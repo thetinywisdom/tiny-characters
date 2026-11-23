@@ -18,6 +18,7 @@ index.html             the demo page (park + gallery)
 demo/demo.js           the demo: strolling crowd, you (keys / tap to walk),
                        tap someone to make them talk; the gallery
 demo/demo.css          the demo page's look (light and dark)
+.nojekyll              tells GitHub Pages to serve the files as they are
 ```
 
 ## How a person is drawn (feet at x, y; one canvas pixel = one pixel)
@@ -46,6 +47,13 @@ Keep them this small and this simple: that is what the owner liked.
 No build step. Serve the folder (`python3 -m http.server`), open the page,
 and check with Playwright screenshots on a desktop size and a phone
 (`devices['iPhone 13']`), with no page errors.
+
+## GitHub Pages
+
+The demo is served from the root of `main` (Settings → Pages → Deploy from a
+branch → `main`, `/ (root)`) at https://thetinywisdom.github.io/tiny-characters/.
+Every push to `main` updates it within a minute or two. All paths in
+`index.html` and `demo/` are relative, so keep them that way (no leading `/`).
 
 ## Keeping the docs up to date
 

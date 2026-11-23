@@ -4,7 +4,8 @@ The little pixel people from **Tiny City Builder**'s bubble lab: about
 5 × 15 pixels each, drawn with a handful of rectangles on a low-resolution
 canvas and scaled up with hard pixels. Plain JavaScript, no dependencies.
 
-Open `index.html` through any static server (or GitHub Pages) for the demo:
+**Try it:** https://thetinywisdom.github.io/tiny-characters/ (GitHub Pages,
+served from `main`). Or open `index.html` through any static server for the demo:
 a park where they stroll about (move the one with the gold line with the arrow
 keys / WASD or by tapping; tap anyone to make them talk) and a gallery of
 random looks.
