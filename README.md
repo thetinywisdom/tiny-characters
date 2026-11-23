@@ -54,7 +54,9 @@ requestAnimationFrame(frame);
 ```
 
 A person: `{ x, y, body, hair, skin, legs, you, talking, walking, facing }`
-(colours are CSS strings; `facing`: `'left'`, `'right'` or nothing). Everyone
+(colours are CSS strings; `facing`: `'down'` (the front, also nothing), `'up'`
+(the back), `'left'` or `'right'`; `facingFor(dx, dy)` picks it from the way
+someone walks). Everyone
 has hands at their sides (swinging when they walk), shoes, a shaded right
 side, and a collar and hem on a plain top; they have no faces. Looks, all
 optional:
@@ -115,7 +117,8 @@ drawBuilding(g, { type: 'shop', shopType: 'ramen', x: 120, y: 104, seed: 3 });
 
 | Export | What it does |
 | --- | --- |
-| `drawBuilding(g, b)` | One building `{ type, x, y, seed, shopType, wall, roof }`: centred on `x`, ground line at `y`. `seed` picks the wall and roof colours and which windows are lit. |
+| `drawBuilding(g, b)` | One building `{ type, x, y, seed, shopType, wall, roof, scale }`: centred on `x`, ground line at `y`. `seed` picks the wall and roof colours and which windows are lit; `scale` draws it bigger with crisp pixels (the town uses 1.5). |
+| `buildingSize(b)` | Its width and height at its scale. |
 | `BUILDINGS` | `type -> { label, w, h }`: name, width and height in pixels (roof included). |
 | `SHOP_TYPES` | `konbini`, `ramen`, `cafe`, `bookshop`, `bakery`, `izakaya` (for `shop` and `mixedUse`). |
 | `drawStreet(g, W, H, { baseY, x0 })` | Sidewalk from `baseY`, road, far sidewalk, grass; `x0` scrolls the paving. |
@@ -148,7 +151,7 @@ drawTownView(g, town, { x: viewX, y: viewY, w: 200, h: 150 }, [you, ...others], 
 | --- | --- |
 | `makeTown(layout)` | A town: `{ W, H, buildings, areas, blocked(x, y), findPath(from, to), randomSpot(rng, within), placeAt(x, y), doorOf(building), ground }`. |
 | `drawTownView(g, town, view, sprites, t)` | The part of the town in `view`: ground, then buildings, people and cats (`cat: true`) further back first. |
-| `DEFAULT_TOWN` | The demo's layout: `streets`, `crossStreets`, `rows` of buildings, single `buildings`, `areas` with their own ground. |
+| `DEFAULT_TOWN` | The demo's layout: `scale` (1.5: the town is drawn that much bigger, the people stay 15 px), `streets`, `crossStreets`, `rows` of buildings, single `buildings`, `areas` with their own ground (all at scale 1; `makeTown` multiplies them). |
 | `buildingSolids(b)` (tinyBuildings.js) | The ground a building takes; you can step between a torii's posts and under a gas station's canopy. |
 
 Speech for these people (floating pixel text, the design picked in the

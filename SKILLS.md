@@ -68,6 +68,14 @@ moustache, hat, things in the hand, the gold line.
   no right hand when something is carried there, none round boxes); a plain
   top (no `top`) gets a collar (3 px white, or a darker shade on light tops)
   and a hem 3 rows above its bottom
+- four views (`facing`): 'down' or nothing is the front; 'left' / 'right'
+  the sides (drawn mirrored by `R`); 'up' the back: hair over the whole head
+  (the nape shows under short hair; long hair 5 wide to the shoulders; a
+  ponytail hangs down the back and swings), no fringe, moustache or collar,
+  a backpack across the back (3 wide), a yukata's obi bow, the sailor
+  collar's flap, an apron's strings, boxes hidden in front. `facingFor(dx,
+  dy)` gives the view for a walking direction (whichever way moves most);
+  cats only face left / right
 - fringe: one hair pixel at (±1, Hd + 1), front view only
 - no eyes, no faces (the owner's decision); the moustache is the only face
   detail
@@ -144,6 +152,14 @@ ground line); anyone behind it (smaller y) would be drawn before it and
 hidden, so in a town nobody can stand there (see the map rules below).
 
 ## How the town map works
+
+**Scale:** `DEFAULT_TOWN.scale` is 1.5 (the owner wanted the town bigger
+than the people). The layout is written at scale 1; `makeTown` multiplies
+every position and size (`scaled`), street sizes come from `streetDims(k)`,
+and each building gets `scale` (drawBuilding scales and rounds every
+rectangle's edges, so 1 px lines become 1 or 2 px and stay crisp; sizes via
+`buildingSize`). People are never scaled. The Buildings sheet and the
+catalogue show buildings at scale 1.
 
 The owner's rules: every building faces you and **its whole picture is solid
 ground** (`buildingSolids`), so nobody is ever hidden behind one: to get past

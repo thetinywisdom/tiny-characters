@@ -21,6 +21,8 @@ bubble lab, so games can use them and they can grow.
   so nobody walks behind one (walk round it); tall buildings only in the back
   row; low buildings in the blocks; the shrine, school and old town get their
   own grounds; the map stops at its edges (no wrapping).
+- People (Nov 2026): four views (front, back, both sides); walking up shows
+  the back. The town is drawn 1.5 times bigger than the people.
 - People (Nov 2026): no eyes, they stay faceless; different sizes are fine
   (tall, short, kids); everyone gets hands, shoes, a shaded side, a collar and
   hem on plain tops, and sometimes a fringe, so they look less generic.
@@ -71,6 +73,10 @@ bubble lab, so games can use them and they can grow.
 9. **Less generic people**: hands that swing, shoes, a shaded side, collar
    and hem, fringe (left / right), sizes (tall 17 px, short 14 px); random
    and seeded looks use them; the police officer is tall, grandma short.
+10. **Four views and a bigger town**: people show their back walking up, their
+    front walking down, a side walking across (`facingFor`); the Looks
+    canvas shows the four views, catalogue cards turn round; the town is
+    drawn at scale 1.5 (`scale` for buildings and towns), people stay 15 px.
 
 ## Next (only when the owner asks)
 

@@ -1,4 +1,4 @@
-import { CAT_COLORS, COLORS, LOOKS, SKIN_COLORS, drawCat, drawCharacter, drawStage, randomCharacter, seeded } from '../src/tinyCharacters.js';
+import { CAT_COLORS, COLORS, LOOKS, SKIN_COLORS, drawCat, drawCharacter, drawStage, facingFor, randomCharacter, seeded } from '../src/tinyCharacters.js';
 
 // The park: tiny people stroll between spots on the path; you (the gold line)
 // walk with the keys or go where you tap; tapping someone makes them talk.
@@ -44,7 +44,7 @@ function frame(now) {
     if (dx || dy) you.to = null;
     else if (you.to) { const ex = you.to.x - you.x, ey = you.to.y - you.y, d = Math.hypot(ex, ey); if (d < 1) you.to = null; else { dx = ex / d; dy = ey / d; } }
     you.walking = !!(dx || dy);
-    if (dx) you.facing = dx < 0 ? 'left' : 'right';
+    if (dx || dy) you.facing = facingFor(dx, dy, you.facing);
     you.x = Math.max(4, Math.min(W - 4, you.x + dx * 24 * dt));
     you.y = Math.max(80, Math.min(H - 6, you.y + dy * 18 * dt));
     // everyone else strolls between spots
@@ -56,7 +56,7 @@ function frame(now) {
       if (p.to && !p.talking) {
         const ex = p.to.x - p.x, ey = p.to.y - p.y, d = Math.hypot(ex, ey);
         if (d < 1) { p.to = null; p.wait = 1 + Math.random() * 4; p.walking = false; }
-        else { const v = p.cat ? 1.3 : 1; p.x += ex / d * 14 * v * dt; p.y += ey / d * 10 * v * dt; p.walking = true; p.facing = ex < 0 ? 'left' : 'right'; }
+        else { const v = p.cat ? 1.3 : 1; p.x += ex / d * 14 * v * dt; p.y += ey / d * 10 * v * dt; p.walking = true; p.facing = p.cat ? (ex < 0 ? 'left' : 'right') : facingFor(ex, ey, p.facing); }
       } else p.walking = false;
     }
   }
@@ -86,6 +86,9 @@ function looksFrame(now) {
   lg.fillStyle = COLORS.paper; lg.fillRect(0, 0, looks.width, looks.height);
   Object.values(LOOKS).forEach((look, i) => drawCharacter(lg, { skin: SKIN_COLORS[i % SKIN_COLORS.length], ...look, x: 9 + i * 15, y: 28 }, t));
   parts[0].forEach((part, i) => drawCharacter(lg, { ...plain, skin: SKIN_COLORS[i % 4], ...part, x: 7 + i * 12, y: 58 }, t));
+  // four views of a few looks: front, right, back, left
+  [LOOKS.woman, LOOKS.girl, LOOKS.salaryman, { ...plain, hairStyle: 'ponytail', carry: 'backpack', carryColor: '#3f7fd6', body: '#e8402f' }].forEach((look, j) =>
+    ['down', 'right', 'up', 'left'].forEach((facing, k) => drawCharacter(lg, { skin: SKIN_COLORS[j + 1], ...look, facing, walking: true, x: 10 + j * 50 + k * 11, y: 118 }, t)));
   parts[1].forEach((part, i) => {
     const at = { x: 8 + i * 12 + (i === 14 ? 2 : i === 15 ? 6 : 0), y: 88 };
     if (part === 'cat') drawCat(lg, { ...at, color: CAT_COLORS[0], walking: true }, t);

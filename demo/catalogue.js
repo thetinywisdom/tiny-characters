@@ -28,7 +28,7 @@ const items = [];
 for (const [name, [label, tags]] of Object.entries(PEOPLE)) {
   if (name !== 'random' && name !== 'kid' && !LOOKS[name]) continue;
   items.push({ id: `person.${name}`, label, group: 'People', tags, seed: name === 'random' || name === 'kid' ? 1 : 0, w: 24, h: 26, px: 5,
-    draw: (g, seed, t, anim) => drawCharacter(g, { ...lookFor(name, seed), x: 12, y: 22, walking: anim && Math.floor(t / 2) % 2 === 0, talking: anim && Math.floor(t / 2) % 2 === 1 }, t),
+    draw: (g, seed, t, anim) => drawCharacter(g, { ...lookFor(name, seed), x: 12, y: 22, walking: anim, facing: anim ? ['down', 'right', 'up', 'left'][Math.floor(t / 1.5) % 4] : 'down' }, t),
     code: (seed) => `drawCharacter(g, { ...lookFor('${name}', ${seed}), x, y }, t)` });
 }
 const catColor = (seed) => (seed ? CAT_COLORS[Math.floor(seeded(seed * 7919 + 13)() * CAT_COLORS.length)] : CAT_COLORS[0]);

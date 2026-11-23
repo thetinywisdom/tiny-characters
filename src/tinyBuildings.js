@@ -504,12 +504,26 @@ export function drawBuilding(g, b) {
   const def = DEFS[b.type];
   if (!def) return;
   const [, w, draw] = def;
-  const L = Math.round(b.x - w / 2), y = Math.round(b.y);
+  const k = b.scale ?? 1;
+  const L = Math.round(b.x - Math.round(w * k) / 2), y = Math.round(b.y);
   const rng = seeded((b.seed ?? 1) * 97 + Object.keys(DEFS).indexOf(b.type));
   const wall = b.wall ?? WALL_COLORS[Math.floor(rng() * WALL_COLORS.length)];
   const roof = b.roof ?? ROOF_COLORS[Math.floor(rng() * ROOF_COLORS.length)];
-  const r = (c, dx, up, rw, rh) => { g.fillStyle = c; g.fillRect(L + dx, y - up - rh, rw, rh); };
+  // at a scale, each rectangle's edges are scaled and rounded, so the
+  // pixels stay as crisp as the people's (a 1 px line becomes 1 or 2 px)
+  const r = k === 1
+    ? (c, dx, up, rw, rh) => { g.fillStyle = c; g.fillRect(L + dx, y - up - rh, rw, rh); }
+    : (c, dx, up, rw, rh) => {
+      const x0 = Math.round(dx * k), x1 = Math.round((dx + rw) * k), y0 = Math.round(up * k), y1 = Math.round((up + rh) * k);
+      if (x1 > x0 && y1 > y0) { g.fillStyle = c; g.fillRect(L + x0, y - y1, x1 - x0, y1 - y0); }
+    };
   draw(r, rng, b, wall, roof);
+}
+
+/** A building's size in pixels at its scale (b.scale, 1 by default): { w, h }. */
+export function buildingSize(b) {
+  const { w, h } = BUILDINGS[b.type], k = b.scale ?? 1;
+  return { w: Math.round(w * k), h: Math.round(h * k) };
 }
 
 /**
@@ -518,9 +532,12 @@ export function drawBuilding(g, b) {
  * gas station only the posts, pumps and kiosk (you walk through and under).
  */
 export function buildingSolids(b) {
-  const { w, h } = BUILDINGS[b.type];
+  const { w, h } = buildingSize(b), k = b.scale ?? 1;
   const L = Math.round(b.x - w / 2), y = Math.round(b.y);
-  if (OPEN[b.type]) return OPEN[b.type].map(([dx, sw, top, bottom]) => ({ x: L + dx, y: y - top, w: sw, h: top - bottom + 1 }));
+  if (OPEN[b.type]) return OPEN[b.type].map(([dx, sw, top, bottom]) => {
+    const x0 = Math.round(dx * k), x1 = Math.max(x0 + 1, Math.round((dx + sw) * k));
+    return { x: L + x0, y: y - Math.round(top * k), w: x1 - x0, h: Math.round(top * k) - Math.round(bottom * k) + 1 };
+  });
   return [{ x: L, y: y - h, w, h: h + 1 }];
 }
 

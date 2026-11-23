@@ -63,6 +63,7 @@ function frameOf(p, bob = 0) {
  *  - talking: the body and head bob up a pixel, six times a second
  *  - walking: the legs take turns lifting a pixel, eight steps a second
  *  - you: a gold line under the feet (the player)
+ * facing: 'down' (the front; also nothing), 'up' (the back), 'left', 'right'.
  * Looks (all optional, see SKILLS.md): kid, size, hairStyle, fringe,
  * moustache, hat, hatColor, top, trim, legwear, shoes, carry, carryColor.
  * Everyone has hands, shoes, a darker right side, and a collar and hem on a
@@ -74,8 +75,10 @@ export function drawCharacter(g, p, t = 0) {
   const step = p.walking ? Math.floor(t * 8) % 2 : -1;      // which leg is lifted (-1: standing)
   const walkBob = p.walking && step === 1 ? -1 : 0;
   const bob = talkBob || walkBob;
+  // four views: front ('down', or nothing), back ('up'), and the sides
   // R: a rectangle at (x + dx, y + dy), mirrored when facing left
   const s = p.facing === 'left' ? -1 : 1, side = p.facing === 'left' || p.facing === 'right';
+  const back = p.facing === 'up' || p.facing === 'back';
   const R = (c, dx, dy, w = 1, h = 1) => { g.fillStyle = c; g.fillRect(s > 0 ? x + dx : x - dx - w + 1, y + dy, w, h); };
   // W: the same, never mirrored (the light always comes from the left)
   const W = (c, dx, dy, w = 1, h = 1) => { g.fillStyle = c; g.fillRect(x + dx, y + dy, w, h); };
@@ -100,9 +103,15 @@ export function drawCharacter(g, p, t = 0) {
   }
   // body and what is worn on it; a plain top gets a collar and a hem
   R(body, -2, B, 5, bodyH);
-  if (!p.top) { R(light(body) ? shade(body, 0.86) : WHITE, -1, B, 3, 1); R(shade(body, 0.8), -2, B + bodyH - 3, 5, 1); }
+  if (!p.top) { if (!back) R(light(body) ? shade(body, 0.86) : WHITE, -1, B, 3, 1); R(shade(body, 0.8), -2, B + bodyH - 3, 5, 1); }
   const trim = p.trim;
-  switch (p.top) {
+  if (back) switch (p.top) {                                     // seen from behind
+    case 'apron': R(trim ?? WHITE, -1, B + bodyH - 3, 3, 1); break;                       // its strings, tied
+    case 'yukata': R(body, -2, -legH - 1, 5, legH); R(p.shoes ?? legs, -1, -1); R(p.shoes ?? legs, 1, -1); R(trim ?? RED, -2, B + bodyH - 3, 5, 1); R(trim ?? RED, -1, B + bodyH - 5, 3, 2); break; // obi and its bow
+    case 'sailor': R(COLORS.navy, -2, B, 5, 2); break;                                     // the collar's flap
+    case 'police': R(trim ?? COLORS.navy, -1, B, 3, bodyH); break;
+  }
+  else switch (p.top) {
     case 'jacket': R(trim ?? WHITE, 0, B, 1, bodyH); break;                              // open: the shirt shows
     case 'suit': R(WHITE, -1, B, 3, 2); R(trim ?? BODY_COLORS[1], 0, B, 1, Math.min(4, bodyH)); break; // shirt and tie
     case 'apron': R(trim ?? WHITE, -1, B + 2, 3, bodyH); break;
@@ -113,20 +122,33 @@ export function drawCharacter(g, p, t = 0) {
   }
   if (wear === 'skirt') R(legs, -2, -legH - 1, 5, 2);
   W(shade(body, 0.82), 2, B, 1, p.top === 'yukata' ? bodyH + legH - 1 : bodyH);   // the shaded side
+  if (carry === 'backpack' && back) R(carryColor, -1, p.kid ? B - 1 : B, 3, p.kid ? 4 : bodyH - 2);  // a backpack, seen on the back
   // hands at the sides, swinging when walking; seen from the side, one hand
   // swings in front and behind; not over what is carried in front
   const swing = step === -1 ? 0 : step ? 1 : -1;
   if (carry !== 'boxes') {
-    if (!side) { R(skin, -3, B + bodyH - 3 + swing, 1, 2); if (!['bag', 'briefcase', 'stick', 'umbrella'].includes(carry)) R(skin, 3, B + bodyH - 3 - swing, 1, 2); }
+    if (!side) { R(skin, -3, B + bodyH - 3 + swing, 1, 2); if (!['bag', 'briefcase', 'stick', 'umbrella'].includes(carry)) R(skin, 3, B + bodyH - 3 - swing, 1, 2); }  // front and back
     else if (swing) R(skin, swing > 0 ? 3 : -3, B + bodyH - 3, 1, 2);
   }
-  if (carry === 'boxes') { R(carryColor, -2, B, 5, 4); R('#8a6440', -2, B + 2, 5, 1); }
+  if (carry === 'boxes' && !back) { R(carryColor, -2, B, 5, 4); R('#8a6440', -2, B + 2, 5, 1); }
   // head and hair (facing: a pixel of hair at the back of the head)
   R(skin, -1, Hd, 3, 4);
   let style = p.hairStyle ?? 'short';
   if (p.hat && (style === 'afro' || style === 'bun' || style === 'mohawk')) style = style === 'mohawk' ? 'bald' : 'short'; // under a hat
   if (style === 'bald' || style === 'mohawk') R(skin, -1, Hd - 1, 3, 1);
-  if (style === 'mohawk') R(hair, 0, Hd - 3, 1, 3);
+  if (back) {
+    // from behind: hair over the whole head, the nape showing under short hair
+    if (style === 'mohawk') R(hair, 0, Hd - 3, 1, 5);
+    else if (style === 'afro') { R(hair, -2, Hd - 2, 5, 3); R(hair, -2, Hd + 1, 5, 2); }
+    else if (style !== 'bald') {
+      R(hair, -1, Hd - 1, 3, 4);
+      if (style === 'bun') R(hair, 0, Hd - 2);
+      if (style === 'long') { R(hair, -2, Hd, 5, 5); }
+      if (style === 'ponytail') R(hair, step === 1 ? 1 : 0, Hd + 2, 1, 4);                    // the tail down the back, swinging
+    }
+  }
+  if (back) { /* drawn above */ }
+  else if (style === 'mohawk') R(hair, 0, Hd - 3, 1, 3);
   else if (style === 'afro') { R(hair, -2, Hd - 2, 5, 3); R(hair, -2, Hd + 1, 1, 2); R(hair, 2, Hd + 1, 1, 2); }
   else if (style !== 'bald') {
     R(hair, -1, Hd - 1, 3, 2);
@@ -139,10 +161,11 @@ export function drawCharacter(g, p, t = 0) {
       else { R(hair, -2, Hd); R(hair, -3, Hd, 1, 5); }                                            // out, then down
     }
   }
-  W(shade(skin, 0.88), 1, Hd + (style === 'bald' || style === 'mohawk' ? 0 : 1), 1, style === 'bald' || style === 'mohawk' ? 4 : 3);  // the shaded side of the face
+  if (!back || style === 'bald' || style === 'mohawk') W(shade(skin, 0.88), 1, Hd + (style === 'bald' || style === 'mohawk' ? 0 : 1), 1, style === 'bald' || style === 'mohawk' ? 4 : 3);  // the shaded side of the face
+  else W(shade(hair, 0.8), 1, Hd - 1, 1, 4);
   // a fringe or side part: one hair pixel on the face (seen from the front)
-  if (p.fringe && !side && !p.hat && style !== 'bald' && style !== 'mohawk' && style !== 'afro') R(hair, p.fringe === 'right' ? 1 : -1, Hd + 1);
-  if (p.moustache) R(hair, 0, Hd + 2);
+  if (p.fringe && !side && !back && !p.hat && style !== 'bald' && style !== 'mohawk' && style !== 'afro') R(hair, p.fringe === 'right' ? 1 : -1, Hd + 1);
+  if (p.moustache && !back) R(hair, 0, Hd + 2);
   // hats
   const hatColor = p.hatColor ?? DEFAULT_HAT[p.hat];
   if (p.hat === 'cap') { R(hatColor, -1, Hd - 2, 3, 2); if (side) R(hatColor, 2, Hd - 1); }   // brim forward
@@ -157,6 +180,15 @@ export function drawCharacter(g, p, t = 0) {
   }
   // the player's gold line
   if (p.you) R(COLORS.gold, -3, 1, 7, 1);
+}
+
+/**
+ * Which way someone walking by (dx, dy) faces: 'up' (their back), 'down'
+ * (their front), 'left' or 'right', whichever way they move most.
+ */
+export function facingFor(dx, dy, was = 'down') {
+  if (!dx && !dy) return was;
+  return Math.abs(dy) > Math.abs(dx) ? (dy < 0 ? 'up' : 'down') : (dx < 0 ? 'left' : 'right');
 }
 
 /** The point just over a person's head (where speech goes), above any hat or umbrella. */

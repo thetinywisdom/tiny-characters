@@ -1,5 +1,5 @@
-import { BUILDINGS, buildingSolids, drawBuilding } from '../src/tinyBuildings.js';
-import { CAT_COLORS, LOOKS, randomCharacter, seeded } from '../src/tinyCharacters.js';
+import { BUILDINGS, buildingSize, buildingSolids, drawBuilding } from '../src/tinyBuildings.js';
+import { CAT_COLORS, LOOKS, facingFor, randomCharacter, seeded } from '../src/tinyCharacters.js';
 import { drawTownView, makeTown } from '../src/tinyTown.js';
 
 // The town: a 2D map of streets and blocks. The view follows you (the gold
@@ -27,7 +27,7 @@ function newPeople() {
   for (let i = 0; i < 5; i++) people.push(walker(randomCharacter(rng), rng, shrine));
   for (let i = 0; i < 6; i++) people.push(walker(randomCharacter(rng), rng, square));
   for (let i = 0; i < 6; i++) people.push(walker({ color: CAT_COLORS[Math.floor(rng() * CAT_COLORS.length)] }, rng, undefined, true));
-  you = { ...randomCharacter(rng), body: '#f2f2ee', x: 196, y: 204, you: true, talk: 0, path: null };
+  you = { ...randomCharacter(rng), body: '#f2f2ee', x: Math.round(196 * town.scale), y: Math.round(204 * town.scale), you: true, talk: 0, path: null };
   people.push(you);
 }
 newPeople();
@@ -46,7 +46,7 @@ canvas.addEventListener('pointerdown', (e) => {
   if (hit) { hit.talk = 2; return; }
   // a building: walk to its door; anywhere else you can stand: walk there
   const b = town.buildings.find((b) => buildingSolids(b).some((s) => x >= s.x && x < s.x + s.w && y >= s.y && y < s.y + s.h))
-    ?? town.buildings.find((b) => { const { w, h } = BUILDINGS[b.type]; return Math.abs(x - b.x) <= w / 2 && y <= b.y && y >= b.y - h; });
+    ?? town.buildings.find((b) => { const { w, h } = buildingSize(b); return Math.abs(x - b.x) <= w / 2 && y <= b.y && y >= b.y - h; });
   const to = b ? town.doorOf(b) : { x, y };
   if (!town.blocked(to.x, to.y)) you.path = town.findPath(you, to);
 });
@@ -59,7 +59,8 @@ function follow(p, speed, dt) {
   const ex = q.x - p.x, ey = q.y - p.y, d = Math.hypot(ex, ey), step = speed * dt;
   if (d <= step) { p.x = q.x; p.y = q.y; p.path.shift(); }
   else { p.x += ex / d * step; p.y += ey / d * step; }
-  if (Math.abs(ex) > 0.3) p.facing = ex < 0 ? 'left' : 'right';
+  if (p.cat) { if (Math.abs(ex) > 0.3) p.facing = ex < 0 ? 'left' : 'right'; }
+  else if (Math.hypot(ex, ey) > 0.3) p.facing = facingFor(ex, ey, p.facing);
   p.walking = true;
   return false;
 }
@@ -75,11 +76,11 @@ function frame(now) {
   }
   if (dx || dy) {
     you.path = null; you.walking = true;
-    if (dx) you.facing = dx < 0 ? 'left' : 'right';
-    const nx = you.x + dx * 30 * dt, ny = you.y + dy * 20 * dt;
+    you.facing = facingFor(dx, dy, you.facing);
+    const nx = you.x + dx * 36 * dt, ny = you.y + dy * 24 * dt;
     if (!town.blocked(nx, you.y)) you.x = nx;
     if (!town.blocked(you.x, ny)) you.y = ny;
-  } else if (you.path) follow(you, 30, dt);
+  } else if (you.path) follow(you, 36, dt);
   else you.walking = false;
   // everyone else: a short trip, a rest, another trip
   for (const p of people) {
@@ -89,7 +90,7 @@ function frame(now) {
     if (p.path) { if (follow(p, p.cat ? 18 : 14, dt)) { p.walking = false; p.wait = 1 + Math.random() * 4; } continue; }
     p.walking = false;
     if ((p.wait -= dt) > 0) continue;
-    const range = p.cat ? 70 : 170;
+    const range = (p.cat ? 70 : 170) * town.scale;
     let to = town.randomSpot(Math.random, p.within);
     for (let k = 0; k < 6 && Math.hypot(to.x - p.x, to.y - p.y) > range; k++) to = town.randomSpot(Math.random, p.within);
     p.path = town.findPath(p, to);
