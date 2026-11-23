@@ -135,7 +135,10 @@ door. Doors and windows show what they are: panelled wood, planks with iron
 straps, a café door with glass, glass in aluminium, a flat's steel door,
 automatic doors, Japanese lattice sliding doors, shoji; sash, aluminium,
 tall, shuttered, arched, pointed, stained, round, lattice, leaded, neon
-windows and shop glass. The catalogue has them all under Doors & windows. Roofs are seen from above (8–18 rows, like a
+windows and shop glass. The catalogue has them all under Doors & windows.
+Everything stays crisp when the town draws it 1.5 times bigger: patterns
+repeat on even steps and small pictures (crosses, letters, the clock) are
+drawn on whole pixels. Roofs are seen from above (8–18 rows, like a
 top-down town map), which gives each building its depth. Tall buildings are
 squashed (the office has 6 floors, the apartment block 6). Sign text is a row of pixels: real letters do
 not fit.

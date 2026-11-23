@@ -168,6 +168,20 @@ hidden, so in a town nobody can stand there (see the map rules below).
 
 ## How the town map works
 
+**Drawing for 1.5 (the owner found broken icons and "random stripes"):**
+`painter` scales every rectangle to the same size wherever it sits (a 1 px
+line is always 2 px, a 2 px stripe always 3), so keep these rules:
+- anything that repeats (stripes, slats, tiles, letters, shelves, windows)
+  repeats on **even steps** (2, 4, 6, 8, 10 px); steps of 3, 5, 9 come out
+  uneven (4 and 5 px) and look random
+- small pictures (crosses, letters, the clock, a cross on a roof) are
+  `icon(r, dx, up, rows, colours)`: rows of characters drawn on whole
+  pixels, centred, so they stay sharp and symmetric (`CROSS` is the medical
+  cross)
+- signs show a short centred word (`sign`), not letters edge to edge; shop
+  glass spreads its bars evenly; shelves are shelf lines with 3 px goods
+- check a new building at scale 1.5 next to a person before committing
+
 **Scale:** `DEFAULT_TOWN.scale` is 1.5 (the owner wanted the town bigger
 than the people). The layout is written at scale 1; `makeTown` multiplies
 every position and size (`scaled`), street sizes come from `streetDims(k)`,

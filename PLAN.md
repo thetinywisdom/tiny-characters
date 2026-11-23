@@ -85,6 +85,12 @@ bubble lab, so games can use them and they can grow.
     windows 4 × 4 to 7 × 9, sills anywhere); one set of sizes; a kit of 10
     door and 15 window types with detail; every building rebuilt on it;
     `drawPart` / `PARTS` and a Doors & windows group in the catalogue.
+12. **Review at town scale** (the owner saw broken crosses and random
+    stripes): even scaling (same size for every rectangle), patterns on
+    even steps, pixel icons (crosses, P, clock, chapel cross, 〒), centred
+    sign words, even shop-glass bars, shelves, hipped roofs without teeth,
+    Tudor windows (no "faces"), the Dutch roof, the koban's lamp, the
+    izakaya's noren.
 
 ## Next (only when the owner asks)
 
