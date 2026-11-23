@@ -25,6 +25,11 @@ bubble lab, so games can use them and they can grow.
 
 1. More looks: hats, skirts, bags, children and grandparents.
 2. Speech with them (floating pixel text from tiny-ui-kit) in the demo.
+3. **A tinified catalogue**: a tiny pixel version of the things in
+   thetinywisdom/tiny-catalogue, drawn in the same small, simple style as the
+   people.
+4. **Buildings first, toward a 2D map**: start the tiny catalogue with
+   buildings, aiming for a 2D map the tiny people can walk around in.
 
 ## Known issues and small ideas
 
