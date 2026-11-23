@@ -96,11 +96,13 @@ includes the roof and anything on it.
   seams; put AC units, water tanks, a roof garden, parked cars on it),
   `pitched(r, colour, dx, up, w, d, hip)` (ridge along the street: front
   slope with a darker tile row every third row, a light ridge, a little of
-  the back slope; `hip` steps the ends in), `gable(r, colour, face, dx, up,
+  the back slope; `hip`: the sloping ends of a hipped roof, drawn as darker
+  triangles at the sides), `gable(r, colour, face, dx, up,
   w, gh, d)` (a gable facing the street: a wall triangle edged with roof and
   the roof running back behind it, left slope in shade, right in light;
   Tudor cottage, stone chapel). Chimneys, towers and dormers sit on the
-  roof, inside its rows.
+  roof, inside its rows. **Every roof fills its whole rectangle** (the
+  owner's rule, so all buildings look alike): never cut corners away.
 - Pieces: `win` / `windows` (glass, sometimes lit or curtained by `rng`),
   `awning` (2 px stripes), `sign` (a band with a row of "letters"), `glass`
   (shop glass with frame lines), `door`, `noren`, `lantern`, `dots` (books,

@@ -48,16 +48,18 @@ function flatRoof(r, wall, dx, up, w, d = 12) {
   r(shade(wall, 0.7), dx, up, w, 1);                                      // its front edge
 }
 /**
- * A pitched roof, ridge along the street: the front slope (a darker row of
- * tiles every third row), the ridge in light, a little of the back slope.
- * hip: how fast the ends step in (a hipped roof); 0 for straight gable ends.
+ * A pitched roof, ridge along the street, filling its whole rectangle like
+ * every roof: the front slope (a darker row of tiles every third row), the
+ * ridge in light, a little of the back slope. hip: on a hipped roof the two
+ * ends slope too; they show as darker triangles at the sides (how fast they
+ * widen toward the ridge); 0 for straight gable ends.
  */
 function pitched(r, c, dx, up, w, d, hip = 0) {
-  const f = Math.round(d * 0.7);
+  const f = Math.round(d * 0.7), side = shade(c, 0.7);
   for (let k = 0; k < d; k++) {
-    const inset = Math.floor(k * hip / 3), rw = w - inset * 2;
-    if (rw <= 0) break;
-    r(k < f ? (k % 3 === 2 ? shade(c, 0.86) : c) : k === f ? shade(c, 1.3) : shade(c, 0.8), dx + inset, up + k, rw, 1);
+    r(k < f ? (k % 3 === 2 ? shade(c, 0.86) : c) : k === f ? shade(c, 1.3) : shade(c, 0.8), dx, up + k, w, 1);
+    const end = Math.min(Math.floor(w / 2), Math.floor((k < f ? k : f - (k - f)) * hip / 3));
+    if (end > 0) { r(side, dx, up + k, end, 1); r(side, dx + w - end, up + k, end, 1); }   // the hipped ends
   }
   r(shade(c, 0.6), dx, up, w, 1);                                         // eaves
 }

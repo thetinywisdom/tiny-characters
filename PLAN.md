@@ -14,7 +14,9 @@ bubble lab, so games can use them and they can grow.
 - Roofs (Nov 2026): like a top-down town map, every building shows its roof
   from above (8–18 rows), so it has depth; tile rows and a ridge on pitched
   roofs, a rim and rooftop things on flat roofs, front gables with the roof
-  running back.
+  running back. Every roof fills its whole rectangle; a hipped roof's ends
+  are darker triangles at its sides, not cut-away corners (consistent with
+  the gables).
 - The town map (Nov 2026): every building's whole picture is solid ground,
   so nobody walks behind one (walk round it); tall buildings only in the back
   row; low buildings in the blocks; the shrine, school and old town get their
