@@ -33,17 +33,29 @@ bubble lab, so games can use them and they can grow.
    walking stick, boxes; a cat (`drawCat`); starter looks (`LOOKS`); random
    looks use them; the demo's Looks canvas shows every one, and cats wander
    the park.
+4. **Tiny buildings** (`src/tinyBuildings.js`): all 31 of tiny-catalogue's
+   buildings as pixel facades (Japanese town, shop kinds, civic buildings,
+   the European old town), `drawStreet`; the demo's Town (one long street
+   you walk down, the view following you, "In front of: ..." under it) and
+   a Buildings sheet.
 
 ## Next (only when the owner asks)
 
 1. Speech with them (floating pixel text from tiny-ui-kit) in the demo.
-2. **A tinified catalogue**: a tiny pixel version of the things in
-   thetinywisdom/tiny-catalogue, drawn in the same small, simple style as the
-   people.
-3. **Buildings first, toward a 2D map**: start the tiny catalogue with
-   buildings, aiming for a 2D map the tiny people can walk around in.
+2. **A 2D map** from the buildings: more than one street (blocks, corners,
+   a crossing), buildings on both sides, walking around and behind them
+   (footprints the people cannot walk through), like the catalogue's areas
+   (shopping street, lane, station plaza, shrine corner, old-town square,
+   back alley).
+3. **The rest of the tinified catalogue**: street props (lamps, vending
+   machines, signs, bus stop, benches), vehicles, trees and nature.
 
 ## Known issues and small ideas
+
+- In the town people only walk in front of the buildings (sidewalk, road,
+  far sidewalk); nobody goes behind or inside them yet.
+- Sign text is a row of pixels, not letters. Real kana would need at least
+  5 px tall signs; could try for a few (ラーメン, コンビニ) if the owner wants.
 
 - Turned down when comparing with the catalogue (do not add): twin tails,
   beard, helmet, tank top, flu mask, wings, bulky build, shoes or boots,

@@ -16,10 +16,15 @@ src/tinyCharacters.js  the library (plain ES module, no dependencies):
                        LOOKS, seeded, headOf, snapToPalette, COLORS, the
                        colour lists and the look lists (HAIRSTYLES, HATS,
                        TOPS, LEGWEAR, CARRY)
-index.html             the demo page (park, looks, gallery)
+src/tinyBuildings.js   the buildings (plain ES module, imports seeded from
+                       tinyCharacters.js): drawBuilding, BUILDINGS,
+                       SHOP_TYPES, drawStreet, WALL_COLORS, ROOF_COLORS
+index.html             the demo page (town, park, looks, buildings, gallery)
 demo/demo.js           the demo: strolling crowd and cats, you (keys / tap
                        to walk), tap someone to make them talk; every look;
                        the gallery
+demo/town.js           the town (one long street of every building, the view
+                       following you) and the Buildings sheet
 demo/demo.css          the demo page's look (light and dark)
 .nojekyll              tells GitHub Pages to serve the files as they are
 ```
@@ -67,6 +72,32 @@ Keep them this small and this simple: that is what the owner liked. Looks
 the owner turned down (too small, or not wanted) are listed in `PLAN.md`
 under Decisions; do not add them back.
 
+## How a building is drawn
+
+Every building faces you: a front wall, a little roof on top (a flat roof
+shows its top as a light band over a darker parapet line; a pitched roof is
+rows narrowing to the ridge), windows, a door, and one or two details that
+make it that building. Each is an entry in `DEFS` in `src/tinyBuildings.js`:
+`[label, width, height, draw(r, rng, b, wall, roof)]`.
+
+- `r(colour, dx, up, w, h)`: a rectangle `dx` from the left edge whose
+  bottom is `up` pixels above the ground line. Keep everything inside
+  `0 .. width` (signs, bikes, post boxes too) so buildings in a row do not
+  overlap; shift the building with a wrapping `r` if something stands beside
+  it (see the koban and the family restaurant).
+- Pieces: `win` / `windows` (glass, sometimes lit or curtained by `rng`),
+  `flatRoof`, `pitched` (top width 1–4 for a gable, wider for a hip roof),
+  `awning` (2 px stripes), `sign` (a band with a row of "letters"), `glass`
+  (shop glass with frame lines), `door`, `noren`, `lantern`, `dots` (books,
+  flowers, goods), `shopFront` (the six shop kinds).
+- Sizes: ground floor 15–20 px, upper floors 12–14, door 6 × 13, windows
+  about 5 × 6. A person (15 px) reaches three quarters of a door.
+- Colours: the catalogue's walls and roofs (`WALL_COLORS`, `ROOF_COLORS`),
+  glass `#9fb6cc`, windows `#5f7487` (lit `#f0dca0`), wood, ink, red, navy.
+
+People in front of a building are drawn after it (their feet are below its
+ground line); anyone behind it (smaller y) is drawn before it and hidden.
+
 ## Common tasks
 
 - **A new look part:** add a value to the list (`HATS`, `TOPS` ...), draw it
@@ -76,6 +107,10 @@ under Decisions; do not add them back.
   not show at 5 × 15, it does not go in.
 - **A new starter look:** add it to `LOOKS` (it shows in the Looks canvas's
   top row; add its name to the caption).
+- **A new building:** add an entry to `DEFS` (look at the catalogue's
+  builder for what makes it that building, then keep only what shows at this
+  size), add it to `ORDER` in `demo/town.js`; the Buildings sheet picks it up.
+  Check it next to a person.
 - **A new colour:** add it to the list (`BODY_COLORS`, `THING_COLORS` ...);
   `snapToPalette` uses all the lists.
 

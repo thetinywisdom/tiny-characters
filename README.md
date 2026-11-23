@@ -1,14 +1,17 @@
 # Tiny Characters
 
-The little pixel people from **Tiny City Builder**'s bubble lab: about
+The little pixel people from **Tiny City Builder**'s bubble lab, and the
+town's buildings to go with them. A person is about
 5 × 15 pixels each, drawn with a handful of rectangles on a low-resolution
 canvas and scaled up with hard pixels. Plain JavaScript, no dependencies.
 
 **Try it:** https://thetinywisdom.github.io/tiny-characters/ (GitHub Pages,
 served from `main`). Or open `index.html` through any static server for the demo:
-a park where they stroll about with a couple of cats (move the one with the
+a town (one long street of every tiny building, the view following you), a
+park where they stroll about with a couple of cats (move the one with the
 gold line with the arrow keys / WASD or by tapping; tap anyone to make them
-talk), every look they can have, and a gallery of random looks.
+talk; the keys move you in the town, or in the park once you tap it), every
+look they can have, every building, and a gallery of random looks.
 
 ```bash
 python3 -m http.server 8000   # then open http://localhost:8000
@@ -66,6 +69,40 @@ size. `LOOKS` has starter looks like the catalogue's: `man`, `woman`, `boy`,
 | `headOf(person)` | The point just over the head, hat or umbrella (for speech). |
 | `snapToPalette(g, W, H, palette)` | Snaps every pixel to the palette (after drawing anything smooth, like text). |
 | `COLORS` | The lab's colours (ink, paper, gold, grass, path, shadow ...). |
+
+## Buildings
+
+`src/tinyBuildings.js` has tiny-catalogue's 31 buildings as small pixel
+facades in the same style: house, apartment block, shop with flats above,
+shop (konbini, ramen, cafe, bookshop, bakery, izakaya), office building,
+shrine, school, coin laundromat, café (kissaten), pharmacy, sushi
+restaurant, flower shop, fishmonger, udon / soba shop, family restaurant,
+takoyaki stand, koban, post office, bank, clinic, fire station, karaoke,
+wooden apartment, parking garage, gas station, and the old town: Tudor
+cottage, Mediterranean villa, Dutch canal house, French country house,
+Scandinavian house, stone chapel.
+
+```js
+import { BUILDINGS, drawBuilding, drawStreet } from './src/tinyBuildings.js';
+
+drawStreet(g, 200, 150, { baseY: 104 });                    // sidewalk, road, far sidewalk
+drawBuilding(g, { type: 'koban', x: 60, y: 104 });           // centred on x, ground line at y
+drawBuilding(g, { type: 'shop', shopType: 'ramen', x: 120, y: 104, seed: 3 });
+// then the people in front of them (feet below the ground line)
+```
+
+| Export | What it does |
+| --- | --- |
+| `drawBuilding(g, b)` | One building `{ type, x, y, seed, shopType, wall, roof }`: centred on `x`, ground line at `y`. `seed` picks the wall and roof colours and which windows are lit. |
+| `BUILDINGS` | `type -> { label, w, h }`: name, width and height in pixels. |
+| `SHOP_TYPES` | `konbini`, `ramen`, `cafe`, `bookshop`, `bakery`, `izakaya` (for `shop` and `mixedUse`). |
+| `drawStreet(g, W, H, { baseY, x0 })` | Sidewalk from `baseY`, road, far sidewalk, grass; `x0` scrolls the paving. |
+| `WALL_COLORS`, `ROOF_COLORS` | The catalogue's wall and roof colours. |
+
+Sizes: a storey is 13–20 px and a door 6 × 13, so a 15 px person reaches
+about three quarters of a door. Tall buildings are squashed (the office has 6
+floors, the apartment block 6). Sign text is a row of pixels: real letters do
+not fit.
 
 Speech for these people (floating pixel text, the design picked in the
 bubble lab) lives in **tiny-ui-kit** (`src/ui/pixelOverlay.js`).

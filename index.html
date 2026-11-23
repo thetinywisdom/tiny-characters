@@ -12,8 +12,13 @@
     <main>
       <header>
         <h1>TINY CHARACTERS</h1>
-        <p>Little pixel people from Tiny City Builder, about 5 × 15 pixels each. Move the one with the gold line (arrow keys / WASD, or tap where to go); tap anyone to make them talk. Cats wander about too.</p>
+        <p>Little pixel people and buildings from Tiny City Builder: a person is about 5 × 15 pixels. Move the one with the gold line (arrow keys / WASD, or tap where to go); tap anyone to make them talk. The keys move you in the town, or in the park once you tap it.</p>
       </header>
+      <section>
+        <h2>Town</h2>
+        <canvas id="town" width="200" height="150" aria-label="A long street of tiny buildings with people walking along it"></canvas>
+        <div class="row"><button type="button" id="newTown">New people</button><span id="here" class="here" aria-live="polite"></span></div>
+      </section>
       <section>
         <h2>Park</h2>
         <canvas id="park" width="200" height="124" aria-label="A park with tiny pixel people strolling about"></canvas>
@@ -25,11 +30,16 @@
         <p class="note">Top: man, woman, boy, girl, grandpa, grandma, schoolboy, schoolgirl, salaryman, police, delivery, summer, rainy. Middle: hairstyles (short, bald, long, ponytail, ponytail walking, afro, bun, mohawk), moustache, cap, cap from the side, straw hat, a kid. Bottom: jacket, suit, apron, yukata, sailor uniform, gakuran, police, shorts, skirt, backpack, bag, briefcase, walking stick, boxes, umbrella, a cat.</p>
       </section>
       <section>
+        <h2>Buildings</h2>
+        <div id="buildings" class="sheet"></div>
+      </section>
+      <section>
         <h2>Gallery</h2>
         <canvas id="gallery" width="200" height="72" aria-label="Rows of tiny pixel people in different colours"></canvas>
         <div class="row"><button type="button" id="shuffle">Shuffle</button></div>
       </section>
     </main>
     <script type="module" src="./demo/demo.js"></script>
+    <script type="module" src="./demo/town.js"></script>
   </body>
 </html>

@@ -17,9 +17,13 @@ function newCrowd() {
 }
 newCrowd();
 
-addEventListener('keydown', (e) => { if (e.key.startsWith('Arrow')) e.preventDefault(); keys.add(e.key.toLowerCase()); });
+// the keys move you here only after the park was tapped (else they move you in the town)
+const active = () => document.body.dataset.active === 'park';
+addEventListener('keydown', (e) => keys.add(e.key.toLowerCase()));
 addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
+addEventListener('blur', () => keys.clear());
 park.addEventListener('pointerdown', (e) => {
+  document.body.dataset.active = 'park';
   const r = park.getBoundingClientRect();
   const x = (e.clientX - r.left) / r.width * W, y = (e.clientY - r.top) / r.height * H;
   // tapped someone (their 5 x 15 body, a little roomier): they talk; else you walk there
@@ -35,8 +39,8 @@ function frame(now) {
   if (!paused) {
     t += dt;
     // you: keys first, else walking to a tapped spot
-    let dx = (keys.has('arrowright') || keys.has('d')) - (keys.has('arrowleft') || keys.has('a'));
-    let dy = (keys.has('arrowdown') || keys.has('s')) - (keys.has('arrowup') || keys.has('w'));
+    let dx = active() ? (keys.has('arrowright') || keys.has('d')) - (keys.has('arrowleft') || keys.has('a')) : 0;
+    let dy = active() ? (keys.has('arrowdown') || keys.has('s')) - (keys.has('arrowup') || keys.has('w')) : 0;
     if (dx || dy) you.to = null;
     else if (you.to) { const ex = you.to.x - you.x, ey = you.to.y - you.y, d = Math.hypot(ex, ey); if (d < 1) you.to = null; else { dx = ex / d; dy = ey / d; } }
     you.walking = !!(dx || dy);
