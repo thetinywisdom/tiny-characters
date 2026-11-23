@@ -54,12 +54,17 @@ requestAnimationFrame(frame);
 ```
 
 A person: `{ x, y, body, hair, skin, legs, you, talking, walking, facing }`
-(colours are CSS strings; `facing`: `'left'`, `'right'` or nothing), plus
-looks, all optional:
+(colours are CSS strings; `facing`: `'left'`, `'right'` or nothing). Everyone
+has hands at their sides (swinging when they walk), shoes, a shaded right
+side, and a collar and hem on a plain top; they have no faces. Looks, all
+optional:
 
 | Key | Values |
 | --- | --- |
 | `kid` | `true`: a child, 11 px tall instead of 15 |
+| `size` | `tall` (17 px) or `short` (14 px); nothing for the usual 15 |
+| `fringe` | `left` or `right`: a hair pixel falling on the face |
+| `shoes` | the shoe colour (the bottom row of the legs; dark brown, red for kids) |
 | `hairStyle` | `short` (default), `bald`, `long`, `ponytail`, `afro`, `bun`, `mohawk` |
 | `moustache` | `true`: one pixel, in the hair colour |
 | `hat`, `hatColor` | `cap` (brim forward when facing), `wide` (straw hat, fedora) |

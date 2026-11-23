@@ -73,7 +73,8 @@ const plain = { body: '#3f7fd6', legs: COLORS.navy, hair: COLORS.ink };
 const parts = [
   [{}, { hairStyle: 'bald' }, { hairStyle: 'long', body: '#d46a8e' }, { hairStyle: 'ponytail', body: '#d46a8e' },
    { hairStyle: 'ponytail', body: '#d46a8e', facing: 'right', walking: true }, { hairStyle: 'afro' }, { hairStyle: 'bun' },
-   { hairStyle: 'mohawk' }, { moustache: true }, { hat: 'cap' }, { hat: 'cap', facing: 'right' }, { hat: 'wide' }, { kid: true, body: '#f2c230' }],
+   { hairStyle: 'mohawk' }, { fringe: 'left' }, { moustache: true }, { hat: 'cap' }, { hat: 'cap', facing: 'right' }, { hat: 'wide' },
+   { size: 'tall' }, { size: 'short' }, { kid: true, body: '#f2c230' }],
   [{ top: 'jacket', body: '#5f8f5a' }, { top: 'suit', body: COLORS.navy }, { top: 'apron', body: '#5f8f5a' }, { top: 'yukata', body: '#3f4f6e' },
    { top: 'sailor', body: '#f2f2ee', legwear: 'skirt' }, { top: 'gakuran', body: COLORS.ink, legs: COLORS.ink }, { top: 'police', body: '#bcd2e0' },
    { legwear: 'shorts' }, { legwear: 'skirt', body: '#d46a8e' }, { carry: 'backpack', facing: 'right' }, { carry: 'bag' }, { carry: 'briefcase' },
@@ -84,7 +85,7 @@ function looksFrame(now) {
   lg.imageSmoothingEnabled = false;
   lg.fillStyle = COLORS.paper; lg.fillRect(0, 0, looks.width, looks.height);
   Object.values(LOOKS).forEach((look, i) => drawCharacter(lg, { skin: SKIN_COLORS[i % SKIN_COLORS.length], ...look, x: 9 + i * 15, y: 28 }, t));
-  parts[0].forEach((part, i) => drawCharacter(lg, { ...plain, skin: SKIN_COLORS[i % 4], ...part, x: 9 + i * 15, y: 58 }, t));
+  parts[0].forEach((part, i) => drawCharacter(lg, { ...plain, skin: SKIN_COLORS[i % 4], ...part, x: 7 + i * 12, y: 58 }, t));
   parts[1].forEach((part, i) => {
     const at = { x: 8 + i * 12 + (i === 14 ? 2 : i === 15 ? 6 : 0), y: 88 };
     if (part === 'cat') drawCat(lg, { ...at, color: CAT_COLORS[0], walking: true }, t);

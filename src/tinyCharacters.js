@@ -34,18 +34,25 @@ export const CAT_COLORS = ['#dcb08c', '#2f3236', '#f2efe8', '#b3b0a8', '#8a6440'
 
 /** Hairstyles, hats, tops, legwear and carried things a person can have. */
 export const HAIRSTYLES = ['short', 'bald', 'long', 'ponytail', 'afro', 'bun', 'mohawk'];
+/** Sizes besides the usual 15 px: tall is 17, short 14 (a kid is 11). */
+export const SIZES = ['tall', 'short'];
 export const HATS = ['cap', 'wide'];
 export const TOPS = ['jacket', 'suit', 'apron', 'yukata', 'sailor', 'gakuran', 'police'];
 export const LEGWEAR = ['trousers', 'shorts', 'skirt'];
 export const CARRY = ['backpack', 'bag', 'briefcase', 'umbrella', 'stick', 'boxes'];
 
 const WHITE = '#f2f2ee', RED = '#e8402f';
+/** A colour darker (f < 1) or lighter (f > 1). */
+const shade = (hex, f) => '#' + [1, 3, 5].map((i) => Math.max(0, Math.min(255, Math.round(parseInt(hex.slice(i, i + 2), 16) * f))).toString(16).padStart(2, '0')).join('');
+/** Is a colour light (so a white collar would not show on it)? */
+const light = (hex) => [1, 3, 5].reduce((a, i) => a + parseInt(hex.slice(i, i + 2), 16), 0) > 600;
 const DEFAULT_HAT = { cap: RED, wide: '#d8b860' };
 const DEFAULT_CARRY = { backpack: '#e8402f', bag: '#c9b48a', briefcase: '#2f3236', umbrella: '#3f7fd6', stick: '#6b4a2a', boxes: '#c09060' };
 
 // Row offsets (from the feet) of a person: legs, body top, head top.
 function frameOf(p, bob = 0) {
-  const legH = p.kid ? 2 : 3, bodyH = p.kid ? 4 : 6;
+  // a kid 11 px tall, short 14, everyone else 15, tall 17
+  const legH = p.kid ? 2 : p.size === 'tall' ? 4 : 3, bodyH = p.kid ? 4 : p.size === 'tall' ? 7 : p.size === 'short' ? 5 : 6;
   const B = -legH - bodyH + bob;
   return { legH, bodyH, B, Hd: B - 4 };
 }
@@ -56,8 +63,10 @@ function frameOf(p, bob = 0) {
  *  - talking: the body and head bob up a pixel, six times a second
  *  - walking: the legs take turns lifting a pixel, eight steps a second
  *  - you: a gold line under the feet (the player)
- * Looks (all optional, see SKILLS.md): kid, hairStyle, moustache, hat,
- * hatColor, top, trim, legwear, carry, carryColor.
+ * Looks (all optional, see SKILLS.md): kid, size, hairStyle, fringe,
+ * moustache, hat, hatColor, top, trim, legwear, shoes, carry, carryColor.
+ * Everyone has hands, shoes, a darker right side, and a collar and hem on a
+ * plain top. No eyes: the people are faceless.
  */
 export function drawCharacter(g, p, t = 0) {
   const x = Math.round(p.x), y = Math.round(p.y);
@@ -68,6 +77,8 @@ export function drawCharacter(g, p, t = 0) {
   // R: a rectangle at (x + dx, y + dy), mirrored when facing left
   const s = p.facing === 'left' ? -1 : 1, side = p.facing === 'left' || p.facing === 'right';
   const R = (c, dx, dy, w = 1, h = 1) => { g.fillStyle = c; g.fillRect(s > 0 ? x + dx : x - dx - w + 1, y + dy, w, h); };
+  // W: the same, never mirrored (the light always comes from the left)
+  const W = (c, dx, dy, w = 1, h = 1) => { g.fillStyle = c; g.fillRect(x + dx, y + dy, w, h); };
   const { legH, bodyH, B, Hd } = frameOf(p, bob);
   const body = p.body ?? BODY_COLORS[0], legs = p.legs ?? COLORS.ink, skin = p.skin ?? SKIN_COLORS[1], hair = p.hair ?? COLORS.ink;
   const carry = p.carry, carryColor = p.carryColor ?? DEFAULT_CARRY[carry];
@@ -75,27 +86,40 @@ export function drawCharacter(g, p, t = 0) {
   // shadow, and a backpack behind the body (only seen from the side)
   R(COLORS.shadow, -3, 0, 7, 2);
   if (carry === 'backpack' && side) R(carryColor, -4, p.kid ? B - 1 : B, 2, p.kid ? 3 : 4);
-  // legs (walking: one lifts a pixel, then the other); shorts and skirts show skin
+  // legs (walking: one lifts a pixel, then the other); shorts and skirts show
+  // skin; shoes are the bottom row; the right leg's outer column in shade
+  const shoes = p.shoes ?? (p.kid ? RED : '#3a2a22');
   if (p.top !== 'yukata') {
     for (const [dx, lifted] of [[-2, step === 0], [1, step === 1]]) {
-      const h = lifted ? legH - 1 : legH;
-      R(wear === 'trousers' ? legs : skin, dx, -legH, 2, h);
+      const h = lifted ? legH - 1 : legH, c = wear === 'trousers' ? legs : skin;
+      R(c, dx, -legH, 2, h);
       if (wear === 'shorts') R(legs, dx, -legH, 2, 1);
+      R(shoes, dx, -legH + h - 1, 2, 1);
     }
+    W(shade(wear === 'trousers' ? legs : skin, 0.78), 2, -legH, 1, legH - 2);
   }
-  // body and what is worn on it
+  // body and what is worn on it; a plain top gets a collar and a hem
   R(body, -2, B, 5, bodyH);
+  if (!p.top) { R(light(body) ? shade(body, 0.86) : WHITE, -1, B, 3, 1); R(shade(body, 0.8), -2, B + bodyH - 3, 5, 1); }
   const trim = p.trim;
   switch (p.top) {
     case 'jacket': R(trim ?? WHITE, 0, B, 1, bodyH); break;                              // open: the shirt shows
     case 'suit': R(WHITE, -1, B, 3, 2); R(trim ?? BODY_COLORS[1], 0, B, 1, Math.min(4, bodyH)); break; // shirt and tie
     case 'apron': R(trim ?? WHITE, -1, B + 2, 3, bodyH); break;
-    case 'yukata': R(body, -2, -legH - 1, 5, legH); R(legs, -1, -1); R(legs, 1, -1); R(trim ?? RED, -2, B + bodyH - 3, 5, 1); break; // robe to the feet, obi
+    case 'yukata': R(body, -2, -legH - 1, 5, legH); R(p.shoes ?? legs, -1, -1); R(p.shoes ?? legs, 1, -1); R(trim ?? RED, -2, B + bodyH - 3, 5, 1); break; // robe to the feet, obi
     case 'sailor': R(COLORS.navy, -2, B, 5, 1); R(trim ?? RED, 0, B + 1); break;          // collar and ribbon
     case 'gakuran': R(COLORS.gold, 0, B + 1); R(COLORS.gold, 0, B + 3); break;            // gold buttons
     case 'police': R(trim ?? COLORS.navy, -1, B, 3, bodyH); R(COLORS.gold, -1, B + 1); break; // vest and badge
   }
   if (wear === 'skirt') R(legs, -2, -legH - 1, 5, 2);
+  W(shade(body, 0.82), 2, B, 1, p.top === 'yukata' ? bodyH + legH - 1 : bodyH);   // the shaded side
+  // hands at the sides, swinging when walking; seen from the side, one hand
+  // swings in front and behind; not over what is carried in front
+  const swing = step === -1 ? 0 : step ? 1 : -1;
+  if (carry !== 'boxes') {
+    if (!side) { R(skin, -3, B + bodyH - 3 + swing, 1, 2); if (!['bag', 'briefcase', 'stick', 'umbrella'].includes(carry)) R(skin, 3, B + bodyH - 3 - swing, 1, 2); }
+    else if (swing) R(skin, swing > 0 ? 3 : -3, B + bodyH - 3, 1, 2);
+  }
   if (carry === 'boxes') { R(carryColor, -2, B, 5, 4); R('#8a6440', -2, B + 2, 5, 1); }
   // head and hair (facing: a pixel of hair at the back of the head)
   R(skin, -1, Hd, 3, 4);
@@ -115,6 +139,9 @@ export function drawCharacter(g, p, t = 0) {
       else { R(hair, -2, Hd); R(hair, -3, Hd, 1, 5); }                                            // out, then down
     }
   }
+  W(shade(skin, 0.88), 1, Hd + (style === 'bald' || style === 'mohawk' ? 0 : 1), 1, style === 'bald' || style === 'mohawk' ? 4 : 3);  // the shaded side of the face
+  // a fringe or side part: one hair pixel on the face (seen from the front)
+  if (p.fringe && !side && !p.hat && style !== 'bald' && style !== 'mohawk' && style !== 'afro') R(hair, p.fringe === 'right' ? 1 : -1, Hd + 1);
   if (p.moustache) R(hair, 0, Hd + 2);
   // hats
   const hatColor = p.hatColor ?? DEFAULT_HAT[p.hat];
@@ -166,15 +193,15 @@ export function drawCat(g, c, t = 0) {
  */
 export const LOOKS = {
   man: { body: WHITE, legs: COLORS.navy, hair: COLORS.ink },
-  woman: { body: '#d46a8e', legs: COLORS.navy, hair: '#3a2a22', hairStyle: 'long', legwear: 'skirt' },
+  woman: { body: '#d46a8e', legs: COLORS.navy, hair: '#3a2a22', hairStyle: 'long', legwear: 'skirt', fringe: 'left' },
   boy: { kid: true, body: '#f2c230', legs: COLORS.navy, hair: COLORS.ink, legwear: 'shorts', carry: 'backpack', carryColor: COLORS.ink },
   girl: { kid: true, body: WHITE, legs: RED, hair: COLORS.ink, hairStyle: 'ponytail', legwear: 'skirt', carry: 'backpack', carryColor: RED },
   grandpa: { body: '#9e6c60', trim: '#c9b48a', top: 'jacket', legs: '#6b5a48', hair: '#b3b0a8', moustache: true, hat: 'cap', hatColor: '#7a7a74', carry: 'stick' },
-  grandma: { body: '#7a6aa8', top: 'jacket', legs: '#6b4a2a', hair: '#f2efe8', hairStyle: 'bun', legwear: 'skirt', carry: 'bag' },
+  grandma: { size: 'short', body: '#7a6aa8', top: 'jacket', legs: '#6b4a2a', hair: '#f2efe8', hairStyle: 'bun', legwear: 'skirt', carry: 'bag' },
   schoolboy: { kid: true, body: COLORS.ink, legs: COLORS.ink, hair: COLORS.ink, top: 'gakuran' },
   schoolgirl: { kid: true, body: WHITE, legs: COLORS.navy, hair: COLORS.ink, hairStyle: 'ponytail', top: 'sailor', legwear: 'skirt' },
-  salaryman: { body: COLORS.navy, legs: COLORS.navy, hair: COLORS.ink, top: 'suit', carry: 'briefcase' },
-  police: { body: '#bcd2e0', legs: COLORS.navy, hair: COLORS.ink, top: 'police', hat: 'cap', hatColor: COLORS.navy },
+  salaryman: { fringe: 'right', body: COLORS.navy, legs: COLORS.navy, hair: COLORS.ink, top: 'suit', carry: 'briefcase' },
+  police: { size: 'tall', body: '#bcd2e0', legs: COLORS.navy, hair: COLORS.ink, top: 'police', hat: 'cap', hatColor: COLORS.navy },
   delivery: { body: '#3f7fd6', legs: COLORS.navy, hair: COLORS.ink, hat: 'cap', hatColor: '#3f7fd6', carry: 'boxes' },
   summer: { body: WHITE, legs: '#c9b48a', hair: '#3a2a22', legwear: 'shorts', hat: 'wide' },
   rainy: { body: COLORS.navy, top: 'jacket', legs: COLORS.ink, hair: '#8a5a2a', carry: 'umbrella' },
@@ -202,6 +229,8 @@ export function randomCharacter(rng = Math.random) {
   if (!grey && rng() < 0.2) p.kid = true;
   p.hairStyle = pick(['short', 'short', 'short', 'short', 'long', 'long', 'ponytail', 'ponytail', 'bald', 'bun', 'afro', 'mohawk']);
   if (p.kid && (p.hairStyle === 'bald' || p.hairStyle === 'mohawk')) p.hairStyle = 'short';
+  if (!p.kid) { const r = rng(); if (r < 0.2) p.size = 'tall'; else if (r < 0.4) p.size = 'short'; }
+  if (rng() < 0.5) p.fringe = rng() < 0.5 ? 'left' : 'right';
   if (!p.kid && rng() < 0.1) p.moustache = true;
   if (rng() < 0.2) { p.hat = pick(HATS); p.hatColor = pick(THING_COLORS); }
   const top = rng();
@@ -265,6 +294,8 @@ export function lookFor(name = 'random', seed = 0) {
   if (!seed) return { skin: SKIN_COLORS[1], ...base };
   const pick = (a) => a[Math.floor(rng() * a.length)];
   const look = { ...base, skin: pick(SKIN_COLORS) };
+  if (!base.kid) { const r = rng(); look.size = r < 0.25 ? 'tall' : r < 0.5 ? 'short' : undefined; }
+  if (rng() < 0.5) look.fringe = rng() < 0.5 ? 'left' : 'right';
   const grey = ['#b3b0a8', '#f2efe8'];
   if (!grey.includes(base.hair)) look.hair = pick(HAIR_COLORS.filter((c) => !grey.includes(c)));
   return look;

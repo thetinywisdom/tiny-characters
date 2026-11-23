@@ -21,6 +21,9 @@ bubble lab, so games can use them and they can grow.
   so nobody walks behind one (walk round it); tall buildings only in the back
   row; low buildings in the blocks; the shrine, school and old town get their
   own grounds; the map stops at its edges (no wrapping).
+- People (Nov 2026): no eyes, they stay faceless; different sizes are fine
+  (tall, short, kids); everyone gets hands, shoes, a shaded side, a collar and
+  hem on plain tops, and sometimes a fringe, so they look less generic.
 - Looks from the catalogue (Nov 2026): keep mohawk (3 px tall), moustache
   (1 px only) and the cat (side view); umbrella with an 11 px canopy;
   ponytail out from the back then 5 px down, swinging out on the walking
@@ -65,6 +68,9 @@ bubble lab, so games can use them and they can grow.
    on a card; filters by group, kind and name (kept in the address); a seed
    per card to type or roll, shuffle all, seed 0 for all; copy the code line;
    `lookFor(name, seed)` in the library for seeded people.
+9. **Less generic people**: hands that swing, shoes, a shaded side, collar
+   and hem, fringe (left / right), sizes (tall 17 px, short 14 px); random
+   and seeded looks use them; the police officer is tall, grandma short.
 
 ## Next (only when the owner asks)
 

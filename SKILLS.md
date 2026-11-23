@@ -58,7 +58,19 @@ Every look is drawn with `R(colour, dx, dy, w, h)`: a rectangle at
 Draw order: shadow, backpack, legs, body, top, skirt, boxes, head, hair,
 moustache, hat, things in the hand, the gold line.
 
-- kid: legs 2 rows, body 4, same head: 11 px tall
+- sizes: kid legs 2 rows, body 4 (11 px); short body 5 (14 px); tall legs 4,
+  body 7 (17 px); `frameOf` gives the rows, so every part follows
+- on everyone: shoes (the bottom row of each leg, `shoes`); the shaded side
+  (the right column of body, face and right leg in a darker shade, drawn
+  with `W`, which is never mirrored: the light always comes from the left);
+  hands (1 × 2 skin at both sides near the bottom of the body, swinging a
+  pixel with the steps; from the side one hand swings in front and behind;
+  no right hand when something is carried there, none round boxes); a plain
+  top (no `top`) gets a collar (3 px white, or a darker shade on light tops)
+  and a hem 3 rows above its bottom
+- fringe: one hair pixel at (±1, Hd + 1), front view only
+- no eyes, no faces (the owner's decision); the moustache is the only face
+  detail
 - hair: bald (skin one row higher), long (a column down each side; the back
   one when facing), ponytail (front: a pixel out, then 5 down on the side;
   facing: the same at the back; on the walking step it swings out: B frame),
