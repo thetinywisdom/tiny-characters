@@ -61,6 +61,10 @@ bubble lab, so games can use them and they can grow.
 7. **A mosque** (the owner asked; not in the catalogue): seeded variations
    (wall, dome colour and size, one or two minarets, side domes, windows,
    trim); eight of them on the Buildings sheet, one in the town's back row.
+8. **The catalogue page** (`catalogue.html`): every person, cat and building
+   on a card; filters by group, kind and name (kept in the address); a seed
+   per card to type or roll, shuffle all, seed 0 for all; copy the code line;
+   `lookFor(name, seed)` in the library for seeded people.
 
 ## Next (only when the owner asks)
 

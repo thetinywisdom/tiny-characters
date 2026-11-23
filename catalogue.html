@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Tiny Catalogue</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" />
+    <link rel="stylesheet" href="./demo/demo.css" />
+    <link rel="stylesheet" href="./demo/catalogue.css" />
+  </head>
+  <body>
+    <main class="cat">
+      <header>
+        <h1>TINY CATALOGUE</h1>
+        <p>Every tiny person, animal and building. Filter, then roll a seed for a new look (🎲) or type one; the copy button gives the line of code that draws exactly that. <a href="./index.html">Back to the town</a></p>
+      </header>
+      <section class="filters" aria-label="Filters">
+        <input id="q" type="search" placeholder="Search (press /)" aria-label="Search by name" autocomplete="off" />
+        <div class="chips" id="groups" role="group" aria-label="Group"></div>
+        <div class="chips" id="tags" role="group" aria-label="Kind"></div>
+        <div class="row">
+          <button type="button" id="shuffleAll">🎲 Shuffle all</button>
+          <button type="button" id="resetAll" class="quiet">Seed 0 for all</button>
+          <label class="check"><input type="checkbox" id="animate" checked /> Walk and talk</label>
+          <span id="count" class="count" aria-live="polite"></span>
+        </div>
+      </section>
+      <section class="grid" id="grid" aria-label="Catalogue items"></section>
+      <p id="empty" class="empty" hidden>Nothing matches. Clear a filter or the search.</p>
+    </main>
+    <script type="module" src="./demo/catalogue.js"></script>
+  </body>
+</html>

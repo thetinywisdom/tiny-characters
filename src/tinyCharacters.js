@@ -244,3 +244,28 @@ export function snapToPalette(g, W, H, palette = [...Object.values(COLORS), ...B
   }
   g.putImageData(img, 0, 0);
 }
+
+/**
+ * A person from a starter look and a seed, the same every time: seed 0 is
+ * the look as it is in LOOKS; any other seed keeps the clothes and changes
+ * the skin and hair colour (grey and white hair stay). 'random' is a whole
+ * random person (randomCharacter), 'kid' a random kid.
+ *   drawCharacter(g, { ...lookFor('salaryman', 7), x, y }, t)
+ */
+export function lookFor(name = 'random', seed = 0) {
+  const rng = seeded((seed >>> 0) * 7919 + (name === 'kid' ? 41 : 13));
+  if (name === 'random') return randomCharacter(rng);
+  if (name === 'kid') {
+    const p = { ...randomCharacter(rng), kid: true, moustache: undefined };
+    if (p.hairStyle === 'bald' || p.hairStyle === 'mohawk') p.hairStyle = 'short';
+    if (p.top === 'suit') delete p.top;
+    return p;
+  }
+  const base = LOOKS[name] ?? {};
+  if (!seed) return { skin: SKIN_COLORS[1], ...base };
+  const pick = (a) => a[Math.floor(rng() * a.length)];
+  const look = { ...base, skin: pick(SKIN_COLORS) };
+  const grey = ['#b3b0a8', '#f2efe8'];
+  if (!grey.includes(base.hair)) look.hair = pick(HAIR_COLORS.filter((c) => !grey.includes(c)));
+  return look;
+}

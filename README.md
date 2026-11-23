@@ -18,6 +18,19 @@ look they can have, every building, and a gallery of random looks.
 python3 -m http.server 8000   # then open http://localhost:8000
 ```
 
+## The catalogue
+
+`catalogue.html` (linked from the demo) shows every person, animal and
+building on its own card. Filter by group (people, animals, buildings), by
+kind (adults, kids, elderly, uniforms, Japanese, European, homes, shops &
+food, civic, worship, tall, low, changes shape ...) and by name (press `/`).
+Each card has a seed: type one, or roll 🎲 for a new look (🎲 Shuffle all
+rolls every card you see; seed 0 is each look as designed). **Copy code**
+gives the line that draws exactly that card, for example
+`drawBuilding(g, { type: 'mosque', x, y, seed: 8 })` or
+`drawCharacter(g, { ...lookFor('salaryman', 7), x, y }, t)`. The filters stay
+in the address, so a link opens the same list.
+
 ## Use it
 
 ```js
@@ -67,6 +80,7 @@ size. `LOOKS` has starter looks like the catalogue's: `man`, `woman`, `boy`,
 | `drawStage(g, W, H)` | The lab's grass with a path across it. |
 | `randomCharacter(rng)` | A random look: colours from `BODY_COLORS`, `HAIR_COLORS`, `SKIN_COLORS`, `LEG_COLORS`; sometimes a kid, another hairstyle, a hat, a jacket, a skirt, something to carry. |
 | `seeded(seed)` | A seeded random number generator, for crowds that come out the same every time. |
+| `lookFor(name, seed)` | A starter look (`'salaryman'` ...), `'random'` or `'kid'` with a seed: always the same person. Seed 0 is the look as designed; other seeds keep the clothes and change skin and hair colour. |
 | `headOf(person)` | The point just over the head, hat or umbrella (for speech). |
 | `snapToPalette(g, W, H, palette)` | Snaps every pixel to the palette (after drawing anything smooth, like text). |
 | `COLORS` | The lab's colours (ink, paper, gold, grass, path, shadow ...). |

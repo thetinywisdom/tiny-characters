@@ -24,6 +24,12 @@ src/tinyTown.js        the 2D town map: makeTown, drawTownView,
                        DEFAULT_TOWN (layout, ground, walkable ground,
                        path finding, place names)
 index.html             the demo page (town, park, looks, buildings, gallery)
+catalogue.html         the catalogue page: every item on a card, filters,
+                       seeds, copy code
+demo/catalogue.js      the catalogue: the item list (people, cat, buildings,
+                       one card per shop kind), kinds (tags), filters kept in
+                       the address, seed per card, copy code
+demo/catalogue.css     the catalogue's look
 demo/demo.js           the demo: strolling crowd and cats, you (keys / tap
                        to walk), tap someone to make them talk; every look;
                        the gallery
@@ -174,6 +180,12 @@ their own grounds in front of them.
 - **Change the town:** edit `DEFAULT_TOWN`; render the whole map once
   (`drawTownView` with the view the size of the town) and check nothing
   overlaps a street or another building.
+- **Put something new in the catalogue:** people come from `PEOPLE` (a
+  starter look and its kinds), buildings from `BUILDINGS` automatically;
+  give a new building its kind in `KIND` (Homes, Shops & food, Civic,
+  Worship) and `EUROPEAN` if it is, and add it to `SHAPE_BY_SEED` if its
+  seed changes its shape, not only its colours (all in `demo/catalogue.js`).
+  Each card's code line must draw exactly what the card shows.
 - **A new colour:** add it to the list (`BODY_COLORS`, `THING_COLORS` ...);
   `snapToPalette` uses all the lists.
 
