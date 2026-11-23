@@ -1,5 +1,6 @@
 import { BUILDINGS, SIGN_FONT, buildingSize, buildingSolids, drawBuilding } from '../src/tinyBuildings.js';
-import { CAT_COLORS, LOOKS, facingFor, randomCharacter, seeded } from '../src/tinyCharacters.js';
+import { LOOKS, facingFor, randomCharacter, seeded } from '../src/tinyCharacters.js';
+import { CAT_COATS, DOG_BREEDS, dogFor } from '../src/tinyAnimals.js';
 import { drawTownView, makeTown } from '../src/tinyTown.js';
 
 // The town: a 2D map of streets and blocks. The view follows you (the gold
@@ -30,7 +31,13 @@ function newPeople() {
   for (let i = 0; i < 10; i++) people.push(walker({ ...randomCharacter(rng), ...(i % 3 === 0 ? (i % 2 ? LOOKS.schoolgirl : LOOKS.schoolboy) : {}), kid: true, carry: undefined }, rng, yard));
   for (let i = 0; i < 5; i++) people.push(walker(randomCharacter(rng), rng, shrine));
   for (let i = 0; i < 6; i++) people.push(walker(randomCharacter(rng), rng, square));
-  for (let i = 0; i < 6; i++) people.push(walker({ color: CAT_COLORS[Math.floor(rng() * CAT_COLORS.length)] }, rng, undefined, true));
+  for (let i = 0; i < 6; i++) people.push(walker({ coat: Object.keys(CAT_COATS)[Math.floor(rng() * 8)] }, rng, undefined, true));
+  // dog walkers: a dog follows its owner, a little behind
+  for (let i = 0; i < 5; i++) {
+    const owner = walker(randomCharacter(rng), rng);
+    const breed = Object.keys(DOG_BREEDS)[Math.floor(rng() * Object.keys(DOG_BREEDS).length)];
+    people.push(owner, { dog: true, ...dogFor(breed, 1 + Math.floor(rng() * 99)), collar: ['#d8443c', '#3f7fd6', '#2fa36b', '#f2c230'][i % 4], owner, x: owner.x - 6, y: owner.y, talk: 0 });
+  }
   you = { ...randomCharacter(rng), body: '#f2f2ee', x: Math.round(196 * town.scale), y: Math.round(204 * town.scale), you: true, talk: 0, path: null };
   people.push(you);
 }
@@ -46,7 +53,7 @@ canvas.addEventListener('pointerdown', (e) => {
   document.body.dataset.active = 'town';
   const r = canvas.getBoundingClientRect();
   const x = view.x + (e.clientX - r.left) / r.width * VW, y = view.y + (e.clientY - r.top) / r.height * VH;
-  const hit = people.filter((p) => p !== you && !p.cat && Math.abs(p.x - x) < 5 && y > p.y - 17 && y < p.y + 3).sort((a, b) => Math.abs(a.x - x) - Math.abs(b.x - x))[0];
+  const hit = people.filter((p) => p !== you && !p.cat && !p.dog && Math.abs(p.x - x) < 5 && y > p.y - 17 && y < p.y + 3).sort((a, b) => Math.abs(a.x - x) - Math.abs(b.x - x))[0];
   if (hit) { hit.talk = 2; return; }
   // a building: walk to its door; anywhere else you can stand: walk there
   const b = town.buildings.find((b) => buildingSolids(b).some((s) => x >= s.x && x < s.x + s.w && y >= s.y && y < s.y + s.h))
@@ -56,6 +63,14 @@ canvas.addEventListener('pointerdown', (e) => {
 });
 document.querySelector('#newTown').onclick = newPeople;
 
+/** A dog keeps a little behind its owner: it trots after them when they get away. */
+function heel(d, dt) {
+  const o = d.owner, back = o.facing === 'left' ? 7 : o.facing === 'right' ? -7 : 0, down = o.facing === 'up' ? 5 : o.facing === 'down' ? -4 : 0;
+  const tx = o.x + back, ty = o.y + down + 1, ex = tx - d.x, ey = ty - d.y, dist = Math.hypot(ex, ey);
+  if (dist > 1.5) { const v = Math.min(dist, (dist > 12 ? 30 : 16) * dt); d.x += ex / dist * v; d.y += ey / dist * v; d.walking = true; d.facing = facingFor(ex, ey, d.facing); }
+  else { d.walking = false; d.facing = o.facing ?? 'down'; }
+}
+
 /** Walk p along its path at `speed` px/s; true when it has arrived. */
 function follow(p, speed, dt) {
   const q = p.path?.[0];
@@ -63,8 +78,7 @@ function follow(p, speed, dt) {
   const ex = q.x - p.x, ey = q.y - p.y, d = Math.hypot(ex, ey), step = speed * dt;
   if (d <= step) { p.x = q.x; p.y = q.y; p.path.shift(); }
   else { p.x += ex / d * step; p.y += ey / d * step; }
-  if (p.cat) { if (Math.abs(ex) > 0.3) p.facing = ex < 0 ? 'left' : 'right'; }
-  else if (Math.hypot(ex, ey) > 0.3) p.facing = facingFor(ex, ey, p.facing);
+  if (Math.hypot(ex, ey) > 0.3) p.facing = facingFor(ex, ey, p.facing);
   p.walking = true;
   return false;
 }
@@ -90,6 +104,7 @@ function frame(now) {
   for (const p of people) {
     p.talk = Math.max(0, p.talk - dt); p.talking = p.talk > 0;
     if (p === you) continue;
+    if (p.dog) { heel(p, dt); continue; }
     if (p.talking) { p.walking = false; continue; }
     if (p.path) { if (follow(p, p.cat ? 18 : 14, dt)) { p.walking = false; p.wait = 1 + Math.random() * 4; } continue; }
     p.walking = false;

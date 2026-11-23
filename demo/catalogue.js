@@ -1,5 +1,7 @@
 import { BUILDINGS, PARTS, SHOP_TYPES, SIGN_FONT, drawBuilding, drawPart } from '../src/tinyBuildings.js';
-import { CAT_COLORS, LOOKS, drawCat, drawCharacter, lookFor, seeded } from '../src/tinyCharacters.js';
+import { LOOKS, drawCharacter, lookFor } from '../src/tinyCharacters.js';
+import { CAT_COATS, DOG_BREEDS, dogFor, drawCat, drawDog } from '../src/tinyAnimals.js';
+import { BUSHES, TERRAINS, TREES, drawBush, drawTerrain, drawTree } from '../src/tinyNature.js';
 
 // The catalogue: every person, animal and building, with filters (group,
 // kind, search) and a seed per card (type it, or roll it with 🎲). The copy
@@ -31,10 +33,35 @@ for (const [name, [label, tags]] of Object.entries(PEOPLE)) {
     draw: (g, seed, t, anim) => drawCharacter(g, { ...lookFor(name, seed), x: 12, y: 22, walking: anim, facing: anim ? ['down', 'right', 'up', 'left'][Math.floor(t / 1.5) % 4] : 'down' }, t),
     code: (seed) => `drawCharacter(g, { ...lookFor('${name}', ${seed}), x, y }, t)` });
 }
-const catColor = (seed) => (seed ? CAT_COLORS[Math.floor(seeded(seed * 7919 + 13)() * CAT_COLORS.length)] : CAT_COLORS[0]);
-items.push({ id: 'animal.cat', label: 'Cat', group: 'Animals', tags: ['Cats'], seed: 0, w: 24, h: 14, px: 5,
-  draw: (g, seed, t, anim) => drawCat(g, { x: 12, y: 11, color: catColor(seed), walking: anim }, t),
-  code: (seed) => `drawCat(g, { x, y, color: '${catColor(seed)}' }, t)` });
+// animals walk and turn round like the people
+const turning = (t, anim) => (anim ? ['down', 'right', 'up', 'left'][Math.floor(t / 1.5) % 4] : 'right');
+for (const [coat, [label]] of Object.entries(CAT_COATS)) {
+  items.push({ id: `animal.cat.${coat}`, label: `Cat: ${label.toLowerCase()}`, group: 'Animals', tags: ['Cats'], seed: 0, noSeed: true, w: 20, h: 12, px: 6,
+    draw: (g, seed, t, anim) => drawCat(g, { x: 10, y: 10, coat, walking: anim, facing: turning(t, anim) }, t),
+    code: () => `drawCat(g, { x, y, coat: '${coat}', facing, walking }, t)` });
+}
+const COLLARS = ['#d8443c', '#3f7fd6', '#2fa36b', '#f2c230', '#d46a8e'];
+for (const [breed, { label }] of Object.entries(DOG_BREEDS)) {
+  const dog = (seed) => ({ ...dogFor(breed, seed), collar: COLLARS[seed % COLLARS.length] });
+  items.push({ id: `animal.dog.${breed}`, label: `Dog: ${label.toLowerCase()}`, group: 'Animals', tags: ['Dogs'], seed: 0, w: 22, h: 14, px: 6,
+    draw: (g, seed, t, anim) => drawDog(g, { x: 11, y: 12, ...dog(seed), walking: anim, facing: turning(t, anim) }, t),
+    code: (seed) => `drawDog(g, { x, y, ...dogFor('${breed}', ${seed}), collar: '${dog(seed).collar}', facing, walking }, t)` });
+}
+
+// trees, bushes and terrains
+const JAPANESE_NATURE = ['maple', 'sakura', 'pine', 'cedar', 'bamboo', 'ginkgo', 'azalea', 'paddy'];
+for (const [type, { label, w, h }] of Object.entries(TREES)) items.push({ id: `nature.tree.${type}`, label, group: 'Nature', tags: ['Trees', ...(JAPANESE_NATURE.includes(type) ? ['Japanese'] : [])], seed: 1,
+  w: Math.round(w * 1.2) + 4, h: Math.round(h * 1.2) + 4, px: 0,
+  draw: (g, seed) => drawTree(g, { type, x: (Math.round(w * 1.2) + 4) / 2, y: Math.round(h * 1.2) + 2, seed }),
+  code: (seed) => `drawTree(g, { type: '${type}', x, y, seed: ${seed} })` });
+for (const [type, { label, w, h }] of Object.entries(BUSHES)) items.push({ id: `nature.bush.${type}`, label, group: 'Nature', tags: ['Bushes', ...(JAPANESE_NATURE.includes(type) ? ['Japanese'] : [])], seed: 1,
+  w: Math.round(w * 1.2) + 4, h: Math.round(h * 1.2) + 4, px: 6,
+  draw: (g, seed) => drawBush(g, { type, x: (Math.round(w * 1.2) + 4) / 2, y: Math.round(h * 1.2) + 2, seed }),
+  code: (seed) => `drawBush(g, { type: '${type}', x, y, seed: ${seed} })` });
+for (const [type, { label }] of Object.entries(TERRAINS)) items.push({ id: `nature.terrain.${type}`, label, group: 'Nature', tags: ['Terrain', ...(JAPANESE_NATURE.includes(type) ? ['Japanese'] : [])], seed: 1,
+  w: 40, h: 26, px: 4, animated: type === 'water',
+  draw: (g, seed, t) => drawTerrain(g, { type, x: 0, y: 0, w: 40, h: 26, seed, t }),
+  code: (seed) => `drawTerrain(g, { type: '${type}', x, y, w, h, seed: ${seed}${type === 'water' ? ', t' : ''} })` });
 for (const [type, { label, w, h }] of Object.entries(BUILDINGS)) {
   const kinds = Object.keys(KIND).filter((k) => KIND[k].includes(type));
   const tags = [EUROPEAN.includes(type) ? 'European' : type === 'mosque' ? 'Mosque' : 'Japanese', ...kinds, h > 60 ? 'Tall' : 'Low'];
@@ -60,7 +87,7 @@ for (const [id, { label, w, h }] of Object.entries(PARTS)) {
 }
 
 // --- filters ---------------------------------------------------------------------
-const GROUPS = ['All', 'People', 'Animals', 'Buildings', 'Doors & windows'];
+const GROUPS = ['All', 'People', 'Animals', 'Buildings', 'Doors & windows', 'Nature'];
 const state = { g: 'All', t: new Set(), q: '' };
 const fromHash = () => {
   const h = new URLSearchParams(location.hash.slice(1));
@@ -91,7 +118,7 @@ const chip = (text, pressed, onClick, n) => {
 };
 function renderFilters() {
   $('#groups').replaceChildren(...GROUPS.map((g) => chip(g, state.g === g, () => { state.g = g; state.t.clear(); update(); }, items.filter((it) => g === 'All' || it.group === g).length)));
-  const ORDER = ['Adults', 'Kids', 'Elderly', 'Uniforms', 'Random', 'Cats', 'Doors', 'Windows', 'Wood', 'Glass', 'Japanese', 'European', 'Mosque', 'Homes', 'Shops & food', 'Civic', 'Worship', 'Low', 'Tall', 'Changes shape'];
+  const ORDER = ['Adults', 'Kids', 'Elderly', 'Uniforms', 'Random', 'Cats', 'Dogs', 'Trees', 'Bushes', 'Terrain', 'Doors', 'Windows', 'Wood', 'Glass', 'Japanese', 'European', 'Mosque', 'Homes', 'Shops & food', 'Civic', 'Worship', 'Low', 'Tall', 'Changes shape'];
   const tags = [...new Set(items.filter(inGroup).flatMap((it) => it.tags))].sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
   // each kind's count: how many you would see with it on
   $('#tags').replaceChildren(...tags.map((t) => chip(t, state.t.has(t), () => { state.t.has(t) ? state.t.delete(t) : state.t.add(t); update(); },
@@ -118,7 +145,7 @@ const cards = items.map((it) => {
   const roll = Object.assign(document.createElement('button'), { type: 'button', textContent: '🎲' });
   roll.setAttribute('aria-label', `New look for ${it.label}`);
   const copy = Object.assign(document.createElement('button'), { type: 'button', className: 'copy', textContent: 'Copy code' });
-  seedRow.append('Seed', input, roll, copy);
+  if (it.noSeed) seedRow.append(copy); else seedRow.append('Seed', input, roll, copy);
   card.append(stage, info, seedRow);
   const g = c.getContext('2d');
   const view = { it, card, g, c, input, setSeed(n) { it.seed = Math.max(0, Math.floor(Number(n) || 0)); input.value = it.seed; paint(view, last); } };
@@ -165,7 +192,7 @@ document.fonts.load(`16px ${SIGN_FONT}`).then(() => cards.forEach((v) => paint(v
 // people and cats move; buildings are drawn again only when their seed changes
 function frame(now) {
   last = now / 1000;
-  if ($('#animate').checked) for (const v of cards) if (!v.card.hidden && (v.it.group === 'People' || v.it.group === 'Animals')) paint(v, last);
+  if ($('#animate').checked) for (const v of cards) if (!v.card.hidden && (v.it.group === 'People' || v.it.group === 'Animals' || v.it.animated)) paint(v, last);
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

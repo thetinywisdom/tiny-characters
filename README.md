@@ -34,7 +34,8 @@ in the address, so a link opens the same list.
 ## Use it
 
 ```js
-import { LOOKS, drawCat, drawCharacter, drawStage, randomCharacter } from './src/tinyCharacters.js';
+import { LOOKS, drawCharacter, drawStage, randomCharacter } from './src/tinyCharacters.js';
+import { drawCat } from './src/tinyAnimals.js';
 
 const canvas = document.querySelector('canvas');   // e.g. width 200, height 124
 canvas.style.imageRendering = 'pixelated';         // scale up with hard pixels
@@ -42,7 +43,7 @@ const g = canvas.getContext('2d');
 
 const person = { ...randomCharacter(), x: 100, y: 100, talking: true };
 const worker = { ...LOOKS.salaryman, x: 80, y: 104, walking: true, facing: 'right' };
-const cat = { x: 120, y: 106, color: '#dcb08c' };
+const cat = { x: 120, y: 106, coat: 'tuxedo', facing: 'down' };
 function frame(now) {
   drawStage(g, canvas.width, canvas.height);
   drawCharacter(g, person, now / 1000);             // feet at (x, y)
@@ -82,7 +83,6 @@ size. `LOOKS` has starter looks like the catalogue's: `man`, `woman`, `boy`,
 | Export | What it does |
 | --- | --- |
 | `drawCharacter(g, person, t)` | Draws one person. `talking`: bobs a pixel six times a second; `walking`: the legs take turns lifting a pixel; `you`: a gold line under the feet; `facing`: a pixel of hair at the back of the head. |
-| `drawCat(g, cat, t)` | A cat seen from the side: `{ x, y, color, facing, walking }`. |
 | `LOOKS` | Starter looks to spread into a person. |
 | `drawStage(g, W, H)` | The lab's grass with a path across it. |
 | `randomCharacter(rng)` | A random look: colours from `BODY_COLORS`, `HAIR_COLORS`, `SKIN_COLORS`, `LEG_COLORS`; sometimes a kid, another hairstyle, a hat, a jacket, a skirt, something to carry. |
@@ -173,9 +173,36 @@ drawTownView(g, town, { x: viewX, y: viewY, w: 200, h: 150 }, [you, ...others], 
 | Export | What it does |
 | --- | --- |
 | `makeTown(layout)` | A town: `{ W, H, buildings, areas, blocked(x, y), findPath(from, to), randomSpot(rng, within), placeAt(x, y), doorOf(building), ground }`. |
-| `drawTownView(g, town, view, sprites, t)` | The part of the town in `view`: ground, then buildings, people and cats (`cat: true`) further back first. |
+| `drawTownView(g, town, view, sprites, t)` | The part of the town in `view`: ground, then buildings, trees, bushes, people, cats (`cat: true`) and dogs (`dog: true`) further back first. |
 | `DEFAULT_TOWN` | The demo's layout: `scale` (1.5: the town is drawn that much bigger, the people stay 15 px), `streets`, `crossStreets`, `rows` of buildings, single `buildings`, `areas` with their own ground (all at scale 1; `makeTown` multiplies them). |
 | `buildingSolids(b)` (tinyBuildings.js) | The ground a building takes; you can step between a torii's posts and under a gas station's canopy. |
+
+## Animals
+
+`src/tinyAnimals.js`: cats and dogs with four views like the people
+(`facing`: `'down'`, `'up'`, `'left'`, `'right'`), walking steps, and no faces
+(a dog has a nose and a collar).
+
+| Export | What it does |
+| --- | --- |
+| `drawCat(g, { x, y, coat, facing, walking }, t)` | A cat. `coat`: `ginger`, `grey` (tabbies), `black`, `white`, `tuxedo`, `calico`, `siamese`, `brown` (`CAT_COATS`); or `color` for a plain coat. |
+| `drawDog(g, { x, y, breed, coat, collar, facing, walking }, t)` | A dog. `breed`: `shiba`, `corgi`, `dachshund`, `poodle`, `pug`, `labrador`, `husky`, `dalmatian` (`DOG_BREEDS`); it wags its tail standing still. |
+| `catFor(seed)`, `dogFor(breed, seed)` | A coat (and a breed for `'random'`) from a seed. |
+
+## Nature
+
+`src/tinyNature.js`: 15 trees, 10 bushes and 10 terrains, scaled with crisp
+pixels like the buildings.
+
+| Export | What it does |
+| --- | --- |
+| `drawTree(g, { type, x, y, seed, scale })` | `oak`, `maple`, `sakura`, `pine`, `cedar`, `fir`, `birch`, `palm`, `willow`, `ginkgo`, `bamboo`, `apple`, `poplar`, `cypress`, `bare` (`TREES`). The seed changes its size a little and where fruit, blossom and leaves fall. |
+| `drawBush(g, { type, x, y, seed, scale })` | `round`, `hedge`, `azalea`, `hydrangea`, `rose`, `lavender`, `fern`, `pampas`, `holly`, `cactus` (`BUSHES`). |
+| `drawTerrain(g, { type, x, y, w, h, seed, scale, t })` | Fills a rectangle: `grass`, `meadow`, `tallGrass`, `dirt`, `sand`, `gravel`, `cobble`, `water` (ripples with `t`), `snow`, `paddy` (`TERRAINS`). |
+
+In the town, trees and bushes stand in the back gardens and round the shrine,
+the school and the square; the grounds are terrains; there is a pond; dogs go
+for walks with their owners. The catalogue has them all (Animals, Nature).
 
 Speech for these people (floating pixel text, the design picked in the
 bubble lab) lives in **tiny-ui-kit** (`src/ui/pixelOverlay.js`).

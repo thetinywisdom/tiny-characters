@@ -18,7 +18,9 @@
 // Units are canvas pixels. Plain ES module, no dependencies.
 
 import { BUILDINGS, buildingSize, buildingSolids, drawBuilding } from './tinyBuildings.js';
-import { drawCat, drawCharacter } from './tinyCharacters.js';
+import { drawCharacter } from './tinyCharacters.js';
+import { drawCat, drawDog } from './tinyAnimals.js';
+import { BUSHES, TREES, drawBush, drawTerrain, drawTree } from './tinyNature.js';
 
 const CELL = 4;                                          // path-finding grid
 /** Street sizes at a scale: a street is 7 + 18 + 7 px top to bottom, a cross street 6 + 18 + 6 across. */
@@ -34,6 +36,7 @@ function scaled(layout) {
     streets: layout.streets.map(m), crossStreets: layout.crossStreets.map(m),
     rows: (layout.rows ?? []).map((r) => ({ ...r, x: m(r.x), y: m(r.y) })),
     buildings: (layout.buildings ?? []).map((b) => ({ ...b, x: m(b.x), y: m(b.y), scale: k })),
+    plants: (layout.plants ?? []).map((p, i) => ({ seed: i + 1, ...p, x: m(p.x), y: m(p.y), scale: k })),
     areas: (layout.areas ?? []).map((a) => ({ ...a, x: m(a.x), y: m(a.y), w: m(a.w), h: m(a.h), path: a.path && { x: m(a.path.x), w: m(a.path.w), y0: m(a.path.y0) } })),
   };
 }
@@ -73,10 +76,23 @@ export const DEFAULT_TOWN = {
     { name: 'Shrine grounds', ground: 'gravel', x: 0, y: 316, w: 180, h: 100, path: { x: 82, w: 16, y0: 350 } },
     { name: 'Schoolyard', ground: 'sand', x: 210, y: 316, w: 160, h: 100 },
     { name: 'Old-town square', ground: 'paving', x: 400, y: 316, w: 160, h: 100 },
+    { name: 'Pond', ground: 'water', x: 88, y: 234, w: 44, h: 11, solid: true },
+  ],
+  // trees and bushes: in the back gardens, round the shrine, the school and the square
+  plants: [
+    { tree: 'apple', x: 30, y: 152 }, { bush: 'round', x: 62, y: 148 }, { tree: 'oak', x: 150, y: 154 },
+    { tree: 'sakura', x: 236, y: 152 }, { tree: 'maple', x: 300, y: 150 }, { bush: 'hedge', x: 340, y: 147 },
+    { tree: 'pine', x: 430, y: 152 }, { bush: 'hydrangea', x: 470, y: 147 }, { tree: 'ginkgo', x: 530, y: 154 },
+    { tree: 'willow', x: 50, y: 246 }, { bush: 'azalea', x: 150, y: 240 }, { bush: 'rose', x: 164, y: 241 },
+    { tree: 'bamboo', x: 226, y: 244 }, { bush: 'lavender', x: 334, y: 239 }, { bush: 'fern', x: 352, y: 241 },
+    { tree: 'birch', x: 418, y: 238 }, { bush: 'holly', x: 460, y: 238 }, { tree: 'cypress', x: 548, y: 248 },
+    { tree: 'cedar', x: 26, y: 340 }, { tree: 'cedar', x: 156, y: 342 }, { tree: 'sakura', x: 36, y: 398 }, { tree: 'pine', x: 146, y: 400 },
+    { bush: 'azalea', x: 60, y: 362 }, { bush: 'azalea', x: 122, y: 362 }, { bush: 'pampas', x: 168, y: 380 },
+    { tree: 'sakura', x: 222, y: 372 }, { tree: 'sakura', x: 358, y: 372 }, { bush: 'round', x: 224, y: 408 }, { bush: 'round', x: 356, y: 408 },
+    { tree: 'poplar', x: 552, y: 384 }, { tree: 'fir', x: 480, y: 410 }, { bush: 'rose', x: 430, y: 404 }, { bush: 'lavender', x: 526, y: 404 },
   ],
 };
 
-const GROUNDS = { grass: '#9fb08d', gravel: '#d8cfb8', sand: '#e0cc9e', paving: '#d8cfc0' };
 
 /** Build a town from a layout: its buildings, ground picture, walkable ground and paths. */
 export function makeTown(layout0 = DEFAULT_TOWN) {
@@ -101,7 +117,14 @@ export function makeTown(layout0 = DEFAULT_TOWN) {
     if (b.y > streets[0] && crossStreets.some((sx) => L < sx + VSTREET && L + w > sx)) console.warn(`tinyTown: ${b.type} at (${b.x}, ${b.y}) stands on a cross street`);
   }
   const top = streets[0] + 2, bottom = H - 3;            // above the first street is the backdrop
-  const solids = buildings.flatMap(buildingSolids);
+  // trees block at the trunk, bushes at their base, a pond everywhere
+  const plants = layout.plants.map((p) => ({ ...p, type: p.tree ?? p.bush, kind: p.tree ? 'tree' : 'bush' }));
+  const solids = [...buildings.flatMap(buildingSolids),
+    ...plants.map((p) => {
+      const w = p.kind === 'tree' ? 4 : Math.round((BUSHES[p.type]?.w ?? 8) * k * 0.8);
+      return { x: Math.round(p.x - w / 2), y: p.y - 3, w, h: 5 };
+    }),
+    ...areas.filter((a) => a.solid).map((a) => ({ x: a.x, y: a.y, w: a.w, h: a.h }))];
 
   /** Is (x, y) somewhere a person cannot stand? (A person is 5 px wide.) */
   function blocked(x, y) {
@@ -178,22 +201,20 @@ export function makeTown(layout0 = DEFAULT_TOWN) {
   /** Where in front of a building to stand (its door): for "tap a building to go there". */
   function doorOf(b) { return { x: b.x, y: b.y + 4 }; }
 
-  return { W, H, scale: k, buildings, areas, solids, blocked, findPath, randomSpot, placeAt, doorOf, ground: drawGround(layout) };
+  return { W, H, scale: k, buildings, plants, areas, solids, blocked, findPath, randomSpot, placeAt, doorOf, ground: drawGround(layout) };
 }
 
 /** The town's ground (grass, grounds, streets, cross streets, crossings) on a canvas of its own. */
+// the areas' grounds are the terrains of tinyNature
+const TERRAIN_OF = { gravel: 'gravel', sand: 'sand', paving: 'cobble', water: 'water', grass: 'grass' };
 function drawGround({ W, H, streets, crossStreets, areas = [], k }) {
   const { SIDE, ROAD, STREET, VSIDE, VSTREET } = streetDims(k), m = (v) => Math.round(v * k);
   const c = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(W, H) : Object.assign(document.createElement('canvas'), { width: W, height: H });
   const g = c.getContext('2d');
   const R = (col, x, y, w, h) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
-  R(GROUNDS.grass, 0, 0, W, H);
-  for (let i = 0; i < 400 * k * k; i++) R('#93a582', (i * 97) % W, (i * 61) % H, 2, 1);        // grass tufts
+  drawTerrain(g, { type: 'grass', x: 0, y: 0, w: W, h: H, scale: k, seed: 3 });
   for (const a of areas) {
-    R(GROUNDS[a.ground] ?? GROUNDS.grass, a.x, a.y, a.w, a.h);
-    if (a.ground === 'gravel') for (let i = 0; i < a.w * a.h / 40; i++) R('#c9c0a8', a.x + (i * 37) % a.w, a.y + (i * 23) % a.h, 1, 1);
-    if (a.ground === 'paving') { for (let y = a.y + 3; y < a.y + a.h; y += 6) R('#c8bfae', a.x, y, a.w, 1); for (let x = a.x + 5; x < a.x + a.w; x += 10) R('#c8bfae', x, a.y, 1, a.h); }
-    if (a.ground === 'sand') for (let i = 0; i < a.w * a.h / 60; i++) R('#d4bf90', a.x + (i * 53) % a.w, a.y + (i * 29) % a.h, 1, 1);
+    drawTerrain(g, { type: TERRAIN_OF[a.ground] ?? a.ground, x: a.x, y: a.y, w: a.w, h: a.h, scale: k, seed: a.x + a.y });
     if (a.path) for (let y = a.path.y0; y < a.y + a.h; y += m(5)) R('#c9c2b0', a.path.x, y, a.path.w, m(4));  // stepping stones
   }
   const y0 = streets[0], y1 = streets[streets.length - 1] + STREET;
@@ -241,8 +262,15 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1 } = {}) {
     const { w, h } = buildingSize(b);
     if (b.x + w / 2 > view.x && b.x - w / 2 < view.x + view.w && b.y > view.y && b.y - h < view.y + view.h) items.push({ y: b.y, b });
   }
+  // water ripples, drawn again each frame
+  for (const a of town.areas) if (a.ground === 'water' && a.x < view.x + view.w && a.x + a.w > view.x && a.y < view.y + view.h && a.y + a.h > view.y) drawTerrain(g, { type: 'water', x: a.x, y: a.y, w: a.w, h: a.h, scale: town.scale, seed: a.x + a.y, t });
+  for (const p of town.plants) if (p.x > view.x - 30 && p.x < view.x + view.w + 30 && p.y > view.y && p.y < view.y + view.h + 60) items.push({ y: p.y, p });
   for (const s of sprites) if (s.x > view.x - 8 && s.x < view.x + view.w + 8 && s.y > view.y - 2 && s.y < view.y + view.h + 24) items.push({ y: s.y, s });
   items.sort((a, b) => a.y - b.y || (a.b ? -1 : 1));
-  for (const it of items) it.b ? drawBuilding(g, dpx === 1 ? it.b : { ...it.b, dpx }) : (it.s.cat ? drawCat : drawCharacter)(g, it.s, t);
+  for (const it of items) {
+    if (it.b) drawBuilding(g, dpx === 1 ? it.b : { ...it.b, dpx });
+    else if (it.p) (it.p.kind === 'tree' ? drawTree : drawBush)(g, it.p);
+    else (it.s.dog ? drawDog : it.s.cat ? drawCat : drawCharacter)(g, it.s, t);
+  }
   g.restore();
 }

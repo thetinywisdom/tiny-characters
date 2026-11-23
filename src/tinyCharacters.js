@@ -4,7 +4,6 @@
 // canvas is scaled up with hard pixels (CSS `image-rendering: pixelated`).
 //
 //   drawCharacter(g, person, t)   one person, feet at (person.x, person.y)
-//   drawCat(g, cat, t)            a cat, seen from the side
 //   drawStage(g, W, H)            the lab's grass strip and path
 //   randomCharacter(rng)          a random look
 //   LOOKS                         starter looks (salaryman, grandma ...)
@@ -200,23 +199,6 @@ export function headOf(p) {
   if (style === 'mohawk' && !p.hat) top = Hd - 3;
   if (p.carry === 'umbrella') top = Hd - 6;
   return { x: p.x, y: p.y + top - 1 };
-}
-
-/**
- * Draw a cat with its feet at (c.x, c.y), seen from the side.
- * A cat: { x, y, color, facing ('left' / 'right'), walking }.
- */
-export function drawCat(g, c, t = 0) {
-  const x = Math.round(c.x), y = Math.round(c.y);
-  const s = c.facing === 'left' ? -1 : 1;
-  const R = (col, dx, dy, w = 1, h = 1) => { g.fillStyle = col; g.fillRect(s > 0 ? x + dx : x - dx - w + 1, y + dy, w, h); };
-  const col = c.color ?? CAT_COLORS[0];
-  const step = c.walking ? Math.floor(t * 8) % 2 : 0;
-  R(COLORS.shadow, -3, 0, 7, 1);
-  R(col, -2, -3, 5, 2);                                           // body
-  if (step) { R(col, -1, -1); R(col, 1, -1); } else { R(col, -2, -1); R(col, 2, -1); } // legs
-  R(col, 2, -5, 2, 2); R(col, 2, -6);                             // head and ear
-  R(col, -3, -5, 1, 2);                                           // tail
 }
 
 /**

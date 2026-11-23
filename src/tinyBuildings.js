@@ -701,6 +701,8 @@ export function drawBuilding(g, b) {
  */
 /** The signs' typeface (Google Fonts; the page loads it). */
 export const SIGN_FONT = '"DotGothic16", monospace';
+/** The painter the buildings draw with (shared with tinyNature). */
+export function makePainter(g, L, y, k = 1, dpx = 1) { return painter(g, L, y, k, dpx); }
 function painter(g, L, y, k = 1, dpx = 1) {
   // every rectangle keeps the same size wherever it is (a 1 px line is always
   // 2 px at 1.5, a 2 px stripe always 3), so stripes and rows stay even

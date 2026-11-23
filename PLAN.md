@@ -99,14 +99,21 @@ bubble lab, so games can use them and they can grow.
     drawn 4-6 times bigger underneath (`dpx`) so the letters fit, a
     fallback when they do not; the pages' headings and buttons in
     DotGothic16.
+14. **Animals and nature**: cats with four views and coats (tabbies, black,
+    white, tuxedo, calico, Siamese, brown); dogs (shiba, corgi, dachshund,
+    poodle, pug, labrador, husky, dalmatian) with collars, tail wags and four
+    views (`src/tinyAnimals.js`); 15 trees, 10 bushes, 10 terrains
+    (`src/tinyNature.js`); in the town: plants in gardens and grounds, a pond,
+    terrains under the grounds, dog walkers; Animals and Nature in the
+    catalogue.
 
 ## Next (only when the owner asks)
 
 1. Speech with them (floating pixel text from tiny-ui-kit) in the demo.
 2. **More town**: a station plaza and a back alley like the catalogue's
-   areas, a park, trees and street props in the blocks' back gardens.
+   areas, a park (meadow, pond, trees), street props in the back gardens.
 3. **The rest of the tinified catalogue**: street props (lamps, vending
-   machines, signs, bus stop, benches), vehicles, trees and nature.
+   machines, signs, bus stop, benches) and vehicles.
 
 ## Known issues and small ideas
 

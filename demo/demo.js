@@ -1,4 +1,5 @@
-import { CAT_COLORS, COLORS, LOOKS, SKIN_COLORS, drawCat, drawCharacter, drawStage, facingFor, randomCharacter, seeded } from '../src/tinyCharacters.js';
+import { COLORS, LOOKS, SKIN_COLORS, drawCharacter, drawStage, facingFor, randomCharacter, seeded } from '../src/tinyCharacters.js';
+import { CAT_COATS, drawCat } from '../src/tinyAnimals.js';
 
 // The park: tiny people stroll between spots on the path; you (the gold line)
 // walk with the keys or go where you tap; tapping someone makes them talk.
@@ -13,7 +14,7 @@ function newCrowd() {
   people = Array.from({ length: 8 }, (_, i) => ({ ...randomCharacter(rng), x: 20 + i * 22, y: 92 + Math.round(rng() * 10), to: null, wait: rng() * 3, talk: 0 }));
   you = { ...randomCharacter(rng), body: '#f2f2ee', x: 100, y: 100, you: true, talk: 0 };
   people.push(you);
-  for (let i = 0; i < 2; i++) people.push({ cat: true, color: CAT_COLORS[Math.floor(rng() * CAT_COLORS.length)], x: 40 + i * 110, y: 106, to: null, wait: rng() * 4, talk: 0 });
+  for (let i = 0; i < 2; i++) people.push({ cat: true, coat: Object.keys(CAT_COATS)[Math.floor(rng() * 8)], x: 40 + i * 110, y: 106, to: null, wait: rng() * 4, talk: 0 });
 }
 newCrowd();
 
@@ -56,7 +57,7 @@ function frame(now) {
       if (p.to && !p.talking) {
         const ex = p.to.x - p.x, ey = p.to.y - p.y, d = Math.hypot(ex, ey);
         if (d < 1) { p.to = null; p.wait = 1 + Math.random() * 4; p.walking = false; }
-        else { const v = p.cat ? 1.3 : 1; p.x += ex / d * 14 * v * dt; p.y += ey / d * 10 * v * dt; p.walking = true; p.facing = p.cat ? (ex < 0 ? 'left' : 'right') : facingFor(ex, ey, p.facing); }
+        else { const v = p.cat ? 1.3 : 1; p.x += ex / d * 14 * v * dt; p.y += ey / d * 10 * v * dt; p.walking = true; p.facing = facingFor(ex, ey, p.facing); }
       } else p.walking = false;
     }
   }
@@ -91,7 +92,7 @@ function looksFrame(now) {
     ['down', 'right', 'up', 'left'].forEach((facing, k) => drawCharacter(lg, { skin: SKIN_COLORS[j + 1], ...look, facing, walking: true, x: 10 + j * 50 + k * 11, y: 118 }, t)));
   parts[1].forEach((part, i) => {
     const at = { x: 8 + i * 12 + (i === 14 ? 2 : i === 15 ? 6 : 0), y: 88 };
-    if (part === 'cat') drawCat(lg, { ...at, color: CAT_COLORS[0], walking: true }, t);
+    if (part === 'cat') drawCat(lg, { ...at, coat: 'ginger', walking: true, facing: 'right' }, t);
     else drawCharacter(lg, { ...plain, skin: SKIN_COLORS[i % 4], ...part, ...at }, t);
   });
   requestAnimationFrame(looksFrame);

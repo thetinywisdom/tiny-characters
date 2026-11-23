@@ -12,7 +12,7 @@ The owner chose these as the start of this repo.
 
 ```
 src/tinyCharacters.js  the library (plain ES module, no dependencies):
-                       drawCharacter, drawCat, drawStage, randomCharacter,
+                       drawCharacter, drawStage, randomCharacter,
                        LOOKS, seeded, headOf, snapToPalette, COLORS, the
                        colour lists and the look lists (HAIRSTYLES, HATS,
                        TOPS, LEGWEAR, CARRY)
@@ -20,6 +20,10 @@ src/tinyBuildings.js   the buildings (plain ES module, imports seeded from
                        tinyCharacters.js): drawBuilding, BUILDINGS,
                        SHOP_TYPES, buildingSolids, drawStreet,
                        WALL_COLORS, ROOF_COLORS
+src/tinyAnimals.js     cats and dogs: drawCat, drawDog, CAT_COATS,
+                       DOG_BREEDS, catFor, dogFor
+src/tinyNature.js      trees, bushes, terrains: drawTree, drawBush,
+                       drawTerrain, TREES, BUSHES, TERRAINS
 src/tinyTown.js        the 2D town map: makeTown, drawTownView,
                        DEFAULT_TOWN (layout, ground, walkable ground,
                        path finding, place names)
@@ -75,7 +79,7 @@ moustache, hat, things in the hand, the gold line.
   a backpack across the back (3 wide), a yukata's obi bow, the sailor
   collar's flap, an apron's strings, boxes hidden in front. `facingFor(dx,
   dy)` gives the view for a walking direction (whichever way moves most);
-  cats only face left / right
+  cats and dogs have the four views too (tinyAnimals)
 - fringe: one hair pixel at (±1, Hd + 1), front view only
 - no eyes, no faces (the owner's decision); the moustache is the only face
   detail
@@ -96,8 +100,7 @@ moustache, hat, things in the hand, the gold line.
 - carried: backpack 2 × 4 behind (side only); bag 2 × 3 and briefcase 2 × 2
   in front at the hand; stick 1 px down to the ground; boxes 5 × 4 over the
   body; umbrella a pole and an 11 / 9 / 5 px canopy with a tip
-- cat (`drawCat`): 5 × 2 body, 2 × 2 head with an ear, a 2 px tail, legs
-  that swap when walking; facing right by default
+- cats and dogs: see "How animals are drawn" below
 
 Keep them this small and this simple: that is what the owner liked. Looks
 the owner turned down (too small, or not wanted) are listed in `PLAN.md`
@@ -230,6 +233,40 @@ their own grounds in front of them.
   door, `doorOf`); townspeople take short trips (`randomSpot`, then a path)
   and rest; kids stay in the schoolyard, some people in the shrine grounds
   and the square (`within`); `placeAt` names where you are.
+
+## How animals are drawn (src/tinyAnimals.js)
+
+One four-legged drawing, `quad(g, a, t, spec, coat, dog)`, for cats and
+dogs. `spec`: body `bw` × `bh`, legs `lh`, head `hw` × `hh`, `ear` (`cat`,
+`point`, `flop`), `tail` (`up`: a cat's S, `curl`, `down`, `stub`, `pom`);
+`coat`: [main, second, pattern] with patterns `tabby` (stripes), `tuxedo` /
+`chest` (white chest and paws), `calico` (patches), `points` (dark ears,
+face, paws, tail), `spots`, `face` (a pug's dark face), `plain`.
+- side (mirrored for left): four legs, the far pair darker, taking turns
+  when walking (short legs step sideways); the tail behind; the body with a
+  darker belly row; the head at the front (a cat's sits on its shoulders),
+  ears; a dog's nose and collar
+- front: the chest (a dog's shoulders wider than its head), two legs, a
+  neck shadow, a dog's collar, the head with its ears, the tail beside it,
+  a dog's nose
+- back: the rump, two legs, the back of the head with ears, the tail over
+  the back (a shade darker so it shows on a plain coat)
+- a dog standing still wags its tail
+A new breed is an entry in `DOG_BREEDS` (and coats in `DOG_COATS`).
+
+## How nature is drawn (src/tinyNature.js)
+
+Trees and bushes use the buildings' painter (`makePainter`), so they scale
+crisply: `[label, w, h, draw(r, rng, cx)]` from the bottom left, `cx` the
+middle. Pieces: `blob` (a clump of leaves lit from the top left), `sprinkle`
+(fruit, flowers, blossom on even steps), `trunk`, `shadowUnder`. The seed
+scales a plant 0.85–1.15 and moves its dots. Terrains fill a rectangle
+(clipped) with a base colour and a pattern on a grid of whole pixels
+(`c = round(scale)`); water's ripples move with `t`. In the town, `plants`
+in the layout (`{ tree: 'sakura', x, y }` or `{ bush: ... }`) block at the
+trunk / the bush's base; areas with `solid: true` (the pond) block whole;
+the grounds are drawn with `drawTerrain` (`TERRAIN_OF`), water again every
+frame.
 
 ## Common tasks
 
