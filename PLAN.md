@@ -21,6 +21,8 @@ bubble lab, so games can use them and they can grow.
   so nobody walks behind one (walk round it); tall buildings only in the back
   row; low buildings in the blocks; the shrine, school and old town get their
   own grounds; the map stops at its edges (no wrapping).
+- Greenery (Nov 2026): the map is full of greenery; every unreachable area
+  is visibly blocked by forest.
 - Signs and type (Nov 2026): signs show the place's name instead of dots
   or stripes, in DotGothic16, **in English** (also the Japanese shops:
   RAMEN, KONBINI, not ラーメン); the pages use DotGothic16 too.
@@ -106,6 +108,10 @@ bubble lab, so games can use them and they can grow.
     (`src/tinyNature.js`); in the town: plants in gardens and grounds, a pond,
     terrains under the grounds, dog walkers; Animals and Nature in the
     catalogue.
+15. **Greenery and forest**: a forest border round the town (behind the
+    skyline, the sides with gaps for the streets, below the last street),
+    blocking everything nobody can reach; bushes, small trees, meadow and
+    long grass in the back gardens.
 
 ## Next (only when the owner asks)
 

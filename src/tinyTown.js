@@ -21,6 +21,7 @@ import { BUILDINGS, buildingSize, buildingSolids, drawBuilding } from './tinyBui
 import { drawCharacter } from './tinyCharacters.js';
 import { drawCat, drawDog } from './tinyAnimals.js';
 import { BUSHES, TREES, drawBush, drawTerrain, drawTree } from './tinyNature.js';
+import { seeded as seededRng } from './tinyCharacters.js';
 
 const CELL = 4;                                          // path-finding grid
 /** Street sizes at a scale: a street is 7 + 18 + 7 px top to bottom, a cross street 6 + 18 + 6 across. */
@@ -30,15 +31,34 @@ function streetDims(k) {
 }
 /** The layout with every position and size multiplied by its scale (people stay the same size). */
 function scaled(layout) {
-  const k = layout.scale ?? 1, m = (v) => Math.round(v * k);
+  // the town sits inside a border of forest (layout.forest px on every side)
+  const k = layout.scale ?? 1, m = (v) => Math.round(v * k), pad = m(layout.forest ?? 0);
+  const X = (v) => m(v) + pad;
   return {
-    ...layout, k, W: m(layout.W), H: m(layout.H),
-    streets: layout.streets.map(m), crossStreets: layout.crossStreets.map(m),
-    rows: (layout.rows ?? []).map((r) => ({ ...r, x: m(r.x), y: m(r.y) })),
-    buildings: (layout.buildings ?? []).map((b) => ({ ...b, x: m(b.x), y: m(b.y), scale: k })),
-    plants: (layout.plants ?? []).map((p, i) => ({ seed: i + 1, ...p, x: m(p.x), y: m(p.y), scale: k })),
-    areas: (layout.areas ?? []).map((a) => ({ ...a, x: m(a.x), y: m(a.y), w: m(a.w), h: m(a.h), path: a.path && { x: m(a.path.x), w: m(a.path.w), y0: m(a.path.y0) } })),
+    ...layout, k, pad, W: m(layout.W) + pad * 2, H: m(layout.H) + pad * 2,
+    streets: layout.streets.map(X), crossStreets: layout.crossStreets.map(X),
+    rows: (layout.rows ?? []).map((r) => ({ ...r, x: X(r.x), y: X(r.y) })),
+    buildings: (layout.buildings ?? []).map((b) => ({ ...b, x: X(b.x), y: X(b.y), scale: k })),
+    plants: (layout.plants ?? []).map((p, i) => ({ seed: i + 1, ...p, x: X(p.x), y: X(p.y), scale: k })),
+    areas: (layout.areas ?? []).map((a) => ({ ...a, x: X(a.x), y: X(a.y), w: m(a.w), h: m(a.h), path: a.path && { x: X(a.path.x), w: m(a.path.w), y0: X(a.path.y0) } })),
   };
+}
+
+const FOREST_TREES = ['cedar', 'cedar', 'pine', 'fir', 'fir', 'oak', 'oak', 'cypress', 'birch'];
+const GARDEN_TREES = ['apple', 'oak', 'maple', 'sakura', 'birch', 'ginkgo', 'poplar'];
+const GARDEN_BUSHES = ['round', 'round', 'azalea', 'hydrangea', 'rose', 'hedge', 'fern', 'lavender'];
+/**
+ * Trees in a jittered grid over the rectangle (x, y, w, h): a forest. skip(x, y)
+ * leaves gaps (the roads out of town).
+ */
+function forestIn(rng, k, x, y, w, h, skip = () => false) {
+  const out = [], sx = Math.round(10 * k), sy = Math.round(8 * k);
+  for (let fy = y + sy; fy < y + h + sy; fy += sy) for (let fx = x + ((fy / sy) % 2) * sx / 2; fx < x + w + sx / 2; fx += sx) {
+    const px = Math.round(fx + (rng() - 0.5) * sx * 0.6), py = Math.round(fy + (rng() - 0.5) * sy * 0.5);
+    if (skip(px, py)) continue;
+    out.push({ tree: FOREST_TREES[Math.floor(rng() * FOREST_TREES.length)], x: px, y: py, seed: 1 + Math.floor(rng() * 999), scale: k, forest: true });
+  }
+  return out;
 }
 
 /**
@@ -51,7 +71,8 @@ function scaled(layout) {
  */
 export const DEFAULT_TOWN = {
   scale: 1.5,                     // the town 1.5 times the size it is drawn at below; the people stay 15 px
-  W: 560, H: 462,
+  forest: 48,                     // a border of forest round the town, which nobody can walk into
+  W: 560, H: 448,
   streets: [108, 200, 284, 416],
   crossStreets: [180, 370],
   rows: [
@@ -116,19 +137,47 @@ export function makeTown(layout0 = DEFAULT_TOWN) {
     if (above !== undefined && above !== b.y && top < above + STREET) console.warn(`tinyTown: ${b.type} at (${b.x}, ${b.y}) reaches into the street above`);
     if (b.y > streets[0] && crossStreets.some((sx) => L < sx + VSTREET && L + w > sx)) console.warn(`tinyTown: ${b.type} at (${b.x}, ${b.y}) stands on a cross street`);
   }
-  const top = streets[0] + 2, bottom = H - 3;            // above the first street is the backdrop
+  const { pad } = layout;
+  const top = streets[0] + 2, bottom = streets[streets.length - 1] + STREET - 3;   // above the first street and below the last: forest
+  const onStreet = (y) => streets.some((sy) => y >= sy + 2 && y <= sy + STREET - 2);
   // trees block at the trunk, bushes at their base, a pond everywhere
-  const plants = layout.plants.map((p) => ({ ...p, type: p.tree ?? p.bush, kind: p.tree ? 'tree' : 'bush' }));
+  let plants = layout.plants.map((p) => ({ ...p, type: p.tree ?? p.bush, kind: p.tree ? 'tree' : 'bush' }));
+  const rng = seededRng(layout.seed ?? 7);
+  // greenery in the back gardens: bushes and small trees where there is room, leaving paths between them
+  const roomFor = (x, y, r) => !buildings.some((b) => { const { w, h } = buildingSize(b); return x > b.x - w / 2 - r && x < b.x + w / 2 + r && y > b.y - h - r && y < b.y + r + 4; })
+    && !plants.some((p) => Math.hypot(p.x - x, p.y - y) < r * 2.2) && !areas.some((a) => x > a.x - r && x < a.x + a.w + r && y > a.y - r && y < a.y + a.h + r)
+    && !crossStreets.some((sx) => x > sx - r && x < sx + VSTREET + r);
+  for (let i = 0; i < streets.length - 1; i++) {
+    const y0 = streets[i] + STREET, y1 = streets[i + 1], step = Math.round(13 * k);
+    for (let y = y0 + Math.round(6 * k); y < y1; y += step) for (let x = pad + 6; x < W - pad - 6; x += step) {
+      const px = Math.round(x + (rng() - 0.5) * step * 0.7), py = Math.round(y + (rng() - 0.5) * step * 0.4);
+      if (rng() < 0.4 || !roomFor(px, py, Math.round(5 * k))) continue;
+      const tree = py - y0 > 18 * k && rng() < 0.45;
+      plants.push({ tree: tree ? GARDEN_TREES[Math.floor(rng() * GARDEN_TREES.length)] : undefined, bush: tree ? undefined : GARDEN_BUSHES[Math.floor(rng() * GARDEN_BUSHES.length)],
+        x: px, y: py, seed: 1 + Math.floor(rng() * 999), scale: k, type: tree ? undefined : null });
+    }
+  }
+  plants = plants.map((p) => ({ ...p, type: p.tree ?? p.bush, kind: p.tree ? 'tree' : 'bush' }));
   const solids = [...buildings.flatMap(buildingSolids),
     ...plants.map((p) => {
       const w = p.kind === 'tree' ? 4 : Math.round((BUSHES[p.type]?.w ?? 8) * k * 0.8);
       return { x: Math.round(p.x - w / 2), y: p.y - 3, w, h: 5 };
     }),
     ...areas.filter((a) => a.solid).map((a) => ({ x: a.x, y: a.y, w: a.w, h: a.h }))];
+  // the forest: behind the skyline, at the sides (gaps for the streets) and below the last street
+  const lastBottom = streets[streets.length - 1] + STREET;
+  const forest = [
+    ...forestIn(rng, k, 0, -Math.round(6 * k), W, streets[0] - Math.round(4 * k)),
+    ...forestIn(rng, k, 0, streets[0], pad - Math.round(4 * k), lastBottom - streets[0], (x, y) => streets.some((sy) => y > sy - 4 * k && y < sy + STREET + 2 * k)),
+    ...forestIn(rng, k, W - pad + Math.round(4 * k), streets[0], pad, lastBottom - streets[0], (x, y) => streets.some((sy) => y > sy - 4 * k && y < sy + STREET + 2 * k)),
+    ...forestIn(rng, k, 0, lastBottom + Math.round(6 * k), W, H - lastBottom),
+  ].map((p) => ({ ...p, type: p.tree, kind: 'tree' }));
+  plants = [...plants, ...forest];
 
   /** Is (x, y) somewhere a person cannot stand? (A person is 5 px wide.) */
   function blocked(x, y) {
     if (x < 4 || x > W - 4 || y < top || y > bottom) return true;
+    if ((x < pad + 3 || x > W - pad - 3) && !onStreet(y)) return true;   // the forest at the sides (the streets run out through it)
     for (const s of solids) if (x > s.x - 3 && x < s.x + s.w + 2 && y >= s.y && y < s.y + s.h) return true;
     return false;
   }
@@ -201,18 +250,27 @@ export function makeTown(layout0 = DEFAULT_TOWN) {
   /** Where in front of a building to stand (its door): for "tap a building to go there". */
   function doorOf(b) { return { x: b.x, y: b.y + 4 }; }
 
-  return { W, H, scale: k, buildings, plants, areas, solids, blocked, findPath, randomSpot, placeAt, doorOf, ground: drawGround(layout) };
+  return { W, H, pad, scale: k, buildings, plants, areas, solids, blocked, findPath, randomSpot, placeAt, doorOf, ground: drawGround(layout) };
 }
 
 /** The town's ground (grass, grounds, streets, cross streets, crossings) on a canvas of its own. */
 // the areas' grounds are the terrains of tinyNature
 const TERRAIN_OF = { gravel: 'gravel', sand: 'sand', paving: 'cobble', water: 'water', grass: 'grass' };
-function drawGround({ W, H, streets, crossStreets, areas = [], k }) {
+function drawGround(layout) {
+  const { W, H, streets, crossStreets, areas = [], k } = layout;
   const { SIDE, ROAD, STREET, VSIDE, VSTREET } = streetDims(k), m = (v) => Math.round(v * k);
   const c = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(W, H) : Object.assign(document.createElement('canvas'), { width: W, height: H });
   const g = c.getContext('2d');
   const R = (col, x, y, w, h) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
   drawTerrain(g, { type: 'grass', x: 0, y: 0, w: W, h: H, scale: k, seed: 3 });
+  // the forest floor: under the trees round the town
+  const pad = Math.round((layout.forest ?? 0) * k), last = streets[streets.length - 1] + STREET;
+  for (const [x, y, w, h] of [[0, 0, W, streets[0]], [0, 0, pad, H], [W - pad, 0, pad, H], [0, last, W, H - last]]) drawTerrain(g, { type: 'tallGrass', x, y, w, h, scale: k, seed: x + y + 11 });
+  // meadow and long grass in patches in the gardens (under the buildings it does not show)
+  for (let i = 0; i < streets.length - 1; i++) {
+    const y0 = streets[i] + STREET, y1 = streets[i + 1];
+    for (let x = pad, j = 0; x < W - pad; x += m(48), j++) drawTerrain(g, { type: j % 2 ? 'meadow' : 'tallGrass', x: x + m(6), y: y0 + m(3), w: m(30), h: Math.min(m(14), y1 - y0 - m(6)), scale: k, seed: x + i });
+  }
   for (const a of areas) {
     drawTerrain(g, { type: TERRAIN_OF[a.ground] ?? a.ground, x: a.x, y: a.y, w: a.w, h: a.h, scale: k, seed: a.x + a.y });
     if (a.path) for (let y = a.path.y0; y < a.y + a.h; y += m(5)) R('#c9c2b0', a.path.x, y, a.path.w, m(4));  // stepping stones

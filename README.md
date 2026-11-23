@@ -200,8 +200,10 @@ pixels like the buildings.
 | `drawBush(g, { type, x, y, seed, scale })` | `round`, `hedge`, `azalea`, `hydrangea`, `rose`, `lavender`, `fern`, `pampas`, `holly`, `cactus` (`BUSHES`). |
 | `drawTerrain(g, { type, x, y, w, h, seed, scale, t })` | Fills a rectangle: `grass`, `meadow`, `tallGrass`, `dirt`, `sand`, `gravel`, `cobble`, `water` (ripples with `t`), `snow`, `paddy` (`TERRAINS`). |
 
-In the town, trees and bushes stand in the back gardens and round the shrine,
-the school and the square; the grounds are terrains; there is a pond; dogs go
+In the town, a forest rings everything nobody can reach (behind the
+skyline, the sides with gaps where the streets run out, below the last
+street), the back gardens are full of bushes, small trees, meadow and long
+grass, trees and bushes stand round the shrine, the school and the square; the grounds are terrains; there is a pond; dogs go
 for walks with their owners. The catalogue has them all (Animals, Nature).
 
 Speech for these people (floating pixel text, the design picked in the

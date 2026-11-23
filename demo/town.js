@@ -38,7 +38,7 @@ function newPeople() {
     const breed = Object.keys(DOG_BREEDS)[Math.floor(rng() * Object.keys(DOG_BREEDS).length)];
     people.push(owner, { dog: true, ...dogFor(breed, 1 + Math.floor(rng() * 99)), collar: ['#d8443c', '#3f7fd6', '#2fa36b', '#f2c230'][i % 4], owner, x: owner.x - 6, y: owner.y, talk: 0 });
   }
-  you = { ...randomCharacter(rng), body: '#f2f2ee', x: Math.round(196 * town.scale), y: Math.round(204 * town.scale), you: true, talk: 0, path: null };
+  you = { ...randomCharacter(rng), body: '#f2f2ee', x: town.pad + Math.round(196 * town.scale), y: town.pad + Math.round(204 * town.scale), you: true, talk: 0, path: null };
   people.push(you);
 }
 newPeople();

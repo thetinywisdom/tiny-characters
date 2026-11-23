@@ -268,6 +268,22 @@ trunk / the bush's base; areas with `solid: true` (the pond) block whole;
 the grounds are drawn with `drawTerrain` (`TERRAIN_OF`), water again every
 frame.
 
+**Greenery and forest (the owner: unreachable areas are blocked by
+forest).** `DEFAULT_TOWN.forest` (48) is a border round the town: `scaled`
+moves everything in by it and makes the map that much bigger. `makeTown`
+then fills, with a seeded rng (`layout.seed`):
+- the forest (`forestIn`: a jittered grid of cedars, pines, firs, oaks,
+  cypresses, birches) behind the skyline, at both sides (skipping the
+  streets, which run out of town through the gaps) and below the last
+  street; it is not solid, `blocked` keeps people out of it (only the
+  streets cross the sides); the forest floor is long grass
+- the back gardens (`roomFor`: away from buildings, other plants, areas and
+  cross streets, 40 % of spots left empty for paths): bushes near the
+  street, small trees deeper in; patches of meadow and long grass on the
+  ground
+Forest trees are drawn like any plant (sorted with buildings and people),
+only those in view.
+
 ## Common tasks
 
 - **A new look part:** add a value to the list (`HATS`, `TOPS` ...), draw it
