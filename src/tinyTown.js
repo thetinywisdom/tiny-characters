@@ -38,7 +38,7 @@ export const DEFAULT_TOWN = {
   crossStreets: [180, 370],
   rows: [
     // the back row: the tall ones, with nothing behind them
-    { y: 108, x: 2, list: ['office', 'apartment', 'karaoke', 'bank', 'mixedUse:bookshop', 'fireStation', 'parkingGarage', 'apartment', 'office', 'mixedUse:cafe', 'karaoke', 'bank', 'woodApartment'] },
+    { y: 108, x: 2, list: ['office', 'apartment', 'karaoke', 'bank', 'mixedUse:bookshop', 'fireStation', 'parkingGarage', 'apartment', 'office', 'mosque', 'karaoke', 'bank'] },
     // between the first and second street
     { y: 200, x: 2, list: ['house', 'shop:konbini', 'kissaten', 'koban'] },
     { y: 200, x: 212, list: ['sushi', 'florist', 'laundromat', 'pharmacy'] },

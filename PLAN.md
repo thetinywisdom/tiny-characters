@@ -57,7 +57,10 @@ bubble lab, so games can use them and they can grow.
 6. **Roofs with depth**: every building's roof seen from above (`flatRoof`,
    `pitched`, `gable`), building heights measured from their drawings, the
    town's blocks made taller to fit, a warning if a building reaches into a
-   street.
+   street. Hipped roofs fill their rectangle too.
+7. **A mosque** (the owner asked; not in the catalogue): seeded variations
+   (wall, dome colour and size, one or two minarets, side domes, windows,
+   trim); eight of them on the Buildings sheet, one in the town's back row.
 
 ## Next (only when the owner asks)
 

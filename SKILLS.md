@@ -84,8 +84,17 @@ Every building faces you: a front wall, then its roof **seen from above**
 depth), windows, a door, and one or two details that make it that building.
 Each is an entry in `DEFS` in `src/tinyBuildings.js`:
 `[label, width, draw(r, rng, b, wall, roof)]`. The height in `BUILDINGS` is
-measured from the drawing (the top of its highest rectangle), so it always
-includes the roof and anything on it.
+measured from the drawing (the top of its highest rectangle, the tallest of
+40 seeds), so it always includes the roof and anything on it.
+
+**Buildings that vary by seed** (the mosque): draw every choice from `rng`
+(the building's seed), keep the width fixed, and add a few seeds that show
+the variations to `VARIED` in `demo/town.js` (the Buildings sheet shows
+each). The mosque picks its wall, dome colour (green, gold, blue, white,
+teal) and size (radius 7–10), trim colour, one or two minarets (50–63 px,
+a single one left or right), small side domes, one or two arched windows
+each side. Its pieces: `dome` (a half disc lit on the left) and
+`pointedArch`.
 
 - `r(colour, dx, up, w, h)`: a rectangle `dx` from the left edge whose
   bottom is `up` pixels above the ground line. Keep everything inside
@@ -100,7 +109,7 @@ includes the roof and anything on it.
   triangles at the sides), `gable(r, colour, face, dx, up,
   w, gh, d)` (a gable facing the street: a wall triangle edged with roof and
   the roof running back behind it, left slope in shade, right in light;
-  Tudor cottage, stone chapel). Chimneys, towers and dormers sit on the
+  Tudor cottage, stone chapel). Chimneys, towers, domes and dormers sit on the
   roof, inside its rows. **Every roof fills its whole rectangle** (the
   owner's rule, so all buildings look alike): never cut corners away.
 - Pieces: `win` / `windows` (glass, sometimes lit or curtained by `rng`),

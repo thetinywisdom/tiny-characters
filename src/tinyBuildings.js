@@ -96,6 +96,22 @@ function noren(r, c, dx, up, w) { r(c, dx, up, w, 4); for (let i = 2; i < w; i +
 /** A row of coloured dots (books, flowers, goods). */
 function dots(r, rng, dx, up, w, colors, step = 1) { for (let i = 0; i < w; i += step) r(colors[Math.floor(rng() * colors.length)], dx + i, up, 1, 1); }
 
+/** A dome seen from the front and a little above: a half disc, lit on the left, with a finial. */
+function dome(r, c, cx, up, rad) {
+  for (let k = 0; k <= rad; k++) {
+    const hw = Math.round(Math.sqrt(rad * rad - k * k));
+    r(c, cx - hw, up + k, hw * 2 + 1, 1);
+    if (hw > 1) { r(shade(c, 1.18), cx - hw + 1, up + k, Math.max(1, Math.round(hw * 0.6)), 1); r(shade(c, 0.8), cx + hw, up + k, 1, 1); }
+  }
+  r(shade(c, 0.7), cx - rad, up, rad * 2 + 1, 1);
+}
+/** A pointed arch (a window or a doorway): w wide, h tall, the top stepping in to a point. */
+function pointedArch(r, c, dx, up, w, h) {
+  const steps = Math.floor((w - 1) / 2);
+  r(c, dx, up, w, h - steps);
+  for (let k = 1; k <= steps; k++) r(c, dx + k, up + h - steps + k - 1, w - k * 2, 1);
+}
+
 // --- shop fronts (the catalogue's shop types) ------------------------------------
 export const SHOP_TYPES = ['konbini', 'ramen', 'cafe', 'bookshop', 'bakery', 'izakaya'];
 const SHOPS = {
@@ -413,6 +429,39 @@ const DEFS = {
     pitched(r, '#3a3f44', -2, 29, 44, 16);
     r(shade(wall, 0.7), 29, 38, 4, 8); r(INK, 29, 45, 4, 1);                // chimney
   }],
+  // Not in tiny-catalogue: the owner asked for it. The seed picks the wall,
+  // the dome (colour, size), one or two minarets (height, which side), small
+  // side domes, how many arched windows and the trim colour.
+  mosque: ['Mosque', 56, (r, rng) => {
+    const pick = (a) => a[Math.floor(rng() * a.length)];
+    const wall = pick(['#f2efe8', '#e8dcc0', '#dcc49c', '#e6d6c4']);
+    const domeC = pick(['#3f8f6a', '#d8a840', '#3f6fa8', '#e8e8e0', '#3fa8a0']);
+    const trim = pick(['#3f8f6a', '#3f6fa8', '#3fa8a0', '#b8603a']);
+    const wallH = 18 + Math.floor(rng() * 4), rad = 7 + Math.floor(rng() * 4);
+    const minarets = rng() < 0.55 ? 2 : 1, leftOnly = rng() < 0.5, tall = 50 + Math.floor(rng() * 14);
+    const sideDomes = rng() < 0.5, perSide = 1 + Math.floor(rng() * 2);
+    // the prayer hall: walls, a trim band, arched windows, the tall entrance
+    r(wall, 6, 0, 44, wallH); r(shade(wall, 0.85), 6, 0, 44, 1);
+    r(trim, 6, wallH - 3, 44, 1);
+    const gap = 16 / (perSide + 1);
+    for (let i = 0; i < perSide; i++) for (const base of [6, 34]) pointedArch(r, NAVY, Math.round(base + gap * (i + 1) - 1.5), 5, 3, 8);
+    flatRoof(r, wall, 6, wallH, 44, 12);
+    if (sideDomes) for (const cx of [14, 41]) { r(wall, cx - 3, wallH + 3, 7, 2); dome(r, domeC, cx, wallH + 5, 3); }
+    r(wall, 28 - rad - 1, wallH + 4, rad * 2 + 3, 3);                           // the drum under the dome
+    dome(r, domeC, 28, wallH + 7, rad);
+    r(GOLD, 28, wallH + 8 + rad, 1, 3); r(GOLD, 27, wallH + 11 + rad, 1, 1); r(GOLD, 29, wallH + 12 + rad, 1, 1);  // finial and crescent
+    r(wall, 19, 0, 18, wallH + 6); r(shade(wall, 0.85), 19, wallH + 5, 18, 1);  // the entrance front (iwan), taller than the hall
+    pointedArch(r, trim, 21, 0, 14, wallH + 3); pointedArch(r, shade(trim, 0.6), 23, 0, 10, wallH);
+    r(DARKWOOD, 25, 0, 6, 11); r(GOLD, 27, 13, 2, 2);
+    // minarets: a shaft, a balcony, a small dome and a finial
+    for (const dx of minarets === 2 ? [0, 51] : [leftOnly ? 0 : 51]) {
+      r(wall, dx, 0, 5, tall); r(shade(wall, 0.85), dx + 3, 0, 2, tall);
+      r(trim, dx, Math.round(tall * 0.45), 5, 1);
+      r(shade(wall, 0.75), dx - 1, Math.round(tall * 0.75), 7, 2); r(trim, dx - 1, Math.round(tall * 0.75) + 2, 7, 1);  // balcony
+      pointedArch(r, NAVY, dx + 2, Math.round(tall * 0.55), 1, 4);
+      dome(r, domeC, dx + 2, tall, 2); r(GOLD, dx + 2, tall + 3, 1, 3);
+    }
+  }],
   stoneChapel: ['Stone chapel', 34, (r) => {
     const wall = '#8f8a80';
     r(wall, 0, 0, 34, 24);
@@ -436,10 +485,10 @@ const OPEN = {
   gasStation: [[4, 1, 3, 0], [14, 2, 3, 0], [24, 4, 3, 0], [38, 4, 3, 0], [50, 2, 3, 0], [56, 12, 20, 0], [0, 68, 40, 9]],
 };
 
-/** How tall a drawing is: the top of its highest rectangle. */
+/** How tall a drawing is: the top of its highest rectangle, the tallest of its seeds. */
 function measure(draw) {
   let top = 0;
-  draw((c, dx, up, w, h) => { if (w > 0 && h > 0) top = Math.max(top, up + h); }, seeded(1), {}, WALL_COLORS[0], ROOF_COLORS[0]);
+  for (let seed = 1; seed <= 40; seed++) draw((c, dx, up, w, h) => { if (w > 0 && h > 0) top = Math.max(top, up + h); }, seeded(seed * 97), {}, WALL_COLORS[0], ROOF_COLORS[0]);
   return top;
 }
 

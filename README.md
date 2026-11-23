@@ -81,7 +81,9 @@ restaurant, flower shop, fishmonger, udon / soba shop, family restaurant,
 takoyaki stand, koban, post office, bank, clinic, fire station, karaoke,
 wooden apartment, parking garage, gas station, and the old town: Tudor
 cottage, Mediterranean villa, Dutch canal house, French country house,
-Scandinavian house, stone chapel.
+Scandinavian house, stone chapel; and a mosque (not in the catalogue), whose
+`seed` picks its wall, dome colour and size, one or two minarets, side
+domes, windows and trim, so every seed is a different mosque.
 
 ```js
 import { BUILDINGS, drawBuilding, drawStreet } from './src/tinyBuildings.js';

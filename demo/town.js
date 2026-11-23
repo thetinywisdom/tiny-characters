@@ -108,17 +108,20 @@ function frame(now) {
 }
 requestAnimationFrame(frame);
 
-// Buildings: each one on its own, with its name.
+// Buildings: each one on its own, with its name; a few seeds of those that vary.
 const sheet = document.querySelector('#buildings');
+const VARIED = { mosque: [1, 2, 3, 8, 11, 16, 9, 6] };
 for (const [type, { label, w, h }] of Object.entries(BUILDINGS)) {
   if (type === 'torii' || type === 'shrineHall') continue;    // shown together as the shrine
-  const c = document.createElement('canvas');
-  c.width = w + 4; c.height = h + 4; c.className = 'bld';
-  c.style.setProperty('--w', c.width);
-  const g = c.getContext('2d');
-  g.fillStyle = '#d8d2c4'; g.fillRect(0, h + 2, c.width, 2);
-  drawBuilding(g, { type, x: 2 + w / 2, y: h + 2, seed: 2 });
-  const f = document.createElement('figure');
-  const cap = document.createElement('figcaption'); cap.textContent = label;
-  f.append(c, cap); sheet.append(f);
+  for (const seed of VARIED[type] ?? [2]) {
+    const c = document.createElement('canvas');
+    c.width = w + 4; c.height = h + 4; c.className = 'bld';
+    c.style.setProperty('--w', c.width);
+    const g = c.getContext('2d');
+    g.fillStyle = '#d8d2c4'; g.fillRect(0, h + 2, c.width, 2);
+    drawBuilding(g, { type, x: 2 + w / 2, y: h + 2, seed });
+    const f = document.createElement('figure');
+    const cap = document.createElement('figcaption'); cap.textContent = VARIED[type] ? `${label} (seed ${seed})` : label;
+    f.append(c, cap); sheet.append(f);
+  }
 }
