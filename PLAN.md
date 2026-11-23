@@ -11,6 +11,10 @@ bubble lab, so games can use them and they can grow.
   to `main` right away, without asking.
 - The characters are the bubble lab's tiny 2D pixel people (about 5 × 15
   pixels), kept as small and simple as they are there.
+- Roofs (Nov 2026): like a top-down town map, every building shows its roof
+  from above (8–18 rows), so it has depth; tile rows and a ridge on pitched
+  roofs, a rim and rooftop things on flat roofs, front gables with the roof
+  running back.
 - The town map (Nov 2026): every building's whole picture is solid ground,
   so nobody walks behind one (walk round it); tall buildings only in the back
   row; low buildings in the blocks; the shrine, school and old town get their
@@ -48,6 +52,10 @@ bubble lab, so games can use them and they can grow.
    square; solid buildings, path finding round them, tap a building to walk
    to its door; townspeople taking trips and turning at corners, kids in the
    schoolyard, cats; the name of where you are under the map.
+6. **Roofs with depth**: every building's roof seen from above (`flatRoof`,
+   `pitched`, `gable`), building heights measured from their drawings, the
+   town's blocks made taller to fit, a warning if a building reaches into a
+   street.
 
 ## Next (only when the owner asks)
 

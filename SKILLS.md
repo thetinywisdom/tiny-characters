@@ -79,19 +79,29 @@ under Decisions; do not add them back.
 
 ## How a building is drawn
 
-Every building faces you: a front wall, a little roof on top (a flat roof
-shows its top as a light band over a darker parapet line; a pitched roof is
-rows narrowing to the ridge), windows, a door, and one or two details that
-make it that building. Each is an entry in `DEFS` in `src/tinyBuildings.js`:
-`[label, width, height, draw(r, rng, b, wall, roof)]`.
+Every building faces you: a front wall, then its roof **seen from above**
+(8–18 rows, as in a top-down town map: this is what gives a building its
+depth), windows, a door, and one or two details that make it that building.
+Each is an entry in `DEFS` in `src/tinyBuildings.js`:
+`[label, width, draw(r, rng, b, wall, roof)]`. The height in `BUILDINGS` is
+measured from the drawing (the top of its highest rectangle), so it always
+includes the roof and anything on it.
 
 - `r(colour, dx, up, w, h)`: a rectangle `dx` from the left edge whose
   bottom is `up` pixels above the ground line. Keep everything inside
   `0 .. width` (signs, bikes, post boxes too) so buildings in a row do not
   overlap; shift the building with a wrapping `r` if something stands beside
   it (see the koban and the family restaurant).
+- Roofs: `flatRoof(r, wall, dx, up, w, d)` (a rim, the light roof top with
+  seams; put AC units, water tanks, a roof garden, parked cars on it),
+  `pitched(r, colour, dx, up, w, d, hip)` (ridge along the street: front
+  slope with a darker tile row every third row, a light ridge, a little of
+  the back slope; `hip` steps the ends in), `gable(r, colour, face, dx, up,
+  w, gh, d)` (a gable facing the street: a wall triangle edged with roof and
+  the roof running back behind it, left slope in shade, right in light;
+  Tudor cottage, stone chapel). Chimneys, towers and dormers sit on the
+  roof, inside its rows.
 - Pieces: `win` / `windows` (glass, sometimes lit or curtained by `rng`),
-  `flatRoof`, `pitched` (top width 1–4 for a gable, wider for a hip roof),
   `awning` (2 px stripes), `sign` (a band with a row of "letters"), `glass`
   (shop glass with frame lines), `door`, `noren`, `lantern`, `dots` (books,
   flowers, goods), `shopFront` (the six shop kinds).

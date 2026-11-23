@@ -95,14 +95,15 @@ drawBuilding(g, { type: 'shop', shopType: 'ramen', x: 120, y: 104, seed: 3 });
 | Export | What it does |
 | --- | --- |
 | `drawBuilding(g, b)` | One building `{ type, x, y, seed, shopType, wall, roof }`: centred on `x`, ground line at `y`. `seed` picks the wall and roof colours and which windows are lit. |
-| `BUILDINGS` | `type -> { label, w, h }`: name, width and height in pixels. |
+| `BUILDINGS` | `type -> { label, w, h }`: name, width and height in pixels (roof included). |
 | `SHOP_TYPES` | `konbini`, `ramen`, `cafe`, `bookshop`, `bakery`, `izakaya` (for `shop` and `mixedUse`). |
 | `drawStreet(g, W, H, { baseY, x0 })` | Sidewalk from `baseY`, road, far sidewalk, grass; `x0` scrolls the paving. |
 | `WALL_COLORS`, `ROOF_COLORS` | The catalogue's wall and roof colours. |
 
 Sizes: a storey is 13–20 px and a door 6 × 13, so a 15 px person reaches
-about three quarters of a door. Tall buildings are squashed (the office has 6
-floors, the apartment block 6). Sign text is a row of pixels: real letters do
+about three quarters of a door. Roofs are seen from above (8–18 rows, like a
+top-down town map), which gives each building its depth. Tall buildings are
+squashed (the office has 6 floors, the apartment block 6). Sign text is a row of pixels: real letters do
 not fit.
 
 ## A town map

@@ -27,7 +27,7 @@ function newPeople() {
   for (let i = 0; i < 5; i++) people.push(walker(randomCharacter(rng), rng, shrine));
   for (let i = 0; i < 6; i++) people.push(walker(randomCharacter(rng), rng, square));
   for (let i = 0; i < 6; i++) people.push(walker({ color: CAT_COLORS[Math.floor(rng() * CAT_COLORS.length)] }, rng, undefined, true));
-  you = { ...randomCharacter(rng), body: '#f2f2ee', x: 196, y: 196, you: true, talk: 0, path: null };
+  you = { ...randomCharacter(rng), body: '#f2f2ee', x: 196, y: 204, you: true, talk: 0, path: null };
   people.push(you);
 }
 newPeople();

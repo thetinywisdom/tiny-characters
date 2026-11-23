@@ -33,31 +33,31 @@ const CELL = 4;                                          // path-finding grid
  * `areas`: open grounds with their own ground and name.
  */
 export const DEFAULT_TOWN = {
-  W: 560, H: 448,
-  streets: [104, 192, 280, 402],
+  W: 560, H: 462,
+  streets: [108, 200, 284, 416],
   crossStreets: [180, 370],
   rows: [
     // the back row: the tall ones, with nothing behind them
-    { y: 104, x: 2, list: ['office', 'apartment', 'karaoke', 'bank', 'mixedUse:bookshop', 'fireStation', 'parkingGarage', 'apartment', 'office', 'mixedUse:cafe', 'karaoke', 'bank', 'woodApartment'] },
+    { y: 108, x: 2, list: ['office', 'apartment', 'karaoke', 'bank', 'mixedUse:bookshop', 'fireStation', 'parkingGarage', 'apartment', 'office', 'mixedUse:cafe', 'karaoke', 'bank', 'woodApartment'] },
     // between the first and second street
-    { y: 192, x: 2, list: ['house', 'shop:konbini', 'kissaten', 'koban'] },
-    { y: 192, x: 212, list: ['sushi', 'florist', 'laundromat', 'pharmacy'] },
-    { y: 192, x: 402, list: ['udonSoba', 'shop:ramen', 'postOffice'] },
+    { y: 200, x: 2, list: ['house', 'shop:konbini', 'kissaten', 'koban'] },
+    { y: 200, x: 212, list: ['sushi', 'florist', 'laundromat', 'pharmacy'] },
+    { y: 200, x: 402, list: ['udonSoba', 'shop:ramen', 'postOffice'] },
     // between the second and third street
-    { y: 280, x: 2, list: ['familyRestaurant', 'gasStation'] },
-    { y: 280, x: 212, list: ['woodApartment', 'clinic', 'fishmonger', 'takoyaki'] },
-    { y: 280, x: 402, list: ['scandinavianHouse', 'mediterraneanVilla', 'shop:izakaya'] },
+    { y: 284, x: 2, list: ['familyRestaurant', 'gasStation'] },
+    { y: 284, x: 212, list: ['woodApartment', 'clinic', 'fishmonger', 'takoyaki'] },
+    { y: 284, x: 402, list: ['scandinavianHouse', 'mediterraneanVilla', 'shop:izakaya'] },
     // grounds: the old town's houses stand at the back of their square
-    { y: 378, x: 404, list: ['tudorCottage', 'dutchCanalHouse', 'stoneChapel', 'frenchCountryHouse'] },
+    { y: 390, x: 404, list: ['tudorCottage', 'dutchCanalHouse', 'stoneChapel', 'frenchCountryHouse'] },
   ],
   buildings: [
-    { type: 'shrineHall', x: 90, y: 346 }, { type: 'torii', x: 90, y: 394 },
-    { type: 'school', x: 290, y: 368 },
+    { type: 'shrineHall', x: 90, y: 350 }, { type: 'torii', x: 90, y: 410 },
+    { type: 'school', x: 290, y: 376 },
   ],
   areas: [
-    { name: 'Shrine grounds', ground: 'gravel', x: 0, y: 312, w: 180, h: 90, path: { x: 82, w: 16, y0: 346 } },
-    { name: 'Schoolyard', ground: 'sand', x: 210, y: 312, w: 160, h: 90 },
-    { name: 'Old-town square', ground: 'paving', x: 400, y: 312, w: 160, h: 90 },
+    { name: 'Shrine grounds', ground: 'gravel', x: 0, y: 316, w: 180, h: 100, path: { x: 82, w: 16, y0: 350 } },
+    { name: 'Schoolyard', ground: 'sand', x: 210, y: 316, w: 160, h: 100 },
+    { name: 'Old-town square', ground: 'paving', x: 400, y: 316, w: 160, h: 100 },
   ],
 };
 
@@ -77,6 +77,13 @@ export function makeTown(layout = DEFAULT_TOWN) {
     }
   }
   const areas = layout.areas ?? [];
+  // a building must not reach into the street above it, nor past the next cross street
+  for (const b of buildings) {
+    const { w, h } = BUILDINGS[b.type], L = b.x - w / 2, top = b.y - h;
+    const above = streets.filter((sy) => sy < b.y).pop();
+    if (above !== undefined && above !== b.y && top < above + STREET) console.warn(`tinyTown: ${b.type} at (${b.x}, ${b.y}) reaches into the street above`);
+    if (b.y > streets[0] && crossStreets.some((sx) => L < sx + VSTREET && L + w > sx)) console.warn(`tinyTown: ${b.type} at (${b.x}, ${b.y}) stands on a cross street`);
+  }
   const top = streets[0] + 2, bottom = H - 3;            // above the first street is the backdrop
   const solids = buildings.flatMap(buildingSolids);
 
