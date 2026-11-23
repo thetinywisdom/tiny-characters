@@ -10,7 +10,6 @@ bubble lab, so games can use them and they can grow.
 - The demo is on GitHub Pages, served from `main`.
 - The characters are the bubble lab's tiny 2D pixel people (about 5 × 15
   pixels), kept as small and simple as they are there.
-
 - Looks from the catalogue (Nov 2026): keep mohawk (1 px taller), moustache
   and the cat; drop beard, helmet and tank top; make the umbrella wider and
   the ponytail and twin tails longer; the rest as sorted in Next 1.
@@ -60,6 +59,7 @@ bubble lab, so games can use them and they can grow.
      headphones, every hairstyle variation within a family (side part,
      undercut, bob ...), the body sliders (heads tall, neck, arm thickness
      ...), walk and run styles.
+2. Speech with them (floating pixel text from tiny-ui-kit) in the demo.
 3. **A tinified catalogue**: a tiny pixel version of the things in
    thetinywisdom/tiny-catalogue, drawn in the same small, simple style as the
    people.
