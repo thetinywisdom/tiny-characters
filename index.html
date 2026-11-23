@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Tiny Characters</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" />
+    <link rel="stylesheet" href="./demo/demo.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>TINY CHARACTERS</h1>
+        <p>Little pixel people from Tiny City Builder, about 5 × 15 pixels each. Move the one with the gold line (arrow keys / WASD, or tap where to go); tap anyone to make them talk.</p>
+      </header>
+      <section>
+        <h2>Park</h2>
+        <canvas id="park" width="200" height="124" aria-label="A park with tiny pixel people strolling about"></canvas>
+        <div class="row"><button type="button" id="crowd">New crowd</button><button type="button" id="pause">Pause</button></div>
+      </section>
+      <section>
+        <h2>Gallery</h2>
+        <canvas id="gallery" width="200" height="72" aria-label="Rows of tiny pixel people in different colours"></canvas>
+        <div class="row"><button type="button" id="shuffle">Shuffle</button></div>
+      </section>
+    </main>
+    <script type="module" src="./demo/demo.js"></script>
+  </body>
+</html>
