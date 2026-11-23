@@ -4,11 +4,15 @@
 // canvas is scaled up with hard pixels (CSS `image-rendering: pixelated`).
 //
 //   drawCharacter(g, person, t)   one person, feet at (person.x, person.y)
+//   drawCat(g, cat, t)            a cat, seen from the side
 //   drawStage(g, W, H)            the lab's grass strip and path
-//   randomCharacter(rng)          a random look (body, hair, skin, legs)
+//   randomCharacter(rng)          a random look
+//   LOOKS                         starter looks (salaryman, grandma ...)
 //   snapToPalette(g, W, H)        hard edges, only the palette's colours
 //
-// A person: { x, y, body, hair, skin, legs, you, talking, walking, facing }.
+// A person: { x, y, body, hair, skin, legs, you, talking, walking, facing }
+// plus looks: kid, hairStyle, moustache, hat, hatColor, top, trim, legwear,
+// carry, carryColor (see SKILLS.md).
 // Colours are CSS strings. Plain ES module, no dependencies.
 
 /** The lab's colours. */
@@ -23,12 +27,37 @@ export const HAIR_COLORS = ['#2f3236', '#3a2a22', '#8a5a2a', '#c99c5a', '#b3b0a8
 export const SKIN_COLORS = ['#f1cdb0', '#e2b08e', '#c98d65', '#8d5a3b', '#5a3825'];
 export const LEG_COLORS = ['#2f3236', '#262b3a', '#3f4f6e', '#6b5a48'];
 
+/** Colours of things: hats, bags, cardboard, the walking stick, uniforms. */
+export const THING_COLORS = ['#f2f2ee', '#e8402f', '#3f7fd6', '#d8b860', '#c09060', '#8a6440', '#6b4a2a', '#bcd2e0', '#7a7a74', '#dcb08c'];
+/** Cat colours: ginger, black, white, grey, brown. */
+export const CAT_COLORS = ['#dcb08c', '#2f3236', '#f2efe8', '#b3b0a8', '#8a6440'];
+
+/** Hairstyles, hats, tops, legwear and carried things a person can have. */
+export const HAIRSTYLES = ['short', 'bald', 'long', 'ponytail', 'afro', 'bun', 'mohawk'];
+export const HATS = ['cap', 'wide'];
+export const TOPS = ['jacket', 'suit', 'apron', 'yukata', 'sailor', 'gakuran', 'police'];
+export const LEGWEAR = ['trousers', 'shorts', 'skirt'];
+export const CARRY = ['backpack', 'bag', 'briefcase', 'umbrella', 'stick', 'boxes'];
+
+const WHITE = '#f2f2ee', RED = '#e8402f';
+const DEFAULT_HAT = { cap: RED, wide: '#d8b860' };
+const DEFAULT_CARRY = { backpack: '#e8402f', bag: '#c9b48a', briefcase: '#2f3236', umbrella: '#3f7fd6', stick: '#6b4a2a', boxes: '#c09060' };
+
+// Row offsets (from the feet) of a person: legs, body top, head top.
+function frameOf(p, bob = 0) {
+  const legH = p.kid ? 2 : 3, bodyH = p.kid ? 4 : 6;
+  const B = -legH - bodyH + bob;
+  return { legH, bodyH, B, Hd: B - 4 };
+}
+
 /**
  * Draw one person with their feet at (p.x, p.y), into a 2D context `g` of a
  * low-res canvas. `t` (seconds) drives the talking bob and the walking step.
  *  - talking: the body and head bob up a pixel, six times a second
  *  - walking: the legs take turns lifting a pixel, eight steps a second
  *  - you: a gold line under the feet (the player)
+ * Looks (all optional, see SKILLS.md): kid, hairStyle, moustache, hat,
+ * hatColor, top, trim, legwear, carry, carryColor.
  */
 export function drawCharacter(g, p, t = 0) {
   const x = Math.round(p.x), y = Math.round(p.y);
@@ -36,26 +65,120 @@ export function drawCharacter(g, p, t = 0) {
   const step = p.walking ? Math.floor(t * 8) % 2 : -1;      // which leg is lifted (-1: standing)
   const walkBob = p.walking && step === 1 ? -1 : 0;
   const bob = talkBob || walkBob;
-  // shadow
-  g.fillStyle = COLORS.shadow; g.fillRect(x - 3, y, 7, 2);
-  // body
-  g.fillStyle = p.body ?? BODY_COLORS[0]; g.fillRect(x - 2, y - 9 + bob, 5, 6);
-  // legs (walking: one lifts a pixel, then the other)
-  g.fillStyle = p.legs ?? COLORS.ink;
-  g.fillRect(x - 2, y - 3, 2, step === 0 ? 2 : 3);
-  g.fillRect(x + 1, y - 3, 2, step === 1 ? 2 : 3);
-  // head and hair (facing: the hair sits a pixel to the back)
-  g.fillStyle = p.skin ?? SKIN_COLORS[1]; g.fillRect(x - 1, y - 13 + bob, 3, 4);
-  g.fillStyle = p.hair ?? COLORS.ink;
-  if (p.facing === 'left') { g.fillRect(x - 1, y - 14 + bob, 3, 2); g.fillRect(x + 1, y - 12 + bob, 1, 1); }
-  else if (p.facing === 'right') { g.fillRect(x - 1, y - 14 + bob, 3, 2); g.fillRect(x - 1, y - 12 + bob, 1, 1); }
-  else g.fillRect(x - 1, y - 14 + bob, 3, 2);
+  // R: a rectangle at (x + dx, y + dy), mirrored when facing left
+  const s = p.facing === 'left' ? -1 : 1, side = p.facing === 'left' || p.facing === 'right';
+  const R = (c, dx, dy, w = 1, h = 1) => { g.fillStyle = c; g.fillRect(s > 0 ? x + dx : x - dx - w + 1, y + dy, w, h); };
+  const { legH, bodyH, B, Hd } = frameOf(p, bob);
+  const body = p.body ?? BODY_COLORS[0], legs = p.legs ?? COLORS.ink, skin = p.skin ?? SKIN_COLORS[1], hair = p.hair ?? COLORS.ink;
+  const carry = p.carry, carryColor = p.carryColor ?? DEFAULT_CARRY[carry];
+  const wear = p.legwear ?? 'trousers';
+  // shadow, and a backpack behind the body (only seen from the side)
+  R(COLORS.shadow, -3, 0, 7, 2);
+  if (carry === 'backpack' && side) R(carryColor, -4, p.kid ? B - 1 : B, 2, p.kid ? 3 : 4);
+  // legs (walking: one lifts a pixel, then the other); shorts and skirts show skin
+  if (p.top !== 'yukata') {
+    for (const [dx, lifted] of [[-2, step === 0], [1, step === 1]]) {
+      const h = lifted ? legH - 1 : legH;
+      R(wear === 'trousers' ? legs : skin, dx, -legH, 2, h);
+      if (wear === 'shorts') R(legs, dx, -legH, 2, 1);
+    }
+  }
+  // body and what is worn on it
+  R(body, -2, B, 5, bodyH);
+  const trim = p.trim;
+  switch (p.top) {
+    case 'jacket': R(trim ?? WHITE, 0, B, 1, bodyH); break;                              // open: the shirt shows
+    case 'suit': R(WHITE, -1, B, 3, 2); R(trim ?? BODY_COLORS[1], 0, B, 1, Math.min(4, bodyH)); break; // shirt and tie
+    case 'apron': R(trim ?? WHITE, -1, B + 2, 3, bodyH); break;
+    case 'yukata': R(body, -2, -legH - 1, 5, legH); R(legs, -1, -1); R(legs, 1, -1); R(trim ?? RED, -2, B + bodyH - 3, 5, 1); break; // robe to the feet, obi
+    case 'sailor': R(COLORS.navy, -2, B, 5, 1); R(trim ?? RED, 0, B + 1); break;          // collar and ribbon
+    case 'gakuran': R(COLORS.gold, 0, B + 1); R(COLORS.gold, 0, B + 3); break;            // gold buttons
+    case 'police': R(trim ?? COLORS.navy, -1, B, 3, bodyH); R(COLORS.gold, -1, B + 1); break; // vest and badge
+  }
+  if (wear === 'skirt') R(legs, -2, -legH - 1, 5, 2);
+  if (carry === 'boxes') { R(carryColor, -2, B, 5, 4); R('#8a6440', -2, B + 2, 5, 1); }
+  // head and hair (facing: a pixel of hair at the back of the head)
+  R(skin, -1, Hd, 3, 4);
+  let style = p.hairStyle ?? 'short';
+  if (p.hat && (style === 'afro' || style === 'bun' || style === 'mohawk')) style = style === 'mohawk' ? 'bald' : 'short'; // under a hat
+  if (style === 'bald' || style === 'mohawk') R(skin, -1, Hd - 1, 3, 1);
+  if (style === 'mohawk') R(hair, 0, Hd - 3, 1, 3);
+  else if (style === 'afro') { R(hair, -2, Hd - 2, 5, 3); R(hair, -2, Hd + 1, 1, 2); R(hair, 2, Hd + 1, 1, 2); }
+  else if (style !== 'bald') {
+    R(hair, -1, Hd - 1, 3, 2);
+    if (side) R(hair, -1, Hd + 1);
+    if (style === 'bun') R(hair, 0, Hd - 2);
+    if (style === 'long') { R(hair, -2, Hd, 1, 4); if (!side) R(hair, 2, Hd, 1, 4); }
+    if (style === 'ponytail') {
+      if (!side) { R(hair, 2, Hd); R(hair, 3, Hd, 1, 5); }                                        // seen from the front
+      else if (step === 1) { R(hair, -2, Hd - 1, 1, 2); R(hair, -3, Hd, 1, 3); R(hair, -4, Hd + 2, 1, 2); } // swinging out
+      else { R(hair, -2, Hd); R(hair, -3, Hd, 1, 5); }                                            // out, then down
+    }
+  }
+  if (p.moustache) R(hair, 0, Hd + 2);
+  // hats
+  const hatColor = p.hatColor ?? DEFAULT_HAT[p.hat];
+  if (p.hat === 'cap') { R(hatColor, -1, Hd - 2, 3, 2); if (side) R(hatColor, 2, Hd - 1); }   // brim forward
+  else if (p.hat === 'wide') { R(hatColor, -2, Hd - 1, 5, 1); R(hatColor, -1, Hd - 2, 3, 1); }  // straw hat, fedora
+  // carried in the hand
+  if (carry === 'bag') R(carryColor, 3, -legH - 2, 2, 3);
+  else if (carry === 'briefcase') R(carryColor, 3, -legH - 1, 2, 2);
+  else if (carry === 'stick') R(carryColor, 3, -legH - 4, 1, legH + 4);
+  else if (carry === 'umbrella') {
+    R(COLORS.ink, 2, Hd - 2, 1, 7);
+    R(carryColor, -5, Hd - 3, 11, 1); R(carryColor, -4, Hd - 4, 9, 1); R(carryColor, -2, Hd - 5, 5, 1); R(COLORS.ink, 0, Hd - 6);
+  }
   // the player's gold line
-  if (p.you) { g.fillStyle = COLORS.gold; g.fillRect(x - 3, y + 1, 7, 1); }
+  if (p.you) R(COLORS.gold, -3, 1, 7, 1);
 }
 
-/** The point just over a person's head (where speech goes). */
-export function headOf(p) { return { x: p.x, y: p.y - 15 }; }
+/** The point just over a person's head (where speech goes), above any hat or umbrella. */
+export function headOf(p) {
+  const { Hd } = frameOf(p);
+  const style = p.hairStyle ?? 'short';
+  let top = Hd - 1;
+  if (p.hat || style === 'afro' || style === 'bun') top = Hd - 2;
+  if (style === 'mohawk' && !p.hat) top = Hd - 3;
+  if (p.carry === 'umbrella') top = Hd - 6;
+  return { x: p.x, y: p.y + top - 1 };
+}
+
+/**
+ * Draw a cat with its feet at (c.x, c.y), seen from the side.
+ * A cat: { x, y, color, facing ('left' / 'right'), walking }.
+ */
+export function drawCat(g, c, t = 0) {
+  const x = Math.round(c.x), y = Math.round(c.y);
+  const s = c.facing === 'left' ? -1 : 1;
+  const R = (col, dx, dy, w = 1, h = 1) => { g.fillStyle = col; g.fillRect(s > 0 ? x + dx : x - dx - w + 1, y + dy, w, h); };
+  const col = c.color ?? CAT_COLORS[0];
+  const step = c.walking ? Math.floor(t * 8) % 2 : 0;
+  R(COLORS.shadow, -3, 0, 7, 1);
+  R(col, -2, -3, 5, 2);                                           // body
+  if (step) { R(col, -1, -1); R(col, 1, -1); } else { R(col, -2, -1); R(col, 2, -1); } // legs
+  R(col, 2, -5, 2, 2); R(col, 2, -6);                             // head and ear
+  R(col, -3, -5, 1, 2);                                           // tail
+}
+
+/**
+ * Starter looks, like tiny-catalogue's people tiles and outfits. Spread one
+ * into a person: { ...LOOKS.salaryman, skin, x, y }.
+ */
+export const LOOKS = {
+  man: { body: WHITE, legs: COLORS.navy, hair: COLORS.ink },
+  woman: { body: '#d46a8e', legs: COLORS.navy, hair: '#3a2a22', hairStyle: 'long', legwear: 'skirt' },
+  boy: { kid: true, body: '#f2c230', legs: COLORS.navy, hair: COLORS.ink, legwear: 'shorts', carry: 'backpack', carryColor: COLORS.ink },
+  girl: { kid: true, body: WHITE, legs: RED, hair: COLORS.ink, hairStyle: 'ponytail', legwear: 'skirt', carry: 'backpack', carryColor: RED },
+  grandpa: { body: '#9e6c60', trim: '#c9b48a', top: 'jacket', legs: '#6b5a48', hair: '#b3b0a8', moustache: true, hat: 'cap', hatColor: '#7a7a74', carry: 'stick' },
+  grandma: { body: '#7a6aa8', top: 'jacket', legs: '#6b4a2a', hair: '#f2efe8', hairStyle: 'bun', legwear: 'skirt', carry: 'bag' },
+  schoolboy: { kid: true, body: COLORS.ink, legs: COLORS.ink, hair: COLORS.ink, top: 'gakuran' },
+  schoolgirl: { kid: true, body: WHITE, legs: COLORS.navy, hair: COLORS.ink, hairStyle: 'ponytail', top: 'sailor', legwear: 'skirt' },
+  salaryman: { body: COLORS.navy, legs: COLORS.navy, hair: COLORS.ink, top: 'suit', carry: 'briefcase' },
+  police: { body: '#bcd2e0', legs: COLORS.navy, hair: COLORS.ink, top: 'police', hat: 'cap', hatColor: COLORS.navy },
+  delivery: { body: '#3f7fd6', legs: COLORS.navy, hair: COLORS.ink, hat: 'cap', hatColor: '#3f7fd6', carry: 'boxes' },
+  summer: { body: WHITE, legs: '#c9b48a', hair: '#3a2a22', legwear: 'shorts', hat: 'wide' },
+  rainy: { body: COLORS.navy, top: 'jacket', legs: COLORS.ink, hair: '#8a5a2a', carry: 'umbrella' },
+};
 
 /** The lab's backdrop: grass, a path across, a row of grass tufts. */
 export function drawStage(g, W, H, { pathY = Math.round(H * 0.68), pathH = Math.round(H * 0.18) } = {}) {
@@ -64,13 +187,35 @@ export function drawStage(g, W, H, { pathY = Math.round(H * 0.68), pathH = Math.
   g.fillStyle = COLORS.grass2; for (let x = 0; x < W; x += 9) g.fillRect(x + ((x / 9) % 2) * 3, pathY - 12, 2, 1);
 }
 
-/** A random look. rng: () => [0, 1) (Math.random by default). */
+/**
+ * A random look. rng: () => [0, 1) (Math.random by default). Mostly plain
+ * people as in the bubble lab, some kids, other hairstyles, hats, jackets,
+ * skirts and things to carry.
+ */
 export function randomCharacter(rng = Math.random) {
   const pick = (a) => a[Math.floor(rng() * a.length)];
   const body = pick(BODY_COLORS);
   let legs = pick(LEG_COLORS);
   if (legs === body) legs = COLORS.ink;
-  return { body, hair: pick(HAIR_COLORS), skin: pick(SKIN_COLORS), legs };
+  const p = { body, hair: pick(HAIR_COLORS), skin: pick(SKIN_COLORS), legs };
+  const grey = p.hair === '#b3b0a8' || p.hair === '#f2efe8';
+  if (!grey && rng() < 0.2) p.kid = true;
+  p.hairStyle = pick(['short', 'short', 'short', 'short', 'long', 'long', 'ponytail', 'ponytail', 'bald', 'bun', 'afro', 'mohawk']);
+  if (p.kid && (p.hairStyle === 'bald' || p.hairStyle === 'mohawk')) p.hairStyle = 'short';
+  if (!p.kid && rng() < 0.1) p.moustache = true;
+  if (rng() < 0.2) { p.hat = pick(HATS); p.hatColor = pick(THING_COLORS); }
+  const top = rng();
+  if (top < 0.15) { p.top = 'jacket'; p.trim = pick(BODY_COLORS); }
+  else if (top < 0.2 && !p.kid) { p.top = 'suit'; p.trim = pick(BODY_COLORS); }
+  else if (top < 0.23) p.top = 'apron';
+  const wear = rng();
+  if (wear < 0.2) p.legwear = 'skirt'; else if (wear < 0.35) p.legwear = 'shorts';
+  if (rng() < 0.3) {
+    p.carry = grey && rng() < 0.5 ? 'stick' : pick(['bag', 'bag', 'briefcase', 'backpack', 'backpack', 'umbrella']);
+    if (p.carry !== 'stick') p.carryColor = pick(THING_COLORS);
+  }
+  if (p.trim === body) delete p.trim;
+  return p;
 }
 
 /** A small seeded random number generator (mulberry32), for repeatable crowds. */
@@ -89,7 +234,7 @@ export function seeded(seed = 1) {
  * `palette` (CSS hex strings), fully opaque. Run after drawing a frame when
  * anything smooth (text, scaled images) was drawn on top.
  */
-export function snapToPalette(g, W, H, palette = [...Object.values(COLORS), ...BODY_COLORS, ...HAIR_COLORS, ...SKIN_COLORS, ...LEG_COLORS]) {
+export function snapToPalette(g, W, H, palette = [...Object.values(COLORS), ...BODY_COLORS, ...HAIR_COLORS, ...SKIN_COLORS, ...LEG_COLORS, ...THING_COLORS, ...CAT_COLORS, '#c9b48a']) {
   const pal = palette.map((h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)));
   const img = g.getImageData(0, 0, W, H), d = img.data;
   for (let i = 0; i < d.length; i += 4) {
