@@ -229,8 +229,10 @@ function drawGround({ W, H, streets, crossStreets, areas = [], k }) {
  * Draw the part of `town` in `view` ({ x, y, w, h }) into `g`: the ground,
  * then the buildings and `sprites` (people, and cats with `cat: true`)
  * further back first, so whoever stands lower on the screen is in front.
+ * dpx: device pixels per canvas pixel, when the canvas is drawn bigger
+ * underneath (g scaled by dpx) so the signs' names can be written.
  */
-export function drawTownView(g, town, view, sprites, t = 0) {
+export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1 } = {}) {
   g.imageSmoothingEnabled = false;
   g.drawImage(town.ground, view.x, view.y, view.w, view.h, 0, 0, view.w, view.h);
   g.save(); g.translate(-view.x, -view.y);
@@ -241,6 +243,6 @@ export function drawTownView(g, town, view, sprites, t = 0) {
   }
   for (const s of sprites) if (s.x > view.x - 8 && s.x < view.x + view.w + 8 && s.y > view.y - 2 && s.y < view.y + view.h + 24) items.push({ y: s.y, s });
   items.sort((a, b) => a.y - b.y || (a.b ? -1 : 1));
-  for (const it of items) it.b ? drawBuilding(g, it.b) : (it.s.cat ? drawCat : drawCharacter)(g, it.s, t);
+  for (const it of items) it.b ? drawBuilding(g, dpx === 1 ? it.b : { ...it.b, dpx }) : (it.s.cat ? drawCat : drawCharacter)(g, it.s, t);
   g.restore();
 }

@@ -117,7 +117,8 @@ drawBuilding(g, { type: 'shop', shopType: 'ramen', x: 120, y: 104, seed: 3 });
 
 | Export | What it does |
 | --- | --- |
-| `drawBuilding(g, b)` | One building `{ type, x, y, seed, shopType, wall, roof, scale }`: centred on `x`, ground line at `y`. `seed` picks the wall and roof colours and which windows are lit; `scale` draws it bigger with crisp pixels (the town uses 1.5). |
+| `drawBuilding(g, b)` | One building `{ type, x, y, seed, shopType, wall, roof, scale, dpx }`: centred on `x`, ground line at `y`. `seed` picks the wall and roof colours and which windows are lit; `scale` draws it bigger with crisp pixels (the town uses 1.5); `dpx` lets its signs write their names (see below). |
+| `SIGN_FONT` | The signs' typeface: DotGothic16 (load it on the page from Google Fonts). |
 | `buildingSize(b)` | Its width and height at its scale. |
 | `drawPart(g, { part, x, y, seed, scale })` | One door or window from the kit the buildings are made of, centred on `x`, its bottom at `y`. |
 | `PARTS` | `id -> { label, w, h }`: `door.wood`, `door.plank`, `door.glazed`, `door.glass`, `door.steel`, `door.arched`, `door.auto`, `door.sliding`, `door.shoji`, `door.garage`, `window.sash`, `window.pair`, `window.alu`, `window.aluPair`, `window.tall`, `window.shuttered`, `window.arched`, `window.pointed`, `window.stained`, `window.round`, `window.lattice`, `window.shoji`, `window.leaded`, `window.neon`, `window.shop`. |
@@ -136,6 +137,15 @@ straps, a café door with glass, glass in aluminium, a flat's steel door,
 automatic doors, Japanese lattice sliding doors, shoji; sash, aluminium,
 tall, shuttered, arched, pointed, stained, round, lattice, leaded, neon
 windows and shop glass. The catalogue has them all under Doors & windows.
+**Signs say what the place is** (LAUNDROMAT, PHARMACY, KONBINI, RAMEN, CAFE,
+BOOKS, BAKERY, IZAKAYA, FLOWERS, FISH, CLINIC, BANK, KOBAN, POST OFFICE,
+TAKOYAKI, SUSHI, UDON, DINER, and KARAOKE down its upright sign), in the pixel
+font DotGothic16. A sign is only a few pixels tall, so the canvas has to be
+drawn bigger underneath for the letters to fit: make the canvas `dpx` times
+bigger than its picture, scale the context (`g.setTransform(dpx, 0, 0, dpx,
+0, 0)`) and pass `dpx` (the demo uses 4 for the town, 6 for single
+buildings). Without it, a sign shows a row of letter-like dashes instead.
+
 Everything stays crisp when the town draws it 1.5 times bigger: patterns
 repeat on even steps and small pictures (crosses, letters, the clock) are
 drawn on whole pixels. Roofs are seen from above (8–18 rows, like a

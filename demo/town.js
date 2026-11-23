@@ -1,4 +1,4 @@
-import { BUILDINGS, buildingSize, buildingSolids, drawBuilding } from '../src/tinyBuildings.js';
+import { BUILDINGS, SIGN_FONT, buildingSize, buildingSolids, drawBuilding } from '../src/tinyBuildings.js';
 import { CAT_COLORS, LOOKS, facingFor, randomCharacter, seeded } from '../src/tinyCharacters.js';
 import { drawTownView, makeTown } from '../src/tinyTown.js';
 
@@ -8,6 +8,10 @@ import { drawTownView, makeTown } from '../src/tinyTown.js';
 // The keys move whoever is in the canvas you tapped last (the town at first).
 const canvas = document.querySelector('#town'), g = canvas.getContext('2d');
 const VW = canvas.width, VH = canvas.height;
+// the canvas is drawn 4 times bigger underneath (the pixels stay as crisp),
+// so the shop signs have the pixels to write their names in DotGothic16
+const D = 4;
+canvas.width = VW * D; canvas.height = VH * D;
 const here = document.querySelector('#here');
 const town = makeTown();
 const area = (name) => town.areas.find((a) => a.name === name);
@@ -102,7 +106,8 @@ function frame(now) {
     y: Math.round(Math.max(0, Math.min(town.H - VH, you.y - VH * 0.6))),
     w: VW, h: VH,
   };
-  drawTownView(g, town, view, people, t);
+  g.setTransform(D, 0, 0, D, 0, 0);
+  drawTownView(g, town, view, people, t, { dpx: D });
   const name = town.placeAt(you.x, you.y);
   if (name !== shown) { shown = name; here.textContent = name; }
   requestAnimationFrame(frame);
@@ -112,15 +117,18 @@ requestAnimationFrame(frame);
 // Buildings: each one on its own, with its name; a few seeds of those that vary.
 const sheet = document.querySelector('#buildings');
 const VARIED = { mosque: [1, 2, 3, 8, 11, 16, 9, 6] };
+const SD = 6;                                                 // drawn 6 times bigger underneath, for the signs
+await document.fonts.load(`16px ${SIGN_FONT}`).catch(() => {});
 for (const [type, { label, w, h }] of Object.entries(BUILDINGS)) {
   if (type === 'torii' || type === 'shrineHall') continue;    // shown together as the shrine
   for (const seed of VARIED[type] ?? [2]) {
     const c = document.createElement('canvas');
-    c.width = w + 4; c.height = h + 4; c.className = 'bld';
-    c.style.setProperty('--w', c.width);
+    c.width = (w + 4) * SD; c.height = (h + 4) * SD; c.className = 'bld';
+    c.style.setProperty('--w', w + 4);
     const g = c.getContext('2d');
-    g.fillStyle = '#d8d2c4'; g.fillRect(0, h + 2, c.width, 2);
-    drawBuilding(g, { type, x: 2 + w / 2, y: h + 2, seed });
+    g.setTransform(SD, 0, 0, SD, 0, 0); g.imageSmoothingEnabled = false;
+    g.fillStyle = '#d8d2c4'; g.fillRect(0, h + 2, w + 4, 2);
+    drawBuilding(g, { type, x: 2 + w / 2, y: h + 2, seed, dpx: SD });
     const f = document.createElement('figure');
     const cap = document.createElement('figcaption'); cap.textContent = VARIED[type] ? `${label} (seed ${seed})` : label;
     f.append(c, cap); sheet.append(f);

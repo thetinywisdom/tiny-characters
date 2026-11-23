@@ -178,7 +178,18 @@ line is always 2 px, a 2 px stripe always 3), so keep these rules:
   `icon(r, dx, up, rows, colours)`: rows of characters drawn on whole
   pixels, centred, so they stay sharp and symmetric (`CROSS` is the medical
   cross)
-- signs show a short centred word (`sign`), not letters edge to edge; shop
+- signs show the place's name (`sign(r, bg, fg, dx, up, w, h, text)`,
+  `upright(...)` for a narrow sign read top to bottom) in DotGothic16
+  (`SIGN_FONT`) through `r.text`: it picks the biggest size of 32, 24, 16,
+  12, 10 device pixels that fits the box, or returns false and the sign
+  draws the old dashes. It needs `dpx` (device pixels per canvas pixel):
+  the canvas is made dpx times bigger and the context scaled, so the
+  pixel art stays crisp and the letters get real pixels (town 4, the
+  Buildings sheet and catalogue cards 6). Painters moved sideways use
+  `shifted(r, ox)` so they keep `text` and `px`. Shop
+  names live in `SHOPS[kind].name`. The pages load DotGothic16 from Google
+  Fonts and draw static canvases again once it has loaded; headings,
+  buttons and chips use it too. Signs not lettered edge to edge; shop
   glass spreads its bars evenly; shelves are shelf lines with 3 px goods
 - check a new building at scale 1.5 next to a person before committing
 

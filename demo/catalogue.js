@@ -1,4 +1,4 @@
-import { BUILDINGS, PARTS, SHOP_TYPES, drawBuilding, drawPart } from '../src/tinyBuildings.js';
+import { BUILDINGS, PARTS, SHOP_TYPES, SIGN_FONT, drawBuilding, drawPart } from '../src/tinyBuildings.js';
 import { CAT_COLORS, LOOKS, drawCat, drawCharacter, lookFor, seeded } from '../src/tinyCharacters.js';
 
 // The catalogue: every person, animal and building, with filters (group,
@@ -42,8 +42,8 @@ for (const [type, { label, w, h }] of Object.entries(BUILDINGS)) {
   const shopTypes = type === 'shop' ? SHOP_TYPES : [undefined];
   for (const shopType of shopTypes) {
     items.push({ id: `building.${type}${shopType ? ':' + shopType : ''}`, label: shopType ? `Shop: ${shopType}` : label, group: 'Buildings', tags, seed: 1,
-      w: w + 8, h: h + 4, px: 0, wide: w > 60,
-      draw: (g, seed) => drawBuilding(g, { type, shopType, x: 4 + w / 2, y: h + 2, seed }),
+      w: w + 8, h: h + 4, px: 0, wide: w > 60, dpx: 6,               // drawn 6 times bigger underneath, for the signs
+      draw: (g, seed) => drawBuilding(g, { type, shopType, x: 4 + w / 2, y: h + 2, seed, dpx: 6 }),
       code: (seed) => `drawBuilding(g, { type: '${type}', ${shopType ? `shopType: '${shopType}', ` : ''}x, y, seed: ${seed} })` });
   }
 }
@@ -102,7 +102,7 @@ function renderFilters() {
 const cards = items.map((it) => {
   const card = document.createElement('article'); card.className = 'card'; if (it.wide) card.style.gridColumn = 'span 2';
   const stage = document.createElement('div'); stage.className = 'stage';
-  const c = document.createElement('canvas'); c.width = it.w; c.height = it.h;
+  const c = document.createElement('canvas'); c.width = it.w * (it.dpx ?? 1); c.height = it.h * (it.dpx ?? 1);
   const px = it.px || Math.max(1, Math.min(3, Math.floor((it.wide ? 360 : 170) / it.w), Math.floor(230 / it.h)));
   c.style.setProperty('--w', it.w); c.style.setProperty('--px', px);
   c.setAttribute('role', 'img'); c.setAttribute('aria-label', it.label);
@@ -135,9 +135,10 @@ $('#grid').append(...cards.map((v) => v.card));
 
 let last = 0;
 function paint(v, t) {
-  v.g.imageSmoothingEnabled = false;
-  v.g.clearRect(0, 0, v.c.width, v.c.height);
-  v.g.fillStyle = '#d8d2c4'; v.g.fillRect(0, v.c.height - 2, v.c.width, 2);
+  const d = v.it.dpx ?? 1;
+  v.g.setTransform(d, 0, 0, d, 0, 0); v.g.imageSmoothingEnabled = false;
+  v.g.clearRect(0, 0, v.it.w, v.it.h);
+  v.g.fillStyle = '#d8d2c4'; v.g.fillRect(0, v.it.h - 2, v.it.w, 2);
   v.it.draw(v.g, v.it.seed, t, $('#animate').checked);
 }
 
@@ -159,6 +160,8 @@ $('#animate').onchange = () => cards.forEach((v) => paint(v, last));
 
 fromHash(); update();
 cards.forEach((v) => paint(v, 0));
+// the signs need DotGothic16: draw them again once it has loaded
+document.fonts.load(`16px ${SIGN_FONT}`).then(() => cards.forEach((v) => paint(v, last))).catch(() => {});
 // people and cats move; buildings are drawn again only when their seed changes
 function frame(now) {
   last = now / 1000;

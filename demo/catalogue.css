@@ -2,7 +2,7 @@
 .filters { display: grid; gap: 10px; position: sticky; top: 0; z-index: 2; background: var(--paper); padding: 8px 0 10px; border-bottom: 2px solid var(--line); }
 .filters input[type="search"] { font: inherit; padding: 10px 12px; min-height: 44px; border: 2px solid var(--line); background: var(--paper); color: var(--ink); width: 100%; max-width: 420px; box-sizing: border-box; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip { font: 700 12px 'Silkscreen', monospace; background: transparent; color: var(--ink); border: 2px solid var(--line); padding: 6px 10px; min-height: 36px; }
+.chip { font: 400 16px 'DotGothic16', monospace; background: transparent; color: var(--ink); border: 2px solid var(--line); padding: 6px 10px; min-height: 36px; }
 .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #2f3236; }
 .chip .n { opacity: .6; margin-left: 4px; }
 .filters .row { margin-top: 0; flex-wrap: wrap; align-items: center; }

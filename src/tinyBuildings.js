@@ -78,11 +78,27 @@ function gable(r, c, face, dx, up, w, gh, d) {
 /** A striped awning, h rows, stripes 2 px wide. */
 function awning(r, c1, c2, dx, up, w, h = 3) { for (let i = 0; i < w; i += 2) r(i % 4 ? c2 : c1, dx + i, up, Math.min(2, w - i), h); }
 /** A sign: a band with a row of "letters" (the text is too small to read). */
-function sign(r, bg, fg, dx, up, w, h = 4) {
+function sign(r, bg, fg, dx, up, w, h = 4, text = '') {
   r(bg, dx, up, w, h);
-  // a word in the middle (about half the sign), letters 2 px on even steps so it stays even when scaled
+  // the name in DotGothic16 when the canvas has the pixels for it (see drawBuilding's dpx);
+  // otherwise a word-shaped row of letters, on even steps so it stays even when scaled
+  if (text && r.text && r.text(text, fg, dx, up, w, h)) return;
   const n = Math.max(2, Math.floor((w * 0.55) / 4)), start = dx + Math.floor((w - (n * 4 - 2)) / 4) * 2;
   for (let i = 0; i < n; i++) r(fg, start + i * 4, up + 1, 2, h - 2);
+}
+/** The same painter moved ox pixels to the right (text and icons too). */
+function shifted(r0, ox) {
+  const r = (c, dx, up, w, h) => r0(c, dx + ox, up, w, h);
+  r.k = r0.k;
+  if (r0.px) r.px = (c, dx, up, w, h) => r0.px(c, dx + Math.round(ox * (r0.k ?? 1)), up, w, h);
+  if (r0.text) r.text = (str, c, dx, up, w, h, v) => r0.text(str, c, dx + ox, up, w, h, v);
+  return r;
+}
+/** A sign that reads top to bottom (a narrow upright sign): its name letter under letter. */
+function upright(r, bg, fg, dx, up, w, h, text, dots) {
+  r(bg, dx, up, w, h);
+  if (text && r.text && r.text(text, fg, dx, up, w, h, true)) return;
+  for (let i = up + 2; i < up + h - 2; i += 4) r(dots ? dots[(i / 4) & 3] : fg, dx + Math.floor((w - 2) / 2), i, 2, 2);
 }
 const lantern = (r, dx, up) => { r(RED, dx, up, 2, 3); r(INK, dx, up + 3, 2, 1); };
 /** A noren: a short curtain over a doorway, cut into strips. */
@@ -263,12 +279,12 @@ const WINDOWS = {
 // --- shop fronts (the catalogue's shop types) ------------------------------------
 export const SHOP_TYPES = ['konbini', 'ramen', 'cafe', 'bookshop', 'bakery', 'izakaya'];
 const SHOPS = {
-  konbini: { bg: WHITE, fg: '#1f4fa8', stripes: ['#2fa36b', '#f08a2c', '#1f4fa8'], auto: true },
-  ramen: { bg: '#d8302a', fg: WHITE, noren: NAVY, lantern: true },
-  cafe: { bg: '#5a3a28', fg: '#f4e6c8', awning: ['#2fa36b', WHITE] },
-  bookshop: { bg: '#1f4fa8', fg: WHITE, books: true },
-  bakery: { bg: '#f2c230', fg: '#5a3a28', awning: [RED, WHITE] },
-  izakaya: { bg: '#2a2a30', fg: '#f2c230', noren: '#8a3a2a', lantern: true },
+  konbini: { name: 'KONBINI', bg: WHITE, fg: '#1f4fa8', stripes: ['#2fa36b', '#f08a2c', '#1f4fa8'], auto: true },
+  ramen: { name: 'RAMEN', bg: '#d8302a', fg: WHITE, noren: NAVY, lantern: true },
+  cafe: { name: 'CAFE', bg: '#5a3a28', fg: '#f4e6c8', awning: ['#2fa36b', WHITE] },
+  bookshop: { name: 'BOOKS', bg: '#1f4fa8', fg: WHITE, books: true },
+  bakery: { name: 'BAKERY', bg: '#f2c230', fg: '#5a3a28', awning: [RED, WHITE] },
+  izakaya: { name: 'IZAKAYA', bg: '#2a2a30', fg: '#f2c230', noren: '#8a3a2a', lantern: true },
 };
 /**
  * A shop's ground floor (19 tall): glass or a wooden front and its door
@@ -277,7 +293,7 @@ const SHOPS = {
 function shopFront(r, rng, dx, w, kind, wall) {
   const s = SHOPS[kind] ?? SHOPS.konbini;
   r(shade(wall, 0.9), dx, 12, w, SHOP_GF - 12);
-  sign(r, s.bg, s.fg, dx + 1, 15, w - 2, 4);
+  sign(r, s.bg, s.fg, dx + 1, 15, w - 2, 4, s.name);
   if (s.stripes) s.stripes.forEach((c, i) => r(c, dx, 14 - i, w, 1));
   if (s.noren) {
     r(DARKWOOD, dx, 0, w, 12);
@@ -323,9 +339,10 @@ const DEFS = {
   mixedUse: ['Shop with flats above', 38, (r, rng, b, wall) => {
     const top = floorAt(4, SHOP_GF);
     r(wall, 0, SHOP_GF, 38, top - SHOP_GF);
-    shopFront(r, rng, 0, 38, b.shopType ?? SHOP_TYPES[Math.floor(rng() * SHOP_TYPES.length)], wall);
+    const kind = b.shopType ?? SHOP_TYPES[Math.floor(rng() * SHOP_TYPES.length)];
+    shopFront(r, rng, 0, 38, kind, wall);
     for (let n = 1; n < 4; n++) { WINDOWS.alu(r, rng, 5, floorAt(n, SHOP_GF) + SILL, 9); WINDOWS.alu(r, rng, 19, floorAt(n, SHOP_GF) + SILL, 9); }
-    r('#2fa36b', 32, SHOP_GF + 3, 5, top - SHOP_GF - 6); for (let i = SHOP_GF + 5; i < top - 5; i += 4) r(WHITE, 33, i, 3, 2);  // vertical sign
+    upright(r, '#2fa36b', WHITE, 32, SHOP_GF + 3, 5, top - SHOP_GF - 6, (SHOPS[kind] ?? SHOPS.konbini).name);  // vertical sign
     flatRoof(r, wall, 0, top, 38, 12); r('#918f8a', 24, top + 3, 7, 3);
   }],
   shop: ['Shop', 40, (r, rng, b, wall) => {
@@ -343,8 +360,8 @@ const DEFS = {
     flatRoof(r, wall, 0, top, 32, 14); r('#918f8a', 4, top + 4, 9, 6); r(shade('#918f8a', 0.8), 4, top + 4, 9, 1); r(INK, 25, top + 4, 1, 9); r(RED, 25, top + 12, 1, 1);  // plant room, antenna
   }],
   shrine: ['Shrine', 72, (r) => {                                        // a torii and the hall, side by side
-    DEFS.torii[2]((c, dx, up, w, h) => r(c, dx + 2, up, w, h));
-    DEFS.shrineHall[2]((c, dx, up, w, h) => r(c, dx + 32, up, w, h));
+    DEFS.torii[2](shifted(r, 2));
+    DEFS.shrineHall[2](shifted(r, 32));
   }],
   torii: ['Torii', 26, (r) => {
     const red = '#c8402c';
@@ -374,7 +391,7 @@ const DEFS = {
   }],
   laundromat: ['Coin laundromat', 36, (r, rng, b, wall) => {
     r(shade(wall, 0.9), 0, 12, 36, SHOP_GF - 12);
-    sign(r, '#e8e0d0', '#3f7fd6', 1, 15, 34, 4);
+    sign(r, '#e8e0d0', '#3f7fd6', 1, 15, 34, 4, 'LAUNDROMAT');
     WINDOWS.shop(r, 1, 0, 26, 12);
     for (let i = 3; i < 22; i += 6) { r(INK, i, 2, 4, 4); r('#7f9ab4', i + 1, 3, 2, 2); }   // washers
     DOORS.glass(r, 28);
@@ -392,7 +409,7 @@ const DEFS = {
   }],
   pharmacy: ['Pharmacy', 44, (r, rng, b, wall) => {
     r(shade(wall, 0.9), 0, 12, 44, SHOP_GF - 12);
-    sign(r, '#eef2e8', '#2fa36b', 8, 15, 35, 4);
+    sign(r, '#eef2e8', '#2fa36b', 8, 15, 35, 4, 'PHARMACY');
     icon(r, 1, 14, CROSS, { g: '#2fa36b', w: WHITE });                        // green cross
     WINDOWS.shop(r, 1, 0, 31, 12, FRAME, '#dfe8ec');
     shelves(r, rng, 2, 1, 29, 3, [RED, '#3f7fd6', '#f2c230', '#2fa36b', WHITE, '#d46a8e']);
@@ -404,7 +421,7 @@ const DEFS = {
     r(wall, 0, GF, 36, top - GF);
     r(DARKWOOD, 0, 0, 36, GF);
     WINDOWS.lattice(r, 3, SILL, 14, 6);
-    r(LIGHTWOOD, 3, 12, 14, 3); for (const i of [6, 9, 12]) r(INK, i, 13, 1, 1);   // name board
+    sign(r, LIGHTWOOD, INK, 3, 12, 14, 3, 'SUSHI');                         // name board
     DOORS.sliding(r, 22); noren(r, NAVY, 21, 8, 12);
     for (const dx of [5, 15, 26]) WINDOWS.alu(r, rng, dx, floorAt(1) + SILL);
     r('#4a4442', -1, GF - 1, 38, 1);
@@ -414,7 +431,7 @@ const DEFS = {
     const top = floorAt(3, SHOP_GF);
     r(wall, 0, 0, 32, top);
     WINDOWS.shop(r, 1, 0, 22, 12); DOORS.glass(r, 24);
-    awning(r, RED, WHITE, -1, 12, 34, 3); sign(r, WHITE, '#d46a8e', 3, 15, 26, 4);
+    awning(r, RED, WHITE, -1, 12, 34, 3); sign(r, WHITE, '#d46a8e', 3, 15, 26, 4, 'FLOWERS');
     for (let n = 1; n < 3; n++) { WINDOWS.alu(r, rng, 5, floorAt(n, SHOP_GF) + SILL); WINDOWS.alu(r, rng, 21, floorAt(n, SHOP_GF) + SILL); }
     for (const dx of [1, 6, 11, 16]) { r('#8a6440', dx, 0, 4, 2); dots(r, rng, dx, 2, 4, [RED, '#f2c230', '#d46a8e', WHITE, '#7a6aa8']); r('#5f8f5a', dx + 1, 3, 2, 1); }
     flatRoof(r, wall, 0, top, 32, 10); for (const dx of [3, 9, 15]) { r('#8a6440', dx, top + 2, 5, 3); r('#5f8f5a', dx + 1, top + 4, 3, 2); }  // roof garden
@@ -424,7 +441,7 @@ const DEFS = {
     r('#3a3f44', 0, 0, 40, 12);                                             // open to the street
     r('#dfe8ec', 2, 0, 36, 5); r(WHITE, 1, 5, 38, 1);                      // ice counter
     for (let i = 4; i < 36; i += 4) r(rng() < 0.5 ? '#b3b0a8' : '#d8b0a0', i, 3, 2, 1);   // fish on the ice
-    awning(r, NAVY, WHITE, -1, 12, 42, 3); sign(r, WHITE, NAVY, 1, 15, 38, 4);
+    awning(r, NAVY, WHITE, -1, 12, 42, 3); sign(r, WHITE, NAVY, 1, 15, 38, 4, 'FISH');
     flatRoof(r, wall, 0, SHOP_GF, 40, 12);
   }],
   udonSoba: ['Udon / soba shop', 36, (r, rng, b, wall) => {
@@ -432,15 +449,15 @@ const DEFS = {
     r(wall, 0, GF, 36, top - GF);
     r(WOOD, 0, 0, 36, GF);
     WINDOWS.lattice(r, 3, SILL, 14, 6);
-    r(LIGHTWOOD, 3, 12, 14, 3); r(INK, 5, 13, 10, 1);                     // name board
+    sign(r, LIGHTWOOD, INK, 3, 12, 14, 3, 'UDON');                          // name board
     DOORS.sliding(r, 22); noren(r, '#3a5a7a', 21, 8, 12); lantern(r, 18, 6);
     WINDOWS.alu(r, rng, 6, floorAt(1) + SILL, 9); WINDOWS.alu(r, rng, 22, floorAt(1) + SILL, 9);
     r('#3a3f44', -1, GF - 1, 38, 1);
     pitched(r, b.roof ?? '#3a3f44', -1, top, 38, 14);
   }],
   familyRestaurant: ['Family restaurant', 72, (r0, rng, b) => {
-    r0(INK, 3, 0, 1, 22); r0('#2fa36b', 0, 22, 7, 5); r0(WHITE, 1, 24, 5, 1);   // pole sign
-    const r = (c, dx, up, w, h) => r0(c, dx + 8, up, w, h);
+    r0(INK, 3, 0, 1, 22); sign(r0, '#2fa36b', WHITE, 0, 22, 7, 5, 'DINER');   // pole sign
+    const r = shifted(r0, 8);
     const wall = b.wall ?? '#b89e80';
     r(wall, 0, 0, 64, GF);
     for (const dx of [2, 12, 22, 32, 42]) WINDOWS.shop(r, dx, 2, 9, 10, '#a03a2c');   // big windows to the booths
@@ -454,24 +471,24 @@ const DEFS = {
     r(DARKWOOD, 0, 0, 20, 6); r(LIGHTWOOD, 0, 5, 20, 1);
     for (let i = 3; i < 17; i += 4) r('#c09060', i, 6, 2, 1);               // takoyaki balls
     awning(r, '#f08a2c', '#f4e6c8', -1, 12, 22, 3);
-    sign(r, '#e0d2b0', '#7a3a32', 0, 15, 20, 6);
+    sign(r, '#e0d2b0', '#7a3a32', 0, 15, 20, 6, 'TAKOYAKI');
     lantern(r, 1, 8);
   }],
   koban: ['Koban (police box)', 42, (r0) => {
     // a bicycle out front
     r0(INK, 0, 0, 3, 3); r0(INK, 5, 0, 3, 3); r0('#d8d0c0', 1, 1, 1, 1); r0('#d8d0c0', 6, 1, 1, 1); r0('#3f7fd6', 2, 3, 5, 1); r0(INK, 4, 4, 1, 1);
-    const r = (c, dx, up, w, h) => r0(c, dx + 11, up, w, h);
+    const r = shifted(r0, 11);
     const wall = '#9a7c60';
     r(wall, 0, 0, 30, GF);
     WINDOWS.shop(r, 2, 0, 14, 12); DOORS.glass(r, 19);
-    sign(r, NAVY, WHITE, 1, 12, 16, 4);
+    sign(r, NAVY, WHITE, 1, 12, 16, 4, 'KOBAN');
     r(shade(wall, 0.8), 20, 12, 4, 1); r(RED, 21, 13, 2, 2); r(WHITE, 21, 14, 1, 1);   // the red lamp over the door
     flatRoof(r, wall, -1, GF, 32, 12); r('#e8dcc0', -1, GF, 32, 1);
   }],
   postOffice: ['Post office', 62, (r, rng) => {
     const wall = '#e8e0d0';
     r(wall, 0, 0, 56, GF);
-    r(RED, 0, 12, 56, 4); icon(r, 3, 12, ['wwwww', '.....', 'wwwww', '..w..'], { w: WHITE }); for (let i = 11; i < 38; i += 4) r(WHITE, i, 13, 2, 2);  // 〒 and the name
+    r(RED, 0, 12, 56, 4); sign(r, RED, WHITE, 9, 12, 34, 4, 'POST OFFICE'); icon(r, 3, 12, ['wwwww', '.....', 'wwwww', '..w..'], { w: WHITE });  // 〒 and the name
     for (const dx of [2, 12, 22, 32]) { WINDOWS.alu(r, rng, dx, SILL, 9); r(rng() < 0.5 ? '#f2c230' : '#3f7fd6', dx + 2, SILL + 1, 2, 3); }  // posters
     DOORS.auto(r, 43);
     flatRoof(r, wall, 0, GF, 56, 14); r(RED, 0, GF, 56, 2); r('#918f8a', 40, GF + 4, 8, 4);
@@ -481,7 +498,7 @@ const DEFS = {
     const wall = '#6a5848', top = floorAt(3);
     r(wall, 0, 0, 46, top);
     for (let n = 1; n < 3; n++) for (const dx of [4, 12, 20, 28, 36]) WINDOWS.alu(r, rng, dx, floorAt(n) + SILL);
-    sign(r, '#c8302a', WHITE, 2, 12, 42, 4);
+    sign(r, '#c8302a', WHITE, 2, 12, 42, 4, 'BANK');
     WINDOWS.shop(r, 2, 0, 25, 12); DOORS.auto(r, 29);
     r(CONCRETE, 41, 0, 4, 10); r(INK, 42, 5, 2, 3);                         // ATM
     flatRoof(r, wall, 0, top, 46, 12); r('#918f8a', 6, top + 3, 8, 4); r(shade('#918f8a', 0.8), 6, top + 3, 8, 1);
@@ -489,7 +506,7 @@ const DEFS = {
   clinic: ['Clinic', 40, (r, rng) => {
     const wall = '#b9b8b0', top = floorAt(2);
     r(wall, 0, 0, 40, top);
-    sign(r, WHITE, '#2fa36b', 2, 12, 36, 4);
+    sign(r, WHITE, '#2fa36b', 2, 12, 36, 4, 'CLINIC');
     WINDOWS.shop(r, 2, 0, 23, 12, FRAME, '#dfe8ec'); DOORS.glass(r, 29);
     icon(r, 5, floorAt(1) + SILL, CROSS, { g: '#2fa36b', w: WHITE });       // green cross
     WINDOWS.alu(r, rng, 15, floorAt(1) + SILL, 9); WINDOWS.alu(r, rng, 28, floorAt(1) + SILL, 9);
@@ -509,7 +526,7 @@ const DEFS = {
     const wall = '#2a2a30', top = floorAt(4);
     r(wall, 0, 0, 34, top);
     for (let n = 1; n < 4; n++) for (const dx of [3, 12, 21]) WINDOWS.neon(r, rng, dx, floorAt(n) + SILL);
-    r(WHITE, 29, GF + 1, 4, top - GF - 3); for (let i = GF + 3; i < top - 3; i += 4) r([RED, '#3f7fd6', '#d46a8e', '#f2c230'][(i / 4) & 3], 30, i, 2, 2);  // vertical sign
+    upright(r, WHITE, '#d8302a', 29, GF + 1, 4, top - GF - 3, 'KARAOKE', [RED, '#3f7fd6', '#d46a8e', '#f2c230']);  // vertical sign
     WINDOWS.shop(r, 2, 0, 18, 12, FRAME, '#7a6aa8'); DOORS.glass(r, 22); r('#f2a040', 2, 13, 26, 2);
     flatRoof(r, wall, 0, top, 34, 12); r('#918f8a', 5, top + 3, 7, 4);
   }],
@@ -535,7 +552,7 @@ const DEFS = {
     icon(r, 48, 40, ['bbbbb', 'bwwwb', 'bwbwb', 'bwwwb', 'bwbbb', 'bwbbb', 'bbbbb'], { b: '#3f7fd6', w: WHITE });  // P
   }],
   gasStation: ['Gas station', 68, (r0, rng) => {
-    const r = (c, dx, up, w, h) => r0(c, dx + 4, up, w, h);
+    const r = shifted(r0, 4);
     r(CONCRETE, 10, 0, 2, 20); r(CONCRETE, 46, 0, 2, 20);
     r('#e4e2dc', 4, 24, 52, 12); r('#d4d2cc', 4, 24, 52, 1); r(WHITE, 4, 20, 52, 4); r(RED, 4, 21, 52, 1);  // canopy, its top
     for (const dx of [20, 34]) { r(RED, dx, 0, 4, 8); r(WHITE, dx + 1, 4, 2, 2); r(INK, dx + 1, 1, 2, 1); }  // pumps
@@ -674,7 +691,7 @@ export function drawBuilding(g, b) {
   const rng = seeded((b.seed ?? 1) * 97 + Object.keys(DEFS).indexOf(b.type));
   const wall = b.wall ?? WALL_COLORS[Math.floor(rng() * WALL_COLORS.length)];
   const roof = b.roof ?? ROOF_COLORS[Math.floor(rng() * ROOF_COLORS.length)];
-  draw(painter(g, L, y, k), rng, b, wall, roof);
+  draw(painter(g, L, y, k, b.dpx ?? 1), rng, b, wall, roof);
 }
 
 /**
@@ -682,7 +699,9 @@ export function drawBuilding(g, b) {
  * rectangle's edges are scaled and rounded, so the pixels stay as crisp as
  * the people's (a 1 px line becomes 1 or 2 px).
  */
-function painter(g, L, y, k = 1) {
+/** The signs' typeface (Google Fonts; the page loads it). */
+export const SIGN_FONT = '"DotGothic16", monospace';
+function painter(g, L, y, k = 1, dpx = 1) {
   // every rectangle keeps the same size wherever it is (a 1 px line is always
   // 2 px at 1.5, a 2 px stripe always 3), so stripes and rows stay even
   const r = k === 1
@@ -695,6 +714,22 @@ function painter(g, L, y, k = 1) {
   r.k = k;
   // whole canvas pixels, for icons: (dx, up) already scaled
   r.px = (c, dx, up, w, h) => { g.fillStyle = c; g.fillRect(L + dx, y - up - h, w, h); };
+  // text in the box (dx, up, w, h), in DotGothic16, if it fits: the canvas has
+  // dpx device pixels per canvas pixel, and the font is crisp at 8, 12, 16 ...
+  r.text = (str, c, dx, up, w, h, vertical = false) => {
+    const W = Math.round(w * k), H = Math.round(h * k), X = L + Math.round(dx * k), Y = y - Math.round(up * k) - H;
+    const boxW = W * dpx - 2, boxH = H * dpx - 2;
+    for (const size of [32, 24, 16, 12, 10]) {
+      g.font = `${size / dpx}px ${SIGN_FONT}`;
+      const fits = vertical ? size * str.length <= boxH && size <= boxW + 2 : g.measureText(str).width * dpx <= boxW && size <= boxH + 2;
+      if (!fits) continue;
+      g.fillStyle = c; g.textAlign = 'center'; g.textBaseline = 'middle';
+      if (vertical) [...str].forEach((ch, i) => g.fillText(ch, X + W / 2, Y + H / 2 + (i - (str.length - 1) / 2) * (size / dpx)));
+      else g.fillText(str, X + W / 2, Y + H / 2 + 0.5 / dpx);
+      return true;
+    }
+    return false;
+  };
   return r;
 }
 
