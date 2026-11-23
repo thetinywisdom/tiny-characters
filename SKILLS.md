@@ -89,7 +89,8 @@ and check with Playwright screenshots on a desktop size and a phone
 
 The demo is served from the root of `main` (Settings → Pages → Deploy from a
 branch → `main`, `/ (root)`) at https://thetinywisdom.github.io/tiny-characters/.
-Every push to `main` updates it within a minute or two. All paths in
+Every push to `main` updates it within a minute or two; push each update
+to `main` (see CLAUDE.md). All paths in
 `index.html` and `demo/` are relative, so keep them that way (no leading `/`).
 
 ## Keeping the docs up to date

@@ -8,6 +8,10 @@ Tiny Characters: the tiny pixel people from Tiny City Builder's bubble lab
   update `SKILLS.md` (files, API, how a person is drawn, workflows),
   `PLAN.md` (move finished work to Done, add next steps, known issues and
   the owner's decisions) and `README.md` (what people see and use).
+- **Push to `main` after every update, without asking** (the owner's
+  standing instruction): GitHub Pages serves the demo from `main`, so each
+  change goes live. Commit on the working branch, then push it to `main` too
+  (fast-forward; never force-push).
 - Keep the characters as small and simple as they are (the owner liked them
   this way); no build step, no dependencies.
 - Check changes visually (Playwright screenshots of `index.html` on a desktop

@@ -7,7 +7,8 @@ bubble lab, so games can use them and they can grow.
 
 ## Decisions (agreed with the owner)
 
-- The demo is on GitHub Pages, served from `main`.
+- The demo is on GitHub Pages, served from `main`; every update is pushed
+  to `main` right away, without asking.
 - The characters are the bubble lab's tiny 2D pixel people (about 5 × 15
   pixels), kept as small and simple as they are there.
 - Looks from the catalogue (Nov 2026): keep mohawk (3 px tall), moustache
