@@ -7,7 +7,8 @@ canvas and scaled up with hard pixels. Plain JavaScript, no dependencies.
 
 **Try it:** https://thetinywisdom.github.io/tiny-characters/ (GitHub Pages,
 served from `main`). Or open `index.html` through any static server for the demo:
-a town (one long street of every tiny building, the view following you), a
+a town to walk around (a 2D map of streets, blocks and grounds; the view
+follows you; tap a building to walk to its door), a
 park where they stroll about with a couple of cats (move the one with the
 gold line with the arrow keys / WASD or by tapping; tap anyone to make them
 talk; the keys move you in the town, or in the park once you tap it), every
@@ -75,7 +76,7 @@ size. `LOOKS` has starter looks like the catalogue's: `man`, `woman`, `boy`,
 `src/tinyBuildings.js` has tiny-catalogue's 31 buildings as small pixel
 facades in the same style: house, apartment block, shop with flats above,
 shop (konbini, ramen, cafe, bookshop, bakery, izakaya), office building,
-shrine, school, coin laundromat, café (kissaten), pharmacy, sushi
+shrine (also as a separate torii and shrine hall), school, coin laundromat, café (kissaten), pharmacy, sushi
 restaurant, flower shop, fishmonger, udon / soba shop, family restaurant,
 takoyaki stand, koban, post office, bank, clinic, fire station, karaoke,
 wooden apartment, parking garage, gas station, and the old town: Tudor
@@ -103,6 +104,30 @@ Sizes: a storey is 13–20 px and a door 6 × 13, so a 15 px person reaches
 about three quarters of a door. Tall buildings are squashed (the office has 6
 floors, the apartment block 6). Sign text is a row of pixels: real letters do
 not fit.
+
+## A town map
+
+`src/tinyTown.js` puts the buildings on a 2D map of streets, cross streets
+and blocks, with the shrine grounds, a schoolyard and an old-town square.
+Every building's whole picture is solid ground, so nobody is ever hidden
+behind one; tall buildings stand only along the back.
+
+```js
+import { makeTown, drawTownView } from './src/tinyTown.js';
+
+const town = makeTown();                                   // the demo's town (DEFAULT_TOWN)
+const you = { ...randomCharacter(), x: 196, y: 196, you: true };
+you.path = town.findPath(you, town.doorOf(town.buildings[0]));   // points to walk to, round buildings
+// each frame: move people (check town.blocked(x, y) for the keys), then
+drawTownView(g, town, { x: viewX, y: viewY, w: 200, h: 150 }, [you, ...others], now / 1000);
+```
+
+| Export | What it does |
+| --- | --- |
+| `makeTown(layout)` | A town: `{ W, H, buildings, areas, blocked(x, y), findPath(from, to), randomSpot(rng, within), placeAt(x, y), doorOf(building), ground }`. |
+| `drawTownView(g, town, view, sprites, t)` | The part of the town in `view`: ground, then buildings, people and cats (`cat: true`) further back first. |
+| `DEFAULT_TOWN` | The demo's layout: `streets`, `crossStreets`, `rows` of buildings, single `buildings`, `areas` with their own ground. |
+| `buildingSolids(b)` (tinyBuildings.js) | The ground a building takes; you can step between a torii's posts and under a gas station's canopy. |
 
 Speech for these people (floating pixel text, the design picked in the
 bubble lab) lives in **tiny-ui-kit** (`src/ui/pixelOverlay.js`).

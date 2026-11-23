@@ -18,13 +18,18 @@ src/tinyCharacters.js  the library (plain ES module, no dependencies):
                        TOPS, LEGWEAR, CARRY)
 src/tinyBuildings.js   the buildings (plain ES module, imports seeded from
                        tinyCharacters.js): drawBuilding, BUILDINGS,
-                       SHOP_TYPES, drawStreet, WALL_COLORS, ROOF_COLORS
+                       SHOP_TYPES, buildingSolids, drawStreet,
+                       WALL_COLORS, ROOF_COLORS
+src/tinyTown.js        the 2D town map: makeTown, drawTownView,
+                       DEFAULT_TOWN (layout, ground, walkable ground,
+                       path finding, place names)
 index.html             the demo page (town, park, looks, buildings, gallery)
 demo/demo.js           the demo: strolling crowd and cats, you (keys / tap
                        to walk), tap someone to make them talk; every look;
                        the gallery
-demo/town.js           the town (one long street of every building, the view
-                       following you) and the Buildings sheet
+demo/town.js           the town (walk around the map; townspeople, kids in
+                       the schoolyard, shrine visitors, cats) and the
+                       Buildings sheet
 demo/demo.css          the demo page's look (light and dark)
 .nojekyll              tells GitHub Pages to serve the files as they are
 ```
@@ -96,7 +101,40 @@ make it that building. Each is an entry in `DEFS` in `src/tinyBuildings.js`:
   glass `#9fb6cc`, windows `#5f7487` (lit `#f0dca0`), wood, ink, red, navy.
 
 People in front of a building are drawn after it (their feet are below its
-ground line); anyone behind it (smaller y) is drawn before it and hidden.
+ground line); anyone behind it (smaller y) would be drawn before it and
+hidden, so in a town nobody can stand there (see the map rules below).
+
+## How the town map works
+
+The owner's rules: every building faces you and **its whole picture is solid
+ground** (`buildingSolids`), so nobody is ever hidden behind one: to get past
+you walk round it. Only the torii (between its posts) and the gas station
+(8 px under its canopy) can be stepped into; `OPEN` in tinyBuildings.js lists
+their solid parts. **Tall buildings stand only in the back row** (above the
+first street, nothing behind them); the blocks between streets hold low
+buildings (up to about 50 px); the shrine, the school and the old town have
+their own grounds in front of them.
+
+- Layout (`DEFAULT_TOWN`): `streets` (the top of each; a street is 7 px
+  sidewalk, 18 px road, 7 px sidewalk), `crossStreets` (left edges; 6 + 18 + 6
+  px, from the first street to the last), `rows` (a ground line, a left edge
+  and building types packed 2 px apart, `'shop:ramen'` for a shop kind),
+  `buildings` (placed one by one), `areas` (`gravel`, `sand`, `paving`
+  grounds with a name; the shrine's has stepping stones). A row's buildings
+  must end before the next cross street; a block's buildings must be lower
+  than the block (the street above stays clear).
+- The ground (grass, grounds, streets, crossings) is drawn once onto
+  `town.ground`; `drawTownView` copies the part in view, then draws buildings
+  and sprites sorted by their ground line / feet.
+- `blocked(x, y)`: outside the map, above the first street's sidewalk, or in
+  a building's solid ground (widened by the person's half width).
+- `findPath(from, to)`: breadth-first search on a 4 px grid of free cells,
+  four directions, kept to the corners; null if `to` is blocked or cut off.
+- The demo: you move with the keys (each axis checked on its own, so you
+  slide along walls) or along a path to where you tapped (a building: its
+  door, `doorOf`); townspeople take short trips (`randomSpot`, then a path)
+  and rest; kids stay in the schoolyard, some people in the shrine grounds
+  and the square (`within`); `placeAt` names where you are.
 
 ## Common tasks
 
@@ -109,8 +147,12 @@ ground line); anyone behind it (smaller y) is drawn before it and hidden.
   top row; add its name to the caption).
 - **A new building:** add an entry to `DEFS` (look at the catalogue's
   builder for what makes it that building, then keep only what shows at this
-  size), add it to `ORDER` in `demo/town.js`; the Buildings sheet picks it up.
-  Check it next to a person.
+  size); the Buildings sheet picks it up. Put it in the town by adding it to
+  a row of `DEFAULT_TOWN` (tall ones in the back row only). Check it next to
+  a person.
+- **Change the town:** edit `DEFAULT_TOWN`; render the whole map once
+  (`drawTownView` with the view the size of the town) and check nothing
+  overlaps a street or another building.
 - **A new colour:** add it to the list (`BODY_COLORS`, `THING_COLORS` ...);
   `snapToPalette` uses all the lists.
 

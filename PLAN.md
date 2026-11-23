@@ -11,6 +11,10 @@ bubble lab, so games can use them and they can grow.
   to `main` right away, without asking.
 - The characters are the bubble lab's tiny 2D pixel people (about 5 × 15
   pixels), kept as small and simple as they are there.
+- The town map (Nov 2026): every building's whole picture is solid ground,
+  so nobody walks behind one (walk round it); tall buildings only in the back
+  row; low buildings in the blocks; the shrine, school and old town get their
+  own grounds; the map stops at its edges (no wrapping).
 - Looks from the catalogue (Nov 2026): keep mohawk (3 px tall), moustache
   (1 px only) and the cat (side view); umbrella with an 11 px canopy;
   ponytail out from the back then 5 px down, swinging out on the walking
@@ -38,22 +42,26 @@ bubble lab, so games can use them and they can grow.
    the European old town), `drawStreet`; the demo's Town (one long street
    you walk down, the view following you, "In front of: ..." under it) and
    a Buildings sheet.
+5. **A 2D town map** (`src/tinyTown.js`): four streets, two cross streets with
+   crossings, tall buildings along the back, two rows of low blocks, shrine
+   grounds (torii, stepping stones, hall), a schoolyard and an old-town
+   square; solid buildings, path finding round them, tap a building to walk
+   to its door; townspeople taking trips and turning at corners, kids in the
+   schoolyard, cats; the name of where you are under the map.
 
 ## Next (only when the owner asks)
 
 1. Speech with them (floating pixel text from tiny-ui-kit) in the demo.
-2. **A 2D map** from the buildings: more than one street (blocks, corners,
-   a crossing), buildings on both sides, walking around and behind them
-   (footprints the people cannot walk through), like the catalogue's areas
-   (shopping street, lane, station plaza, shrine corner, old-town square,
-   back alley).
+2. **More town**: a station plaza and a back alley like the catalogue's
+   areas, a park, trees and street props in the blocks' back gardens.
 3. **The rest of the tinified catalogue**: street props (lamps, vending
    machines, signs, bus stop, benches), vehicles, trees and nature.
 
 ## Known issues and small ideas
 
-- In the town people only walk in front of the buildings (sidewalk, road,
-  far sidewalk); nobody goes behind or inside them yet.
+- Nobody goes inside buildings yet (tapping one walks you to its door).
+- Townspeople cross roads anywhere their path goes, not only at crossings,
+  and walk through each other.
 - Sign text is a row of pixels, not letters. Real kana would need at least
   5 px tall signs; could try for a few (ラーメン, コンビニ) if the owner wants.
 

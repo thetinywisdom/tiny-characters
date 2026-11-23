@@ -1,93 +1,109 @@
-import { BUILDINGS, drawBuilding, drawStreet } from '../src/tinyBuildings.js';
-import { CAT_COLORS, drawCat, drawCharacter, randomCharacter, seeded } from '../src/tinyCharacters.js';
+import { BUILDINGS, buildingSolids, drawBuilding } from '../src/tinyBuildings.js';
+import { CAT_COLORS, LOOKS, randomCharacter, seeded } from '../src/tinyCharacters.js';
+import { drawTownView, makeTown } from '../src/tinyTown.js';
 
-// The town: every tiny building along one long street. The view follows you
-// (the gold line); arrow keys / WASD or tap where to go; tap someone to make
-// them talk. The keys move whoever is in the canvas you tapped last.
-const town = document.querySelector('#town'), tg = town.getContext('2d');
-const VW = town.width, VH = town.height;
-const BASE = 104;                                    // the buildings' ground line
-const WALK = { top: BASE + 3, bottom: VH - 8 };      // sidewalk, road, far sidewalk
+// The town: a 2D map of streets and blocks. The view follows you (the gold
+// line): arrow keys / WASD, or tap where to go (tap a building to walk to its
+// door); tap someone to make them talk. Everyone walks round the buildings.
+// The keys move whoever is in the canvas you tapped last (the town at first).
+const canvas = document.querySelector('#town'), g = canvas.getContext('2d');
+const VW = canvas.width, VH = canvas.height;
 const here = document.querySelector('#here');
+const town = makeTown();
+const area = (name) => town.areas.find((a) => a.name === name);
 
-// Japanese town first, then the old town (European houses).
-const ORDER = [
-  ['house'], ['kissaten'], ['shop', 'konbini'], ['mixedUse', 'bakery'], ['koban'], ['apartment'], ['shop', 'ramen'],
-  ['florist'], ['bank'], ['office'], ['takoyaki'], ['sushi'], ['laundromat'], ['clinic'], ['postOffice'], ['karaoke'],
-  ['udonSoba'], ['pharmacy'], ['woodApartment'], ['fishmonger'], ['shop', 'cafe'], ['familyRestaurant'], ['fireStation'],
-  ['mixedUse', 'bookshop'], ['parkingGarage'], ['gasStation'], ['shop', 'izakaya'], ['school'], ['shrine'],
-  ['tudorCottage'], ['dutchCanalHouse'], ['frenchCountryHouse'], ['scandinavianHouse'], ['mediterraneanVilla'], ['stoneChapel'],
-];
-let edge = 6;
-const buildings = ORDER.map(([type, shopType], i) => {
-  const w = BUILDINGS[type].w, b = { type, shopType, seed: i + 1, x: edge + w / 2, y: BASE, w };
-  edge += w + 4;
-  return b;
-});
-const WORLD = edge + 2;
-
-let people, you, cam = 0, seed = 11;
+let people, you, seed = 11;
 const keys = new Set();
-function newTown() {
+function walker(look, rng, within, cat = false) {
+  const at = town.randomSpot(rng, within);
+  return { ...look, ...at, within, cat, path: null, wait: rng() * 3, talk: 0 };
+}
+function newPeople() {
   const rng = seeded(seed++);
-  people = Array.from({ length: 28 }, () => ({ ...randomCharacter(rng), x: 8 + rng() * (WORLD - 16), y: WALK.top + rng() * (WALK.bottom - WALK.top), to: null, wait: rng() * 3, talk: 0 }));
-  for (let i = 0; i < 4; i++) people.push({ cat: true, color: CAT_COLORS[Math.floor(rng() * CAT_COLORS.length)], x: 30 + rng() * (WORLD - 60), y: WALK.top + 2, to: null, wait: rng() * 4, talk: 0 });
-  you = { ...randomCharacter(rng), body: '#f2f2ee', x: 60, y: WALK.top + 6, you: true, talk: 0 };
+  people = [];
+  for (let i = 0; i < 40; i++) people.push(walker(randomCharacter(rng), rng));
+  const yard = area('Schoolyard'), shrine = area('Shrine grounds'), square = area('Old-town square');
+  for (let i = 0; i < 10; i++) people.push(walker({ ...randomCharacter(rng), ...(i % 3 === 0 ? (i % 2 ? LOOKS.schoolgirl : LOOKS.schoolboy) : {}), kid: true, carry: undefined }, rng, yard));
+  for (let i = 0; i < 5; i++) people.push(walker(randomCharacter(rng), rng, shrine));
+  for (let i = 0; i < 6; i++) people.push(walker(randomCharacter(rng), rng, square));
+  for (let i = 0; i < 6; i++) people.push(walker({ color: CAT_COLORS[Math.floor(rng() * CAT_COLORS.length)] }, rng, undefined, true));
+  you = { ...randomCharacter(rng), body: '#f2f2ee', x: 196, y: 196, you: true, talk: 0, path: null };
   people.push(you);
 }
-newTown();
+newPeople();
 
 const active = () => (document.body.dataset.active ?? 'town') === 'town';
 addEventListener('keydown', (e) => { if (e.key.startsWith('Arrow') && active()) e.preventDefault(); keys.add(e.key.toLowerCase()); });
 addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
 addEventListener('blur', () => keys.clear());
-town.addEventListener('pointerdown', (e) => {
+
+let view = { x: 0, y: 0, w: VW, h: VH };
+canvas.addEventListener('pointerdown', (e) => {
   document.body.dataset.active = 'town';
-  const r = town.getBoundingClientRect();
-  const x = cam + (e.clientX - r.left) / r.width * VW, y = (e.clientY - r.top) / r.height * VH;
+  const r = canvas.getBoundingClientRect();
+  const x = view.x + (e.clientX - r.left) / r.width * VW, y = view.y + (e.clientY - r.top) / r.height * VH;
   const hit = people.filter((p) => p !== you && !p.cat && Math.abs(p.x - x) < 5 && y > p.y - 17 && y < p.y + 3).sort((a, b) => Math.abs(a.x - x) - Math.abs(b.x - x))[0];
-  if (hit) hit.talk = 2; else you.to = { x: Math.max(4, Math.min(WORLD - 4, x)), y: Math.max(WALK.top, Math.min(WALK.bottom, y)) };
+  if (hit) { hit.talk = 2; return; }
+  // a building: walk to its door; anywhere else you can stand: walk there
+  const b = town.buildings.find((b) => buildingSolids(b).some((s) => x >= s.x && x < s.x + s.w && y >= s.y && y < s.y + s.h))
+    ?? town.buildings.find((b) => { const { w, h } = BUILDINGS[b.type]; return Math.abs(x - b.x) <= w / 2 && y <= b.y && y >= b.y - h; });
+  const to = b ? town.doorOf(b) : { x, y };
+  if (!town.blocked(to.x, to.y)) you.path = town.findPath(you, to);
 });
-document.querySelector('#newTown').onclick = newTown;
+document.querySelector('#newTown').onclick = newPeople;
+
+/** Walk p along its path at `speed` px/s; true when it has arrived. */
+function follow(p, speed, dt) {
+  const q = p.path?.[0];
+  if (!q) { p.path = null; return true; }
+  const ex = q.x - p.x, ey = q.y - p.y, d = Math.hypot(ex, ey), step = speed * dt;
+  if (d <= step) { p.x = q.x; p.y = q.y; p.path.shift(); }
+  else { p.x += ex / d * step; p.y += ey / d * step; }
+  if (Math.abs(ex) > 0.3) p.facing = ex < 0 ? 'left' : 'right';
+  p.walking = true;
+  return false;
+}
 
 let last = performance.now(), t = 0, shown = '';
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
-  // you: keys first (when this canvas is active), else walking to a tapped spot
+  // you: the keys (sliding along walls), else your path
   let dx = 0, dy = 0;
   if (active()) {
     dx = (keys.has('arrowright') || keys.has('d')) - (keys.has('arrowleft') || keys.has('a'));
     dy = (keys.has('arrowdown') || keys.has('s')) - (keys.has('arrowup') || keys.has('w'));
   }
-  if (dx || dy) you.to = null;
-  else if (you.to) { const ex = you.to.x - you.x, ey = you.to.y - you.y, d = Math.hypot(ex, ey); if (d < 1) you.to = null; else { dx = ex / d; dy = ey / d; } }
-  you.walking = !!(dx || dy);
-  if (dx) you.facing = dx < 0 ? 'left' : 'right';
-  you.x = Math.max(4, Math.min(WORLD - 4, you.x + dx * 30 * dt));
-  you.y = Math.max(WALK.top, Math.min(WALK.bottom, you.y + dy * 18 * dt));
-  // everyone else strolls between spots not far away
+  if (dx || dy) {
+    you.path = null; you.walking = true;
+    if (dx) you.facing = dx < 0 ? 'left' : 'right';
+    const nx = you.x + dx * 30 * dt, ny = you.y + dy * 20 * dt;
+    if (!town.blocked(nx, you.y)) you.x = nx;
+    if (!town.blocked(you.x, ny)) you.y = ny;
+  } else if (you.path) follow(you, 30, dt);
+  else you.walking = false;
+  // everyone else: a short trip, a rest, another trip
   for (const p of people) {
     p.talk = Math.max(0, p.talk - dt); p.talking = p.talk > 0;
     if (p === you) continue;
-    if (!p.to && (p.wait -= dt) < 0) p.to = { x: Math.max(6, Math.min(WORLD - 6, p.x + (Math.random() - 0.5) * 120)), y: WALK.top + Math.random() * (WALK.bottom - WALK.top) };
-    if (p.to && !p.talking) {
-      const ex = p.to.x - p.x, ey = p.to.y - p.y, d = Math.hypot(ex, ey), v = p.cat ? 1.3 : 1;
-      if (d < 1) { p.to = null; p.wait = 1 + Math.random() * 4; p.walking = false; }
-      else { p.x += ex / d * 14 * v * dt; p.y += ey / d * 10 * v * dt; p.walking = true; p.facing = ex < 0 ? 'left' : 'right'; }
-    } else p.walking = false;
+    if (p.talking) { p.walking = false; continue; }
+    if (p.path) { if (follow(p, p.cat ? 18 : 14, dt)) { p.walking = false; p.wait = 1 + Math.random() * 4; } continue; }
+    p.walking = false;
+    if ((p.wait -= dt) > 0) continue;
+    const range = p.cat ? 70 : 170;
+    let to = town.randomSpot(Math.random, p.within);
+    for (let k = 0; k < 6 && Math.hypot(to.x - p.x, to.y - p.y) > range; k++) to = town.randomSpot(Math.random, p.within);
+    p.path = town.findPath(p, to);
+    if (!p.path) p.wait = 1;
   }
   // the view follows you
-  cam = Math.round(Math.max(0, Math.min(WORLD - VW, you.x - VW / 2)));
-  tg.imageSmoothingEnabled = false;
-  drawStreet(tg, VW, VH, { baseY: BASE, x0: cam });
-  tg.save(); tg.translate(-cam, 0);
-  for (const b of buildings) if (b.x + b.w / 2 > cam - 10 && b.x - b.w / 2 < cam + VW + 10) drawBuilding(tg, b);
-  for (const p of [...people].sort((a, b) => a.y - b.y)) if (p.x > cam - 10 && p.x < cam + VW + 10) (p.cat ? drawCat : drawCharacter)(tg, p, t);
-  tg.restore();
-  // the building you are in front of
-  const at = buildings.find((b) => Math.abs(you.x - b.x) <= b.w / 2);
-  const name = at ? BUILDINGS[at.type].label + (at.shopType ? ` (${at.shopType})` : '') : '';
-  if (name !== shown) { shown = name; here.textContent = name ? `In front of: ${name}` : 'Between buildings'; }
+  view = {
+    x: Math.round(Math.max(0, Math.min(town.W - VW, you.x - VW / 2))),
+    y: Math.round(Math.max(0, Math.min(town.H - VH, you.y - VH * 0.6))),
+    w: VW, h: VH,
+  };
+  drawTownView(g, town, view, people, t);
+  const name = town.placeAt(you.x, you.y);
+  if (name !== shown) { shown = name; here.textContent = name; }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -95,6 +111,7 @@ requestAnimationFrame(frame);
 // Buildings: each one on its own, with its name.
 const sheet = document.querySelector('#buildings');
 for (const [type, { label, w, h }] of Object.entries(BUILDINGS)) {
+  if (type === 'torii' || type === 'shrineHall') continue;    // shown together as the shrine
   const c = document.createElement('canvas');
   c.width = w + 4; c.height = h + 4; c.className = 'bld';
   c.style.setProperty('--w', c.width);

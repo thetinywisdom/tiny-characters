@@ -137,15 +137,21 @@ const DEFS = {
     glass(r, 4, 0, 24, 14); door(r, GLASS2, 13, 6, 14); r(shade(wall, 0.7), 2, 15, 28, 1);
     flatRoof(r, wall, 0, 88, 32); r(INK, 24, 89, 1, 3); r('#918f8a', 4, 89, 8, 2);
   }],
-  shrine: ['Shrine', 72, 30, (r) => {
+  shrine: ['Shrine', 72, 30, (r) => {                                  // a torii and the hall, side by side
+    DEFS.torii[3]((c, dx, up, w, h) => r(c, dx + 2, up, w, h));
+    DEFS.shrineHall[3]((c, dx, up, w, h) => r(c, dx + 32, up, w, h));
+  }],
+  torii: ['Torii', 26, 24, (r) => {
+    const red = '#c8402c';
+    r(red, 5, 0, 2, 20); r(red, 19, 0, 2, 20); r(red, 3, 15, 20, 2);
+    r(INK, 1, 20, 24, 2); r(INK, 0, 22, 1, 1); r(INK, 25, 22, 1, 1);
+    r(red, 12, 17, 2, 3);
+  }],
+  shrineHall: ['Shrine hall', 40, 26, (r) => {
     const hall = '#9a6a48';
-    r('#c9c2b0', 36, 0, 32, 3);                                         // stone base
-    r(hall, 38, 3, 28, 12); r(WHITE, 41, 5, 6, 8); r(WHITE, 57, 5, 6, 8); r(DARKWOOD, 49, 3, 6, 10);
-    pitched(r, '#3a3f44', 33, 15, 38, 10, 20); r('#3a3f44', 32, 16, 1, 1); r('#3a3f44', 71, 16, 1, 1); r(GOLD, 50, 24, 4, 1);
-    const tori = '#c8402c';                                              // torii
-    r(tori, 7, 0, 2, 20); r(tori, 21, 0, 2, 20); r(tori, 5, 15, 20, 2);
-    r(INK, 3, 20, 24, 2); r(INK, 2, 22, 1, 1); r(INK, 27, 22, 1, 1);
-    r(tori, 14, 17, 2, 3);
+    r('#c9c2b0', 4, 0, 32, 3);                                           // stone base
+    r(hall, 6, 3, 28, 12); r(WHITE, 9, 5, 6, 8); r(WHITE, 25, 5, 6, 8); r(DARKWOOD, 17, 3, 6, 10);
+    pitched(r, '#3a3f44', 1, 15, 38, 10, 20); r('#3a3f44', 0, 16, 1, 1); r('#3a3f44', 39, 16, 1, 1); r(GOLD, 18, 24, 4, 1);
   }],
   school: ['School', 110, 54, (r, rng, b) => {
     const wall = b.wall ?? '#e4e0d6';
@@ -381,6 +387,15 @@ const DEFS = {
   }],
 };
 
+// Ground a person cannot stand on, as [dx, w, top, bottom] (rows above the
+// ground line), for buildings you can partly walk into: between the torii's
+// posts, under the gas station's canopy (8 px deep). Everything else is
+// solid over its whole picture.
+const OPEN = {
+  torii: [[5, 2, 3, 0], [19, 2, 3, 0]],
+  gasStation: [[4, 1, 3, 0], [14, 2, 3, 0], [24, 4, 3, 0], [38, 4, 3, 0], [50, 2, 3, 0], [56, 12, 14, 0], [0, 68, 30, 9]],
+};
+
 /** Every building: type -> { label, w, h } (pixels). */
 export const BUILDINGS = Object.fromEntries(Object.entries(DEFS).map(([k, [label, w, h]]) => [k, { label, w, h }]));
 
@@ -399,6 +414,18 @@ export function drawBuilding(g, b) {
   const roof = b.roof ?? ROOF_COLORS[Math.floor(rng() * ROOF_COLORS.length)];
   const r = (c, dx, up, rw, rh) => { g.fillStyle = c; g.fillRect(L + dx, y - up - rh, rw, rh); };
   draw(r, rng, b, wall, roof);
+}
+
+/**
+ * The ground a building takes, as rectangles { x, y, w, h } in the canvas:
+ * its whole picture (nobody walks behind a building), or for a torii and a
+ * gas station only the posts, pumps and kiosk (you walk through and under).
+ */
+export function buildingSolids(b) {
+  const { w, h } = BUILDINGS[b.type];
+  const L = Math.round(b.x - w / 2), y = Math.round(b.y);
+  if (OPEN[b.type]) return OPEN[b.type].map(([dx, sw, top, bottom]) => ({ x: L + dx, y: y - top, w: sw, h: top - bottom + 1 }));
+  return [{ x: L, y: y - h, w, h: h + 1 }];
 }
 
 /**
