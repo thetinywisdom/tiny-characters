@@ -21,6 +21,8 @@ bubble lab, so games can use them and they can grow.
   so nobody walks behind one (walk round it); tall buildings only in the back
   row; low buildings in the blocks; the shrine, school and old town get their
   own grounds; the map stops at its edges (no wrapping).
+- Signs and type (Nov 2026): signs show the place's name instead of dots
+  or stripes, in DotGothic16; the pages use DotGothic16 too.
 - Doors and windows (Nov 2026): one set of sizes and proportions on every
   building (storeys 16 / 19 / 13, doors 6 × 12 and 10 × 12, windows 5 × 6,
   9 × 6, 5 × 8, sills 4 above the floor), and detailed types that show what
@@ -91,6 +93,11 @@ bubble lab, so games can use them and they can grow.
     sign words, even shop-glass bars, shelves, hipped roofs without teeth,
     Tudor windows (no "faces"), the Dutch roof, the koban's lamp, the
     izakaya's noren.
+13. **Names on the signs** in DotGothic16 (laundromat, pharmacy, konbini,
+    ramen, ...; karaoke and the shop-with-flats on upright signs): canvases
+    drawn 4-6 times bigger underneath (`dpx`) so the letters fit, a
+    fallback when they do not; the pages' headings and buttons in
+    DotGothic16.
 
 ## Next (only when the owner asks)
 
@@ -101,6 +108,11 @@ bubble lab, so games can use them and they can grow.
    machines, signs, bus stop, benches), vehicles, trees and nature.
 
 ## Known issues and small ideas
+
+- Sign text is drawn by the canvas, so its edges are a little soft (not
+  snapped to the pixel grid like everything else). Japanese names (ラーメン,
+  コンビニ) would work the same way (DotGothic16 has kana and kanji) if the
+  owner wants them.
 
 - Nobody goes inside buildings yet (tapping one walks you to its door).
 - Townspeople cross roads anywhere their path goes, not only at crossings,
