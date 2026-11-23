@@ -31,12 +31,6 @@ const shade = (hex, f) => '#' + [1, 3, 5].map((i) => Math.max(0, Math.min(255, M
 // r(colour, dx, up, w, h): a rectangle dx from the building's left edge whose
 // bottom is `up` pixels above the ground.
 
-const win = (r, rng, dx, up, w = 5, h = 6) => r(rng() < 0.2 ? LIT : rng() < 0.2 ? CURTAIN : WIN, dx, up, w, h);
-/** n windows spread evenly between dx0 and dx1. */
-function windows(r, rng, dx0, dx1, up, n, w = 5, h = 6) {
-  const gap = (dx1 - dx0 - n * w) / (n + 1);
-  for (let i = 0; i < n; i++) win(r, rng, Math.round(dx0 + gap + i * (w + gap)), up, w, h);
-}
 // Roofs are seen from above, as in a top-down town map: d rows of roof over
 // the front wall give a building its depth.
 
@@ -87,9 +81,6 @@ function sign(r, bg, fg, dx, up, w, h = 4) {
   r(bg, dx, up, w, h);
   for (let i = 2; i < w - 2; i++) if (i % 3 !== 1) r(fg, dx + i, up + (h > 3 ? 1 : 1), 1, h - 2);
 }
-/** Shop glass with a frame line every 6 px. */
-function glass(r, dx, up, w, h, c = GLASS) { r(c, dx, up, w, h); for (let i = 6; i < w; i += 6) r(shade(c, 0.7), dx + i, up, 1, h); }
-const door = (r, c, dx, w = 6, h = 13) => r(c, dx, 0, w, h);
 const lantern = (r, dx, up) => { r(RED, dx, up, 2, 3); r(INK, dx, up + 3, 2, 1); };
 /** A noren: a short curtain over a doorway, cut into strips. */
 function noren(r, c, dx, up, w) { r(c, dx, up, w, 4); for (let i = 2; i < w; i += 3) r(shade(c, 0.6), dx + i, up, 1, 3); }
@@ -112,82 +103,221 @@ function pointedArch(r, c, dx, up, w, h) {
   for (let k = 1; k <= steps; k++) r(c, dx + k, up + h - steps + k - 1, w - k * 2, 1);
 }
 
+// --- one set of sizes for every building ----------------------------------------
+// A ground floor is 16 px (a shop's 19: its awning and sign sit above the
+// door), every upper floor 13. A door is 6 x 12 (double and sliding doors
+// 10 x 12, a garage 18 x 14); a window 5 x 6 (a pair 9 x 6, a tall window
+// 5 x 8) with its sill 4 px above its floor (3 for a tall one); shop glass
+// is as tall as the door. Every building uses these, so they all match.
+export const STOREY = { ground: 16, shop: 19, upper: 13, sill: 4 };
+const GF = STOREY.ground, SHOP_GF = STOREY.shop, FL = STOREY.upper, SILL = STOREY.sill;
+/** The bottom of floor n (0 is the ground floor) above a ground floor gf tall. */
+const floorAt = (n, gf = GF) => (n === 0 ? 0 : gf + (n - 1) * FL);
+
+const FRAME = '#4a4e54', METAL = '#b8bcc0', PAPER = '#f4efe0', HI = '#c8dceb';
+/** What shows in a window: dark glass, a lit room, or curtains. */
+const pane = (rng) => { const v = rng(); return v < 0.18 ? LIT : v < 0.34 ? CURTAIN : WIN; };
+
+// --- doors (12 tall; their bottom at `up`) -----------------------------------------
+const DOORS = {
+  /** Panelled wood, a brass knob. 6 wide. */
+  wood(r, dx, up = 0, c = WOOD) {
+    r(shade(c, 0.62), dx, up, 6, 12); r(c, dx + 1, up, 4, 11);
+    r(shade(c, 0.82), dx + 2, up + 1, 2, 4); r(shade(c, 0.82), dx + 2, up + 6, 2, 4); r(GOLD, dx + 4, up + 5, 1, 1);
+  },
+  /** Boards with iron straps (a cottage, a chapel). 6 wide. */
+  plank(r, dx, up = 0, c = WOOD) {
+    r(c, dx, up, 6, 12); for (let i = 1; i < 6; i += 2) r(shade(c, 0.78), dx + i, up, 1, 12);
+    r(INK, dx, up + 3, 5, 1); r(INK, dx, up + 8, 5, 1); r(INK, dx + 4, up + 5, 1, 1);
+  },
+  /** Wood with glass in its top half (a café). 6 wide. */
+  glazed(r, dx, up = 0, c = WOOD) {
+    r(shade(c, 0.62), dx, up, 6, 12); r(c, dx + 1, up, 4, 11);
+    r(GLASS, dx + 2, up + 6, 2, 4); r(HI, dx + 2, up + 9, 1, 1); r(shade(c, 0.82), dx + 2, up + 1, 2, 3); r(GOLD, dx + 4, up + 4, 1, 1);
+  },
+  /** Glass in an aluminium frame, a push bar. 6 wide. */
+  glass(r, dx, up = 0) {
+    r(FRAME, dx, up, 6, 12); r(GLASS, dx + 1, up + 1, 4, 10); r(HI, dx + 1, up + 8, 1, 2); r(HI, dx + 2, up + 9, 1, 1); r(METAL, dx + 1, up + 5, 4, 1);
+  },
+  /** A flat's steel door: painted, a peephole, a lever. 6 wide. */
+  steel(r, dx, up = 0, c = '#6a7f94') {
+    r(shade(c, 0.7), dx, up, 6, 12); r(c, dx + 1, up, 4, 11); r(shade(c, 1.12), dx + 1, up + 10, 4, 1);
+    r(INK, dx + 2, up + 8, 1, 1); r(METAL, dx + 3, up + 5, 2, 1);
+  },
+  /** Planks under a round top (a villa, a chapel, a mosque). 6 wide. */
+  arched(r, dx, up = 0, c = DARKWOOD) {
+    r(c, dx, up, 6, 10); r(c, dx + 1, up + 10, 4, 1); r(c, dx + 2, up + 11, 2, 1);
+    r(shade(c, 0.72), dx + 2, up, 1, 10); r(shade(c, 0.72), dx + 4, up, 1, 9); r(GOLD, dx + 3, up + 5, 1, 1);
+  },
+  /** Automatic sliding glass doors, two leaves. 10 wide. */
+  auto(r, dx, up = 0) {
+    r(FRAME, dx, up, 10, 12); r(GLASS, dx + 1, up + 1, 3, 10); r(GLASS, dx + 6, up + 1, 3, 10);
+    r(HI, dx + 1, up + 8, 1, 2); r(HI, dx + 6, up + 8, 1, 2); r(METAL, dx + 1, up + 11, 8, 1);
+  },
+  /** Japanese wooden lattice doors (koshi-do) that slide, two leaves. 10 wide. */
+  sliding(r, dx, up = 0, c = LIGHTWOOD) {
+    r(DARKWOOD, dx, up, 10, 12); r(c, dx + 1, up, 8, 11);
+    for (let i = dx + 2; i < dx + 9; i += 2) r(shade(c, 0.66), i, up, 1, 11);
+    r(shade(c, 0.66), dx + 1, up + 4, 8, 1); r(DARKWOOD, dx + 5, up, 1, 11);
+  },
+  /** Shoji: paper on a wooden grid (a shrine). 10 wide. */
+  shoji(r, dx, up = 0) {
+    r(DARKWOOD, dx, up, 10, 12); r(PAPER, dx + 1, up, 8, 11);
+    for (const i of [3, 5, 7]) r(LIGHTWOOD, dx + i, up, 1, 11);
+    for (const j of [3, 6, 9]) r(LIGHTWOOD, dx + 1, up + j, 8, 1);
+    r(DARKWOOD, dx + 5, up, 1, 11);
+  },
+  /** A roller shutter (a fire station). w wide, 14 tall. */
+  garage(r, dx, up = 0, w = 18, c = RED) {
+    r(shade(c, 0.6), dx, up, w, 14); r(c, dx + 1, up, w - 2, 13);
+    for (let y = up + 1; y < up + 13; y += 2) r(shade(c, 0.82), dx + 1, y, w - 2, 1);
+    r(METAL, dx + Math.floor(w / 2) - 1, up + 1, 2, 1);
+  },
+};
+
+// --- windows (their bottom, the sill, at `up`) -----------------------------------
+const WINDOWS = {
+  /** A framed window, 5 x 6; 9 wide it is a pair. */
+  sash(r, rng, dx, up, w = 5, frame = WHITE) {
+    r(frame, dx, up, w, 6); r(pane(rng), dx + 1, up + 1, w - 2, 4);
+    if (w >= 9) r(frame, dx + Math.floor(w / 2), up + 1, 1, 4);
+    r(shade(frame, 0.78), dx - 1, up, w + 2, 1);                       // the sill
+  },
+  /** An aluminium window (Japanese flats and shops), 5 x 6; 9 wide it slides in two. */
+  alu(r, rng, dx, up, w = 5) {
+    r(METAL, dx, up, w, 6); const c = pane(rng); r(c, dx + 1, up + 1, w - 2, 4);
+    if (w >= 7) r(METAL, dx + Math.floor(w / 2), up + 1, 1, 4);
+    if (c === WIN) r(HI, dx + 1, up + 4, 1, 1);
+  },
+  /** A tall window with a transom, 5 x 8. */
+  tall(r, rng, dx, up, frame = WHITE) {
+    r(frame, dx, up, 5, 8); r(pane(rng), dx + 1, up + 1, 3, 6); r(frame, dx + 1, up + 5, 3, 1);
+  },
+  /** A tall window between louvred shutters (7 wide in all). */
+  shuttered(r, rng, dx, up, shutter, frame = WHITE) {
+    WINDOWS.tall(r, rng, dx, up, frame);
+    for (const sx of [dx - 1, dx + 5]) { r(shutter, sx, up, 1, 8); for (let y = up + 1; y < up + 8; y += 2) r(shade(shutter, 0.75), sx, y, 1, 1); }
+  },
+  /** A tall window with a round top, 5 x 8. */
+  arched(r, rng, dx, up, frame = NAVY) {
+    r(frame, dx, up, 5, 7); r(frame, dx + 1, up + 7, 3, 1); r(pane(rng), dx + 1, up + 1, 3, 6);
+  },
+  /** A tall pointed window, 5 x 8 (a mosque). */
+  pointed(r, dx, up, frame) {
+    pointedArch(r, frame, dx, up, 5, 8); pointedArch(r, NAVY, dx + 1, up + 1, 3, 6);
+  },
+  /** Stained glass under a round top, 5 x 8 (a chapel). */
+  stained(r, dx, up) {
+    r(INK, dx, up, 5, 7); r(INK, dx + 1, up + 7, 3, 1);
+    [['#3f6fa8', '#c8402c', '#f2c230'], ['#2fa36b', '#3f6fa8', '#c8402c']].forEach((row, j) => row.forEach((c, i) => r(c, dx + 1 + i, up + 1 + j * 3, 1, 3)));
+  },
+  /** A round window, 4 x 4 (a rose window). */
+  round(r, dx, up) { r(INK, dx + 1, up, 2, 4); r(INK, dx, up + 1, 4, 2); r(GLASS, dx + 1, up + 1, 2, 2); r('#c8402c', dx + 1, up + 1, 1, 1); },
+  /** Wooden lattice over paper (a Japanese shop), any width. */
+  lattice(r, dx, up, w, h = 6) {
+    r(DARKWOOD, dx, up, w, h); r(LIGHTWOOD, dx + 1, up + 1, w - 2, h - 2);
+    for (let i = dx + 2; i < dx + w - 1; i += 2) r(WOOD, i, up + 1, 1, h - 2);
+  },
+  /** Shoji: paper on a wooden grid, 5 x 6. */
+  shoji(r, dx, up) { r(DARKWOOD, dx, up, 5, 6); r(PAPER, dx + 1, up + 1, 3, 4); r(LIGHTWOOD, dx + 2, up + 1, 1, 4); r(LIGHTWOOD, dx + 1, up + 3, 3, 1); },
+  /** Small panes in lead (a Tudor cottage), 5 x 6. */
+  leaded(r, rng, dx, up) {
+    r('#3a2a22', dx, up, 5, 6); r(pane(rng) === LIT ? LIT : WIN, dx + 1, up + 1, 3, 4);
+    r('#3a2a22', dx + 2, up + 2, 1, 1); r('#3a2a22', dx + 1, up + 3, 1, 1); r('#3a2a22', dx + 3, up + 3, 1, 1); r('#3a2a22', dx + 2, up + 4, 1, 1);
+  },
+  /** A glowing window (karaoke), 5 x 6. */
+  neon(r, rng, dx, up) { const c = rng() < 0.5 ? '#e8603a' : '#f2a040'; r(INK, dx, up, 5, 6); r(c, dx + 1, up + 1, 3, 4); r(shade(c, 1.2), dx + 1, up + 4, 3, 1); },
+  /** A shop's glass front, w wide and as tall as a door (12): a frame, a bar every 6 px. */
+  shop(r, dx, up, w, h = 12, frame = FRAME, c = GLASS) {
+    r(frame, dx, up, w, h); r(c, dx + 1, up + 1, w - 2, h - 2);
+    for (let i = dx + 6; i < dx + w - 1; i += 6) r(frame, i, up + 1, 1, h - 2);
+    r(shade(c, 1.12), dx + 1, up + h - 4, 1, 2); r(shade(c, 1.12), dx + 2, up + h - 3, 1, 1);
+  },
+};
+
 // --- shop fronts (the catalogue's shop types) ------------------------------------
 export const SHOP_TYPES = ['konbini', 'ramen', 'cafe', 'bookshop', 'bakery', 'izakaya'];
 const SHOPS = {
-  konbini: { bg: WHITE, fg: '#1f4fa8', stripes: ['#2fa36b', '#f08a2c', '#1f4fa8'] },
+  konbini: { bg: WHITE, fg: '#1f4fa8', stripes: ['#2fa36b', '#f08a2c', '#1f4fa8'], auto: true },
   ramen: { bg: '#d8302a', fg: WHITE, noren: NAVY, lantern: true },
   cafe: { bg: '#5a3a28', fg: '#f4e6c8', awning: ['#2fa36b', WHITE] },
   bookshop: { bg: '#1f4fa8', fg: WHITE, books: true },
   bakery: { bg: '#f2c230', fg: '#5a3a28', awning: [RED, WHITE] },
   izakaya: { bg: '#2a2a30', fg: '#f2c230', noren: '#5a3a28', lantern: true },
 };
-/** A shop's ground floor, h tall: sign, then glass or a wooden front. */
-function shopFront(r, rng, dx, w, kind, h = 20) {
+/**
+ * A shop's ground floor (19 tall): glass or a wooden front and its door
+ * (0-12), stripes or an awning (12-15), the sign (15-19).
+ */
+function shopFront(r, rng, dx, w, kind, wall) {
   const s = SHOPS[kind] ?? SHOPS.konbini;
-  sign(r, s.bg, s.fg, dx, h - 5, w, 5);
-  let top = h - 5;
-  if (s.stripes) { s.stripes.forEach((c, i) => r(c, dx, top - 1 - i, w, 1)); top -= 3; }
-  if (s.awning) { awning(r, s.awning[0], s.awning[1], dx - 1, top - 3, w + 2); top -= 3; }
-  const dw = 6, ddx = dx + w - dw - 3;
+  r(shade(wall, 0.9), dx, 12, w, SHOP_GF - 12);
+  sign(r, s.bg, s.fg, dx + 1, 15, w - 2, 4);
+  if (s.stripes) s.stripes.forEach((c, i) => r(c, dx, 14 - i, w, 1));
   if (s.noren) {
-    r(DARKWOOD, dx, 0, w, top);
-    r(LIGHTWOOD, dx + 3, 4, ddx - dx - 6, top - 7);                // lattice window
-    for (let i = dx + 5; i < ddx - 3; i += 3) r(DARKWOOD, i, 4, 1, top - 7);
-    door(r, INK, ddx, dw, top);
-    noren(r, s.noren, ddx - 1, top - 5, dw + 2);
-    if (s.lantern) lantern(r, ddx - 4, top - 7);
+    r(DARKWOOD, dx, 0, w, 12);
+    WINDOWS.lattice(r, dx + 2, SILL, w - 17, 6);
+    DOORS.sliding(r, dx + w - 12);
+    noren(r, s.noren, dx + w - 13, 8, 12);
+    if (s.lantern) lantern(r, dx + w - 16, 6);
+  } else if (s.auto) {
+    WINDOWS.shop(r, dx + 1, 0, w - 13, 12); DOORS.auto(r, dx + w - 11);
   } else {
-    glass(r, dx + 1, 0, w - 2, top);
-    if (s.books) for (let row = 2; row < top - 2; row += 3) dots(r, rng, dx + 2, row, ddx - dx - 3, [RED, '#3f7fd6', '#f2c230', '#5f8f5a', WHITE, '#7a6aa8']);
-    door(r, GLASS2, ddx, dw, top);
-    r(shade(GLASS, 0.6), ddx, top - 1, dw, 1);
+    WINDOWS.shop(r, dx + 1, 0, w - 10, 12); DOORS.glass(r, dx + w - 8);
+    if (s.books) for (let row = 2; row < 10; row += 3) dots(r, rng, dx + 2, row, w - 12, [RED, '#3f7fd6', '#f2c230', '#5f8f5a', WHITE, '#7a6aa8']);
   }
+  if (s.awning) awning(r, s.awning[0], s.awning[1], dx - 1, 12, w + 2, 3);
 }
 
 // --- the buildings ---------------------------------------------------------------
 // Each: [label, width, draw(r, rng, b, wall, roof)]. The height is measured from the drawing.
 
 const DEFS = {
-  house: ['House', 44, (r, rng, b, wall, roof) => {
-    r(wall, 2, 0, 40, 18);
-    pitched(r, b.roof ?? '#c8603e', 0, 18, 44, 18);
-    door(r, WOOD, 7); r(GOLD, 11, 6);
-    win(r, rng, 19, 6, 7, 6); win(r, rng, 31, 6, 7, 6);
+  house: ['House', 44, (r, rng, b, wall) => {
+    r(wall, 2, 0, 40, GF);
+    pitched(r, b.roof ?? '#c8603e', 0, GF, 44, 18);
+    DOORS.wood(r, 8); r(shade(wall, 0.8), 7, 12, 8, 1);                    // door and its lintel
+    WINDOWS.sash(r, rng, 19, SILL, 9);
+    WINDOWS.sash(r, rng, 32, SILL);
     r(shade(wall, 0.85), 2, 0, 40, 1);
   }],
   apartment: ['Apartment block', 34, (r, rng, b, wall) => {
-    r(wall, 0, 0, 34, 83);
-    for (let f = 0; f < 5; f++) {
-      const up = 18 + f * 13;
-      windows(r, rng, 0, 34, up + 4, 3, 6, 6);
-      r('#d8d4ca', 1, up + 1, 32, 1); r('#d8d4ca', 1, up + 4, 32, 1);   // balcony rail
+    const top = floorAt(6);
+    r(wall, 0, 0, 34, top);
+    for (let n = 1; n < 6; n++) {
+      const up = floorAt(n);
+      for (const dx of [4, 15, 25]) WINDOWS.alu(r, rng, dx, up + SILL);
+      r('#d8d4ca', 1, up + 1, 32, 1); r('#d8d4ca', 1, up + 3, 32, 1);     // balcony rail
       for (let i = 1; i < 33; i += 4) r('#d8d4ca', i, up + 1, 1, 3);
     }
-    door(r, GLASS2, 14, 6, 13); r(shade(wall, 0.8), 13, 13, 8, 1);
-    r(CONCRETE, 4, 3, 4, 5); r(INK, 5, 6, 2, 1);                         // post boxes
-    flatRoof(r, wall, 0, 83, 34, 12); r(CONCRETE, 21, 87, 7, 5); r(shade(CONCRETE, 0.8), 21, 87, 7, 1); r('#918f8a', 4, 86, 5, 3);  // water tank, AC
+    DOORS.auto(r, 12); r(shade(wall, 0.7), 11, 12, 12, 1);               // entrance and its canopy
+    r(CONCRETE, 3, 3, 6, 7); for (const y of [5, 8]) r(INK, 4, y, 4, 1);  // post boxes
+    WINDOWS.alu(r, rng, 26, SILL);
+    flatRoof(r, wall, 0, top, 34, 12); r(CONCRETE, 21, top + 4, 7, 5); r(shade(CONCRETE, 0.8), 21, top + 4, 7, 1); r('#918f8a', 4, top + 3, 5, 3);  // water tank, AC
   }],
   mixedUse: ['Shop with flats above', 38, (r, rng, b, wall) => {
-    r(wall, 0, 20, 38, 39);
-    shopFront(r, rng, 0, 38, b.shopType ?? SHOP_TYPES[Math.floor(rng() * SHOP_TYPES.length)]);
-    for (let f = 0; f < 3; f++) windows(r, rng, 0, 34, 24 + f * 13, 2, 6, 6);
-    r('#2fa36b', 33, 26, 4, 28); for (let i = 29; i < 52; i += 3) r(WHITE, 34, i, 2, 2);  // vertical sign
-    flatRoof(r, wall, 0, 59, 38, 12); r('#918f8a', 24, 62, 7, 3);
+    const top = floorAt(4, SHOP_GF);
+    r(wall, 0, SHOP_GF, 38, top - SHOP_GF);
+    shopFront(r, rng, 0, 38, b.shopType ?? SHOP_TYPES[Math.floor(rng() * SHOP_TYPES.length)], wall);
+    for (let n = 1; n < 4; n++) { WINDOWS.alu(r, rng, 5, floorAt(n, SHOP_GF) + SILL, 9); WINDOWS.alu(r, rng, 19, floorAt(n, SHOP_GF) + SILL, 9); }
+    r('#2fa36b', 32, SHOP_GF + 3, 5, top - SHOP_GF - 6); for (let i = SHOP_GF + 5; i < top - 5; i += 3) r(WHITE, 33, i, 3, 2);  // vertical sign
+    flatRoof(r, wall, 0, top, 38, 12); r('#918f8a', 24, top + 3, 7, 3);
   }],
   shop: ['Shop', 40, (r, rng, b, wall) => {
-    r(wall, 0, 20, 40, 2);
-    shopFront(r, rng, 0, 40, b.shopType ?? SHOP_TYPES[Math.floor(rng() * SHOP_TYPES.length)]);
-    flatRoof(r, wall, 0, 22, 40, 14); r('#918f8a', 27, 26, 7, 4); r(shade('#918f8a', 0.8), 27, 26, 7, 1);
+    shopFront(r, rng, 0, 40, b.shopType ?? SHOP_TYPES[Math.floor(rng() * SHOP_TYPES.length)], wall);
+    flatRoof(r, wall, 0, SHOP_GF, 40, 14); r('#918f8a', 27, SHOP_GF + 4, 7, 4); r(shade('#918f8a', 0.8), 27, SHOP_GF + 4, 7, 1);
   }],
   office: ['Office building', 32, (r, rng, b) => {
-    const wall = b.wall ?? '#cfd2d4';
-    r(wall, 0, 0, 32, 88);
-    for (let f = 0; f < 6; f++) { const up = 18 + f * 12; r('#6f8aa6', 2, up + 3, 28, 6); for (let i = 2; i < 30; i += 4) r('#8fa8c0', i, up + 3, 1, 6); }
-    glass(r, 4, 0, 24, 14); door(r, GLASS2, 13, 6, 14); r(shade(wall, 0.7), 2, 15, 28, 1);
-    flatRoof(r, wall, 0, 88, 32, 14); r('#918f8a', 4, 92, 9, 6); r(shade('#918f8a', 0.8), 4, 92, 9, 1); r(INK, 25, 92, 1, 9); r(RED, 25, 100, 1, 1);  // plant room, antenna
+    const wall = b.wall ?? '#cfd2d4', top = floorAt(7);
+    r(wall, 0, 0, 32, top);
+    for (let n = 1; n < 7; n++) {                                          // a ribbon of windows on every floor
+      const up = floorAt(n) + SILL;
+      r(METAL, 2, up, 28, 6); r('#6f8aa6', 2, up + 1, 28, 4); for (let i = 2; i < 30; i += 4) r('#8fa8c0', i, up + 1, 1, 4);
+    }
+    WINDOWS.shop(r, 2, 0, 28, 12); DOORS.auto(r, 11); r(shade(wall, 0.7), 2, 13, 28, 1);
+    flatRoof(r, wall, 0, top, 32, 14); r('#918f8a', 4, top + 4, 9, 6); r(shade('#918f8a', 0.8), 4, top + 4, 9, 1); r(INK, 25, top + 4, 1, 9); r(RED, 25, top + 12, 1, 1);  // plant room, antenna
   }],
-  shrine: ['Shrine', 72, (r) => {                                  // a torii and the hall, side by side
+  shrine: ['Shrine', 72, (r) => {                                        // a torii and the hall, side by side
     DEFS.torii[2]((c, dx, up, w, h) => r(c, dx + 2, up, w, h));
     DEFS.shrineHall[2]((c, dx, up, w, h) => r(c, dx + 32, up, w, h));
   }],
@@ -199,166 +329,179 @@ const DEFS = {
   }],
   shrineHall: ['Shrine hall', 40, (r) => {
     const hall = '#9a6a48';
-    r('#c9c2b0', 4, 0, 32, 3);                                           // stone base
-    r(hall, 6, 3, 28, 12); r(WHITE, 9, 5, 6, 8); r(WHITE, 25, 5, 6, 8); r(DARKWOOD, 17, 3, 6, 10);
-    pitched(r, '#3a3f44', 1, 15, 38, 16, 2); r('#2a2e33', 0, 15, 1, 2); r('#2a2e33', 39, 15, 1, 2); r(GOLD, 17, 26, 6, 1);  // flared eaves, ridge ornament
+    r('#c9c2b0', 4, 0, 32, 3);                                             // stone base
+    r(hall, 6, 3, 28, 13);
+    DOORS.shoji(r, 15, 3);
+    WINDOWS.shoji(r, 8, 3 + SILL); WINDOWS.shoji(r, 27, 3 + SILL);
+    pitched(r, '#3a3f44', 1, 16, 38, 16, 2); r('#2a2e33', 0, 16, 1, 2); r('#2a2e33', 39, 16, 1, 2); r(GOLD, 17, 27, 6, 1);  // flared eaves, ridge ornament
   }],
   school: ['School', 110, (r, rng, b) => {
-    const wall = b.wall ?? '#e4e0d6';
-    r(wall, 0, 0, 110, 42);
-    for (let f = 0; f < 3; f++) windows(r, rng, 0, 110, 4 + f * 14, 12, 6, 7);
-    r(wall, 47, 0, 16, 14); glass(r, 49, 0, 12, 12); r(shade(wall, 0.8), 0, 13, 110, 1); r(shade(wall, 0.8), 0, 27, 110, 1);
-    flatRoof(r, wall, 0, 42, 110, 16);
-    r(wall, 48, 42, 14, 11); flatRoof(r, wall, 47, 53, 16, 5); r(WHITE, 52, 44, 6, 6); r(INK, 54, 47, 1, 2); r(INK, 55, 47, 2, 1);  // clock tower
+    const wall = b.wall ?? '#e4e0d6', top = floorAt(3);
+    r(wall, 0, 0, 110, top);
+    for (let n = 0; n < 3; n++) for (let i = 0; i < 12; i++) {
+      if (n === 0 && (i === 5 || i === 6)) continue;                       // the entrance
+      WINDOWS.alu(r, rng, 4 + i * 9, floorAt(n) + SILL, 5);
+    }
+    r(shade(wall, 0.8), 0, floorAt(1), 110, 1); r(shade(wall, 0.8), 0, floorAt(2), 110, 1);
+    r(shade(wall, 0.9), 46, 0, 18, 14); DOORS.auto(r, 50); r(shade(wall, 0.7), 46, 13, 18, 1);
+    flatRoof(r, wall, 0, top, 110, 16);
+    r(wall, 48, top, 14, 11); flatRoof(r, wall, 47, top + 11, 16, 5); r(WHITE, 52, top + 2, 6, 6); r(INK, 54, top + 5, 1, 2); r(INK, 55, top + 5, 2, 1);  // clock tower
   }],
   laundromat: ['Coin laundromat', 36, (r, rng, b, wall) => {
-    r(wall, 0, 0, 36, 23);
-    sign(r, '#e8e0d0', '#3f7fd6', 1, 17, 34, 5);
-    r(GLASS, 1, 0, 34, 16);
-    for (let i = 3; i < 28; i += 6) { r(INK, i, 3, 4, 4); r('#7f9ab4', i + 1, 4, 2, 2); }   // washers
-    door(r, GLASS2, 28, 6, 14);
-    flatRoof(r, wall, 0, 23, 36, 12); r('#918f8a', 25, 26, 7, 4); r(shade('#918f8a', 0.8), 25, 26, 7, 1);
+    r(shade(wall, 0.9), 0, 12, 36, SHOP_GF - 12);
+    sign(r, '#e8e0d0', '#3f7fd6', 1, 15, 34, 4);
+    WINDOWS.shop(r, 1, 0, 26, 12);
+    for (let i = 3; i < 22; i += 6) { r(INK, i, 2, 4, 4); r('#7f9ab4', i + 1, 3, 2, 2); }   // washers
+    DOORS.glass(r, 28);
+    flatRoof(r, wall, 0, SHOP_GF, 36, 12); r('#918f8a', 25, SHOP_GF + 3, 7, 4); r(shade('#918f8a', 0.8), 25, SHOP_GF + 3, 7, 1);
   }],
   kissaten: ['Café (kissaten)', 34, (r, rng, b, wall) => {
-    r(wall, 0, 0, 34, 34);
-    r(DARKWOOD, 0, 0, 34, 15); glass(r, 3, 2, 16, 10, '#c9a46a'); door(r, WOOD, 23, 6, 13);
-    awning(r, RED, WHITE, -1, 15, 36, 3);
-    windows(r, rng, 0, 34, 22, 2, 6, 7);
-    pitched(r, b.roof ?? '#5a4a48', -1, 34, 36, 14);
+    const top = floorAt(2);
+    r(wall, 0, GF, 34, top - GF);
+    r(DARKWOOD, 0, 0, 34, GF);
+    WINDOWS.shop(r, 2, 0, 18, 12, WOOD, '#c9a46a');
+    DOORS.glazed(r, 24);
+    awning(r, RED, WHITE, -1, 12, 36, 3);
+    WINDOWS.sash(r, rng, 6, floorAt(1) + SILL); WINDOWS.sash(r, rng, 23, floorAt(1) + SILL);
+    pitched(r, b.roof ?? '#5a4a48', -1, top, 36, 14);
   }],
   pharmacy: ['Pharmacy', 44, (r, rng, b, wall) => {
-    r(wall, 0, 0, 44, 22);
-    sign(r, '#eef2e8', '#2fa36b', 8, 16, 35, 5);
-    r('#2fa36b', 1, 15, 6, 6); r(WHITE, 3, 16, 2, 4); r(WHITE, 2, 17, 4, 2);    // green cross
-    glass(r, 1, 0, 42, 15, '#dfe8ec');
-    for (let row = 2; row < 13; row += 3) dots(r, rng, 2, row, 30, [RED, '#3f7fd6', '#f2c230', '#2fa36b', WHITE, '#d46a8e']);
-    door(r, GLASS2, 34, 6, 14);
-    flatRoof(r, wall, 0, 22, 44, 12); r('#918f8a', 30, 25, 7, 4); r(shade('#918f8a', 0.8), 30, 25, 7, 1);
+    r(shade(wall, 0.9), 0, 12, 44, SHOP_GF - 12);
+    sign(r, '#eef2e8', '#2fa36b', 8, 15, 35, 4);
+    r('#2fa36b', 1, 13, 6, 6); r(WHITE, 3, 14, 2, 4); r(WHITE, 2, 15, 4, 2);    // green cross
+    WINDOWS.shop(r, 1, 0, 31, 12, FRAME, '#dfe8ec');
+    for (let row = 2; row < 10; row += 3) dots(r, rng, 2, row, 29, [RED, '#3f7fd6', '#f2c230', '#2fa36b', WHITE, '#d46a8e']);
+    DOORS.auto(r, 33);
+    flatRoof(r, wall, 0, SHOP_GF, 44, 12); r('#918f8a', 30, SHOP_GF + 3, 7, 4); r(shade('#918f8a', 0.8), 30, SHOP_GF + 3, 7, 1);
   }],
   sushi: ['Sushi restaurant', 36, (r, rng, b, wall) => {
-    r(wall, 0, 15, 36, 19);
-    r(DARKWOOD, 0, 0, 36, 15);
-    r(LIGHTWOOD, 20, 0, 10, 13); for (let i = 22; i < 30; i += 2) r(WOOD, i, 0, 1, 13);   // sliding door
-    noren(r, NAVY, 19, 9, 12);
-    r(LIGHTWOOD, 4, 7, 12, 4); r(INK, 6, 8, 1, 2); r(INK, 9, 8, 1, 2); r(INK, 12, 8, 1, 2);  // name board
-    windows(r, rng, 0, 36, 22, 3, 6, 7);
-    pitched(r, b.roof ?? '#4a4442', -1, 34, 38, 14); r('#4a4442', -1, 15, 38, 1);
+    const top = floorAt(2);
+    r(wall, 0, GF, 36, top - GF);
+    r(DARKWOOD, 0, 0, 36, GF);
+    WINDOWS.lattice(r, 3, SILL, 14, 6);
+    r(LIGHTWOOD, 3, 12, 14, 3); for (const i of [6, 9, 12]) r(INK, i, 13, 1, 1);   // name board
+    DOORS.sliding(r, 22); noren(r, NAVY, 21, 8, 12);
+    for (const dx of [5, 15, 26]) WINDOWS.alu(r, rng, dx, floorAt(1) + SILL);
+    r('#4a4442', -1, GF - 1, 38, 1);
+    pitched(r, b.roof ?? '#4a4442', -1, top, 38, 14);
   }],
   florist: ['Flower shop', 32, (r, rng, b, wall) => {
-    r(wall, 0, 0, 32, 47);
-    glass(r, 1, 0, 30, 14); door(r, GLASS2, 22, 6, 13);
-    awning(r, RED, WHITE, -1, 14, 34, 3); sign(r, WHITE, '#d46a8e', 4, 17, 24, 3);
-    for (let f = 0; f < 2; f++) windows(r, rng, 0, 32, 24 + f * 12, 2, 6, 6);
+    const top = floorAt(3, SHOP_GF);
+    r(wall, 0, 0, 32, top);
+    WINDOWS.shop(r, 1, 0, 22, 12); DOORS.glass(r, 24);
+    awning(r, RED, WHITE, -1, 12, 34, 3); sign(r, WHITE, '#d46a8e', 3, 15, 26, 4);
+    for (let n = 1; n < 3; n++) { WINDOWS.alu(r, rng, 5, floorAt(n, SHOP_GF) + SILL); WINDOWS.alu(r, rng, 21, floorAt(n, SHOP_GF) + SILL); }
     for (const dx of [1, 6, 11, 16]) { r('#8a6440', dx, 0, 4, 2); dots(r, rng, dx, 2, 4, [RED, '#f2c230', '#d46a8e', WHITE, '#7a6aa8']); r('#5f8f5a', dx + 1, 3, 2, 1); }
-    flatRoof(r, wall, 0, 47, 32, 10); for (const dx of [3, 9, 15]) { r('#8a6440', dx, 49, 5, 3); r('#5f8f5a', dx + 1, 51, 3, 2); }  // roof garden
+    flatRoof(r, wall, 0, top, 32, 10); for (const dx of [3, 9, 15]) { r('#8a6440', dx, top + 2, 5, 3); r('#5f8f5a', dx + 1, top + 4, 3, 2); }  // roof garden
   }],
   fishmonger: ['Fishmonger', 40, (r, rng, b, wall) => {
-    r(wall, 0, 0, 40, 23);
-    sign(r, WHITE, NAVY, 1, 18, 38, 4);
-    awning(r, NAVY, WHITE, -1, 15, 42, 3);
-    r('#3a3f44', 0, 0, 40, 15);
+    r(shade(wall, 0.9), 0, 12, 40, SHOP_GF - 12);
+    r('#3a3f44', 0, 0, 40, 12);                                             // open to the street
     r('#dfe8ec', 2, 0, 36, 5); r(WHITE, 1, 5, 38, 1);                      // ice counter
     for (let i = 3; i < 37; i += 3) r(rng() < 0.5 ? '#b3b0a8' : '#d8b0a0', i, 3, 2, 1);
-    flatRoof(r, wall, 0, 23, 40, 12);
+    awning(r, NAVY, WHITE, -1, 12, 42, 3); sign(r, WHITE, NAVY, 1, 15, 38, 4);
+    flatRoof(r, wall, 0, SHOP_GF, 40, 12);
   }],
   udonSoba: ['Udon / soba shop', 36, (r, rng, b, wall) => {
-    r(wall, 0, 15, 36, 19);
-    r(WOOD, 0, 0, 36, 15);
-    r(LIGHTWOOD, 3, 3, 14, 9); for (let i = 5; i < 17; i += 3) r(WOOD, i, 3, 1, 9); r(WOOD, 3, 7, 14, 1);  // lattice window
-    door(r, INK, 23, 7, 13); noren(r, '#3a5a7a', 22, 9, 9); lantern(r, 19, 8);
-    r(LIGHTWOOD, 10, 15, 16, 3); r(INK, 13, 16, 10, 1);                     // name board
-    windows(r, rng, 0, 36, 22, 2, 7, 7);
-    pitched(r, b.roof ?? '#3a3f44', -1, 34, 38, 14); r('#3a3f44', -1, 18, 38, 1);
+    const top = floorAt(2);
+    r(wall, 0, GF, 36, top - GF);
+    r(WOOD, 0, 0, 36, GF);
+    WINDOWS.lattice(r, 3, SILL, 14, 6);
+    r(LIGHTWOOD, 3, 12, 14, 3); r(INK, 5, 13, 10, 1);                     // name board
+    DOORS.sliding(r, 22); noren(r, '#3a5a7a', 21, 8, 12); lantern(r, 18, 6);
+    WINDOWS.alu(r, rng, 6, floorAt(1) + SILL, 9); WINDOWS.alu(r, rng, 22, floorAt(1) + SILL, 9);
+    r('#3a3f44', -1, GF - 1, 38, 1);
+    pitched(r, b.roof ?? '#3a3f44', -1, top, 38, 14);
   }],
   familyRestaurant: ['Family restaurant', 72, (r0, rng, b) => {
     r0(INK, 3, 0, 1, 22); r0('#2fa36b', 0, 22, 7, 5); r0(WHITE, 1, 24, 5, 1);   // pole sign
     const r = (c, dx, up, w, h) => r0(c, dx + 8, up, w, h);
     const wall = b.wall ?? '#b89e80';
-    r(wall, 0, 0, 64, 18);
-    for (let i = 3; i < 50; i += 9) { r('#a03a2c', i, 3, 8, 9); r(GLASS, i + 1, 4, 6, 7); }
-    door(r, INK, 54, 6, 13);
-    pitched(r, '#d0603e', -1, 18, 66, 14, 2); r('#2fa36b', -1, 18, 66, 1);   // red hipped roof, green trim
+    r(wall, 0, 0, 64, GF);
+    for (const dx of [2, 12, 22, 32, 42]) WINDOWS.shop(r, dx, 2, 9, 10, '#a03a2c');   // big windows to the booths
+    DOORS.glass(r, 54);
+    pitched(r, '#d0603e', -1, GF, 66, 14, 2); r('#2fa36b', -1, GF, 66, 1);  // red hipped roof, green trim
   }],
   takoyaki: ['Takoyaki stand', 20, (r) => {
-    r('#e8e0d0', 0, 0, 20, 18);
-    flatRoof(r, '#e8e0d0', 0, 18, 20, 8);
-    r('#3a3f44', 1, 7, 18, 6);
-    r(DARKWOOD, 0, 0, 20, 7); r(LIGHTWOOD, 0, 6, 20, 1);
-    awning(r, '#f08a2c', '#f4e6c8', -1, 13, 22, 3);
-    sign(r, '#e0d2b0', '#7a3a32', 0, 19, 20, 6);
-    lantern(r, 1, 9);
-    for (let i = 4; i < 17; i += 3) r('#c09060', i, 7, 2, 1);               // takoyaki balls
+    r('#e8e0d0', 0, 0, 20, SHOP_GF);
+    flatRoof(r, '#e8e0d0', 0, SHOP_GF, 20, 8);
+    r('#3a3f44', 1, 6, 18, 6);                                              // the opening
+    r(DARKWOOD, 0, 0, 20, 6); r(LIGHTWOOD, 0, 5, 20, 1);
+    for (let i = 4; i < 17; i += 3) r('#c09060', i, 6, 2, 1);               // takoyaki balls
+    awning(r, '#f08a2c', '#f4e6c8', -1, 12, 22, 3);
+    sign(r, '#e0d2b0', '#7a3a32', 0, 15, 20, 6);
+    lantern(r, 1, 8);
   }],
-  koban: ['Koban (police box)', 42, (r0, rng) => {
+  koban: ['Koban (police box)', 42, (r0) => {
     // a bicycle out front
     r0(INK, 0, 0, 3, 3); r0(INK, 5, 0, 3, 3); r0('#d8d0c0', 1, 1, 1, 1); r0('#d8d0c0', 6, 1, 1, 1); r0('#3f7fd6', 2, 3, 5, 1); r0(INK, 4, 4, 1, 1);
     const r = (c, dx, up, w, h) => r0(c, dx + 11, up, w, h);
     const wall = '#9a7c60';
-    r(wall, 0, 0, 30, 18);
-    sign(r, NAVY, WHITE, 2, 13, 26, 4);
-    glass(r, 2, 2, 12, 9); door(r, '#3f5f9a', 19, 7, 12);
-    r(RED, 21, 12, 3, 2);                                                   // red lamp
-    flatRoof(r, wall, -1, 18, 32, 12); r('#e8dcc0', -1, 18, 32, 1);
+    r(wall, 0, 0, 30, GF);
+    WINDOWS.shop(r, 2, 0, 14, 12); DOORS.glass(r, 19);
+    sign(r, NAVY, WHITE, 1, 12, 28, 4);
+    r(RED, 21, 13, 3, 2);                                                   // red lamp
+    flatRoof(r, wall, -1, GF, 32, 12); r('#e8dcc0', -1, GF, 32, 1);
   }],
   postOffice: ['Post office', 62, (r, rng) => {
     const wall = '#e8e0d0';
-    r(wall, 0, 0, 56, 18);
-    r(RED, 0, 15, 56, 3); dots(r, rng, 10, 16, 36, [WHITE, RED], 1);
-    for (let i = 3; i < 38; i += 9) { r(GLASS, i, 3, 7, 9); r(rng() < 0.5 ? '#f2c230' : '#3f7fd6', i + 2, 5, 3, 4); }
-    door(r, '#7a3a32', 45, 7, 13);
-    flatRoof(r, wall, 0, 18, 56, 14); r(RED, 0, 18, 56, 2); r('#918f8a', 40, 22, 8, 4);
-    r(RED, 59, 0, 3, 6); r(INK, 59, 4, 3, 1);                               // post box
+    r(wall, 0, 0, 56, GF);
+    r(RED, 0, 12, 56, 4); dots(r, rng, 4, 13, 34, [WHITE, RED], 1);
+    for (const dx of [2, 12, 22, 32]) { WINDOWS.alu(r, rng, dx, SILL, 9); r(rng() < 0.5 ? '#f2c230' : '#3f7fd6', dx + 2, SILL + 1, 2, 3); }  // posters
+    DOORS.auto(r, 43);
+    flatRoof(r, wall, 0, GF, 56, 14); r(RED, 0, GF, 56, 2); r('#918f8a', 40, GF + 4, 8, 4);
+    r(RED, 58, 0, 3, 6); r(INK, 58, 4, 3, 1);                               // post box
   }],
   bank: ['Bank', 46, (r, rng) => {
-    const wall = '#6a5848';
-    r(wall, 0, 0, 46, 49);
-    for (let f = 0; f < 2; f++) windows(r, rng, 0, 46, 24 + f * 13, 5, 5, 7);
-    r('#c8302a', 2, 15, 42, 4); for (let i = 5; i < 41; i += 3) r(WHITE, i, 16, 2, 2);
-    glass(r, 3, 0, 22, 13); door(r, GLASS2, 31, 7, 13);
-    r(CONCRETE, 42, 0, 4, 9); r(INK, 43, 4, 2, 3);                          // ATM
-    flatRoof(r, wall, 0, 49, 46, 12); r('#918f8a', 6, 52, 8, 4); r(shade('#918f8a', 0.8), 6, 52, 8, 1);
+    const wall = '#6a5848', top = floorAt(3);
+    r(wall, 0, 0, 46, top);
+    for (let n = 1; n < 3; n++) for (const dx of [3, 12, 21, 30, 39]) WINDOWS.alu(r, rng, dx, floorAt(n) + SILL);
+    r('#c8302a', 2, 12, 42, 4); for (let i = 5; i < 41; i += 3) r(WHITE, i, 13, 2, 2);
+    WINDOWS.shop(r, 2, 0, 25, 12); DOORS.auto(r, 29);
+    r(CONCRETE, 41, 0, 4, 10); r(INK, 42, 5, 2, 3);                         // ATM
+    flatRoof(r, wall, 0, top, 46, 12); r('#918f8a', 6, top + 3, 8, 4); r(shade('#918f8a', 0.8), 6, top + 3, 8, 1);
   }],
   clinic: ['Clinic', 40, (r, rng) => {
-    const wall = '#b9b8b0';
-    r(wall, 0, 0, 40, 35);
-    r('#2fa36b', 4, 23, 7, 7); r(WHITE, 6, 24, 3, 5); r(WHITE, 5, 25, 5, 3);
-    windows(r, rng, 14, 40, 22, 2, 7, 8);
-    sign(r, WHITE, '#2fa36b', 2, 15, 36, 4);
-    glass(r, 2, 0, 22, 13, '#dfe8ec'); door(r, '#3f5f9a', 29, 7, 14);
-    flatRoof(r, wall, 0, 35, 40, 12);
+    const wall = '#b9b8b0', top = floorAt(2);
+    r(wall, 0, 0, 40, top);
+    sign(r, WHITE, '#2fa36b', 2, 12, 36, 4);
+    WINDOWS.shop(r, 2, 0, 23, 12, FRAME, '#dfe8ec'); DOORS.glass(r, 29);
+    r('#2fa36b', 4, floorAt(1) + 3, 7, 7); r(WHITE, 6, floorAt(1) + 4, 3, 5); r(WHITE, 5, floorAt(1) + 5, 5, 3);  // green cross
+    WINDOWS.alu(r, rng, 15, floorAt(1) + SILL, 9); WINDOWS.alu(r, rng, 28, floorAt(1) + SILL, 9);
+    flatRoof(r, wall, 0, top, 40, 12);
   }],
   fireStation: ['Fire station', 56, (r, rng) => {
-    const wall = '#d8d0c4';
-    r(wall, 0, 0, 46, 34);
-    for (const dx of [3, 23]) { r(RED, dx, 0, 18, 17); for (let i = 3; i < 17; i += 3) r('#a83028', dx, i, 18, 1); }
-    r('#a83028', 0, 17, 46, 2);
-    windows(r, rng, 0, 46, 23, 4, 6, 7);
-    flatRoof(r, wall, 0, 34, 46, 14);
-    r('#b9b0a4', 46, 0, 10, 54); for (let i = 20; i < 50; i += 8) r(WIN, 49, i, 4, 4);   // hose tower
-    flatRoof(r, '#b9b0a4', 46, 54, 10, 6); r(RED, 50, 56, 2, 3);
+    const wall = '#d8d0c4', top = floorAt(2, SHOP_GF);
+    r(wall, 0, 0, 46, top);
+    DOORS.garage(r, 3); DOORS.garage(r, 25);
+    r('#a83028', 0, 15, 46, 2);
+    for (const dx of [4, 15, 26, 37]) WINDOWS.alu(r, rng, dx, floorAt(1, SHOP_GF) + SILL);
+    flatRoof(r, wall, 0, top, 46, 14);
+    r('#b9b0a4', 46, 0, 10, 55); for (const up of [SHOP_GF + SILL, 32 + SILL, 45]) WINDOWS.alu(r, rng, 49, up, 4);   // hose tower
+    flatRoof(r, '#b9b0a4', 46, 55, 10, 6); r(RED, 50, 57, 2, 3);
   }],
   karaoke: ['Karaoke', 34, (r, rng) => {
-    const wall = '#2a2a30';
-    r(wall, 0, 0, 34, 62);
-    for (let f = 0; f < 3; f++) for (let i = 0; i < 3; i++) r(rng() < 0.5 ? '#e8603a' : '#f2a040', 3 + i * 9, 24 + f * 13, 6, 6);
-    r(WHITE, 29, 18, 4, 40); for (let i = 21; i < 56; i += 4) r([RED, '#3f7fd6', '#d46a8e', '#f2c230'][(i / 4) & 3], 30, i, 2, 2);  // vertical sign
-    glass(r, 2, 0, 20, 14, '#7a6aa8'); door(r, '#d46a8e', 22, 6, 13); r('#f2a040', 2, 15, 26, 2);
-    flatRoof(r, wall, 0, 62, 34, 12); r('#918f8a', 5, 65, 7, 4);
+    const wall = '#2a2a30', top = floorAt(4);
+    r(wall, 0, 0, 34, top);
+    for (let n = 1; n < 4; n++) for (const dx of [3, 12, 21]) WINDOWS.neon(r, rng, dx, floorAt(n) + SILL);
+    r(WHITE, 29, GF + 1, 4, top - GF - 3); for (let i = GF + 3; i < top - 3; i += 4) r([RED, '#3f7fd6', '#d46a8e', '#f2c230'][(i / 4) & 3], 30, i, 2, 2);  // vertical sign
+    WINDOWS.shop(r, 2, 0, 18, 12, FRAME, '#7a6aa8'); DOORS.glass(r, 22); r('#f2a040', 2, 13, 26, 2);
+    flatRoof(r, wall, 0, top, 34, 12); r('#918f8a', 5, top + 3, 7, 4);
   }],
   woodApartment: ['Wooden apartment', 48, (r, rng) => {
-    const wall = '#b8ae9c';
-    r(wall, 0, 0, 42, 32);
-    for (let f = 0; f < 2; f++) for (let i = 0; i < 3; i++) { r(WOOD, 3 + i * 13, f * 16, 5, 11); win(r, rng, 9 + i * 13, f * 16 + 5, 4, 4); }
-    r('#7a6a5a', 0, 16, 42, 1); r('#7a6a5a', 0, 20, 42, 1); for (let i = 0; i < 42; i += 4) r('#7a6a5a', i, 16, 1, 4);  // corridor rail
-    for (let k = 0; k < 8; k++) r('#7a6a5a', 42 + k * 0.75 | 0, 16 - k * 2, 2, 1);                                      // outside stairs
-    r('#7a6a5a', 46, 0, 1, 17);
-    flatRoof(r, wall, 0, 32, 42, 12);
+    const wall = '#b8ae9c', top = floorAt(2);
+    r(wall, 0, 0, 42, top);
+    for (let n = 0; n < 2; n++) for (const ux of [2, 16, 30]) { DOORS.steel(r, ux, floorAt(n), '#8a6a4a'); WINDOWS.alu(r, rng, ux + 7, floorAt(n) + SILL); }
+    r('#7a6a5a', 0, GF, 42, 1); r('#7a6a5a', 0, GF + 3, 42, 1); for (let i = 0; i < 42; i += 4) r('#7a6a5a', i, GF, 1, 3);  // corridor rail
+    for (let k = 0; k < 8; k++) r('#7a6a5a', 42 + k * 0.75 | 0, GF - k * 2, 2, 1);                                         // outside stairs
+    r('#7a6a5a', 46, 0, 1, GF + 1);
+    flatRoof(r, wall, 0, top, 42, 12);
   }],
   parkingGarage: ['Parking garage', 56, (r, rng) => {
     const slab = '#c9c4ba';
     for (let l = 0; l < 3; l++) {
-      const up = l * 13;
-      r('#3a3f44', 0, up, 56, 13); r(slab, 0, up + 11, 56, 2);
+      const up = l * FL;
+      r('#3a3f44', 0, up, 56, FL); r(slab, 0, up + 11, 56, 2);
       for (let i = 4; i < 48; i += 10) if (rng() < 0.7) { const c = ['#e8402f', WHITE, '#3f7fd6', INK, '#b3b0a8'][Math.floor(rng() * 5)]; r(c, i, up + 2, 7, 3); r(c, i + 1, up + 5, 5, 2); r(GLASS, i + 2, up + 5, 3, 1); }
     }
     r(slab, 0, 0, 2, 39); r(slab, 27, 0, 2, 39); r(slab, 54, 0, 2, 39);
@@ -366,68 +509,66 @@ const DEFS = {
     for (let i = 5; i < 44; i += 9) if (rng() < 0.6) { const c = ['#e8402f', WHITE, '#3f7fd6', INK][Math.floor(rng() * 4)]; r(c, i, 43, 5, 7); r(GLASS, i + 1, 47, 3, 2); }
     r('#3f7fd6', 47, 39, 7, 7); r(WHITE, 49, 40, 1, 5); r(WHITE, 50, 44, 2, 1); r(WHITE, 51, 42, 1, 2); r(WHITE, 50, 42, 1, 1);  // P
   }],
-  gasStation: ['Gas station', 68, (r0) => {
+  gasStation: ['Gas station', 68, (r0, rng) => {
     const r = (c, dx, up, w, h) => r0(c, dx + 4, up, w, h);
     r(CONCRETE, 10, 0, 2, 20); r(CONCRETE, 46, 0, 2, 20);
     r('#e4e2dc', 4, 24, 52, 12); r('#d4d2cc', 4, 24, 52, 1); r(WHITE, 4, 20, 52, 4); r(RED, 4, 21, 52, 1);  // canopy, its top
     for (const dx of [20, 34]) { r(RED, dx, 0, 4, 8); r(WHITE, dx + 1, 4, 2, 2); r(INK, dx + 1, 1, 2, 1); }  // pumps
-    r('#e8e0d0', 52, 0, 12, 14); r(GLASS, 54, 0, 6, 10); flatRoof(r, '#e8e0d0', 52, 14, 12, 6);  // kiosk
+    r('#e8e0d0', 51, 0, 13, GF); DOORS.glass(r, 52); WINDOWS.alu(r, rng, 59, SILL, 4); flatRoof(r, '#e8e0d0', 51, GF, 13, 6);  // kiosk
     r(INK, 0, 0, 1, 22); r(WHITE, -3, 22, 7, 8); r(RED, -2, 27, 5, 2); r(INK, -2, 23, 5, 1); r(INK, -2, 25, 5, 1);  // price sign
   }],
   tudorCottage: ['Tudor cottage', 36, (r, rng) => {
-    const wall = '#ece0c4', beam = '#3a2a22';
-    r(wall, 0, 0, 36, 30);
-    r(beam, 0, 0, 1, 30); r(beam, 35, 0, 1, 30); r(beam, 0, 15, 36, 1); r(beam, 0, 29, 36, 1);
-    for (const dx of [8, 27]) r(beam, dx, 0, 1, 30);
-    for (let k = 0; k < 5; k++) { r(beam, 1 + k, 16 + k * 2, 1, 2); r(beam, 34 - k, 16 + k * 2, 1, 2); }   // braces
-    door(r, WOOD, 15, 6, 12); r(beam, 14, 12, 8, 1);
-    for (const dx of [2, 28]) { r(WIN, dx + 1, 5, 4, 6); r(beam, dx + 2, 5, 1, 6); r(beam, dx + 1, 8, 4, 1); }
-    windows(r, rng, 9, 27, 19, 2, 4, 6);
-    gable(r, '#4a3a32', wall, -2, 30, 40, 14, 12);
-    r(beam, 17, 30, 2, 10); r(beam, 10, 34, 16, 1);                          // beams in the gable
-    r('#9a4a3a', 28, 46, 4, 9); r(INK, 28, 54, 4, 1);                       // chimney
+    const wall = '#ece0c4', beam = '#3a2a22', top = floorAt(2);
+    r(wall, 0, 0, 36, top);
+    r(beam, 0, 0, 1, top); r(beam, 35, 0, 1, top); r(beam, 0, GF, 36, 1); r(beam, 0, top - 1, 36, 1);
+    for (const dx of [8, 27]) r(beam, dx, 0, 1, top);
+    for (let k = 0; k < 5; k++) { r(beam, 1 + k, GF + 1 + k * 2, 1, 2); r(beam, 34 - k, GF + 1 + k * 2, 1, 2); }   // braces
+    DOORS.plank(r, 15); r(beam, 14, 12, 8, 1);
+    WINDOWS.leaded(r, rng, 2, SILL); WINDOWS.leaded(r, rng, 29, SILL);
+    WINDOWS.leaded(r, rng, 11, floorAt(1) + SILL); WINDOWS.leaded(r, rng, 20, floorAt(1) + SILL);
+    gable(r, '#4a3a32', wall, -2, top, 40, 14, 12);
+    r(beam, 17, top, 2, 10); r(beam, 10, top + 4, 16, 1);                 // beams in the gable
+    r('#9a4a3a', 28, top + 16, 4, 9); r(INK, 28, top + 24, 4, 1);         // chimney
   }],
-  mediterraneanVilla: ['Mediterranean villa', 44, (r) => {
-    const wall = '#f0e8d8', shut = '#3f5f9a';
-    r(wall, 0, 0, 44, 33);
-    const arch = (dx, up, w, h) => { r(NAVY, dx, up, w, h - 1); r(NAVY, dx + 1, up + h - 1, w - 2, 1); };
-    for (const dx of [5, 14, 25, 34]) { arch(dx, 20, 5, 8); r(shut, dx - 1, 20, 1, 7); r(shut, dx + 5, 20, 1, 7); }
-    for (const dx of [5, 34]) { arch(dx, 4, 5, 8); r(shut, dx - 1, 4, 1, 7); r(shut, dx + 5, 4, 1, 7); r('#a8664a', dx, 2, 5, 2); r('#5f8f5a', dx + 1, 4, 3, 1); }
-    arch(19, 0, 7, 14);
-    pitched(r, '#c0603a', -2, 33, 48, 15, 3);
+  mediterraneanVilla: ['Mediterranean villa', 44, (r, rng) => {
+    const wall = '#f0e8d8', shut = '#3f5f9a', top = floorAt(2);
+    r(wall, 0, 0, 44, top);
+    for (const dx of [5, 14, 25, 34]) WINDOWS.shuttered(r, rng, dx, floorAt(1) + 3, shut, NAVY);
+    for (const dx of [5, 34]) { WINDOWS.shuttered(r, rng, dx, 3, shut, NAVY); r('#a8664a', dx, 1, 5, 2); r('#5f8f5a', dx + 1, 3, 3, 1); }  // flower boxes
+    DOORS.arched(r, 19, 0, '#6a4a3a'); r(shade(wall, 0.85), 18, 0, 1, 12); r(shade(wall, 0.85), 25, 0, 1, 12);
+    pitched(r, '#c0603a', -2, top, 48, 15, 3);
   }],
-  dutchCanalHouse: ['Dutch canal house', 24, (r) => {
-    const wall = '#6a5a8a', trim = '#f2efe8';
-    r(wall, 0, 0, 24, 50);
-    for (let f = 0; f < 3; f++) for (const dx of [4, 14]) { r(trim, dx, 16 + f * 12, 6, 9); r(WIN, dx + 1, 17 + f * 12, 4, 7); r(trim, dx + 1, 21 + f * 12, 4, 1); }
-    r(trim, 3, 3, 6, 9); r(WIN, 4, 4, 4, 7); door(r, '#2a4a3a', 14, 6, 13); r(trim, 13, 13, 8, 1);
+  dutchCanalHouse: ['Dutch canal house', 24, (r, rng) => {
+    const wall = '#6a5a8a', trim = '#f2efe8', top = floorAt(4);
+    r(wall, 0, 0, 24, top);
+    for (let n = 1; n < 4; n++) for (const dx of [4, 15]) WINDOWS.tall(r, rng, dx, floorAt(n) + 3, trim);
+    WINDOWS.tall(r, rng, 4, 3, trim);
+    DOORS.wood(r, 15, 0, '#2a4a3a'); r(trim, 14, 12, 8, 1); r(GLASS, 15, 13, 6, 2);   // door and its transom light
     const half = 12;                                                       // the roof behind the gable
-    r(shade('#5a5450', 0.8), 2, 50, half - 2, 16); r('#5a5450', half, 50, half - 2, 16); r(shade('#5a5450', 1.3), half - 1, 62, 2, 4);
-    const steps = [[0, 24], [3, 18], [6, 12], [9, 6]];                    // stepped gable
-    steps.forEach(([inset, w], i) => { r(wall, inset, 50 + i * 3, w, 3); r(trim, inset, 52 + i * 3, w, 1); });
-    r(trim, 11, 62, 2, 2); r(WIN, 10, 53, 4, 4);
+    r(shade('#5a5450', 0.8), 2, top, half - 2, 16); r('#5a5450', half, top, half - 2, 16); r(shade('#5a5450', 1.3), half - 1, top + 12, 2, 4);
+    [[0, 24], [3, 18], [6, 12], [9, 6]].forEach(([inset, w], i) => { r(wall, inset, top + i * 3, w, 3); r(trim, inset, top + 2 + i * 3, w, 1); });  // stepped gable
+    r(trim, 11, top + 12, 2, 2); WINDOWS.round(r, 10, top + 3);
   }],
   frenchCountryHouse: ['French country house', 42, (r, rng) => {
-    const wall = '#c8b08c', shut = '#3c4a5a';
-    r(wall, 0, 0, 42, 33);
-    for (const up of [3, 19]) for (const dx of [5, 18, 31]) {
-      if (up === 3 && dx === 31) continue;
-      win(r, rng, dx, up, 6, 9); r(shut, dx - 2, up, 2, 9); r(shut, dx + 6, up, 2, 9);
-    }
-    door(r, WOOD, 31, 7, 14);
-    pitched(r, '#3a3f44', -2, 33, 46, 18, 3);
-    for (const dx of [10, 27]) { r(wall, dx, 35, 6, 6); r(WIN, dx + 1, 35, 4, 4); pitched(r, '#3a3f44', dx - 1, 41, 8, 3, 3); }  // dormers
-    r('#9a7c60', 6, 45, 4, 8); r('#9a7c60', 32, 45, 4, 8); r(INK, 6, 52, 4, 1); r(INK, 32, 52, 4, 1);  // chimneys
+    const wall = '#c8b08c', shut = '#3c4a5a', top = floorAt(2);
+    r(wall, 0, 0, 42, top);
+    for (const dx of [5, 18, 31]) WINDOWS.shuttered(r, rng, dx, floorAt(1) + 3, shut);
+    for (const dx of [5, 18]) WINDOWS.shuttered(r, rng, dx, 3, shut);
+    DOORS.wood(r, 31); r(shade(wall, 0.8), 30, 12, 8, 1);
+    pitched(r, '#3a3f44', -2, top, 46, 18, 3);
+    for (const dx of [10, 27]) { r(wall, dx, top + 2, 6, 6); WINDOWS.sash(r, rng, dx + 1, top + 2, 4); pitched(r, '#3a3f44', dx - 1, top + 8, 8, 3, 3); }  // dormers
+    r('#9a7c60', 6, top + 12, 4, 8); r('#9a7c60', 32, top + 12, 4, 8); r(INK, 6, top + 19, 4, 1); r(INK, 32, top + 19, 4, 1);  // chimneys
   }],
   scandinavianHouse: ['Scandinavian house', 40, (r, rng) => {
-    const wall = '#a83a32';
-    r(wall, 0, 0, 40, 29);
-    for (let i = 2; i < 40; i += 3) r(shade(wall, 0.82), i, 0, 1, 29);     // planks
-    r(WHITE, 0, 0, 1, 29); r(WHITE, 39, 0, 1, 29);
-    for (const [dx, up] of [[4, 4], [27, 4], [6, 17], [17, 17], [28, 17]]) { r(WHITE, dx - 1, up - 1, 8, 9); win(r, rng, dx, up, 6, 7); r(WHITE, dx + 2, up, 1, 7); }
-    door(r, '#2f4a5a', 16, 7, 13); r(WHITE, 15, 13, 9, 1);
-    pitched(r, '#3a3f44', -2, 29, 44, 16);
-    r(shade(wall, 0.7), 29, 38, 4, 8); r(INK, 29, 45, 4, 1);                // chimney
+    const wall = '#a83a32', top = floorAt(2);
+    r(wall, 0, 0, 40, top);
+    for (let i = 2; i < 40; i += 3) r(shade(wall, 0.82), i, 0, 1, top);   // planks
+    r(WHITE, 0, 0, 1, top); r(WHITE, 39, 0, 1, top);
+    for (const dx of [5, 30]) WINDOWS.sash(r, rng, dx, SILL);
+    for (const dx of [6, 17, 28]) WINDOWS.sash(r, rng, dx, floorAt(1) + SILL);
+    r(WHITE, 16, 0, 8, 13); DOORS.wood(r, 17, 0, '#2f4a5a');
+    pitched(r, '#3a3f44', -2, top, 44, 16);
+    r(shade(wall, 0.7), 29, top + 9, 4, 8); r(INK, 29, top + 16, 4, 1);   // chimney
   }],
   // Not in tiny-catalogue: the owner asked for it. The seed picks the wall,
   // the dome (colour, size), one or two minarets (height, which side), small
@@ -440,11 +581,10 @@ const DEFS = {
     const wallH = 18 + Math.floor(rng() * 4), rad = 7 + Math.floor(rng() * 4);
     const minarets = rng() < 0.55 ? 2 : 1, leftOnly = rng() < 0.5, tall = 50 + Math.floor(rng() * 14);
     const sideDomes = rng() < 0.5, perSide = 1 + Math.floor(rng() * 2);
-    // the prayer hall: walls, a trim band, arched windows, the tall entrance
+    // the prayer hall: walls, a trim band, pointed windows, the tall entrance
     r(wall, 6, 0, 44, wallH); r(shade(wall, 0.85), 6, 0, 44, 1);
     r(trim, 6, wallH - 3, 44, 1);
-    const gap = 16 / (perSide + 1);
-    for (let i = 0; i < perSide; i++) for (const base of [6, 34]) pointedArch(r, NAVY, Math.round(base + gap * (i + 1) - 1.5), 5, 3, 8);
+    for (const base of [6, 35]) for (let i = 0; i < perSide; i++) WINDOWS.pointed(r, base + (perSide === 1 ? 5 : 1 + i * 8), 3, trim);
     flatRoof(r, wall, 6, wallH, 44, 12);
     if (sideDomes) for (const cx of [14, 41]) { r(wall, cx - 3, wallH + 3, 7, 2); dome(r, domeC, cx, wallH + 5, 3); }
     r(wall, 28 - rad - 1, wallH + 4, rad * 2 + 3, 3);                           // the drum under the dome
@@ -452,7 +592,7 @@ const DEFS = {
     r(GOLD, 28, wallH + 8 + rad, 1, 3); r(GOLD, 27, wallH + 11 + rad, 1, 1); r(GOLD, 29, wallH + 12 + rad, 1, 1);  // finial and crescent
     r(wall, 19, 0, 18, wallH + 6); r(shade(wall, 0.85), 19, wallH + 5, 18, 1);  // the entrance front (iwan), taller than the hall
     pointedArch(r, trim, 21, 0, 14, wallH + 3); pointedArch(r, shade(trim, 0.6), 23, 0, 10, wallH);
-    r(DARKWOOD, 25, 0, 6, 11); r(GOLD, 27, 13, 2, 2);
+    DOORS.arched(r, 25); r(GOLD, 27, 14, 2, 2);
     // minarets: a shaft, a balcony, a small dome and a finial
     for (const dx of minarets === 2 ? [0, 51] : [leftOnly ? 0 : 51]) {
       r(wall, dx, 0, 5, tall); r(shade(wall, 0.85), dx + 3, 0, 2, tall);
@@ -463,13 +603,13 @@ const DEFS = {
     }
   }],
   stoneChapel: ['Stone chapel', 34, (r) => {
-    const wall = '#8f8a80';
-    r(wall, 0, 0, 34, 24);
-    for (let up = 2; up < 24; up += 3) for (let i = (up % 2) * 2; i < 34; i += 5) r(shade(wall, 0.85), i, up, 2, 1);  // stones
-    r(DARKWOOD, 13, 0, 8, 11); r(DARKWOOD, 14, 11, 6, 1); r(DARKWOOD, 15, 12, 4, 1);   // arched door
-    r(GLASS, 15, 16, 4, 4); r('#c8402c', 16, 17, 2, 2);                      // round window
-    for (const dx of [4, 26]) { r(WIN, dx, 7, 4, 9); r(WIN, dx + 1, 16, 2, 1); }
-    gable(r, '#2f2a2a', wall, -2, 24, 38, 16, 16);
+    const wall = '#8f8a80', top = 24;
+    r(wall, 0, 0, 34, top);
+    for (let up = 2; up < top; up += 3) for (let i = (up % 2) * 2; i < 34; i += 5) r(shade(wall, 0.85), i, up, 2, 1);  // stones
+    r(shade(wall, 0.7), 13, 0, 8, 13); DOORS.arched(r, 14, 0, DARKWOOD);       // the door in its stone arch
+    WINDOWS.round(r, 15, 15);
+    WINDOWS.stained(r, 4, SILL); WINDOWS.stained(r, 25, SILL);
+    gable(r, '#2f2a2a', wall, -2, top, 38, 16, 16);
     r(wall, 14, 38, 6, 12); r(INK, 16, 43, 2, 4);                            // bell tower on the front of the roof
     for (let k = 0; k < 4; k++) r('#2f2a2a', 13 + k, 50 + k, 8 - k * 2, 1);
     r(GOLD, 16, 54, 1, 6); r(GOLD, 15, 57, 3, 1);                            // cross
@@ -482,7 +622,7 @@ const DEFS = {
 // solid over its whole picture.
 const OPEN = {
   torii: [[5, 2, 3, 0], [19, 2, 3, 0]],
-  gasStation: [[4, 1, 3, 0], [14, 2, 3, 0], [24, 4, 3, 0], [38, 4, 3, 0], [50, 2, 3, 0], [56, 12, 20, 0], [0, 68, 40, 9]],
+  gasStation: [[4, 1, 3, 0], [14, 2, 3, 0], [24, 4, 3, 0], [38, 4, 3, 0], [50, 2, 3, 0], [55, 13, 22, 0], [0, 68, 40, 9]],
 };
 
 /** How tall a drawing is: the top of its highest rectangle, the tallest of its seeds. */
@@ -509,15 +649,63 @@ export function drawBuilding(g, b) {
   const rng = seeded((b.seed ?? 1) * 97 + Object.keys(DEFS).indexOf(b.type));
   const wall = b.wall ?? WALL_COLORS[Math.floor(rng() * WALL_COLORS.length)];
   const roof = b.roof ?? ROOF_COLORS[Math.floor(rng() * ROOF_COLORS.length)];
-  // at a scale, each rectangle's edges are scaled and rounded, so the
-  // pixels stay as crisp as the people's (a 1 px line becomes 1 or 2 px)
-  const r = k === 1
+  draw(painter(g, L, y, k), rng, b, wall, roof);
+}
+
+/**
+ * r(colour, dx, up, w, h) drawing from (L, y) upward. At a scale, each
+ * rectangle's edges are scaled and rounded, so the pixels stay as crisp as
+ * the people's (a 1 px line becomes 1 or 2 px).
+ */
+function painter(g, L, y, k = 1) {
+  return k === 1
     ? (c, dx, up, rw, rh) => { g.fillStyle = c; g.fillRect(L + dx, y - up - rh, rw, rh); }
     : (c, dx, up, rw, rh) => {
       const x0 = Math.round(dx * k), x1 = Math.round((dx + rw) * k), y0 = Math.round(up * k), y1 = Math.round((up + rh) * k);
       if (x1 > x0 && y1 > y0) { g.fillStyle = c; g.fillRect(L + x0, y - y1, x1 - x0, y1 - y0); }
     };
-  draw(r, rng, b, wall, roof);
+}
+
+/**
+ * Every door and window on its own (the kit the buildings are made from):
+ * id -> [label, w, h, draw(r, rng)]. Doors are 12 tall, windows 6 (tall
+ * ones 8); a window's sill sticks out a pixel each side.
+ */
+const PART_DEFS = {
+  'door.wood': ['Wooden door', 6, 12, (r) => DOORS.wood(r, 0)],
+  'door.plank': ['Plank door', 6, 12, (r) => DOORS.plank(r, 0)],
+  'door.glazed': ['Café door', 6, 12, (r) => DOORS.glazed(r, 0)],
+  'door.glass': ['Glass door', 6, 12, (r) => DOORS.glass(r, 0)],
+  'door.steel': ['Flat door (steel)', 6, 12, (r) => DOORS.steel(r, 0)],
+  'door.arched': ['Arched door', 6, 12, (r) => DOORS.arched(r, 0)],
+  'door.auto': ['Automatic doors', 10, 12, (r) => DOORS.auto(r, 0)],
+  'door.sliding': ['Sliding lattice doors', 10, 12, (r) => DOORS.sliding(r, 0)],
+  'door.shoji': ['Shoji doors', 10, 12, (r) => DOORS.shoji(r, 0)],
+  'door.garage': ['Roller shutter', 18, 14, (r) => DOORS.garage(r, 0)],
+  'window.sash': ['Window', 7, 6, (r, rng) => WINDOWS.sash(r, rng, 1, 0)],
+  'window.pair': ['Pair of windows', 11, 6, (r, rng) => WINDOWS.sash(r, rng, 1, 0, 9)],
+  'window.alu': ['Aluminium window', 5, 6, (r, rng) => WINDOWS.alu(r, rng, 0, 0)],
+  'window.aluPair': ['Sliding aluminium window', 9, 6, (r, rng) => WINDOWS.alu(r, rng, 0, 0, 9)],
+  'window.tall': ['Tall window', 5, 8, (r, rng) => WINDOWS.tall(r, rng, 0, 0)],
+  'window.shuttered': ['Shuttered window', 7, 8, (r, rng) => WINDOWS.shuttered(r, rng, 1, 0, '#3c4a5a')],
+  'window.arched': ['Arched window', 5, 8, (r, rng) => WINDOWS.arched(r, rng, 0, 0)],
+  'window.pointed': ['Pointed window', 5, 8, (r) => WINDOWS.pointed(r, 0, 0, '#3f8f6a')],
+  'window.stained': ['Stained glass', 5, 8, (r) => WINDOWS.stained(r, 0, 0)],
+  'window.round': ['Round window', 4, 4, (r) => WINDOWS.round(r, 0, 0)],
+  'window.lattice': ['Lattice window', 11, 6, (r) => WINDOWS.lattice(r, 0, 0, 11)],
+  'window.shoji': ['Shoji window', 5, 6, (r) => WINDOWS.shoji(r, 0, 0)],
+  'window.leaded': ['Leaded window', 5, 6, (r, rng) => WINDOWS.leaded(r, rng, 0, 0)],
+  'window.neon': ['Neon-lit window', 5, 6, (r, rng) => WINDOWS.neon(r, rng, 0, 0)],
+  'window.shop': ['Shop glass', 18, 12, (r) => WINDOWS.shop(r, 0, 0, 18)],
+};
+/** The doors and windows: id -> { label, w, h }. */
+export const PARTS = Object.fromEntries(Object.entries(PART_DEFS).map(([id, [label, w, h]]) => [id, { label, w, h }]));
+/** Draw one door or window { part, x, y, seed, scale }: centred on x, its bottom at y. */
+export function drawPart(g, p) {
+  const def = PART_DEFS[p.part];
+  if (!def) return;
+  const k = p.scale ?? 1;
+  def[3](painter(g, Math.round(p.x - Math.round(def[1] * k) / 2), Math.round(p.y), k), seeded((p.seed ?? 1) * 131 + 7));
 }
 
 /** A building's size in pixels at its scale (b.scale, 1 by default): { w, h }. */

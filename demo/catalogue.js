@@ -1,4 +1,4 @@
-import { BUILDINGS, SHOP_TYPES, drawBuilding } from '../src/tinyBuildings.js';
+import { BUILDINGS, PARTS, SHOP_TYPES, drawBuilding, drawPart } from '../src/tinyBuildings.js';
 import { CAT_COLORS, LOOKS, drawCat, drawCharacter, lookFor, seeded } from '../src/tinyCharacters.js';
 
 // The catalogue: every person, animal and building, with filters (group,
@@ -48,8 +48,19 @@ for (const [type, { label, w, h }] of Object.entries(BUILDINGS)) {
   }
 }
 
+// the doors and windows the buildings are made from (one set of sizes)
+const PART_KIND = { 'door.wood': 'Wood', 'door.plank': 'Wood', 'door.glazed': 'Wood', 'door.arched': 'Wood', 'door.sliding': 'Japanese', 'door.shoji': 'Japanese', 'window.lattice': 'Japanese', 'window.shoji': 'Japanese', 'door.glass': 'Glass', 'door.auto': 'Glass', 'window.shop': 'Glass', 'window.alu': 'Glass', 'window.aluPair': 'Glass' };
+for (const [id, { label, w, h }] of Object.entries(PARTS)) {
+  const [kind, name] = id.split('.');
+  const tags = [kind === 'door' ? 'Doors' : 'Windows'];
+  if (PART_KIND[id]) tags.push(PART_KIND[id]);
+  items.push({ id: `part.${id}`, label, group: 'Doors & windows', tags, seed: 1, w: w + 4, h: h + 3, px: 8,
+    draw: (g, seed) => { g.fillStyle = '#d8d0c0'; g.fillRect(0, 0, w + 4, h + 1); drawPart(g, { part: id, x: 2 + w / 2, y: h + 1, seed }); },
+    code: (seed) => `drawPart(g, { part: '${id}', x, y, seed: ${seed} })` });
+}
+
 // --- filters ---------------------------------------------------------------------
-const GROUPS = ['All', 'People', 'Animals', 'Buildings'];
+const GROUPS = ['All', 'People', 'Animals', 'Buildings', 'Doors & windows'];
 const state = { g: 'All', t: new Set(), q: '' };
 const fromHash = () => {
   const h = new URLSearchParams(location.hash.slice(1));
@@ -80,7 +91,7 @@ const chip = (text, pressed, onClick, n) => {
 };
 function renderFilters() {
   $('#groups').replaceChildren(...GROUPS.map((g) => chip(g, state.g === g, () => { state.g = g; state.t.clear(); update(); }, items.filter((it) => g === 'All' || it.group === g).length)));
-  const ORDER = ['Adults', 'Kids', 'Elderly', 'Uniforms', 'Random', 'Cats', 'Japanese', 'European', 'Mosque', 'Homes', 'Shops & food', 'Civic', 'Worship', 'Low', 'Tall', 'Changes shape'];
+  const ORDER = ['Adults', 'Kids', 'Elderly', 'Uniforms', 'Random', 'Cats', 'Doors', 'Windows', 'Wood', 'Glass', 'Japanese', 'European', 'Mosque', 'Homes', 'Shops & food', 'Civic', 'Worship', 'Low', 'Tall', 'Changes shape'];
   const tags = [...new Set(items.filter(inGroup).flatMap((it) => it.tags))].sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
   // each kind's count: how many you would see with it on
   $('#tags').replaceChildren(...tags.map((t) => chip(t, state.t.has(t), () => { state.t.has(t) ? state.t.delete(t) : state.t.add(t); update(); },
@@ -151,7 +162,7 @@ cards.forEach((v) => paint(v, 0));
 // people and cats move; buildings are drawn again only when their seed changes
 function frame(now) {
   last = now / 1000;
-  if ($('#animate').checked) for (const v of cards) if (!v.card.hidden && v.it.group !== 'Buildings') paint(v, last);
+  if ($('#animate').checked) for (const v of cards) if (!v.card.hidden && (v.it.group === 'People' || v.it.group === 'Animals')) paint(v, last);
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

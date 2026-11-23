@@ -138,12 +138,27 @@ each side. Its pieces: `dome` (a half disc lit on the left) and
   Tudor cottage, stone chapel). Chimneys, towers, domes and dormers sit on the
   roof, inside its rows. **Every roof fills its whole rectangle** (the
   owner's rule, so all buildings look alike): never cut corners away.
-- Pieces: `win` / `windows` (glass, sometimes lit or curtained by `rng`),
-  `awning` (2 px stripes), `sign` (a band with a row of "letters"), `glass`
-  (shop glass with frame lines), `door`, `noren`, `lantern`, `dots` (books,
-  flowers, goods), `shopFront` (the six shop kinds).
-- Sizes: ground floor 15–20 px, upper floors 12–14, door 6 × 13, windows
-  about 5 × 6. A person (15 px) reaches three quarters of a door.
+- **Doors and windows: one set of sizes (the owner's rule).** `STOREY`:
+  ground floor `GF` 16 (a shop's `SHOP_GF` 19: glass and door 0–12,
+  stripes or awning 12–15, sign 15–19), upper floors `FL` 13 (`floorAt(n,
+  gf)` is the bottom of floor n), window sills `SILL` 4 above the floor (3
+  for a tall window). Doors are 12 tall: `DOORS.wood`, `plank`, `glazed`,
+  `glass`, `steel`, `arched` (6 wide), `auto`, `sliding`, `shoji` (10 wide),
+  `garage` (18 × 14). Windows: `WINDOWS.sash` (5 × 6, a pair at 9, white
+  frame and a sill), `alu` (aluminium, 5 or 9), `tall` (5 × 8, transom),
+  `shuttered`, `arched`, `pointed`, `stained`, `round` (4 × 4), `lattice`
+  (any width, 6 tall), `shoji`, `leaded`, `neon`, `shop` (as tall as a
+  door, a bar every 6 px). `pane(rng)` decides dark glass, a lit room or
+  curtains. **Never draw a door or window as a bare rectangle**: use the
+  kit, at its size, on the floor lines, so all buildings stay alike.
+  `PART_DEFS` / `drawPart` show each on its own (the catalogue's Doors &
+  windows group).
+- Other pieces: `awning` (2 px stripes), `sign` (a band with a row of
+  "letters"), `noren`, `lantern`, `dots` (books, flowers, goods), `dome`,
+  `pointedArch`, `shopFront(r, rng, dx, w, kind, wall)` (the six shop kinds
+  on a 19 px shop ground floor).
+- A person (15 px) reaches three quarters of a door at scale 1; in the
+  town (scale 1.5) doors are taller than people.
 - Colours: the catalogue's walls and roofs (`WALL_COLORS`, `ROOF_COLORS`),
   glass `#9fb6cc`, windows `#5f7487` (lit `#f0dca0`), wood, ink, red, navy.
 

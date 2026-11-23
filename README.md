@@ -119,13 +119,23 @@ drawBuilding(g, { type: 'shop', shopType: 'ramen', x: 120, y: 104, seed: 3 });
 | --- | --- |
 | `drawBuilding(g, b)` | One building `{ type, x, y, seed, shopType, wall, roof, scale }`: centred on `x`, ground line at `y`. `seed` picks the wall and roof colours and which windows are lit; `scale` draws it bigger with crisp pixels (the town uses 1.5). |
 | `buildingSize(b)` | Its width and height at its scale. |
+| `drawPart(g, { part, x, y, seed, scale })` | One door or window from the kit the buildings are made of, centred on `x`, its bottom at `y`. |
+| `PARTS` | `id -> { label, w, h }`: `door.wood`, `door.plank`, `door.glazed`, `door.glass`, `door.steel`, `door.arched`, `door.auto`, `door.sliding`, `door.shoji`, `door.garage`, `window.sash`, `window.pair`, `window.alu`, `window.aluPair`, `window.tall`, `window.shuttered`, `window.arched`, `window.pointed`, `window.stained`, `window.round`, `window.lattice`, `window.shoji`, `window.leaded`, `window.neon`, `window.shop`. |
+| `STOREY` | The sizes every building shares: ground floor 16, a shop's 19, upper floors 13, window sills 4 above the floor. |
 | `BUILDINGS` | `type -> { label, w, h }`: name, width and height in pixels (roof included). |
 | `SHOP_TYPES` | `konbini`, `ramen`, `cafe`, `bookshop`, `bakery`, `izakaya` (for `shop` and `mixedUse`). |
 | `drawStreet(g, W, H, { baseY, x0 })` | Sidewalk from `baseY`, road, far sidewalk, grass; `x0` scrolls the paving. |
 | `WALL_COLORS`, `ROOF_COLORS` | The catalogue's wall and roof colours. |
 
-Sizes: a storey is 13–20 px and a door 6 × 13, so a 15 px person reaches
-about three quarters of a door. Roofs are seen from above (8–18 rows, like a
+Sizes, the same on every building: a ground floor is 16 px (a shop's 19, its
+awning and sign above the door), an upper floor 13; a door 6 × 12 (double and
+sliding doors 10 × 12, a garage 18 × 14); a window 5 × 6 (a pair 9 × 6, a tall
+window 5 × 8) with its sill 4 px above its floor; shop glass is as tall as a
+door. Doors and windows show what they are: panelled wood, planks with iron
+straps, a café door with glass, glass in aluminium, a flat's steel door,
+automatic doors, Japanese lattice sliding doors, shoji; sash, aluminium,
+tall, shuttered, arched, pointed, stained, round, lattice, leaded, neon
+windows and shop glass. The catalogue has them all under Doors & windows. Roofs are seen from above (8–18 rows, like a
 top-down town map), which gives each building its depth. Tall buildings are
 squashed (the office has 6 floors, the apartment block 6). Sign text is a row of pixels: real letters do
 not fit.

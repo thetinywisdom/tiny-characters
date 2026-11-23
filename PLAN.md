@@ -21,6 +21,10 @@ bubble lab, so games can use them and they can grow.
   so nobody walks behind one (walk round it); tall buildings only in the back
   row; low buildings in the blocks; the shrine, school and old town get their
   own grounds; the map stops at its edges (no wrapping).
+- Doors and windows (Nov 2026): one set of sizes and proportions on every
+  building (storeys 16 / 19 / 13, doors 6 × 12 and 10 × 12, windows 5 × 6,
+  9 × 6, 5 × 8, sills 4 above the floor), and detailed types that show what
+  they are (wood, glass, sliding, shoji, steel ...).
 - People (Nov 2026): four views (front, back, both sides); walking up shows
   the back. The town is drawn 1.5 times bigger than the people.
 - People (Nov 2026): no eyes, they stay faceless; different sizes are fine
@@ -77,6 +81,10 @@ bubble lab, so games can use them and they can grow.
     front walking down, a side walking across (`facingFor`); the Looks
     canvas shows the four views, catalogue cards turn round; the town is
     drawn at scale 1.5 (`scale` for buildings and towns), people stay 15 px.
+11. **Doors and windows**: audited every building (doors were 5–8 × 11–14,
+    windows 4 × 4 to 7 × 9, sills anywhere); one set of sizes; a kit of 10
+    door and 15 window types with detail; every building rebuilt on it;
+    `drawPart` / `PARTS` and a Doors & windows group in the catalogue.
 
 ## Next (only when the owner asks)
 
