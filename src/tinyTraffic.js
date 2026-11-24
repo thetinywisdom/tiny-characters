@@ -14,7 +14,7 @@
 //                               (0 right, 90 down / towards you, 180 left, 270 up)
 //   VEHICLES                    type -> { label, length, width, height, box }
 //   vehicleLights(v)            its lamps' glows at night
-//   drawVehicleBeams(g, v, style)  the light its headlamps throw on the road ('cone', 'pixel', 'pool')
+//   drawVehicleBeams(g, v)      the pool of light its headlamps throw on the road
 //   makeTraffic(town, opts)     { vehicles, update(dt, t, walkers), mayCross(x, y, nx, ny, t),
 //                               lightAt(junction, axis, t) }
 //
@@ -220,42 +220,23 @@ export function vehicleLights(v) {
   return out;
 }
 
-/** The beam styles drawVehicleBeams knows: soft cones, pixel beams, one pool of light. */
-export const BEAM_STYLES = ['cone', 'pixel', 'pool'];
 /**
- * The light a vehicle's headlamps throw on the road ahead (and a little red
- * behind it), drawn into a light layer `g` ('lighter' adds it): style 'cone'
- * (a soft cone from each lamp), 'pixel' (each cone in three flat bands, for
- * a crisp pixel look when the layer is drawn small and scaled up) or 'pool'
- * (one wide pool in front of the car). Paint the vehicles out of the layer
- * afterwards so the light falls on the road, not on them.
+ * The light a vehicle's headlamps throw on the road (the owner chose a pool
+ * of light): one smooth oval on the road ahead, brightest by the lamps (and a
+ * little red behind), drawn into a light layer `g` ('lighter' adds it).
+ * Paint the vehicles out of the layer afterwards so the light falls on the
+ * road, not on them.
  */
-export function drawVehicleBeams(g, v, style = 'cone') {
+export function drawVehicleBeams(g, v) {
   const S = SHAPES[v.type] ?? SHAPES.car, hl = S.L / 2, side = S.W / 2 - 1.6;
   const P = (u, w, z = 0) => onScreen(v, S, u, w, z);
-  const poly = (pts, fill) => { g.beginPath(); pts.forEach((p, i) => (i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y))); g.closePath(); g.fillStyle = fill; g.fill(); };
-  const LONG = 26;
-  if (style === 'pool') {
-    // one smooth oval of light on the road ahead (further out when the car drives away, so it shows beyond it)
-    const th = ((v.heading ?? HEADING[v.facing ?? 'right']) * Math.PI) / 180, cs = Math.cos(th), sn = Math.sin(th);
-    const c = P(hl + (sn > -0.35 ? 10 : 18), 0), a = 13, b = side + 5;
-    g.save(); g.translate(c.x, c.y); g.transform(cs * a, sn * KY * a, -sn * b, cs * KY * b, 0, 0);
-    const grad = g.createRadialGradient(-0.55, 0, 0, 0, 0, 1);
-    grad.addColorStop(0, 'rgba(255,244,200,0.5)'); grad.addColorStop(0.5, 'rgba(255,240,190,0.22)'); grad.addColorStop(1, 'rgba(255,240,190,0)');
-    g.fillStyle = grad; g.beginPath(); g.arc(0, 0, 1, 0, Math.PI * 2); g.fill(); g.restore();
-  } else {
-    for (const w of [-side, side]) {
-      const lamp = P(hl, w, 4.8), near = (k) => [P(hl + 1, w - k), P(hl + 1, w + k)], far = (len, spread) => [P(hl + len, w + spread), P(hl + len, w - spread)];
-      if (style === 'pixel') {
-        // three flat bands, brightest near the lamp
-        for (const [len, spread, a] of [[LONG, 6, 0.12], [LONG * 0.62, 4, 0.16], [LONG * 0.3, 2.5, 0.22]]) poly([lamp, ...near(1), ...far(len, spread)], `rgba(255,240,190,${a})`);
-      } else {
-        const end = P(hl + LONG, w), grad = g.createLinearGradient(lamp.x, lamp.y, end.x, end.y);
-        grad.addColorStop(0, 'rgba(255,244,200,0.55)'); grad.addColorStop(0.35, 'rgba(255,240,190,0.25)'); grad.addColorStop(1, 'rgba(255,240,190,0)');
-        poly([lamp, ...near(1), ...far(LONG, 6)], grad);
-      }
-    }
-  }
+  // further out when the car drives away, so it shows beyond it
+  const th = ((v.heading ?? HEADING[v.facing ?? 'right']) * Math.PI) / 180, cs = Math.cos(th), sn = Math.sin(th);
+  const c = P(hl + (sn > -0.35 ? 10 : 18), 0), a = 13, b = side + 5;
+  g.save(); g.translate(c.x, c.y); g.transform(cs * a, sn * KY * a, -sn * b, cs * KY * b, 0, 0);   // the unit circle laid on the road
+  const pool = g.createRadialGradient(-0.55, 0, 0, 0, 0, 1);
+  pool.addColorStop(0, 'rgba(255,244,200,0.5)'); pool.addColorStop(0.5, 'rgba(255,240,190,0.22)'); pool.addColorStop(1, 'rgba(255,240,190,0)');
+  g.fillStyle = pool; g.beginPath(); g.arc(0, 0, 1, 0, Math.PI * 2); g.fill(); g.restore();
   // a little red on the road behind
   const back = P(-hl - 3, 0), grad = g.createRadialGradient(back.x, back.y, 0, back.x, back.y, 7);
   grad.addColorStop(0, 'rgba(232,64,58,0.35)'); grad.addColorStop(1, 'rgba(232,64,58,0)');

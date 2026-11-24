@@ -45,6 +45,8 @@ bubble lab, so games can use them and they can grow.
   step; no twin tails, beard, helmet, tank top; none of the "maybe" parts
   (flu mask, wings, bulky build, shoes or boots: too small to matter).
 
+- Headlights (Nov 2026): a pool of light on the road ahead of the car (not
+  cones or beams), with small glows on the lamps.
 - Building seeds (Nov 2026): a seed changes the building itself (width,
   floors, windows' kind, number and spacing, door, roof, details), not only
   its colours; all on the shared door and window sizes.
@@ -192,6 +194,10 @@ bubble lab, so games can use them and they can grow.
     north half); buses serve their stops on the kerb side. At night: two
     headlights and two tail lights on the lamps (not one in the middle),
     each beam on the road, lamps on the far end hidden.
+28. **Headlights shine on the road** (the owner: they looked like floating
+    orbs; tried soft cones, pixel beams and a light pool, chose the pool):
+    one smooth pool of light on the road ahead of each car, never over a
+    car; small glows on the lamps themselves.
 
 ## Next (only when the owner asks)
 
@@ -235,7 +241,4 @@ bubble lab, so games can use them and they can grow.
 
 ## Open questions for the owner
 
-- Headlights (the owner: they looked like floating orbs; try three): which
-  style, A soft cones, B pixel beams or C a light pool? All three are in
-  (`?beams=cone|pixel|pool`, cone by default); keep the chosen one and
-  remove the others.
+None right now.

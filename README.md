@@ -342,10 +342,8 @@ instead.
 
 `drawBuilding(g, { ...b, lights: true })` draws only what shines on a
 building, `propLights(p)` and `vehicleLights(v)` where things give light;
-`drawVehicleBeams(g, v, style)` the light headlamps throw on the road, in
-one of three styles to choose from (`beams` in drawTownView: `'cone'`,
-`'pixel'`, `'pool'`; in the demo add `?beams=pixel` or `?beams=pool` to the
-address).
+`drawVehicleBeams(g, v)` the pool of light headlamps throw on the road in
+front of a car.
 
 Speech for these people (floating pixel text, the design picked in the
 bubble lab) lives in **tiny-ui-kit** (`src/ui/pixelOverlay.js`).
