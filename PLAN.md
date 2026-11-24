@@ -112,6 +112,10 @@ bubble lab, so games can use them and they can grow.
     skyline, the sides with gaps for the streets, below the last street),
     blocking everything nobody can reach; bushes, small trees, meadow and
     long grass in the back gardens.
+16. **Trees fixed** (the owner saw broken, striped trees): plants are drawn
+    once at their real size and scaled as an image (no more size-by-seed
+    scaling); the seed mirrors them; birch bark bands; forest crowns stay
+    off the roads.
 
 ## Next (only when the owner asks)
 

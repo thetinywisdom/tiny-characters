@@ -6,8 +6,8 @@
 //   drawTerrain(g, { type, x, y, w, h, seed, scale, t })   fills a rectangle
 //   TREES, BUSHES: type -> { label, w, h }   TERRAINS: type -> { label }
 //
-// The seed changes a tree's or bush's size and shade a little, and where
-// its flowers, fruit and blossom fall; a terrain's seed moves its pattern.
+// The seed picks one of 8 looks of a tree or bush (where its flowers, fruit
+// and blossom fall) and mirrors it; a terrain's seed moves its pattern.
 // Like the buildings, everything scales with crisp pixels (scale 1.5 in the
 // town): patterns repeat on even steps.
 
@@ -79,7 +79,7 @@ const TREE_DEFS = {
   }],
   birch: ['Birch', 15, 22, (r, rng, cx) => {
     shadowUnder(r, cx, 9);
-    r('#eeeae0', cx - 1, 0, 2, 14); for (const y of [2, 6, 10]) r(INKISH, cx - 1 + (y % 4 ? 1 : 0), y, 1, 1);   // white bark with marks
+    r('#eeeae0', cx - 1, 0, 2, 14); r('#d8d4ca', cx, 0, 1, 14); for (const y of [2, 6, 10]) r(INKISH, cx - 1, y, 2, 1);   // white bark with dark bands
     blob(r, cx, 16, 5, 6, '#8ab45a');
     sprinkle(r, rng, cx, 16, 5, 6, ['#a8c870'], 6);
   }],
@@ -172,15 +172,36 @@ export const TREES = Object.fromEntries(Object.entries(TREE_DEFS).map(([k, [labe
 /** Bushes: type -> { label, w, h }. */
 export const BUSHES = Object.fromEntries(Object.entries(BUSH_DEFS).map(([k, [label, w, h]]) => [k, { label, w, h }]));
 
+// Plants are drawn once at their real size into a small image, then placed
+// at the scale asked for (nearest pixel, no smoothing). Drawing them
+// straight at 1.5 made their rows of leaves overlap or miss: stripes. In the
+// town the canvas is drawn 4 times bigger underneath, so 1.5 comes out as
+// exactly 6 screen pixels per plant pixel.
+const VARIANTS = 8;                 // looks per plant type (the seed picks one, and mirrors it)
+const cache = new Map();
+const MX = 10, MY = 8;              // room round a plant for what sticks out (fronds, strands, shadow)
+function plantImage(defs, type, variant, salt) {
+  const key = `${salt}:${type}:${variant}`;
+  if (cache.has(key)) return cache.get(key);
+  const [, w, h, draw] = defs[type];
+  const cw = w + MX * 2, ch = h + MY * 2;
+  const c = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(cw, ch) : Object.assign(document.createElement('canvas'), { width: cw, height: ch });
+  draw(makePainter(c.getContext('2d'), MX, h + MY, 1), seeded(variant * 131 + salt), Math.floor(w / 2));
+  const img = { c, cw, ch, w, h };
+  cache.set(key, img);
+  return img;
+}
 function drawPlant(defs, g, p, salt) {
-  const def = defs[p.type];
-  if (!def) return;
-  const [, w, , draw] = def;
-  const rng = seeded((p.seed ?? 1) * 131 + salt);
-  // the seed makes it a little bigger or smaller (scale x 0.85 - 1.15)
-  const k = (p.scale ?? 1) * (p.seed ? 0.85 + rng() * 0.3 : 1);
-  const r = makePainter(g, Math.round(p.x - Math.round(w * k) / 2), Math.round(p.y), k);
-  draw(r, rng, Math.floor(w / 2));
+  if (!defs[p.type]) return;
+  const seed = p.seed ?? 0, k = p.scale ?? 1;
+  const { c, cw, ch, w, h } = plantImage(defs, p.type, seed % VARIANTS, salt);
+  const flip = seed % 2 === 1;                                           // the seed mirrors it too
+  const x0 = p.x - (MX + w / 2) * k, y0 = p.y - (h + MY) * k;
+  const smooth = g.imageSmoothingEnabled;
+  g.imageSmoothingEnabled = false;
+  if (flip) { g.save(); g.translate(x0 + cw * k, y0); g.scale(-1, 1); g.drawImage(c, 0, 0, cw * k, ch * k); g.restore(); }
+  else g.drawImage(c, x0, y0, cw * k, ch * k);
+  g.imageSmoothingEnabled = smooth;
 }
 /** Draw a tree { type, x, y, seed, scale }: centred on x, its foot at y. */
 export function drawTree(g, p) { drawPlant(TREE_DEFS, g, p, 17); }

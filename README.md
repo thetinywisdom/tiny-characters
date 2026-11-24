@@ -196,7 +196,7 @@ pixels like the buildings.
 
 | Export | What it does |
 | --- | --- |
-| `drawTree(g, { type, x, y, seed, scale })` | `oak`, `maple`, `sakura`, `pine`, `cedar`, `fir`, `birch`, `palm`, `willow`, `ginkgo`, `bamboo`, `apple`, `poplar`, `cypress`, `bare` (`TREES`). The seed changes its size a little and where fruit, blossom and leaves fall. |
+| `drawTree(g, { type, x, y, seed, scale })` | `oak`, `maple`, `sakura`, `pine`, `cedar`, `fir`, `birch`, `palm`, `willow`, `ginkgo`, `bamboo`, `apple`, `poplar`, `cypress`, `bare` (`TREES`). The seed picks where fruit, blossom and leaves fall and mirrors the tree. |
 | `drawBush(g, { type, x, y, seed, scale })` | `round`, `hedge`, `azalea`, `hydrangea`, `rose`, `lavender`, `fern`, `pampas`, `holly`, `cactus` (`BUSHES`). |
 | `drawTerrain(g, { type, x, y, w, h, seed, scale, t })` | Fills a rectangle: `grass`, `meadow`, `tallGrass`, `dirt`, `sand`, `gravel`, `cobble`, `water` (ripples with `t`), `snow`, `paddy` (`TERRAINS`). |
 

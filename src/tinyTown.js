@@ -168,9 +168,9 @@ export function makeTown(layout0 = DEFAULT_TOWN) {
   const lastBottom = streets[streets.length - 1] + STREET;
   const forest = [
     ...forestIn(rng, k, 0, -Math.round(6 * k), W, streets[0] - Math.round(4 * k)),
-    ...forestIn(rng, k, 0, streets[0], pad - Math.round(4 * k), lastBottom - streets[0], (x, y) => streets.some((sy) => y > sy - 4 * k && y < sy + STREET + 2 * k)),
-    ...forestIn(rng, k, W - pad + Math.round(4 * k), streets[0], pad, lastBottom - streets[0], (x, y) => streets.some((sy) => y > sy - 4 * k && y < sy + STREET + 2 * k)),
-    ...forestIn(rng, k, 0, lastBottom + Math.round(6 * k), W, H - lastBottom),
+    ...forestIn(rng, k, 0, streets[0], pad - Math.round(4 * k), lastBottom - streets[0], (x, y) => streets.some((sy) => y > sy - 4 * k && y < sy + STREET + 20 * k)),   // crowns stay off the road
+    ...forestIn(rng, k, W - pad + Math.round(4 * k), streets[0], pad, lastBottom - streets[0], (x, y) => streets.some((sy) => y > sy - 4 * k && y < sy + STREET + 20 * k)),   // crowns stay off the road
+    ...forestIn(rng, k, 0, lastBottom + Math.round(16 * k), W, H - lastBottom),
   ].map((p) => ({ ...p, type: p.tree, kind: 'tree' }));
   plants = [...plants, ...forest];
 

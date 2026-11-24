@@ -256,11 +256,17 @@ A new breed is an entry in `DOG_BREEDS` (and coats in `DOG_COATS`).
 
 ## How nature is drawn (src/tinyNature.js)
 
-Trees and bushes use the buildings' painter (`makePainter`), so they scale
-crisply: `[label, w, h, draw(r, rng, cx)]` from the bottom left, `cx` the
-middle. Pieces: `blob` (a clump of leaves lit from the top left), `sprinkle`
-(fruit, flowers, blossom on even steps), `trunk`, `shadowUnder`. The seed
-scales a plant 0.85–1.15 and moves its dots. Terrains fill a rectangle
+Trees and bushes: `[label, w, h, draw(r, rng, cx)]` from the bottom left,
+`cx` the middle. Pieces: `blob` (a clump of leaves lit from the top left),
+`sprinkle` (fruit, flowers, blossom on even steps), `trunk`, `shadowUnder`.
+**Each plant is drawn once at its real size into a small cached image**
+(`plantImage`, 8 looks per type) and placed at the scale asked for with
+nearest-pixel scaling; the seed picks a look and mirrors it. Never draw a
+plant straight at a scale like 1.5 or a random one (the owner saw "broken"
+striped trees: rows of leaves overlapped or missed). In the town the canvas
+is 4 times bigger underneath, so 1.5 is exactly 6 screen pixels per plant
+pixel. Forest trees keep their trunks 20 px (scale 1) below a street so
+their crowns stay off it. Terrains fill a rectangle
 (clipped) with a base colour and a pattern on a grid of whole pixels
 (`c = round(scale)`); water's ripples move with `t`. In the town, `plants`
 in the layout (`{ tree: 'sakura', x, y }` or `{ bush: ... }`) block at the
