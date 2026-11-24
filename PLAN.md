@@ -37,7 +37,9 @@ bubble lab, so games can use them and they can grow.
 - People (Nov 2026): four views (front, back, both sides); walking up shows
   the back.
 - How to work (Nov 2026): show the owner a preview of any change to how
-  things look before switching everything over. The town is drawn 1.5 times bigger than the people.
+  things look before switching everything over.
+- People stay flat (Nov 2026): no 3D people (tried: the owner found every
+  version bad). The town is drawn 1.5 times bigger than the people.
 - People (Nov 2026): no eyes, they stay faceless; different sizes are fine
   (tall, short, kids); everyone gets hands, shoes, a shaded side, a collar and
   hem on plain tops, and sometimes a fringe, so they look less generic.
@@ -201,11 +203,11 @@ bubble lab, so games can use them and they can grow.
     one smooth pool of light on the road ahead of each car, never over a
     car; small glows on the lamps themselves.
 
-29. **People in 3D, as a preview only** (the owner asked to try the
-    vehicles' approach on the people; I first switched everyone over, the
-    owner said to show it first, so it was put back): `drawCharacter3D`
-    (blocks, the shared src/tinyVoxel.js renderer, 8 headings, every look)
-    shows only at index.html?people=3d; the flat people stay the default.
+29. **People in 3D: tried and dropped** (the owner asked to try the
+    vehicles' approach on the people; the first try was switched in without
+    asking and put back; a flat-looking first preview, then three variants
+    with an angled camera and outlines; the owner: all bad, forget it). All
+    of it removed; the people stay flat.
 
 ## Next (only when the owner asks)
 
@@ -249,8 +251,4 @@ bubble lab, so games can use them and they can grow.
 
 ## Open questions for the owner
 
-- People in 3D (the owner: the first try looked flat, "just 2D with no
-  depth"): three variants with an angled camera (a, b with an inner edge,
-  c with an outline) at index.html?people=3d&style=a|b|c. At 5 x 3 blocks
-  the depth stays small at real size; bigger or more detailed people would
-  show it more. Which way, if any?
+None right now.

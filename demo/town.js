@@ -1,5 +1,5 @@
 import { BUILDINGS, SIGN_FONT, buildingSize, buildingSolids, drawBuilding } from '../src/tinyBuildings.js';
-import { LOOKS, PEOPLE_3D_STYLE, facingFor, randomCharacter, seeded } from '../src/tinyCharacters.js';
+import { LOOKS, facingFor, randomCharacter, seeded } from '../src/tinyCharacters.js';
 import { CAT_COATS, DOG_BREEDS, dogFor } from '../src/tinyAnimals.js';
 import { drawTownView, makeTown } from '../src/tinyTown.js';
 import { makeTraffic } from '../src/tinyTraffic.js';
@@ -82,10 +82,6 @@ monstersButton.onclick = () => { showMonsters = !showMonsters; monstersButton.te
 // the time of day: an hour every 8 seconds, from 4 in the afternoon (so the
 // evening comes soon); the button keeps it day or night instead
 let hour = 16, timeMode = 'passing';
-// a preview for the owner: people drawn in 3D (index.html?people=3d); not the default
-const PEOPLE_3D = new URLSearchParams(location.search).get('people') === '3d';
-// which variant of the preview: ?people=3d&style=a (angled camera), b (+ an inner edge) or c (+ an outline)
-PEOPLE_3D_STYLE.outline = { b: 'inner', c: 'outer' }[new URLSearchParams(location.search).get('style')] ?? null;
 const timeButton = document.querySelector('#time'), clock = document.querySelector('#clock');
 timeButton.onclick = () => {
   timeMode = { passing: 'day', day: 'night', night: 'passing' }[timeMode];
@@ -167,7 +163,7 @@ function frame(now) {
     w: VW, h: VH,
   };
   g.setTransform(D, 0, 0, D, 0, 0);
-  drawTownView(g, town, view, [...shownPeople, ...traffic.vehicles], t, { dpx: D, night: nightAt(hour), people3d: PEOPLE_3D });
+  drawTownView(g, town, view, [...shownPeople, ...traffic.vehicles], t, { dpx: D, night: nightAt(hour) });
   const name = town.placeAt(you.x, you.y);
   if (name !== shown) { shown = name; here.textContent = name; }
   requestAnimationFrame(frame);

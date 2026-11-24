@@ -4,7 +4,6 @@
 // canvas is scaled up with hard pixels (CSS `image-rendering: pixelated`).
 //
 //   drawCharacter(g, person, t)   one person, feet at (person.x, person.y)
-//   drawCharacter3D(g, person, t) the same person in 3D: a preview (index.html?people=3d)
 //   drawStage(g, W, H)            the lab's grass strip and path
 //   randomCharacter(rng)          a random look
 //   LOOKS                         starter looks (salaryman, grandma ...)
@@ -13,9 +12,7 @@
 // A person: { x, y, body, hair, skin, legs, you, talking, walking, facing }
 // plus looks: kid, hairStyle, moustache, hat, hatColor, top, trim, legwear,
 // carry, carryColor (see SKILLS.md).
-// Colours are CSS strings. Plain ES module (draws with tinyVoxel.js).
-
-import { voxelSprite } from './tinyVoxel.js';
+// Colours are CSS strings. Plain ES module, no dependencies.
 
 /** The lab's colours. */
 export const COLORS = {
@@ -182,134 +179,6 @@ export function drawCharacter(g, p, t = 0) {
   }
   // the player's gold line
   if (p.you) R(COLORS.gold, -3, 1, 7, 1);
-}
-
-// --- people in 3D ---------------------------------------------------------------------
-// Like the vehicles, a person is a small shape of pixel-sized blocks drawn
-// from any heading (tinyVoxel): legs and shoes, the body and what is worn on
-// it, arms with hands, the head, hair, a hat, what they carry. Their tops
-// (hair, hat brims, shoulders, an umbrella) show from above like the
-// buildings' roofs, the light comes from the upper left, and they turn
-// round as one solid thing. Blocks: u is forward, v across (+ their left),
-// z up from the soles; the body is 5 across and 3 deep, the head 3 x 3.
-
-const HEAD_OF = { down: 90, up: 270, back: 270, right: 0, left: 180 };
-const PEOPLE = new Map();
-const HAND = -3;                                    // things are carried in the right hand
-
-/** The blocks of a person (a Map 'u,v,z' -> colour) for a look and a moment (step: -1 standing, 0 or 1; bob 0 or 1). */
-function personBlocks(p, step, bob) {
-  const M = new Map(), set = (u, v, z, c) => M.set(`${u},${v},${z}`, c);
-  const box = (u0, u1, v0, v1, z0, z1, c) => { for (let u = u0; u <= u1; u++) for (let v = v0; v <= v1; v++) for (let z = z0; z <= z1; z++) set(u, v, z, c); };
-  const { legH, bodyH } = frameOf(p);
-  const body = p.body ?? BODY_COLORS[0], legs = p.legs ?? COLORS.ink, skin = p.skin ?? SKIN_COLORS[1], hair = p.hair ?? COLORS.ink;
-  const carry = p.carry, carryColor = p.carryColor ?? DEFAULT_CARRY[carry], wear = p.legwear ?? 'trousers', trim = p.trim;
-  const shoes = p.shoes ?? (p.kid ? RED : '#3a2a22');
-  const b0 = legH + bob, b1 = b0 + bodyH - 1, hz = b1 + 1;            // body rows, the head's bottom row
-  const swing = step === -1 ? 0 : step ? 1 : -1;
-  // legs: one forward and one back when walking; shoes with a toe; a talking bob stretches them
-  if (p.top !== 'yukata') {
-    for (const [v0, s] of [[1, swing], [-2, -swing]]) {
-      const c = wear === 'trousers' ? legs : skin;
-      box(-1 + s, 0 + s, v0, v0 + 1, 1, b0 - 1, c);
-      if (wear === 'shorts') box(-1 + s, 0 + s, v0, v0 + 1, b0 - 1, b0 - 1, legs);
-      box(-1 + s, 1 + s, v0, v0 + 1, 0, 0, shoes);
-    }
-    if (wear === 'skirt') box(-1, 1, -2, 2, b0 - 1, b0, legs);
-  } else {
-    box(-1, 1, -2, 2, 1, b0 - 1, body);                                  // the robe down to the feet
-    box(0, 1, -1, -1, 0, 0, p.shoes ?? legs); box(0, 1, 1, 1, 0, 0, p.shoes ?? legs);
-  }
-  // the body, and what is worn on it (front: u = 1; back: u = -1)
-  box(-1, 1, -2, 2, b0, b1, body);
-  if (wear === 'skirt') box(-1, 1, -2, 2, b0, b0, legs);
-  const front = (v0, v1, z0, z1, c) => box(1, 1, v0, v1, z0, z1, c), back = (v0, v1, z0, z1, c) => box(-1, -1, v0, v1, z0, z1, c);
-  const hem = b0 + 2;
-  switch (p.top) {
-    case undefined: case null: front(-1, 1, b1, b1, light(body) ? shade(body, 0.86) : WHITE); box(-1, 1, -2, 2, hem, hem, shade(body, 0.8)); break;   // collar and hem
-    case 'jacket': front(0, 0, b0, b1, trim ?? WHITE); break;
-    case 'suit': front(-1, 1, b1 - 1, b1, WHITE); front(0, 0, b1 - Math.min(3, bodyH - 1), b1, trim ?? BODY_COLORS[1]); break;
-    case 'apron': front(-1, 1, b0, b1 - 2, trim ?? WHITE); back(-1, 1, hem, hem, trim ?? WHITE); break;
-    case 'yukata': box(-1, 1, -2, 2, hem, hem, trim ?? RED); box(-2, -2, -1, 1, hem + 1, hem + 2, trim ?? RED); break;   // obi and its bow
-    case 'sailor': front(-2, 2, b1, b1, COLORS.navy); front(0, 0, b1 - 1, b1 - 1, trim ?? RED); back(-2, 2, b1 - 1, b1, COLORS.navy); break;
-    case 'gakuran': front(0, 0, b1 - 1, b1 - 1, COLORS.gold); front(0, 0, b1 - 3, b1 - 3, COLORS.gold); break;
-    case 'police': front(-1, 1, b0, b1, trim ?? COLORS.navy); front(1, 1, b1 - 1, b1 - 1, COLORS.gold); back(-1, 1, b0, b1, trim ?? COLORS.navy); break;
-  }
-  // arms: sleeves and hands, swinging opposite the legs; not when carrying boxes in front
-  if (carry !== 'boxes') for (const [v, s] of [[3, -swing], [-3, swing]]) {
-    const holding = v === HAND && ['bag', 'briefcase', 'stick', 'umbrella'].includes(carry), d = holding ? 0 : s;
-    box(d, d, v, v, b0 + 2, b1, body); box(d, d, v, v, b0, b0 + 1, skin);
-  }
-  if (carry === 'boxes') { box(2, 3, -2, 2, b0 + 1, b0 + 4, carryColor); box(2, 3, -2, 2, b0 + 3, b0 + 3, '#8a6440'); box(1, 1, -3, -3, b0 + 1, b0 + 2, skin); box(1, 1, 3, 3, b0 + 1, b0 + 2, skin); }
-  if (carry === 'backpack') { box(-2, -2, -1, 1, b0 + (p.kid ? 0 : 1), b1, carryColor); box(-2, -2, -1, 1, b1, b1, shade(carryColor, 0.8)); }
-  // the head and hair
-  box(-1, 1, -1, 1, hz, hz + 3, skin);
-  let style = p.hairStyle ?? 'short';
-  if (p.hat && (style === 'afro' || style === 'bun' || style === 'mohawk')) style = style === 'mohawk' ? 'bald' : 'short';
-  // (the top of the head shows from above, so hair needs no extra row over it, as the flat drawing did)
-  if (style === 'mohawk') box(-1, 1, 0, 0, hz + 3, hz + 5, hair);
-  else if (style === 'afro') { box(-2, 1, -2, 2, hz + 3, hz + 4, hair); box(-2, 1, -2, -2, hz + 1, hz + 2, hair); box(-2, 1, 2, 2, hz + 1, hz + 2, hair); box(-2, -2, -2, 2, hz + 1, hz + 2, hair); }
-  else if (style !== 'bald') {
-    box(-1, 1, -1, 1, hz + 3, hz + 3, hair);                              // the top of the head
-    box(-1, -1, -1, 1, hz + 1, hz + 3, hair);                             // the back, the nape bare
-    if (style === 'bun') box(-1, 0, 0, 0, hz + 4, hz + 4, hair);
-    if (style === 'long') { box(-1, 0, -2, -2, hz, hz + 3, hair); box(-1, 0, 2, 2, hz, hz + 3, hair); box(-2, -2, -2, 2, hz - 1, hz + 3, hair); }
-    if (style === 'ponytail') { set(-2, 0, hz + 3, hair); const out = step === 1 ? -4 : -3; box(-3, -3, 0, 0, hz + 1, hz + 3, hair); box(out, out, 0, 0, hz - 1, hz + 1, hair); }
-  }
-  if (p.fringe && !p.hat && style !== 'bald' && style !== 'mohawk' && style !== 'afro') set(1, p.fringe === 'right' ? -1 : 1, hz + 2, hair);
-  if (p.moustache) set(1, 0, hz + 1, hair);
-  // hats
-  const hatColor = p.hatColor ?? DEFAULT_HAT[p.hat];
-  if (p.hat === 'cap') { box(-1, 1, -1, 1, hz + 3, hz + 4, hatColor); box(2, 2, -1, 1, hz + 3, hz + 3, hatColor); }   // the brim forward
-  else if (p.hat === 'wide') { box(-2, 2, -2, 2, hz + 3, hz + 3, hatColor); box(-1, 1, -1, 1, hz + 4, hz + 4, hatColor); }
-  // carried in the hand
-  if (carry === 'bag') box(-1, 0, HAND - 1, HAND, b0 - 2, b0 - 1, carryColor);
-  else if (carry === 'briefcase') box(-1, 1, HAND, HAND, b0 - 2, b0 - 1, carryColor);
-  else if (carry === 'stick') box(1, 1, HAND, HAND, 0, b0 + 1, carryColor);
-  else if (carry === 'umbrella') {
-    // held high, so the face shows under it: a round canopy, seen from above
-    box(0, 0, -2, -2, b0 + 2, hz + 6, COLORS.ink);
-    for (const [z, r] of [[hz + 7, 4.7], [hz + 8, 3.3]]) for (let u = -5; u <= 5; u++) for (let v = -5; v <= 5; v++) if (u * u + v * v <= r * r) set(u, v, z, carryColor);
-    set(0, 0, hz + 9, COLORS.ink);
-  }
-  return M;
-}
-
-/** A person's sprite for a look, a moment and a heading (kept once made). */
-// how the preview is drawn (being tried out with the owner): the camera a little to the side
-// (skew) so every block shows a shaded side face, how dark faces away from the light get, an outline
-export const PEOPLE_3D_STYLE = { skew: -0.5, dark: 0.6, outline: null };
-function personSprite(p, step, bob, heading) {
-  const look = [p.kid, p.size, p.body, p.legs, p.skin, p.hair, p.hairStyle, p.fringe, p.moustache, p.hat, p.hatColor, p.top, p.trim, p.legwear, p.shoes, p.carry, p.carryColor].join('|');
-  const st = PEOPLE_3D_STYLE, key = `${look}#${step}${bob}@${heading}~${st.skew},${st.dark},${st.outline}`;
-  if (!PEOPLE.has(key)) {
-    const M = personBlocks(p, step, bob);
-    PEOPLE.set(key, voxelSprite((u, v, z) => M.get(`${u},${v},${z}`) ?? null, { L: 12, W: 12, H: 28, centred: true, ...st }, heading));
-  }
-  return PEOPLE.get(key);
-}
-
-/**
- * Draw one person with their feet at (p.x, p.y): a small 3D figure seen the
- * way the town is, from in front and above, at p.heading (degrees: 0 right,
- * 90 towards you, 180 left, 270 away; 8 steps) or p.facing ('down' their
- * front, 'up' their back, 'left', 'right'). `t` (seconds) drives the talking
- * bob and the walking step: legs and arms swing front and back.
- * Looks (all optional, see SKILLS.md): kid, size, hairStyle, fringe,
- * moustache, hat, hatColor, top, trim, legwear, shoes, carry, carryColor.
- * No eyes: the people are faceless. A PREVIEW for the owner to look at
- * (index.html?people=3d); drawCharacter (flat) is what everything uses.
- */
-export function drawCharacter3D(g, p, t = 0) {
-  const talkBob = p.talking && Math.floor(t * 6) % 2 ? 1 : 0;
-  const step = p.walking ? Math.floor(t * 8) % 2 : -1;
-  const bob = talkBob || (p.walking && step === 1 ? 1 : 0);
-  const heading = p.heading ?? HEAD_OF[p.facing ?? 'down'] ?? 90;
-  const dir = ((Math.round(heading / 45) % 8) + 8) % 8;                 // 8 steps: at this size the in-between ones are noise
-  const s = personSprite(p, step, bob, dir * 45);
-  const x = Math.round(p.x), y = Math.round(p.y);
-  g.drawImage(s.canvas, x - s.ox, y - s.oy);
-  if (p.you) { g.fillStyle = COLORS.gold; g.fillRect(x - 3, y + 2, 7, 1); }   // the player's gold line
 }
 
 /**

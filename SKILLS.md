@@ -32,8 +32,7 @@ src/tinyCombat.js      weapons and fights: drawWeapon, drawArmed,
                        REACTIONS
 src/tinyStreet.js      street things: drawProp, PROPS, propSolid,
                        propLights, poleTops, drawWire
-src/tinyVoxel.js       the 3D block renderer: voxelSprite, KY (the vehicles,
-                       and the 3D people preview)
+src/tinyVoxel.js       the 3D block renderer for the vehicles: voxelSprite, KY
 src/tinyTraffic.js     vehicles and traffic: drawVehicle, VEHICLES,
                        makeTraffic (lanes, lights, turns, buses)
 src/tinyTown.js        the 2D town map: makeTown, drawTownView,
@@ -55,45 +54,6 @@ demo/town.js           the town (walk around the map; townspeople, kids in
 demo/demo.css          the demo page's look (light and dark)
 .nojekyll              tells GitHub Pages to serve the files as they are
 ```
-
-## A preview: people in 3D (drawCharacter3D; NOT the default)
-
-The owner asked to try the vehicles' 3D approach on the people and to SEE
-IT FIRST: it is only a preview (index.html?people=3d, `people3d` in
-drawTownView); everything else draws people flat (`drawCharacter`, below).
-Variants (`PEOPLE_3D_STYLE`; `&style=a|b|c`): the camera a little to the
-side as well as above (`skew` -0.5 in voxelSprite, so every block shows its
-shaded right side too), faces away from the light darker (`dark` 0.6), and
-an `outline`: none (a), 'inner' (the figure's edge pixels darker, b) or
-'outer' (a dark line round it, c). `drawCharacter3D` builds a person from pixel-sized
-blocks (`personBlocks`: a Map 'u,v,z' -> colour; u forward, v across, z up
-from the soles) and draws it with `voxelSprite` (src/tinyVoxel.js, shared
-with the vehicles): from in front and above, walls full height, tops at 0.6
-of their depth, light from the upper left, so the top of the head, hat
-brims, shoulders and an umbrella show from above like the buildings' roofs.
-- the same rows as the flat drawing (`frameOf`: legs 3, body 6, head 4; kid
-  2 / 4, short body 5, tall legs 4 / body 7); the body 5 across and 3 deep,
-  the head 3 x 3; legs two 2 x 2 columns with a gap, shoes the bottom row
-  with a toe forward; arms (sleeve and two rows of hand) out at the sides
-- walking: one leg a block forward and the other back, the arms the other
-  way (a hand holding something stays still); the body bobs up on the
-  second step; talking bobs too (the legs stretch, no gap)
-- front details on the front face (collar, tie, buttons, apron, vest,
-  sailor collar, fringe, moustache), back details on the back (the sailor
-  flap, the yukata's bow, the apron strings), hems and obis all round
-- hair: the top layer of the head and its back (the nape bare); no extra
-  row over the head (its top shows from above); long hair down the sides
-  and behind, a ponytail out behind and down (further out on the step), a
-  bun on top, an afro round the head, a mohawk ridge; a cap with its brim
-  forward, a straw hat's brim all round
-- carried: backpack on the back, bag and briefcase in the right hand
-  (`HAND`), stick, boxes held in front, an umbrella held high with a round
-  canopy (so the face shows under it)
-- 8 headings (`p.heading`, or `p.facing`), every sprite made once per look,
-  moment (step, bob) and heading and kept (`PEOPLE`); the gold line for
-  `you` is drawn under the feet
-A look part added to the flat drawing needs its blocks in `personBlocks`
-too while the preview is kept.
 
 ## How a person is drawn (feet at x, y; one canvas pixel = one pixel)
 

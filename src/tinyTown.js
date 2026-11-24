@@ -18,7 +18,7 @@
 // Units are canvas pixels. Plain ES module, no dependencies.
 
 import { BUILDINGS, buildingSize, buildingSolids, drawBuilding } from './tinyBuildings.js';
-import { drawCharacter, drawCharacter3D } from './tinyCharacters.js';
+import { drawCharacter } from './tinyCharacters.js';
 import { drawCat, drawDog } from './tinyAnimals.js';
 import { drawMonster } from './tinyMonsters.js';
 import { BUSHES, TREES, drawBush, drawTerrain, drawTree } from './tinyNature.js';
@@ -480,7 +480,7 @@ function drawGround(layout) {
  * dpx: device pixels per canvas pixel, when the canvas is drawn bigger
  * underneath (g scaled by dpx) so the signs' names can be written.
  */
-export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0, people3d = false } = {}) {
+export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0 } = {}) {
   g.imageSmoothingEnabled = false;
   g.drawImage(town.ground, view.x, view.y, view.w, view.h, 0, 0, view.w, view.h);
   g.save(); g.translate(-view.x, -view.y);
@@ -501,7 +501,7 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0
     else if (it.p) (it.p.kind === 'tree' ? drawTree : drawBush)(g, it.p);
     else if (it.s.vehicle) drawVehicle(g, it.s);                                   // cars, buses: { vehicle: true, type, facing, ... }
     else if (it.s.monster) drawMonster(g, { ...it.s, type: it.s.monster }, t);   // monsters: { monster: 'zombie', variant, ... }
-    else (it.s.dog ? drawDog : it.s.cat ? drawCat : people3d ? drawCharacter3D : drawCharacter)(g, it.s, t);   // people3d: the 3D preview
+    else (it.s.dog ? drawDog : it.s.cat ? drawCat : drawCharacter)(g, it.s, t);
   }
   // the wires, over everything
   for (const [a, b, sag] of town.wires) if (Math.max(a.x, b.x) > view.x && Math.min(a.x, b.x) < view.x + view.w && a.y > view.y - 10 && a.y < view.y + view.h + 10) drawWire(g, a, b, sag);
