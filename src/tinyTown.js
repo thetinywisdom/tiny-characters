@@ -22,8 +22,8 @@ import { drawCharacter } from './tinyCharacters.js';
 import { drawCat, drawDog } from './tinyAnimals.js';
 import { drawMonster } from './tinyMonsters.js';
 import { BUSHES, TREES, drawBush, drawTerrain, drawTree } from './tinyNature.js';
-import { PROPS, drawProp, drawWire, poleTops, propSolid } from './tinyStreet.js';
-import { drawVehicle } from './tinyTraffic.js';
+import { PROPS, drawProp, drawWire, poleTops, propLights, propSolid } from './tinyStreet.js';
+import { drawVehicle, vehicleLights } from './tinyTraffic.js';
 import { seeded as seededRng } from './tinyCharacters.js';
 
 const CELL = 4;                                          // path-finding grid
@@ -367,6 +367,39 @@ export function makeTown(layout0 = DEFAULT_TOWN) {
   return { W, H, pad, scale: k, streets, crossStreets, dims: streetDims(k), junctions, roadAt, crossingAt, buildings, plants, props, wires, areas, solids, blocked, findPath, randomSpot, placeAt, doorOf, ground: drawGround(layout) };
 }
 
+/** Mix two #rrggbb colours: u = 0 is a, 1 is b. */
+const mix = (a, b, u) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(a.slice(i, i + 2), 16) * (1 - u) + parseInt(b.slice(i, i + 2), 16) * u).toString(16).padStart(2, '0')).join('');
+/**
+ * Evening and night over a drawn view: the town tinted (warm at dusk, deep
+ * blue at night), then what shines drawn again over it (lit windows, shop
+ * glass, signs, neon, lanterns), then soft light round lamps, vending
+ * machines, traffic lights and cars' lights. night: 0 (day) to 1.
+ */
+function drawNight(g, view, items, night, dpx) {
+  const dusk = Math.max(0, 1 - Math.abs(night - 0.35) / 0.35);              // the warm light of dusk, early in the evening
+  g.save();
+  g.globalCompositeOperation = 'multiply';
+  g.fillStyle = mix(mix('#ffffff', '#f4a870', dusk * 0.7), '#4c5494', Math.min(1, night ** 1.6 * 1.1));
+  g.fillRect(view.x, view.y, view.w, view.h);
+  g.globalCompositeOperation = 'source-over';
+  const on = Math.max(0, Math.min(1, (night - 0.25) / 0.45));               // lights come on as it gets dark
+  if (on > 0) {
+    g.globalAlpha = on;
+    for (const it of items) if (it.b) drawBuilding(g, { ...it.b, lights: true, dpx });
+    g.globalCompositeOperation = 'lighter';
+    const glow = (x, y, r, c) => {
+      const grad = g.createRadialGradient(x, y, 0, x, y, r);
+      grad.addColorStop(0, c + '99'); grad.addColorStop(0.4, c + '33'); grad.addColorStop(1, c + '00');
+      g.fillStyle = grad; g.fillRect(x - r, y - r, r * 2, r * 2);
+    };
+    for (const it of items) {
+      const lights = it.prop ? propLights(it.prop) : it.s?.vehicle ? vehicleLights(it.s) : [];
+      for (const l of lights) glow(l.x, l.y, l.r, l.c);
+    }
+  }
+  g.restore();
+}
+
 /** The town's ground (grass, grounds, streets, cross streets, crossings) on a canvas of its own. */
 // the areas' grounds are the terrains of tinyNature
 const TERRAIN_OF = { gravel: 'gravel', sand: 'sand', paving: 'cobble', water: 'water', grass: 'grass' };
@@ -431,7 +464,7 @@ function drawGround(layout) {
  * dpx: device pixels per canvas pixel, when the canvas is drawn bigger
  * underneath (g scaled by dpx) so the signs' names can be written.
  */
-export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1 } = {}) {
+export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0 } = {}) {
   g.imageSmoothingEnabled = false;
   g.drawImage(town.ground, view.x, view.y, view.w, view.h, 0, 0, view.w, view.h);
   g.save(); g.translate(-view.x, -view.y);
@@ -456,5 +489,6 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1 } = {}) {
   }
   // the wires, over everything
   for (const [a, b, sag] of town.wires) if (Math.max(a.x, b.x) > view.x && Math.min(a.x, b.x) < view.x + view.w && a.y > view.y - 10 && a.y < view.y + view.h + 10) drawWire(g, a, b, sag);
+  if (night > 0.01) drawNight(g, view, items, night, dpx);
   g.restore();
 }

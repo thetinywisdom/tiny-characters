@@ -169,14 +169,17 @@ bubble lab, so games can use them and they can grow.
     vehicles in the catalogue (Street, Vehicles). The stop signs left the
     town (lights at every junction), but stay in the catalogue.
 
+25. **Day and night**: a clock in the demo (an hour every 8 s, from 4 pm;
+    Time: passing / day / night); the town turns golden at dusk, then deep
+    blue; lit windows, shop glass, signs, neon, lanterns, street lamps,
+    vending machines, traffic lights and car lights glow.
+
 ## Next (only when the owner asks)
 
 1. Speech with them (floating pixel text from tiny-ui-kit) in the demo.
 2. **More town**: a station plaza and a back alley like the catalogue's
    areas, a park (meadow, pond, trees), street props in the back gardens.
-3. **Day and night** (next, agreed): windows light up, lamps,
-   vending machines and neon glow.
-4. Small life: pigeons that scatter, laundry on balconies, shopkeepers,
+3. Small life (the owner's list of ideas, not yet asked for): pigeons that scatter, laundry on balconies, shopkeepers,
    steam from the ramen shop, people chatting or sitting on benches.
 
 ## Known issues and small ideas
@@ -186,6 +189,8 @@ bubble lab, so games can use them and they can grow.
 - The town's back row is packed from the left, so narrower seeds leave a
   gap at its right end.
 
+- The glows round lights are soft gradients, not pixels (light in pixel
+  games usually is); the catalogue has no night view yet.
 - Sign text is drawn by the canvas, so its edges are a little soft (not
   snapped to the pixel grid like everything else).
 

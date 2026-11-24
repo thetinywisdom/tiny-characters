@@ -126,10 +126,14 @@ export function propSolid(p) {
   return { x: left(p, k) + Math.round(fx * k), y: Math.round(p.y - depth * k), w: Math.max(1, Math.round(fw * k)), h: Math.round(depth * k) + 1 };
 }
 
-/** Where it lights up at night (in the canvas): [{ x, y, r }]. */
+/** Where it lights up at night (in the canvas): [{ x, y, r, c }] (c: the light's colour). */
 export function propLights(p) {
   const k = p.scale ?? 1, L = left(p, k);
-  return (DEFS[p.type]?.[5] ?? []).map(([dx, up, rad]) => ({ x: L + dx * k, y: p.y - up * k, r: rad * k }));
+  if (p.type === 'trafficLight') {
+    const [dx, c] = { green: [2, '#3fd0a0'], yellow: [4, '#f2c230'], red: [6, '#e8403a'] }[p.lit ?? 'green'];
+    return [{ x: L + dx * k, y: p.y - 17 * k, r: 6 * k, c }, { x: L + 6 * k, y: p.y - (p.lit === 'red' ? 7 : 9) * k, r: 3 * k, c: p.lit === 'red' ? '#3fd0a0' : '#e8403a' }];
+  }
+  return (DEFS[p.type]?.[5] ?? []).map(([dx, up, rad]) => ({ x: L + dx * k, y: p.y - up * k, r: rad * k, c: p.type === 'vendingMachine' ? '#e8f4ff' : '#ffe8a8' }));
 }
 
 /** A utility pole's wires hang from the ends of its crossarm: [{ x, y }]. */

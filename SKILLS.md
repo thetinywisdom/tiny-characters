@@ -434,6 +434,28 @@ s at each. Vehicles leaving the town on a street come back in at the edge
 of another. `mayCross` stops someone on foot from stepping onto a crossing
 unless that crossing's cars have red (the walk signal is green then).
 
+## How day and night work
+
+`drawTownView`'s `night` (0 to 1) runs `drawNight` after everything else:
+1. a `multiply` tint over the view: white by day, warm orange at dusk
+   (strongest at night 0.35), deep blue (`#4c5494`) at night
+2. the lights come on from night 0.25 (full at 0.7): each building in view
+   is drawn again with `lights: true`: its painter (`nightLights` in
+   tinyBuildings.js) draws only colours in `NIGHT` (lit rooms, curtains,
+   shop glass, neon, lanterns `LANTERN`, the karaoke's glass), each as its
+   lit colour, plus 45 % of the dark windows (`WIN`), picked by a hash of
+   the building's seed and the window's place, so the same windows are lit
+   every frame; signs (`sign`, `upright`) draw through `r.force`, so they
+   are always lit
+3. soft glows (`lighter`, radial gradients) round every light:
+   `propLights` (lamps warm, vending machines white, a traffic light's lit
+   lamp and walk signal) and `vehicleLights` (headlights ahead, red tail
+   lights behind)
+A new building's lights come for free if it uses the shared colours (`LIT`,
+`CURTAIN`, `GLASS` ...); a new thing that shines gets `lights` in its
+`DEFS` entry. The demo's clock (`hour`, `nightAt` in demo/town.js): night
+from 20 to 5, day from 7 to 17, easing between.
+
 ## Common tasks
 
 - **A new look part:** add a value to the list (`HATS`, `TOPS` ...), draw it

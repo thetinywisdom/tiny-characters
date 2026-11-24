@@ -180,7 +180,7 @@ drawTownView(g, town, { x: viewX, y: viewY, w: 200, h: 150 }, [you, ...others], 
 | Export | What it does |
 | --- | --- |
 | `makeTown(layout)` | A town: `{ W, H, streets, crossStreets, junctions, roadAt(x, y), crossingAt(x, y), buildings, props, wires, areas, blocked(x, y), findPath(from, to), randomSpot(rng, within), placeAt(x, y), doorOf(building), ground }`. |
-| `drawTownView(g, town, view, sprites, t)` | The part of the town in `view`: ground, then buildings, trees, bushes, people, cats (`cat: true`) and dogs (`dog: true`) further back first. |
+| `drawTownView(g, town, view, sprites, t, { dpx, night })` | The part of the town in `view`: ground, then buildings, trees, bushes, people, cats (`cat: true`) and dogs (`dog: true`) further back first. |
 | `DEFAULT_TOWN` | The demo's layout: `scale` (1.5: the town is drawn that much bigger, the people stay 15 px), `streets`, `crossStreets`, `rows` of buildings, single `buildings`, `props` (street things), `areas` with their own ground (all at scale 1; `makeTown` multiplies them). |
 | `buildingSolids(b)` (tinyBuildings.js) | The ground a building takes; you can step between a torii's posts and under a gas station's canopy. |
 
@@ -324,6 +324,20 @@ and wait at each one; cars leaving town come back in somewhere else. People
 on foot cross the roads only at the zebra crossings and wait for the green
 man there (you can still walk anywhere with the keys). The catalogue has
 the vehicles (Street, Vehicles), turning round.
+
+## Day and night
+
+`drawTownView(g, town, view, sprites, t, { night })` takes how dark it is,
+from 0 (day) to 1 (night). As evening comes the town turns golden, then
+deep blue; then the lights come on: lit windows (about half the windows of
+each building, always the same ones), shop glass, signs, neon, lanterns,
+street lamps, vending machines, traffic lights, and cars' headlights and
+tail lights. In the demo an hour passes every 8 seconds from 4 in the
+afternoon (the clock is under the town); **Time** keeps it day or night
+instead.
+
+`drawBuilding(g, { ...b, lights: true })` draws only what shines on a
+building, `propLights(p)` and `vehicleLights(v)` where things give light.
 
 Speech for these people (floating pixel text, the design picked in the
 bubble lab) lives in **tiny-ui-kit** (`src/ui/pixelOverlay.js`).

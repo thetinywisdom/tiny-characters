@@ -7,6 +7,7 @@
 //   drawVehicle(g, v, t)        one vehicle { type, x, y, facing, color, seed }:
 //                               centred on x, its wheels on y
 //   VEHICLES                    type -> { label, side: [len, h], front: [w, h] }
+//   vehicleLights(v)            its head and tail lights, for the night
 //   makeTraffic(town, opts)     { vehicles, update(dt, t, walkers), mayCross(x, y, nx, ny),
 //                               lightAt(junction, axis) }
 //
@@ -147,6 +148,16 @@ export function drawVehicle(g, v) {
   const flip = facing === 'left';
   const R = (col, dx, up, rw, rh) => { g.fillStyle = col; g.fillRect(L + (flip ? w - dx - rw : dx), Y - up - rh, rw, rh); };
   if (side) d.side(R, c, c2); else if (facing === 'down') d.front(R, c, c2); else d.back(R, c, c2);
+}
+
+/** A vehicle's lights at night: headlights ahead of it, tail lights behind: [{ x, y, r, c }]. */
+export function vehicleLights(v) {
+  const s = SIZE[v.type] ?? SIZE.car, f = v.facing ?? 'right';
+  if (f === 'left' || f === 'right') {
+    const d = f === 'right' ? 1 : -1, half = s.side[0] / 2;
+    return [{ x: v.x + d * (half + 3), y: v.y - 4, r: 11, c: '#fff2c0' }, { x: v.x - d * half, y: v.y - 4, r: 4, c: '#e8403a' }];
+  }
+  return f === 'down' ? [{ x: v.x, y: v.y + 2, r: 12, c: '#fff2c0' }] : [{ x: v.x - 4, y: v.y - 3, r: 4, c: '#e8403a' }, { x: v.x + 4, y: v.y - 3, r: 4, c: '#e8403a' }];
 }
 
 // --- the traffic -------------------------------------------------------------------

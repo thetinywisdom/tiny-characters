@@ -79,6 +79,24 @@ let showMonsters = true;
 const monstersButton = document.querySelector('#monsters');
 monstersButton.onclick = () => { showMonsters = !showMonsters; monstersButton.textContent = showMonsters ? 'Hide monsters' : 'Show monsters'; monstersButton.setAttribute('aria-pressed', showMonsters); };
 
+// the time of day: an hour every 8 seconds, from 4 in the afternoon (so the
+// evening comes soon); the button keeps it day or night instead
+let hour = 16, timeMode = 'passing';
+const timeButton = document.querySelector('#time'), clock = document.querySelector('#clock');
+timeButton.onclick = () => {
+  timeMode = { passing: 'day', day: 'night', night: 'passing' }[timeMode];
+  timeButton.textContent = `Time: ${timeMode}`;
+  if (timeMode === 'day') hour = 12; else if (timeMode === 'night') hour = 22;
+};
+/** How dark it is at an hour: 0 by day (7 to 17), 1 at night (20 to 5), easing between. */
+function nightAt(h) {
+  const ease = (u) => u * u * (3 - 2 * u);
+  if (h >= 7 && h < 17) return 0;
+  if (h >= 17 && h < 20) return ease((h - 17) / 3);
+  if (h >= 5 && h < 7) return ease(1 - (h - 5) / 2);
+  return 1;
+}
+
 /** A dog keeps a little behind its owner: it trots after them when they get away. */
 function heel(d, dt) {
   const o = d.owner, back = o.facing === 'left' ? 7 : o.facing === 'right' ? -7 : 0, down = o.facing === 'up' ? 5 : o.facing === 'down' ? -4 : 0;
@@ -134,6 +152,10 @@ function frame(now) {
   }
   const shownPeople = showMonsters ? people : people.filter((p) => !p.monster);
   traffic.update(dt, t, shownPeople);
+  if (timeMode === 'passing') hour = (hour + dt / 8) % 24;
+  const hh = Math.floor(hour), mm = Math.floor((hour - hh) * 6) * 10;
+  const time = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+  if (clock.textContent !== time) clock.textContent = time;
   // the view follows you
   view = {
     x: Math.round(Math.max(0, Math.min(town.W - VW, you.x - VW / 2))),
@@ -141,7 +163,7 @@ function frame(now) {
     w: VW, h: VH,
   };
   g.setTransform(D, 0, 0, D, 0, 0);
-  drawTownView(g, town, view, [...shownPeople, ...traffic.vehicles], t, { dpx: D });
+  drawTownView(g, town, view, [...shownPeople, ...traffic.vehicles], t, { dpx: D, night: nightAt(hour) });
   const name = town.placeAt(you.x, you.y);
   if (name !== shown) { shown = name; here.textContent = name; }
   requestAnimationFrame(frame);

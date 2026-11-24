@@ -82,12 +82,12 @@ function gable(r, c, face, dx, up, w, gh, d) {
 function awning(r, c1, c2, dx, up, w, h = 3) { for (let i = 0; i < w; i += 2) r(i % 4 ? c2 : c1, dx + i, up, Math.min(2, w - i), h); }
 /** A sign: a band with a row of "letters" (the text is too small to read). */
 function sign(r, bg, fg, dx, up, w, h = 4, text = '') {
-  r(bg, dx, up, w, h);
+  (r.force ?? r)(bg, dx, up, w, h);                                       // signs are lit at night too
   // the name in DotGothic16 when the canvas has the pixels for it (see drawBuilding's dpx);
   // otherwise a word-shaped row of letters, on even steps so it stays even when scaled
   if (text && r.text && r.text(text, fg, dx, up, w, h)) return;
   const n = Math.max(2, Math.floor((w * 0.55) / 4)), start = dx + Math.floor((w - (n * 4 - 2)) / 4) * 2;
-  for (let i = 0; i < n; i++) r(fg, start + i * 4, up + 1, 2, h - 2);
+  for (let i = 0; i < n; i++) (r.force ?? r)(fg, start + i * 4, up + 1, 2, h - 2);
 }
 /** The same painter moved ox pixels to the right (text and icons too). */
 function shifted(r0, ox) {
@@ -99,11 +99,12 @@ function shifted(r0, ox) {
 }
 /** A sign that reads top to bottom (a narrow upright sign): its name letter under letter. */
 function upright(r, bg, fg, dx, up, w, h, text, dots) {
-  r(bg, dx, up, w, h);
+  (r.force ?? r)(bg, dx, up, w, h);
   if (text && r.text && r.text(text, fg, dx, up, w, h, true)) return;
-  for (let i = up + 2; i < up + h - 2; i += 4) r(dots ? dots[(i / 4) & 3] : fg, dx + Math.floor((w - 2) / 2), i, 2, 2);
+  for (let i = up + 2; i < up + h - 2; i += 4) (r.force ?? r)(dots ? dots[(i / 4) & 3] : fg, dx + Math.floor((w - 2) / 2), i, 2, 2);
 }
-const lantern = (r, dx, up) => { r(RED, dx, up, 2, 3); r(INK, dx, up + 3, 2, 1); };
+const LANTERN = '#d8402f';
+const lantern = (r, dx, up) => { r(LANTERN, dx, up, 2, 3); r(INK, dx, up + 3, 2, 1); };
 /** A noren: a short curtain over a doorway, cut into strips. */
 function noren(r, c, dx, up, w) { r(c, dx, up, w, 4); for (let i = 3; i < w - 1; i += 4) r(shade(c, 0.6), dx + i, up, 1, 3); }
 /** A row of coloured dots (books, flowers, goods). */
@@ -842,7 +843,25 @@ export function drawBuilding(g, b) {
   if (!DEFS[b.type]) return;
   const k = b.scale ?? 1, { rng, wall, roof, w } = choices(b);
   const L = Math.round(b.x - Math.round(w * k) / 2), y = Math.round(b.y);
-  DEFS[b.type][2](painter(g, L, y, k, b.dpx ?? 1), rng, b, wall, roof, w);
+  const r = painter(g, L, y, k, b.dpx ?? 1);
+  DEFS[b.type][2](b.lights ? nightLights(r, b.seed ?? 1) : r, rng, b, wall, roof, w);
+}
+
+// --- at night ----------------------------------------------------------------------
+// drawBuilding with b.lights draws only what shines (over the darkened town):
+// lit rooms, shop glass, neon, lanterns, signs; about half the dark windows
+// light up too (which ones is fixed by the seed and the window's place).
+const NIGHT = new Map([[LIT, LIT], [CURTAIN, '#f2dcae'], [GLASS, '#e4cf98'], [GLASS2, '#c8b07c'], ['#dfe8ec', '#e8e0c4'],
+  ['#e8603a', '#ff7a4a'], ['#f2a040', '#ffb860'], ['#e870a0', '#ff88b8'], ['#6ac8f2', '#88dcff'], [LANTERN, '#ff6a40'],
+  ['#7a6aa8', '#a890e0'], ['#a85a8a', '#e080b8'], ['#5a7aa8', '#80a8e0']]);
+function nightLights(r0, seed) {
+  const r = (c, dx, up, w, h) => {
+    let lc = NIGHT.get(c);
+    if (!lc && c === WIN) { const hsh = Math.imul(Math.round(dx) * 73856093 ^ Math.round(up) * 19349663 ^ seed * 83492791, 2654435761) >>> 0; if (hsh % 100 < 45) lc = LIT; }
+    if (lc) r0(lc, dx, up, w, h);
+  };
+  r.force = r0; r.k = r0.k; r.text = r0.text; r.px = () => {};
+  return r;
 }
 
 /**
