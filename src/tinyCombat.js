@@ -29,7 +29,7 @@ export const WEAPONS = {
 export const ACTIONS = {
   slash: { label: 'Sword slash', weapon: 'sword', duration: 0.45, reach: 'front', range: 10 },
   stab: { label: 'Sword stab', weapon: 'sword', duration: 0.4, reach: 'front', range: 13 },
-  axeSwing: { label: 'Axe swing (360)', weapon: 'axe', duration: 0.8, reach: 'around', range: 14 },   // a full spin: hits all round
+  axeSwing: { label: 'Axe swing (360)', weapon: 'axe', duration: 0.42, reach: 'around', range: 14 },   // a full spin: hits all round
   chop: { label: 'Axe chop', weapon: 'axe', duration: 0.6, reach: 'front', range: 10 },
   spearSwing: { label: 'Spear swing', weapon: 'spear', duration: 0.55, reach: 'front', range: 15 },
   spearStab: { label: 'Spear stab', weapon: 'spear', duration: 0.45, reach: 'front', range: 20 },
@@ -150,13 +150,13 @@ const POSES = {
     // a wind-up, then one full turn: the axe goes all the way round the body
     // (angles here are on the screen, for facing right) and the fighter turns
     // through every view with it; a ring of motion all round
-    if (u < 0.2) { const k = ease(span(u, 0, 0.2)); return { hand: [lerp(1, -1, k), lerp(3, 2, k)], angle: lerp(-60, -170, k) }; }
-    if (u < 0.85) {
-      const k = span(u, 0.2, 0.85), a = 0 + k * 360, r = a * Math.PI / 180;
+    if (u < 0.1) { const k = ease(span(u, 0, 0.1)); return { hand: [lerp(1, -1, k), lerp(3, 2, k)], angle: lerp(-60, -170, k) }; }
+    if (u < 0.88) {
+      const k = span(u, 0.1, 0.88), a = 0 + k * 360, r = a * Math.PI / 180;
       const facing = ['right', 'down', 'left', 'up'][Math.floor(((a + 45) % 360) / 90)];
       return { spin: true, facing, hand: [Math.round(Math.cos(r) * 4), Math.round(Math.sin(r) * 2) + 2], angle: a, whirl: k, trail: true };
     }
-    const k = span(u, 0.85, 1); return { hand: [1, 3], angle: lerp(0, -60, k), dust: k < 0.8 ? k : 0 };
+    const k = span(u, 0.88, 1); return { hand: [1, 3], angle: lerp(0, -60, k), dust: k < 0.8 ? k : 0 };
   },
   chop: (u) => {
     if (u < 0.45) { const k = ease(span(u, 0, 0.45)); return { hand: [lerp(1, 0, k), lerp(3, -4, k)], angle: lerp(-60, -110, k) }; }

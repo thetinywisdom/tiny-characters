@@ -135,8 +135,8 @@ bubble lab, so games can use them and they can grow.
     trap, bone throw, fireball); hit, shoved back, dead (with special deaths
     for ghosts, skeletons, skulls, spiders); a Combat group in the catalogue.
 21. **Axe swing is a 360 spin** (the owner: it should affect everything
-    round the character): a wind-up, one full turn through every view, a
-    ring of motion; actions now say their reach (`front`, `around`, `self`)
+    round the character): a quick wind-up, one fast full turn (0.42 s in
+    all) through every view, a ring of motion; actions now say their reach (`front`, `around`, `self`)
     and range.
 
 ## Next (only when the owner asks)
