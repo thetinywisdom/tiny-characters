@@ -235,4 +235,7 @@ bubble lab, so games can use them and they can grow.
 
 ## Open questions for the owner
 
-None right now.
+- Headlights (the owner: they looked like floating orbs; try three): which
+  style, A soft cones, B pixel beams or C a light pool? All three are in
+  (`?beams=cone|pixel|pool`, cone by default); keep the chosen one and
+  remove the others.

@@ -13,7 +13,8 @@
 //                               its middle on the ground at (x, y); heading in degrees
 //                               (0 right, 90 down / towards you, 180 left, 270 up)
 //   VEHICLES                    type -> { label, length, width, height, box }
-//   vehicleLights(v)            its head and tail lights, for the night
+//   vehicleLights(v)            its lamps' glows at night
+//   drawVehicleBeams(g, v, style)  the light its headlamps throw on the road ('cone', 'pixel', 'pool')
 //   makeTraffic(town, opts)     { vehicles, update(dt, t, walkers), mayCross(x, y, nx, ny, t),
 //                               lightAt(junction, axis, t) }
 //
@@ -198,23 +199,67 @@ export function drawVehicle(g, v) {
   g.drawImage(s.canvas, Math.round(v.x) - s.ox, Math.round(v.y) - s.oy);
 }
 
+/** Where a point on a vehicle (u along, w across, z up) is on the screen. */
+function onScreen(v, S, u, w, z) {
+  const th = ((v.heading ?? HEADING[v.facing ?? 'right']) * Math.PI) / 180, cs = Math.cos(th), sn = Math.sin(th);
+  return { x: v.x + u * cs - w * sn, y: v.y + (u * sn + w * cs) * KY - z };
+}
+const sinOf = (v) => Math.sin(((v.heading ?? HEADING[v.facing ?? 'right']) * Math.PI) / 180);
+
 /**
- * A vehicle's lights at night, two at each end on its lamps: headlights
- * (each with a beam on the road ahead) and red tail lights: [{ x, y, r, c }].
+ * A vehicle's lamps at night: small glows on its two headlamps and two tail
+ * lights, each only when its end faces you: [{ x, y, r, c }]. The light they
+ * throw on the road is drawVehicleBeams.
  */
 export function vehicleLights(v) {
-  const S = SHAPES[v.type] ?? SHAPES.car, th = ((v.heading ?? HEADING[v.facing ?? 'right']) * Math.PI) / 180;
-  const cs = Math.cos(th), sn = Math.sin(th);
-  const at = (u, w, z) => ({ x: v.x + u * cs - w * sn, y: v.y + (u * sn + w * cs) * KY - z });
-  const hl = S.L / 2, side = S.W / 2 - 1.6, z = 4.8, out = [];
-  // a lamp shows only when its end of the vehicle faces you (or side on); the beams always light the road
-  const frontShows = sn > -0.35, backShows = sn < 0.35;
+  const S = SHAPES[v.type] ?? SHAPES.car, sn = sinOf(v), hl = S.L / 2, side = S.W / 2 - 1.6, out = [];
   for (const w of [-side, side]) {
-    if (frontShows) out.push({ ...at(hl, w, z), r: 3.5, c: '#fff8d8' });   // a headlamp
-    out.push({ ...at(hl + (frontShows ? 6 : 17), w * 1.2, 0.5), r: 7, c: '#fff2c0' });   // its beam on the road (beyond the car when it drives away)
-    if (backShows) out.push({ ...at(-hl, w, z), r: 3, c: '#e8403a' });     // a tail light
+    if (sn > -0.35) out.push({ ...onScreen(v, S, hl + 0.5, w, 4.8), r: 2.5, c: '#fff8d8' });
+    if (sn < 0.35) out.push({ ...onScreen(v, S, -hl - 0.5, w, 4.8), r: 2.5, c: '#ff5040' });
   }
   return out;
+}
+
+/** The beam styles drawVehicleBeams knows: soft cones, pixel beams, one pool of light. */
+export const BEAM_STYLES = ['cone', 'pixel', 'pool'];
+/**
+ * The light a vehicle's headlamps throw on the road ahead (and a little red
+ * behind it), drawn into a light layer `g` ('lighter' adds it): style 'cone'
+ * (a soft cone from each lamp), 'pixel' (each cone in three flat bands, for
+ * a crisp pixel look when the layer is drawn small and scaled up) or 'pool'
+ * (one wide pool in front of the car). Paint the vehicles out of the layer
+ * afterwards so the light falls on the road, not on them.
+ */
+export function drawVehicleBeams(g, v, style = 'cone') {
+  const S = SHAPES[v.type] ?? SHAPES.car, hl = S.L / 2, side = S.W / 2 - 1.6;
+  const P = (u, w, z = 0) => onScreen(v, S, u, w, z);
+  const poly = (pts, fill) => { g.beginPath(); pts.forEach((p, i) => (i ? g.lineTo(p.x, p.y) : g.moveTo(p.x, p.y))); g.closePath(); g.fillStyle = fill; g.fill(); };
+  const LONG = 26;
+  if (style === 'pool') {
+    // one smooth oval of light on the road ahead (further out when the car drives away, so it shows beyond it)
+    const th = ((v.heading ?? HEADING[v.facing ?? 'right']) * Math.PI) / 180, cs = Math.cos(th), sn = Math.sin(th);
+    const c = P(hl + (sn > -0.35 ? 10 : 18), 0), a = 13, b = side + 5;
+    g.save(); g.translate(c.x, c.y); g.transform(cs * a, sn * KY * a, -sn * b, cs * KY * b, 0, 0);
+    const grad = g.createRadialGradient(-0.55, 0, 0, 0, 0, 1);
+    grad.addColorStop(0, 'rgba(255,244,200,0.5)'); grad.addColorStop(0.5, 'rgba(255,240,190,0.22)'); grad.addColorStop(1, 'rgba(255,240,190,0)');
+    g.fillStyle = grad; g.beginPath(); g.arc(0, 0, 1, 0, Math.PI * 2); g.fill(); g.restore();
+  } else {
+    for (const w of [-side, side]) {
+      const lamp = P(hl, w, 4.8), near = (k) => [P(hl + 1, w - k), P(hl + 1, w + k)], far = (len, spread) => [P(hl + len, w + spread), P(hl + len, w - spread)];
+      if (style === 'pixel') {
+        // three flat bands, brightest near the lamp
+        for (const [len, spread, a] of [[LONG, 6, 0.12], [LONG * 0.62, 4, 0.16], [LONG * 0.3, 2.5, 0.22]]) poly([lamp, ...near(1), ...far(len, spread)], `rgba(255,240,190,${a})`);
+      } else {
+        const end = P(hl + LONG, w), grad = g.createLinearGradient(lamp.x, lamp.y, end.x, end.y);
+        grad.addColorStop(0, 'rgba(255,244,200,0.55)'); grad.addColorStop(0.35, 'rgba(255,240,190,0.25)'); grad.addColorStop(1, 'rgba(255,240,190,0)');
+        poly([lamp, ...near(1), ...far(LONG, 6)], grad);
+      }
+    }
+  }
+  // a little red on the road behind
+  const back = P(-hl - 3, 0), grad = g.createRadialGradient(back.x, back.y, 0, back.x, back.y, 7);
+  grad.addColorStop(0, 'rgba(232,64,58,0.35)'); grad.addColorStop(1, 'rgba(232,64,58,0)');
+  g.fillStyle = grad; g.fillRect(back.x - 7, back.y - 7, 14, 14);
 }
 
 // --- the traffic -------------------------------------------------------------------

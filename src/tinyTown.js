@@ -23,7 +23,7 @@ import { drawCat, drawDog } from './tinyAnimals.js';
 import { drawMonster } from './tinyMonsters.js';
 import { BUSHES, TREES, drawBush, drawTerrain, drawTree } from './tinyNature.js';
 import { PROPS, drawProp, drawWire, poleTops, propLights, propSolid } from './tinyStreet.js';
-import { drawVehicle, vehicleLights } from './tinyTraffic.js';
+import { drawVehicle, drawVehicleBeams, vehicleLights } from './tinyTraffic.js';
 import { seeded as seededRng } from './tinyCharacters.js';
 
 const CELL = 4;                                          // path-finding grid
@@ -375,7 +375,7 @@ const mix = (a, b, u) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(a.slice(
  * glass, signs, neon, lanterns), then soft light round lamps, vending
  * machines, traffic lights and cars' lights. night: 0 (day) to 1.
  */
-function drawNight(g, view, items, night, dpx) {
+function drawNight(g, view, items, night, dpx, beams = 'cone') {
   const dusk = Math.max(0, 1 - Math.abs(night - 0.35) / 0.35);              // the warm light of dusk, early in the evening
   g.save();
   g.globalCompositeOperation = 'multiply';
@@ -386,6 +386,22 @@ function drawNight(g, view, items, night, dpx) {
   if (on > 0) {
     g.globalAlpha = on;
     for (const it of items) if (it.b) drawBuilding(g, { ...it.b, lights: true, dpx });
+    // headlights on the road: drawn into a layer of their own, the vehicles painted out of it
+    // (so the light falls on the road, not over the cars), then added to the picture
+    const vehicles = items.filter((it) => it.s?.vehicle).map((it) => it.s);
+    if (vehicles.length) {
+      const res = beams === 'pixel' ? 1 : dpx;                               // pixel beams: drawn small, scaled up crisp
+      const L = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(view.w * res, view.h * res) : Object.assign(document.createElement('canvas'), { width: view.w * res, height: view.h * res });
+      const lg = L.getContext('2d');
+      lg.setTransform(res, 0, 0, res, -view.x * res, -view.y * res);
+      lg.globalCompositeOperation = 'lighter';
+      for (const v of vehicles) drawVehicleBeams(lg, v, beams);
+      lg.globalCompositeOperation = 'destination-out';
+      for (const v of vehicles) drawVehicle(lg, v);
+      g.globalCompositeOperation = 'lighter';
+      g.imageSmoothingEnabled = false;
+      g.drawImage(L, view.x, view.y, view.w, view.h);
+    }
     g.globalCompositeOperation = 'lighter';
     const glow = (x, y, r, c) => {
       const grad = g.createRadialGradient(x, y, 0, x, y, r);
@@ -464,7 +480,7 @@ function drawGround(layout) {
  * dpx: device pixels per canvas pixel, when the canvas is drawn bigger
  * underneath (g scaled by dpx) so the signs' names can be written.
  */
-export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0 } = {}) {
+export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0, beams = 'cone' } = {}) {
   g.imageSmoothingEnabled = false;
   g.drawImage(town.ground, view.x, view.y, view.w, view.h, 0, 0, view.w, view.h);
   g.save(); g.translate(-view.x, -view.y);
@@ -489,6 +505,6 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0
   }
   // the wires, over everything
   for (const [a, b, sag] of town.wires) if (Math.max(a.x, b.x) > view.x && Math.min(a.x, b.x) < view.x + view.w && a.y > view.y - 10 && a.y < view.y + view.h + 10) drawWire(g, a, b, sag);
-  if (night > 0.01) drawNight(g, view, items, night, dpx);
+  if (night > 0.01) drawNight(g, view, items, night, dpx, beams);
   g.restore();
 }
