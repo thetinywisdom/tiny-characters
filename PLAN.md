@@ -249,4 +249,8 @@ bubble lab, so games can use them and they can grow.
 
 ## Open questions for the owner
 
-- People in 3D (index.html?people=3d): keep the flat people, or switch?
+- People in 3D (the owner: the first try looked flat, "just 2D with no
+  depth"): three variants with an angled camera (a, b with an inner edge,
+  c with an outline) at index.html?people=3d&style=a|b|c. At 5 x 3 blocks
+  the depth stays small at real size; bigger or more detailed people would
+  show it more. Which way, if any?

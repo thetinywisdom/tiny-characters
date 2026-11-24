@@ -276,12 +276,15 @@ function personBlocks(p, step, bob) {
 }
 
 /** A person's sprite for a look, a moment and a heading (kept once made). */
+// how the preview is drawn (being tried out with the owner): the camera a little to the side
+// (skew) so every block shows a shaded side face, how dark faces away from the light get, an outline
+export const PEOPLE_3D_STYLE = { skew: -0.5, dark: 0.6, outline: null };
 function personSprite(p, step, bob, heading) {
   const look = [p.kid, p.size, p.body, p.legs, p.skin, p.hair, p.hairStyle, p.fringe, p.moustache, p.hat, p.hatColor, p.top, p.trim, p.legwear, p.shoes, p.carry, p.carryColor].join('|');
-  const key = `${look}#${step}${bob}@${heading}`;
+  const st = PEOPLE_3D_STYLE, key = `${look}#${step}${bob}@${heading}~${st.skew},${st.dark},${st.outline}`;
   if (!PEOPLE.has(key)) {
     const M = personBlocks(p, step, bob);
-    PEOPLE.set(key, voxelSprite((u, v, z) => M.get(`${u},${v},${z}`) ?? null, { L: 12, W: 12, H: 28, centred: true }, heading));
+    PEOPLE.set(key, voxelSprite((u, v, z) => M.get(`${u},${v},${z}`) ?? null, { L: 12, W: 12, H: 28, centred: true, ...st }, heading));
   }
   return PEOPLE.get(key);
 }

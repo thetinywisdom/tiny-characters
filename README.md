@@ -5,7 +5,8 @@ town's buildings to go with them. A person is about
 5 × 15 pixels each, drawn with a handful of rectangles on a low-resolution
 canvas and scaled up with hard pixels. Plain JavaScript, no dependencies.
 (A preview of the people in 3D, like the vehicles: add `?people=3d` to the
-demo's address.)
+demo's address, and `&style=b` or `&style=c` for the variants with an inner
+edge or an outline.)
 
 **Try it:** https://thetinywisdom.github.io/tiny-characters/ (GitHub Pages,
 served from `main`). Or open `index.html` through any static server for the demo:

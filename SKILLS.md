@@ -61,7 +61,11 @@ demo/demo.css          the demo page's look (light and dark)
 The owner asked to try the vehicles' 3D approach on the people and to SEE
 IT FIRST: it is only a preview (index.html?people=3d, `people3d` in
 drawTownView); everything else draws people flat (`drawCharacter`, below).
-`drawCharacter3D` builds a person from pixel-sized
+Variants (`PEOPLE_3D_STYLE`; `&style=a|b|c`): the camera a little to the
+side as well as above (`skew` -0.5 in voxelSprite, so every block shows its
+shaded right side too), faces away from the light darker (`dark` 0.6), and
+an `outline`: none (a), 'inner' (the figure's edge pixels darker, b) or
+'outer' (a dark line round it, c). `drawCharacter3D` builds a person from pixel-sized
 blocks (`personBlocks`: a Map 'u,v,z' -> colour; u forward, v across, z up
 from the soles) and draws it with `voxelSprite` (src/tinyVoxel.js, shared
 with the vehicles): from in front and above, walls full height, tops at 0.6
