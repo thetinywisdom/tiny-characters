@@ -153,13 +153,26 @@ bubble lab, so games can use them and they can grow.
     seeds that fit each block and row; the Buildings sheet shows three seeds
     of each.
 
+23. **Street things** (`src/tinyStreet.js`; the owner asked what makes a
+    town feel alive and chose: street things, then cars and traffic
+    lights, then day and night): utility poles with lamps and wires,
+    street lamps, old lamps, stone lanterns, vending machines, bus stops,
+    benches, bins, bikes in a rack, a post box, pot plants, stop signs,
+    manholes; placed in the town; a Street group in the catalogue.
+
 ## Next (only when the owner asks)
 
 1. Speech with them (floating pixel text from tiny-ui-kit) in the demo.
 2. **More town**: a station plaza and a back alley like the catalogue's
    areas, a park (meadow, pond, trees), street props in the back gardens.
-3. **The rest of the tinified catalogue**: street props (lamps, vending
-   machines, signs, bus stop, benches) and vehicles.
+3. **Cars and traffic lights** (next, agreed): cars, a bus, a taxi, a kei
+   truck, bikes driving in lanes and turning at crossings; traffic lights
+   at the crossings that cars and people wait for; people cross only at
+   the crossings.
+4. **Day and night** (agreed, after the cars): windows light up, lamps,
+   vending machines and neon glow.
+5. Small life: pigeons that scatter, laundry on balconies, shopkeepers,
+   steam from the ramen shop, people chatting or sitting on benches.
 
 ## Known issues and small ideas
 

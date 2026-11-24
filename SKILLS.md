@@ -30,6 +30,8 @@ src/tinyMonsters.js    monsters: drawMonster, MONSTERS (zombie, werewolf,
 src/tinyCombat.js      weapons and fights: drawWeapon, drawArmed,
                        drawAction, drawActor, WEAPONS, ACTIONS, SKILLS,
                        REACTIONS
+src/tinyStreet.js      street things: drawProp, PROPS, propSolid,
+                       propLights, poleTops, drawWire
 src/tinyTown.js        the 2D town map: makeTown, drawTownView,
                        DEFAULT_TOWN (layout, ground, walkable ground,
                        path finding, place names)
@@ -373,6 +375,25 @@ then fills, with a seeded rng (`layout.seed`):
   ground
 Forest trees are drawn like any plant (sorted with buildings and people),
 only those in view.
+
+## How street things are drawn (src/tinyStreet.js)
+
+Each thing is an entry in `DEFS`: `[label, w, h, depth, draw(r, rng),
+lights]`, drawn with the buildings' painter (`makePainter`), so it scales
+as crisply (the town draws them at 1.5). `depth` is the rows of ground it
+stands on (`propSolid`; `FOOT` narrows poles and lamps to their pole so
+they never block a sidewalk); `lights` are `[dx, up, radius]` for the night.
+Keep them on whole pixels and small: a vending machine is 7 x 11, a lamp 19
+tall, a utility pole 30 (the tallest thing on a street).
+
+In the town (`placeProps` in tinyTown.js): the layout's `props` first, then
+vending machines and bins where a row ends short of its cross street,
+utility poles every 58 px on the far sidewalk of each street (none at the
+crossings), street lamps in the gardens along the cross streets (their arm
+over the sidewalk). Nothing goes where it would cover a building or another
+thing (`fits`). Poles on the same street are wired (`town.wires`, drawn
+over everything). Garden plants keep clear of things. Manholes are part of
+the ground picture.
 
 ## Common tasks
 

@@ -179,9 +179,9 @@ drawTownView(g, town, { x: viewX, y: viewY, w: 200, h: 150 }, [you, ...others], 
 
 | Export | What it does |
 | --- | --- |
-| `makeTown(layout)` | A town: `{ W, H, buildings, areas, blocked(x, y), findPath(from, to), randomSpot(rng, within), placeAt(x, y), doorOf(building), ground }`. |
+| `makeTown(layout)` | A town: `{ W, H, buildings, props, wires, areas, blocked(x, y), findPath(from, to), randomSpot(rng, within), placeAt(x, y), doorOf(building), ground }`. |
 | `drawTownView(g, town, view, sprites, t)` | The part of the town in `view`: ground, then buildings, trees, bushes, people, cats (`cat: true`) and dogs (`dog: true`) further back first. |
-| `DEFAULT_TOWN` | The demo's layout: `scale` (1.5: the town is drawn that much bigger, the people stay 15 px), `streets`, `crossStreets`, `rows` of buildings, single `buildings`, `areas` with their own ground (all at scale 1; `makeTown` multiplies them). |
+| `DEFAULT_TOWN` | The demo's layout: `scale` (1.5: the town is drawn that much bigger, the people stay 15 px), `streets`, `crossStreets`, `rows` of buildings, single `buildings`, `props` (street things), `areas` with their own ground (all at scale 1; `makeTown` multiplies them). |
 | `buildingSolids(b)` (tinyBuildings.js) | The ground a building takes; you can step between a torii's posts and under a gas station's canopy. |
 
 ## Animals
@@ -269,6 +269,29 @@ skyline, the sides with gaps where the streets run out, below the last
 street), the back gardens are full of bushes, small trees, meadow and long
 grass, trees and bushes stand round the shrine, the school and the square; the grounds are terrains; there is a pond; dogs go
 for walks with their owners. The catalogue has them all (Animals, Nature).
+
+## Street things
+
+`src/tinyStreet.js`: what makes the streets feel lived in, in the same
+pixel style: utility poles (with a lamp, sometimes a transformer, the
+yellow-and-black guard and an address plate) and the wires between them,
+street lamps, old street lamps, stone lanterns (tōrō), vending machines,
+a bus stop, benches, bins, bikes in a rack, a red post box, pot plants and
+a stop sign (tomare). The catalogue has them all (Street).
+
+| Export | What it does |
+| --- | --- |
+| `drawProp(g, { type, x, y, seed, scale })` | One thing, centred on `x`, standing on `y` (`PROPS` lists the types). The seed picks a vending machine's colour and drinks, the bikes' colours, a pole's transformer. |
+| `propSolid(p)` | The ground it stands on (poles and lamps only their pole), so people walk round it. |
+| `propLights(p)` | Where it gives light at night. |
+| `poleTops(p)`, `drawWire(g, a, b, sag)` | A pole's wire ends, and a sagging wire between two points. |
+
+In the town, `makeTown` puts utility poles along the far side of every
+street with wires between them, street lamps along the cross streets and
+vending machines (and bins) where a row of buildings ends; the layout's
+`props` add bus stops, benches, stone lanterns by the shrine's path, old
+lamps in the square, a bike rack at the school, a post box and stop signs.
+The roads have manholes.
 
 Speech for these people (floating pixel text, the design picked in the
 bubble lab) lives in **tiny-ui-kit** (`src/ui/pixelOverlay.js`).
