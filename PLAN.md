@@ -21,6 +21,9 @@ bubble lab, so games can use them and they can grow.
   so nobody walks behind one (walk round it); tall buildings only in the back
   row; low buildings in the blocks; the shrine, school and old town get their
   own grounds; the map stops at its edges (no wrapping).
+- Shadows (Nov 2026): every shadow (people, animals, monsters, trees,
+  bushes) is 30% black, so it looks natural on any ground (the old grey-green
+  bar looked like a skateboard).
 - Greenery (Nov 2026): the map is full of greenery; every unreachable area
   is visibly blocked by forest.
 - Signs and type (Nov 2026): signs show the place's name instead of dots
@@ -124,6 +127,8 @@ bubble lab, so games can use them and they can grow.
     shrine, a reaper by the chapel, skeletons in the schoolyard, werewolves,
     giant spiders and flaming skulls roaming, each at its own speed; a
     Hide / Show monsters button.
+19. **Shadows**: `COLORS.shadow` is 30% black (`rgba(0, 0, 0, 0.3)`) for
+    everyone and everything; `snapToPalette` skips it.
 
 ## Next (only when the owner asks)
 

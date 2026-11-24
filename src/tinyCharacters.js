@@ -17,7 +17,8 @@
 /** The lab's colours. */
 export const COLORS = {
   ink: '#2f3236', paper: '#f2efe8', navy: '#262b3a', gold: '#f2b64a',
-  grass: '#9fb08d', grass2: '#93a582', path: '#ddd0aa', shadow: '#7f8f6e',
+  grass: '#9fb08d', grass2: '#93a582', path: '#ddd0aa',
+  shadow: 'rgba(0, 0, 0, 0.3)',   // 30% black: a natural shadow on any ground (the owner's choice)
 };
 
 /** Body (top) colours used by the lab's people, and a few more. */
@@ -278,7 +279,7 @@ export function seeded(seed = 1) {
  * anything smooth (text, scaled images) was drawn on top.
  */
 export function snapToPalette(g, W, H, palette = [...Object.values(COLORS), ...BODY_COLORS, ...HAIR_COLORS, ...SKIN_COLORS, ...LEG_COLORS, ...THING_COLORS, ...CAT_COLORS, '#c9b48a']) {
-  const pal = palette.map((h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)));
+  const pal = palette.filter((h) => h.startsWith('#')).map((h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)));   // solid colours only (not the shadow)
   const img = g.getImageData(0, 0, W, H), d = img.data;
   for (let i = 0; i < d.length; i += 4) {
     let best = pal[0], bd = Infinity;
