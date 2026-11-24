@@ -25,6 +25,8 @@ bubble lab, so games can use them and they can grow.
   monsters (ghost girl, reaper, flaming skull), which have a 30% black one.
 - Greenery (Nov 2026): the map is full of greenery; every unreachable area
   is visibly blocked by forest.
+- The koban is called a police station (its sign says POLICE STATION; its
+  type stays 'koban').
 - Signs and type (Nov 2026): signs show the place's name instead of dots
   or stripes, in DotGothic16, **in English** (also the Japanese shops:
   RAMEN, KONBINI, not ラーメン); the pages use DotGothic16 too.

@@ -474,14 +474,14 @@ const DEFS = {
     sign(r, '#e0d2b0', '#7a3a32', 0, 15, 20, 6, 'TAKOYAKI');
     lantern(r, 1, 8);
   }],
-  koban: ['Koban (police box)', 42, (r0) => {
+  koban: ['Police station (koban)', 42, (r0) => {
     // a bicycle out front
     r0(INK, 0, 0, 3, 3); r0(INK, 5, 0, 3, 3); r0('#d8d0c0', 1, 1, 1, 1); r0('#d8d0c0', 6, 1, 1, 1); r0('#3f7fd6', 2, 3, 5, 1); r0(INK, 4, 4, 1, 1);
     const r = shifted(r0, 11);
     const wall = '#9a7c60';
     r(wall, 0, 0, 30, GF);
     WINDOWS.shop(r, 2, 0, 14, 12); DOORS.glass(r, 19);
-    sign(r, NAVY, WHITE, 1, 12, 16, 4, 'KOBAN');
+    sign(r, NAVY, WHITE, 1, 12, 18, 4, 'POLICE STATION');
     r(shade(wall, 0.8), 20, 12, 4, 1); r(RED, 21, 13, 2, 2); r(WHITE, 21, 14, 1, 1);   // the red lamp over the door
     flatRoof(r, wall, -1, GF, 32, 12); r('#e8dcc0', -1, GF, 32, 1);
   }],

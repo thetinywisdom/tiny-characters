@@ -99,7 +99,7 @@ facades in the same style: house, apartment block, shop with flats above,
 shop (konbini, ramen, cafe, bookshop, bakery, izakaya), office building,
 shrine (also as a separate torii and shrine hall), school, coin laundromat, café (kissaten), pharmacy, sushi
 restaurant, flower shop, fishmonger, udon / soba shop, family restaurant,
-takoyaki stand, koban, post office, bank, clinic, fire station, karaoke,
+takoyaki stand, police station (koban), post office, bank, clinic, fire station, karaoke,
 wooden apartment, parking garage, gas station, and the old town: Tudor
 cottage, Mediterranean villa, Dutch canal house, French country house,
 Scandinavian house, stone chapel; and a mosque (not in the catalogue), whose
@@ -138,7 +138,7 @@ automatic doors, Japanese lattice sliding doors, shoji; sash, aluminium,
 tall, shuttered, arched, pointed, stained, round, lattice, leaded, neon
 windows and shop glass. The catalogue has them all under Doors & windows.
 **Signs say what the place is** (LAUNDROMAT, PHARMACY, KONBINI, RAMEN, CAFE,
-BOOKS, BAKERY, IZAKAYA, FLOWERS, FISH, CLINIC, BANK, KOBAN, POST OFFICE,
+BOOKS, BAKERY, IZAKAYA, FLOWERS, FISH, CLINIC, BANK, POLICE STATION, POST OFFICE,
 TAKOYAKI, SUSHI, UDON, DINER, and KARAOKE down its upright sign), in the pixel
 font DotGothic16. A sign is only a few pixels tall, so the canvas has to be
 drawn bigger underneath for the letters to fit: make the canvas `dpx` times
