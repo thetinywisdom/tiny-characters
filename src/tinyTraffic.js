@@ -29,44 +29,52 @@ const TAXI_COLORS = [['#f2c230', '#3a3d42'], ['#3a3d42', '#f2c230'], ['#3f8a5a',
  * The roof shows from above, as on the buildings.
  */
 const DEFS = {
-  car: { label: 'Car', size: [[22, 11], [12, 16]],
+  car: { label: 'Car', size: [[22, 12], [12, 16]],
     side: (R, c) => {
       wheels(R, [3, 15]);
-      R(c, 0, 2, 22, 4); R(shade(c, 0.72), 0, 2, 22, 1); R(shade(c, 0.85), 11, 3, 1, 3);
+      R(c, 0, 2, 22, 4); R(shade(c, 0.72), 0, 2, 22, 1); R(shade(c, 0.85), 11, 3, 1, 3);   // the side, the door
       R(LAMP, 21, 4, 1, 1); R(TAIL, 0, 4, 1, 1);
-      R(c, 4, 6, 14, 3); R(GLASS, 5, 6, 5, 2); R(GLASS, 11, 6, 5, 2); R(GLASS2, 17, 6, 1, 2);
-      R(shade(c, 1.12), 5, 9, 12, 2);
+      const top = shade(c, 1.12), edge = shade(c, 0.86);
+      R(top, 16, 6, 6, 4); R(top, 0, 6, 4, 4); R(edge, 16, 9, 6, 1); R(edge, 0, 9, 4, 1);    // bonnet and boot, from above
+      R(c, 4, 6, 12, 2); R(GLASS2, 5, 6, 4, 2); R(GLASS2, 10, 6, 5, 2);                    // the cabin's side windows
+      R(GLASS, 4, 8, 2, 4); R(top, 6, 8, 7, 4); R(GLASS, 13, 8, 3, 4); R(edge, 4, 11, 12, 1); // rear window, roof, windscreen
     },
     front: (R, c) => headOn(R, c, { w: 12, face: 4, glass: 3, roof: 5, rear: 2, end: 1 }),
     back: (R, c) => tailOn(R, c, { w: 12, face: 4, glass: 2, roof: 5, rear: 3, end: 1 }) },
-  kei: { label: 'Kei car', size: [[18, 12], [11, 15]],
+  kei: { label: 'Kei car', size: [[18, 13], [11, 15]],
     side: (R, c) => {
       wheels(R, [2, 12]);
-      R(c, 0, 2, 18, 4); R(shade(c, 0.72), 0, 2, 18, 1); R(LAMP, 17, 4, 1, 1); R(TAIL, 0, 4, 1, 1);
-      R(c, 1, 6, 16, 4); R(GLASS, 2, 7, 6, 2); R(GLASS, 9, 7, 6, 2); R(GLASS2, 16, 7, 1, 2);
-      R(shade(c, 1.12), 1, 10, 15, 2);
+      R(c, 0, 2, 18, 4); R(shade(c, 0.72), 0, 2, 18, 1); R(shade(c, 0.85), 8, 3, 1, 3); R(LAMP, 17, 4, 1, 1); R(TAIL, 0, 4, 1, 1);
+      const top = shade(c, 1.12), edge = shade(c, 0.86);
+      R(top, 15, 6, 3, 4); R(edge, 15, 9, 3, 1);                                            // a short bonnet
+      R(c, 0, 6, 15, 3); R(GLASS2, 1, 6, 6, 3); R(GLASS2, 8, 6, 6, 3);                     // tall side windows
+      R(top, 0, 9, 12, 4); R(GLASS, 12, 9, 3, 4); R(edge, 0, 12, 15, 1);                   // the boxy roof, windscreen
     },
     front: (R, c) => headOn(R, c, { w: 11, face: 4, glass: 3, roof: 5, rear: 2, end: 0 }),
     back: (R, c) => tailOn(R, c, { w: 11, face: 4, glass: 3, roof: 5, rear: 2, end: 0 }) },
-  taxi: { label: 'Taxi', size: [[22, 13], [12, 17]],
-    side: (R, c, c2) => { DEFS.car.side(R, c); R(c2, 0, 4, 22, 1); R(WHITE, 9, 11, 4, 2); R(c2, 10, 12, 2, 1); },
+  taxi: { label: 'Taxi', size: [[22, 12], [12, 17]],
+    side: (R, c, c2) => { DEFS.car.side(R, c); R(c2, 0, 4, 22, 1); R(WHITE, 8, 9, 4, 2); R(c2, 9, 10, 2, 1); R(shade(c2, 0.8), 8, 9, 4, 1); },
     front: (R, c, c2) => { headOn(R, c, { w: 12, face: 4, glass: 3, roof: 5, rear: 2, end: 1 }); R(WHITE, 4, 10, 4, 2); R(c2, 5, 11, 2, 1); },
     back: (R, c, c2) => { tailOn(R, c, { w: 12, face: 4, glass: 2, roof: 5, rear: 3, end: 1 }); R(WHITE, 4, 9, 4, 2); R(c2, 5, 10, 2, 1); } },
   van: { label: 'Delivery van', size: [[22, 13], [12, 18]],
     side: (R, c, c2) => {
       wheels(R, [3, 15]);
-      R(c, 0, 2, 22, 9); R(shade(c, 0.72), 0, 2, 22, 1); R(c2, 0, 5, 17, 2);
-      R(GLASS, 17, 7, 4, 3); R(GLASS2, 21, 7, 1, 3); R(LAMP, 21, 4, 1, 1); R(TAIL, 0, 4, 1, 1); R(shade(c, 0.85), 16, 3, 1, 7);
-      R(shade(c, 1.1), 0, 11, 21, 2);
+      R(c, 0, 2, 22, 7); R(shade(c, 0.72), 0, 2, 22, 1); R(c2, 0, 5, 17, 2); R(shade(c, 0.85), 16, 3, 1, 6);
+      R(GLASS2, 17, 6, 4, 2); R(LAMP, 21, 4, 1, 1); R(TAIL, 0, 4, 1, 1);
+      const top = shade(c, 1.1), edge = shade(c, 0.86);
+      R(top, 0, 9, 19, 4); R(GLASS, 19, 9, 3, 4); R(edge, 0, 12, 22, 1); R(shade(top, 0.94), 0, 10, 19, 1);   // the long roof from above
     },
     front: (R, c, c2) => headOn(R, c, { w: 12, face: 4, glass: 3, roof: 9, rear: 0, end: 1 }, c2),
     back: (R, c, c2) => { tailOn(R, c, { w: 12, face: 6, glass: 0, roof: 9, rear: 2, end: 0 }); R(shade(c, 0.8), 6, 1, 1, 6); R(c2, 0, 4, 12, 1); } },
-  keiTruck: { label: 'Kei truck', size: [[20, 11], [11, 17]],
+  keiTruck: { label: 'Kei truck', size: [[20, 12], [11, 17]],
     side: (R, c, c2) => {
       wheels(R, [2, 13]);
-      R(c, 13, 2, 7, 8); R(GLASS, 15, 6, 4, 3); R(GLASS2, 19, 6, 1, 3); R(LAMP, 19, 3, 1, 1); R(shade(c, 1.12), 13, 10, 6, 1);
-      R(c, 0, 2, 13, 3); R(shade(c, 0.72), 0, 2, 20, 1); R(TAIL, 0, 3, 1, 1);
-      R('#8a8a84', 0, 5, 13, 2); R(shade(c, 0.85), 0, 5, 1, 2); R(c2, 3, 5, 4, 3); R(shade(c2, 0.8), 3, 5, 4, 1);   // the bed and a load
+      const top = shade(c, 1.12), edge = shade(c, 0.86);
+      R(c, 13, 2, 7, 4); R(c, 13, 6, 7, 2); R(GLASS2, 14, 6, 4, 2); R(LAMP, 19, 3, 1, 1);  // the cab, its side window
+      R(top, 13, 8, 4, 4); R(GLASS, 17, 8, 3, 4); R(edge, 13, 11, 7, 1);                   // its roof and windscreen from above
+      R(c, 0, 2, 13, 3); R(shade(c, 0.72), 0, 2, 20, 1); R(TAIL, 0, 3, 1, 1);              // the bed's side
+      R('#8a8a84', 1, 5, 12, 4); R(c, 0, 5, 1, 5); R(shade(c, 0.86), 0, 9, 13, 1);           // its floor, tailgate, far rail
+      R(c2, 4, 5, 5, 3); R(shade(c2, 1.15), 4, 7, 5, 1);                                   // a load
     },
     front: (R, c, c2) => {
       wheels(R, [0, 9], 2);
@@ -80,15 +88,17 @@ const DEFS = {
       R(shade(c, 0.8), 0, 4, 11, 6); R('#8a8a84', 1, 4, 9, 5); R(c2, 3, 5, 5, 3);
       R(c, 1, 10, 9, 2); R(GLASS2, 2, 11, 7, 1); R(shade(c, 1.12), 1, 12, 9, 3); R(GLASS, 2, 15, 7, 1);
     } },
-  bus: { label: 'Bus', size: [[40, 16], [14, 26]],
+  bus: { label: 'Bus', size: [[40, 18], [14, 26]],
     side: (R, c, c2) => {
       wheels(R, [5, 30]);
       R(c, 0, 2, 40, 11); R(shade(c, 0.72), 0, 2, 40, 1); R(c2, 0, 4, 40, 2);
-      for (let x = 2; x < 30; x += 5) R(GLASS, x, 8, 4, 3);
+      for (let x = 2; x < 30; x += 5) R(GLASS2, x, 8, 4, 3);
       R(GLASS2, 32, 3, 4, 9); R(INK, 34, 3, 1, 9);                            // the door
       R(GLASS, 37, 6, 3, 6); R(INK, 37, 11, 3, 1); R('#f2a040', 37, 11, 2, 1); // windscreen, destination
       R(LAMP, 39, 4, 1, 1); R(TAIL, 0, 5, 1, 2);
-      R(shade(c, 1.1), 0, 13, 40, 3); R(METAL, 12, 14, 10, 2);               // roof, air conditioning
+      const top = shade(c, 1.1), edge = shade(c, 0.86);
+      R(top, 0, 13, 40, 5); R(edge, 0, 17, 40, 1); R(shade(top, 0.94), 0, 15, 40, 1);   // the roof from above
+      R(METAL, 12, 14, 10, 3); R(shade(METAL, 0.8), 12, 14, 10, 1); R(METAL, 30, 14, 4, 2);   // air conditioning, a hatch
     },
     front: (R, c, c2) => {
       wheels(R, [0, 12], 2);

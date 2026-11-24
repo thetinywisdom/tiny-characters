@@ -174,6 +174,12 @@ bubble lab, so games can use them and they can grow.
     blue; lit windows, shop glass, signs, neon, lanterns, street lamps,
     vending machines, traffic lights and car lights glow.
 
+26. **Vehicles with depth** (the owner: from the side they looked like
+    paper cars): side views now show the top from above too (bonnet, boot,
+    raised cabin with side windows, rear window, roof, windscreen; the
+    van's and bus's roofs; the kei truck's open bed), as the buildings show
+    their roofs.
+
 ## Next (only when the owner asks)
 
 1. Speech with them (floating pixel text from tiny-ui-kit) in the demo.

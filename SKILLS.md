@@ -404,8 +404,14 @@ not scaled with the town): `DEFS[type]` has `size: [[length, height] side
 on, [width, height] head on]` and `side(R, c, c2)` (facing right; left is
 mirrored), `front` and `back` (`headOn` / `tailOn`: bumper, lamps, glass,
 then the roof running back, seen from above like the buildings' roofs).
-`R(colour, dx, up, w, h)` draws from the bottom-left. A car is 22 x 11
-side on, 12 x 16 head on; a bus 40 x 16 and 14 x 26. The seed picks colours
+`R(colour, dx, up, w, h)` draws from the bottom-left. **Every view has
+depth, like the buildings** (the owner: side views looked like paper
+cars): side on, above the side panel come 4-5 rows of the vehicle's top
+seen from above (bonnet and boot lower, then the raised cabin: its side
+windows, then rear window, roof and windscreen; a van's and a bus's long
+roof; a kei truck's open bed with its load), the far edge a shade darker;
+head on, the roof runs back above the front. A car is 22 x 12 side on, 12
+x 16 head on; a bus 40 x 18 and 14 x 26. The seed picks colours
 (`CAR_COLORS`, taxi and bus liveries).
 
 **The town's junctions** come from makeTown (`junctionsOf`): for each

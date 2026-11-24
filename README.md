@@ -298,6 +298,7 @@ The roads have manholes.
 
 `src/tinyTraffic.js`: cars, kei cars, taxis, delivery vans, kei trucks and
 buses, in four views (side on both ways, front, back) at the people's size,
+each showing its top from above as well (bonnet, cabin, roof) so it has depth,
 and a town's traffic.
 
 ```js
