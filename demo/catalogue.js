@@ -125,14 +125,13 @@ for (const [type, { label, w, h }] of Object.entries(PROPS)) items.push({ id: `s
   w: w + 8, h: h + 4, px: 0, animated: type === 'trafficLight',
   draw: (g, seed, t, moving) => drawProp(g, { type, x: (w + 8) / 2, y: h + 2, seed, lit: moving ? LIGHT_CYCLE[Math.floor(t / 1.2) % 5] : 'green' }),
   code: (seed) => `drawProp(g, { type: '${type}', x, y, seed: ${seed}${type === 'trafficLight' ? ", lit: 'green'" : ''} })` });
-// vehicles, turning round to show their four sides
-const VIEWS = ['right', 'down', 'left', 'up'];
-for (const [type, { label, side, front }] of Object.entries(VEHICLES)) {
-  const w = Math.max(side[0], front[0]) + 8, h = Math.max(side[1], front[1]) + 4;
+// vehicles, turning slowly all the way round (16 headings)
+for (const [type, { label, box }] of Object.entries(VEHICLES)) {
+  const w = box.w + 4, h = box.h + 4;
   items.push({ id: `street.vehicle.${type}`, label, group: 'Street', tags: ['Vehicles', ...(type === 'kei' || type === 'keiTruck' || type === 'taxi' ? ['Japanese'] : [])], seed: 1,
     w, h, px: 0, animated: true,
-    draw: (g, seed, t, moving) => drawVehicle(g, { type, x: w / 2, y: h - 2, seed, facing: moving ? VIEWS[Math.floor(t / 1.2) % 4] : 'right' }),
-    code: (seed) => `drawVehicle(g, { type: '${type}', x, y, facing: 'right', seed: ${seed} })` });
+    draw: (g, seed, t, moving) => drawVehicle(g, { type, x: w / 2, y: h - 2 - box.below, seed, heading: moving ? (t * 45) % 360 : 30 }),
+    code: (seed) => `drawVehicle(g, { type: '${type}', x, y, heading: 30, seed: ${seed} })` });
 }
 
 // --- filters ---------------------------------------------------------------------

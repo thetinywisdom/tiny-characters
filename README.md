@@ -297,9 +297,11 @@ The roads have manholes.
 ## Traffic
 
 `src/tinyTraffic.js`: cars, kei cars, taxis, delivery vans, kei trucks and
-buses, in four views (side on both ways, front, back) at the people's size,
-each showing its top from above as well (bonnet, cabin, roof) so it has depth,
-and a town's traffic.
+buses, each a small 3D shape drawn from any heading the way the town is seen
+(walls full height, tops from above), so the front, back, sides and every
+angle between are the same vehicle, with wheels in arches, bumpers, plates,
+lamps, grille, mirrors, a sloped windscreen and rear window; and a town's
+traffic.
 
 ```js
 import { makeTraffic } from './src/tinyTraffic.js';
@@ -314,17 +316,18 @@ if (!traffic.mayCross(p.x, p.y, nextX, nextY, t)) { /* wait for the green man */
 
 | Export | What it does |
 | --- | --- |
-| `drawVehicle(g, { type, x, y, facing, color, seed })` | One vehicle (`VEHICLES`: `car`, `kei`, `taxi`, `van`, `keiTruck`, `bus`), centred on `x`, wheels on `y`; `facing` `'left'`, `'right'`, `'down'` (its front), `'up'` (its back). The seed picks the colour. |
+| `drawVehicle(g, { type, x, y, heading, color, seed })` | One vehicle (`VEHICLES`: `car`, `kei`, `taxi`, `van`, `keiTruck`, `bus`), its middle on the ground at (x, y); `heading` in degrees (0 right, 90 towards you, 180 left, 270 away; 16 steps), or `facing` `'right'` / `'down'` / `'left'` / `'up'`. The seed picks the colours. |
 | `makeTraffic(town, { cars, buses, seed })` | `{ vehicles, update(dt, t, walkers), mayCross(x, y, nx, ny, t), lightAt(junction, axis, t) }`. |
 
-How it behaves: cars drive on the left, as in Japan; every junction has
+How it behaves: cars drive on the left, as in Japan (east-bound on the
+north half of a street); they swing round as they turn; every junction has
 traffic lights (green, yellow, red side by side, and a walk signal) that
 cars wait at; cars turn at junctions, keep their distance, and stop for
 anyone in front of them (you too); buses keep to the streets with bus stops
 and wait at each one; cars leaving town come back in somewhere else. People
 on foot cross the roads only at the zebra crossings and wait for the green
 man there (you can still walk anywhere with the keys). The catalogue has
-the vehicles (Street, Vehicles), turning round.
+the vehicles (Street, Vehicles), turning slowly all the way round.
 
 ## Day and night
 

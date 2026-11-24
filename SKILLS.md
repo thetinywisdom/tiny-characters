@@ -399,26 +399,35 @@ the ground picture.
 
 ## How traffic works (src/tinyTraffic.js)
 
-**Vehicles** are drawn at the people's size (one canvas pixel = one pixel,
-not scaled with the town): `DEFS[type]` has `size: [[length, height] side
-on, [width, height] head on]` and `side(R, c, c2)` (facing right; left is
-mirrored), `front` and `back` (`headOn` / `tailOn`: bumper, lamps, glass,
-then the roof running back, seen from above like the buildings' roofs).
-`R(colour, dx, up, w, h)` draws from the bottom-left. **Every view has
-depth, like the buildings** (the owner: side views looked like paper
-cars): side on, above the side panel come 4-5 rows of the vehicle's top
-seen from above (bonnet and boot lower, then the raised cabin: its side
-windows, then rear window, roof and windscreen; a van's and a bus's long
-roof; a kei truck's open bed with its load), the far edge a shade darker;
-head on and from behind (`headOn` / `tailOn`): the front or back face (a
-shade darker than the top: bumper, lamps, grille, plate; a van's and a
-bus's tall face has its glass in it), then the top from above running back
-about a third of the length (bonnet, then the cabin a pixel narrower each
-side, with mirrors: windscreen, roof, rear window; then the boot), the far
-edge darker. Same proportions as the side views: the top shows a third of
-the vehicle's real length or width. A car is 22 x 12 side on, 12 x 14 head
-on; a bus 40 x 18 and 14 x 20. The seed picks colours
-(`CAR_COLORS`, taxi and bus liveries).
+**Vehicles are small 3D shapes** (the owner compared them with a 3D car
+sprite sheet turning round: every view must be the same car). `SHAPES[type]`
+has its size in blocks (`L` long, `W` wide, `H` tall; one block = one pixel,
+the people's size, not scaled with the town) and `shape(u, v, z, c, c2)`:
+the colour of the block at `u` along it (+ its front), `v` across (+ its
+right), `z` up, or null. `carShape(o)` builds the car-likes: wheels (tyre and
+hub) in dark arches, the lower body (bumpers, white plates, twin headlamps,
+grille, tail lamps, a side skirt, the doors' line, a stripe for taxis and
+vans) up to `body`, then a cabin a block narrower each side whose front and
+back slope in (`cabF` / `slopeF`, `cabB` / `slopeB`: windscreen and rear
+window), glass to a roof one block thick, pillars, mirrors; `panel` makes a
+van's sides solid, `extra` adds things above (the taxi's roof sign). The
+kei truck and the bus have their own shapes (the open bed with a load; the
+bus's windows, kerb-side door, destination, air conditioning).
+
+**Drawing** (`sprite`): the view is the town's: walls at full height, tops
+at 0.6 of their depth (`KY`), seen from in front and above. For each pixel
+the renderer walks along the line of sight from the top down until it meets
+a block, and shades it by the face it hit: tops light (1.1), faces towards
+the light (`LIGHT`, from the upper left) brighter, faces away darker; glass
+one tone on its slopes and darker on the side windows (no stair steps);
+lamps unshaded. Sprites are made for 16 headings, once per type and colours,
+and kept (`SPRITES`). `drawVehicle` takes `heading` (degrees; 0 right, 90
+towards you) or `facing`, and its (x, y) is the middle of the vehicle on the
+ground. `VEHICLES[type].box` is the largest sprite (for cards). A car is
+30 x 13 x 11.5 blocks (about 30 x 16 px side on, 13 x 24 head on), a kei car
+24 x 12 x 13, a bus 54 x 16 x 19. The seed picks colours (`CAR_COLORS`,
+taxi and bus liveries). To add a vehicle: add a shape (start from
+`carShape` with other numbers) and check it at all 16 headings.
 
 **The town's junctions** come from makeTown (`junctionsOf`): for each
 street x cross street, the `box` where the roads cross, its zebra
@@ -431,7 +440,7 @@ foot only cross there (`blocked`, which the keys use, still lets you walk
 on roads).
 
 **The traffic** (`makeTraffic`): lanes on the left (`hLanes`: east-bound in
-the lower half of a street, west-bound in the upper; `vLanes`: south-bound
+the north half of a street, west-bound in the south half; `vLanes`: south-bound
 on the east side of a cross street, north-bound on the west). The lights
 (`signal`): a 16 s cycle per junction, offset by its place (street green
 6 s, yellow 1.5, all red 1, cross street green 6, yellow 1, all red), set
@@ -441,7 +450,9 @@ line of a red (or late yellow) light, to anyone standing in front of it;
 it speeds up (40 px/s²) and brakes (90) toward 30 px/s (a bus 24). Turns:
 passing a cross street's lane, a car may turn into it (30 %); going along a
 cross street it may turn at each street and must turn at the last one.
-Buses stay on the east-bound lanes of streets with bus stops and wait 2.5
+Vehicles swing round to a new heading when they turn (280°/s), and only
+turn into a lane with room (a car that must turn waits for a gap). Buses
+stay on the west-bound lanes (the kerb on their left) of streets with bus stops and wait 2.5
 s at each. Vehicles leaving the town on a street come back in at the edge
 of another. `mayCross` stops someone on foot from stepping onto a crossing
 unless that crossing's cars have red (the walk signal is green then).

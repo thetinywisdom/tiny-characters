@@ -182,6 +182,15 @@ bubble lab, so games can use them and they can grow.
     weird, tall boxes): the face, then a top a third of the length (bonnet,
     a narrower cabin with mirrors, boot), same proportions as the sides.
 
+27. **3D vehicles** (the owner showed a 3D car sprite sheet turning round:
+    our views were weird and did not match): every vehicle is now a small
+    3D shape of pixel blocks drawn from 16 headings in the town's view, so
+    all views are the same vehicle; bigger (a car 30 long, a person's size
+    beside it) with arches, hubs, bumpers, plates, twin lamps, grille, side
+    skirt, doors, mirrors, sloped glass; cars swing round as they turn and
+    only turn into room; the lanes fixed to the left (east-bound in the
+    north half); buses serve their stops on the kerb side.
+
 ## Next (only when the owner asks)
 
 1. Speech with them (floating pixel text from tiny-ui-kit) in the demo.
