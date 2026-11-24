@@ -16,12 +16,12 @@
 // Each pixel looks into the shape along the line of sight (from in front and
 // above); the first block it meets gives its colour, shaded by the face it
 // hit: tops light, faces towards the light (from the upper left) brighter,
-// faces away darker. Plain ES module, no dependencies.
+// faces away darker. Plain ES module.
+
+import { canvasOf, shade } from './tinyCharacters.js';
 
 export const KY = 0.6;
 const LIGHT = [-0.45, 0.89];
-const shade = (hex, f) => '#' + [1, 3, 5].map((i) => Math.max(0, Math.min(255, Math.round(parseInt(hex.slice(i, i + 2), 16) * f))).toString(16).padStart(2, '0')).join('');
-const canvasOf = (w, h) => (typeof document !== 'undefined' ? Object.assign(document.createElement('canvas'), { width: w, height: h }) : new OffscreenCanvas(w, h));
 
 /** Draw a shape of blocks at a heading into a canvas of its own (see the top of the file). */
 export function voxelSprite(get, box, heading, tone) {

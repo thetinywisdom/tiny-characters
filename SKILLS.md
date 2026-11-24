@@ -15,11 +15,12 @@ src/tinyCharacters.js  the library (plain ES module, no dependencies):
                        drawCharacter, drawStage, randomCharacter,
                        LOOKS, seeded, headOf, snapToPalette, COLORS, the
                        colour lists and the look lists (HAIRSTYLES, HATS,
-                       TOPS, LEGWEAR, CARRY)
+                       TOPS, LEGWEAR, CARRY); and the helpers every other
+                       module shares: shade (a colour darker or lighter)
+                       and canvasOf (a canvas of its own); do not copy them
 src/tinyBuildings.js   the buildings (plain ES module, imports seeded from
                        tinyCharacters.js): drawBuilding, BUILDINGS,
-                       SHOP_TYPES, buildingSolids, drawStreet,
-                       WALL_COLORS, ROOF_COLORS
+                       SHOP_TYPES, buildingSolids, WALL_COLORS, ROOF_COLORS
 src/tinyAnimals.js     cats and dogs: drawCat, drawDog, CAT_COATS,
                        DOG_BREEDS, catFor, dogFor
 src/tinyNature.js      trees, bushes, terrains: drawTree, drawBush,
@@ -514,6 +515,13 @@ from 20 to 5, day from 7 to 17, easing between.
   `snapToPalette` uses all the lists.
 
 ## Testing and checking
+
+- **A refactor must not change a pixel.** Before it, render everything that
+  is deterministic and keep a hash per picture (the whole town by day, at
+  dusk and at night with traffic and people from fixed seeds, the town's
+  layout, the Buildings sheet, every catalogue card with the clock frozen
+  and Math.random seeded); after it, render again and compare: all equal.
+  (Done for the Nov 2026 clean-up: 210 pictures, all the same.)
 
 No build step. Serve the folder (`python3 -m http.server`), open the page,
 and check with Playwright screenshots on a desktop size and a phone

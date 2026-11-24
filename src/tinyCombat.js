@@ -11,7 +11,7 @@
 // { dog: true }, { monster: 'zombie', variant }. Actions face actor.facing
 // ('left' / 'right' / 'down' / 'up'). Plain ES module, no dependencies.
 
-import { drawCharacter } from './tinyCharacters.js';
+import { canvasOf, drawCharacter } from './tinyCharacters.js';
 import { drawCat, drawDog } from './tinyAnimals.js';
 import { drawMonster } from './tinyMonsters.js';
 
@@ -238,7 +238,7 @@ function drawPersonPose(g, p0, pose, weapon, t, u, poseFn) {
 // --- monster skills ------------------------------------------------------------------------
 function drawSkill(g, a, name, u, t) {
   const { sx, dir, side } = facingOf(a);
-  const x = a.x, y = a.y, P = (c, dx, dy, w = 1, h = 1) => px(g, c, x + dx, y + dy, w, h);
+  const x = a.x, y = a.y;
   const fwd = (d) => [x + dir[0] * d, y + dir[1] * d];
   switch (name) {
     case 'bite': {                                                          // a lunge, then the bite
@@ -318,10 +318,11 @@ function webNet(g, x, y, r) {
 }
 
 // --- reactions --------------------------------------------------------------------------------
-/** The actor drawn into its own small canvas (to flash it white, turn it over, fade it). */
+/** The actor drawn into a small canvas of its own (to flash it white, turn it over, fade it); one canvas, kept and cleared. */
+let spriteCanvas = null;
 function sprite(a, t) {
-  const c = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(48, 48) : Object.assign(document.createElement('canvas'), { width: 48, height: 48 });
-  const g = c.getContext('2d');
+  const c = spriteCanvas ??= canvasOf(48, 48), g = c.getContext('2d');
+  g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.clearRect(0, 0, 48, 48);
   drawActor(g, { ...a, x: 24, y: 40, walking: false }, t);
   return { c, g };
 }

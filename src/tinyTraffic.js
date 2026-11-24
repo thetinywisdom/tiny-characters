@@ -20,12 +20,11 @@
 //
 // Plain ES module, no dependencies (seeded from tinyCharacters).
 
-import { seeded } from './tinyCharacters.js';
+import { seeded, shade } from './tinyCharacters.js';
 import { KY, voxelSprite } from './tinyVoxel.js';
 
 const INK = '#2f3236', WHITE = '#f2f2ee', METAL = '#a8aeb4', DARK = '#3a3f44';
 const LAMP = '#fff2c0', TAIL = '#e8403a', GLASS = '#5d7590', TYRE = '#26282c', ORANGE = '#f2a040';
-const shade = (hex, f) => '#' + [1, 3, 5].map((i) => Math.max(0, Math.min(255, Math.round(parseInt(hex.slice(i, i + 2), 16) * f))).toString(16).padStart(2, '0')).join('');
 
 /** Body colours: white and silver most, then black, red, blue, a few bright ones. */
 export const CAR_COLORS = ['#f2f2ee', '#f2f2ee', '#c8ccd0', '#c8ccd0', '#3a3d42', '#c8402c', '#2f5f9a', '#3f7a5a', '#e8c840', '#8a5a7a', '#d87a3a'];

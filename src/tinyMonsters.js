@@ -10,10 +10,9 @@
 // flickering fire. Unlike the faceless people, monsters have eyes. Only
 // floating and flying monsters (ghost girl, reaper, skull) have a shadow.
 
-import { COLORS } from './tinyCharacters.js';
+import { COLORS, shade } from './tinyCharacters.js';
 
 const INK = '#2f3236';
-const shade = (hex, f) => '#' + [1, 3, 5].map((i) => Math.max(0, Math.min(255, Math.round(parseInt(hex.slice(i, i + 2), 16) * f))).toString(16).padStart(2, '0')).join('');
 
 /** The monsters and their four variants. */
 export const MONSTERS = {
@@ -47,7 +46,7 @@ const ZOMBIES = [
   { skin: '#8fa078', top: '#c8a060', legs: '#4a6a8a', hair: '#6a5a3a', overalls: '#4a6a8a', hat: '#d8b860' },  // farmer
   { skin: '#7a8a60', top: '#6a5a48', legs: '#5a4a3a', hair: null, ribs: true },                     // rotten
 ];
-function zombie({ R, W, y, v, side, back, t, walking }) {
+function zombie({ R, W, v, side, back, t, walking }) {
   const z = ZOMBIES[v], step = walking ? Math.floor(t * 4) % 2 : -1;      // a slow shamble
   const B = -9, Hd = -13, blood = '#7a2a22';
   // legs: one drags (lifts less)
@@ -88,7 +87,7 @@ const WOLVES = [
   { fur: '#3a3a3e', eye: '#f2d040', rags: '#6a3a3a' },
   { fur: '#e8e6e0', eye: '#4ab0e8', rags: '#4a5a7a' },
 ];
-function werewolf({ R, W, y, v, side, back, t, walking }) {
+function werewolf({ R, W, v, side, back, t, walking }) {
   const f = WOLVES[v], fur = f.fur, dark = shade(fur, 0.72), light = shade(fur, 1.22), claw = '#f2efe8';
   const step = walking ? Math.floor(t * 6) % 2 : -1;
   const B = -11, Hd = -15;                                                  // taller than a person, hunched
@@ -128,7 +127,7 @@ const GIRLS = [
   { dress: '#b8303a', hair: '#1d1f22', skin: '#e8e4e4' },
   { dress: '#c8dcec', hair: '#a8b0b8', skin: '#e0eaf2' },
 ];
-function ghostGirl({ R, W, g, v, side, back, t }) {
+function ghostGirl({ R, g, v, side, back, t }) {
   const p = GIRLS[v], bob = -3 + Math.round(Math.sin(t * 2) * 1.5);         // she floats
   const B = -9 + bob, Hd = -13 + bob;
   R(COLORS.shadow, -2, 0, 5, 1);
@@ -191,7 +190,7 @@ const SPIDERS = [
   { body: '#9a8a70', mark: '#6a5a44', leg: '#8a7a60', stripes: true },        // huntsman
   { body: '#4a8a3a', mark: '#f2d040', leg: '#3a6a2e', spots: true },          // poison
 ];
-function spider({ R, W, v, side, back, t, walking }) {
+function spider({ R, v, side, back, t, walking }) {
   const p = SPIDERS[v], step = walking ? Math.floor(t * 10) % 2 : 0, eye = '#e8402f';
   const leg = p.leg, band = p.bands ? p.mark : shade(leg, 1.25);
   // eight legs: up from the body, then down to the ground; walking, they take turns

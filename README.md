@@ -114,9 +114,8 @@ dome, minarets, side domes, windows and trim. The Buildings sheet shows
 three seeds of each; the town picks seeds that fit each block.
 
 ```js
-import { BUILDINGS, drawBuilding, drawStreet } from './src/tinyBuildings.js';
+import { BUILDINGS, drawBuilding } from './src/tinyBuildings.js';
 
-drawStreet(g, 200, 150, { baseY: 104 });                    // sidewalk, road, far sidewalk
 drawBuilding(g, { type: 'koban', x: 60, y: 104 });           // centred on x, ground line at y
 drawBuilding(g, { type: 'shop', shopType: 'ramen', x: 120, y: 104, seed: 3 });
 // then the people in front of them (feet below the ground line)
@@ -132,7 +131,6 @@ drawBuilding(g, { type: 'shop', shopType: 'ramen', x: 120, y: 104, seed: 3 });
 | `STOREY` | The sizes every building shares: ground floor 16, a shop's 19, upper floors 13, window sills 4 above the floor. |
 | `BUILDINGS` | `type -> { label, w, h, widths }`: name, the largest width and height any seed makes (roof included), and the widths a seed picks from. |
 | `SHOP_TYPES` | `konbini`, `ramen`, `cafe`, `bookshop`, `bakery`, `izakaya` (for `shop` and `mixedUse`). |
-| `drawStreet(g, W, H, { baseY, x0 })` | Sidewalk from `baseY`, road, far sidewalk, grass; `x0` scrolls the paving. |
 | `WALL_COLORS`, `ROOF_COLORS` | The catalogue's wall and roof colours. |
 
 Sizes, the same on every building: a ground floor is 16 px (a shop's 19, its

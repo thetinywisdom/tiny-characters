@@ -109,7 +109,7 @@ for (const [type, { label, w, h }] of Object.entries(BUILDINGS)) {
 // the doors and windows the buildings are made from (one set of sizes)
 const PART_KIND = { 'door.wood': 'Wood', 'door.plank': 'Wood', 'door.glazed': 'Wood', 'door.arched': 'Wood', 'door.sliding': 'Japanese', 'door.shoji': 'Japanese', 'window.lattice': 'Japanese', 'window.shoji': 'Japanese', 'door.glass': 'Glass', 'door.auto': 'Glass', 'window.shop': 'Glass', 'window.alu': 'Glass', 'window.aluPair': 'Glass' };
 for (const [id, { label, w, h }] of Object.entries(PARTS)) {
-  const [kind, name] = id.split('.');
+  const [kind] = id.split('.');
   const tags = [kind === 'door' ? 'Doors' : 'Windows'];
   if (PART_KIND[id]) tags.push(PART_KIND[id]);
   items.push({ id: `part.${id}`, label, group: 'Doors & windows', tags, seed: 1, w: w + 4, h: h + 3, px: 8,

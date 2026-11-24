@@ -9,10 +9,9 @@
 // facing: 'down' (the front; also nothing), 'up' (the back), 'left', 'right'.
 // No faces, like the people (a dog has a nose pixel). Plain ES module.
 
-import { CAT_COLORS, COLORS, seeded } from './tinyCharacters.js';
+import { CAT_COLORS, seeded, shade } from './tinyCharacters.js';
 
 const INK = '#2f3236', WHITE = '#f2efe8';
-const shade = (hex, f) => '#' + [1, 3, 5].map((i) => Math.max(0, Math.min(255, Math.round(parseInt(hex.slice(i, i + 2), 16) * f))).toString(16).padStart(2, '0')).join('');
 
 /**
  * Cat coats: [label, main colour, second colour, pattern]. Patterns: tabby

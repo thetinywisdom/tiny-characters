@@ -7,7 +7,6 @@
 //   BUILDINGS             type -> { label, w, h, widths } (the largest size any seed makes)
 //   buildingSize(b)       one building's size for its seed
 //   SHOP_TYPES            the shop's kinds (konbini, ramen, cafe ...)
-//   drawStreet(g, W, H)   a street to stand them along
 //
 // A building: { type, x, y, seed, shopType, wall, roof }. Colours are CSS
 // strings; the seed picks the width, floors, windows (kind, number), door
@@ -17,7 +16,7 @@
 // buildings are squashed (an office has 6 floors, not 13). Roofs are seen
 // from above (8-18 rows), which gives each building its depth on a map.
 
-import { seeded } from './tinyCharacters.js';
+import { seeded, shade } from './tinyCharacters.js';
 
 const INK = '#2f3236', WHITE = '#f2f2ee', RED = '#d8443c', NAVY = '#2c3652', GOLD = '#f2b64a';
 const WIN = '#5f7487', LIT = '#f0dca0', CURTAIN = '#e4d6bc', GLASS = '#9fb6cc', GLASS2 = '#7f9ab4';
@@ -28,7 +27,6 @@ export const WALL_COLORS = ['#f2efe8', '#e4e0d6', '#cfccc4', '#b3b0a8', '#918f8a
 export const ROOF_COLORS = ['#4a5560', '#6a4a3a', '#3c4a5a', '#7a3a32', '#3a3f44', '#5a6a5a'];
 
 /** A colour darker (f < 1) or lighter (f > 1). */
-const shade = (hex, f) => '#' + [1, 3, 5].map((i) => Math.max(0, Math.min(255, Math.round(parseInt(hex.slice(i, i + 2), 16) * f))).toString(16).padStart(2, '0')).join('');
 
 // --- the pieces ----------------------------------------------------------------
 // r(colour, dx, up, w, h): a rectangle dx from the building's left edge whose
@@ -350,12 +348,6 @@ function windowRow(r, rng, kind, x0, x1, up, n, o) {
   const ww = WW[kind], gap = (x1 - x0 - n * ww) / (n + 1);
   for (let i = 0; i < n; i++) oneWindow(r, rng, kind, Math.round(x0 + gap + i * (ww + gap)), up, o);
 }
-/** A door of a kind (6 wide, or 10 for auto / sliding / shoji) at dx. */
-function aDoor(r, kind, dx, up = 0, c) {
-  if (kind === 'auto' || kind === 'sliding' || kind === 'shoji') return DOORS[kind](r, dx, up, c);
-  return DOORS[kind](r, dx, up, c);
-}
-const DW = (kind) => (kind === 'auto' || kind === 'sliding' || kind === 'shoji' ? 10 : 6);
 /** A roof over a wall from dx, w wide, at `up`: flat, pitched or hipped. */
 function aRoof(r, kind, wall, roofC, dx, up, w, d) {
   if (kind === 'flat') return flatRoof(r, wall, dx, up, w, Math.min(d, 14));
@@ -364,6 +356,8 @@ function aRoof(r, kind, wall, roofC, dx, up, w, d) {
 const HOUSE_ROOFS = ['#c8603e', '#4a5560', '#6a4a3a', '#3c4a5a', '#7a3a32', '#5a6a5a'];
 const DOOR_COLOURS = [WOOD, '#7a3a32', '#2f4a5a', '#3f6a4a', '#5a4a6a', DARKWOOD];
 const AWNINGS = [[RED, WHITE], ['#2fa36b', WHITE], [NAVY, WHITE], ['#f08a2c', '#f4e6c8'], ['#7a3a6a', WHITE]];
+/** A flat roof (12 deep) across the whole width, and things on it. */
+const flatTop = (r, v, wall, up, w) => { flatRoof(r, wall, 0, up, w, 12); rooftop(r, v, 0, up, w); };
 /** Things on a flat roof: AC units, a water tank, a plant room. */
 function rooftop(r, v, dx, up, w) {
   const n = v.int(0, Math.max(1, Math.floor(w / 14)));
@@ -383,7 +377,7 @@ const DEFS = {
     const kind = v.pick(['sash', 'pair', 'alu', 'aluPair']), frame = v.pick([WHITE, WHITE, '#e8dcc0', '#6a4a3a']);
     r(wall, 2, 0, w - 4, top);
     const dx = doorLeft ? 6 : w - 12;
-    aDoor(r, doorKind, dx, 0, doorC); r(shade(wall, 0.8), dx - 1, 12, 8, 1);
+    DOORS[doorKind](r, dx, 0, doorC); r(shade(wall, 0.8), dx - 1, 12, 8, 1);
     if (v.chance(0.5)) r(GOLD, doorLeft ? dx + 7 : dx - 2, 8, 1, 2);        // a lamp by the door
     const x0 = doorLeft ? dx + 8 : 3, x1 = doorLeft ? w - 3 : dx - 2;
     windowRow(r, rng, kind, x0, x1, SILL, v.int(1, howMany(kind, x0, x1)), { frame });
@@ -408,7 +402,7 @@ const DEFS = {
     const free = dx > w / 2 ? [2, dx - 3] : [dx + 12, w - 2];
     if (free[1] - free[0] > 8) { r(CONCRETE, free[0] + 1, 3, 6, 7); for (const y of [5, 8]) r(INK, free[0] + 2, y, 4, 1); }   // post boxes
     if (free[1] - free[0] > 16) WINDOWS.alu(r, rng, free[1] - 6, SILL);
-    flatRoof(r, wall, 0, top, w, 12); rooftop(r, v, 0, top, w);
+    flatTop(r, v, wall, top, w);
   }],
   mixedUse: ['Shop with flats above', [34, 38, 44], (r, rng, b, wall, roof, w) => {
     const v = V(rng), floors = v.int(2, 4), top = floorAt(floors, SHOP_GF);
@@ -419,7 +413,7 @@ const DEFS = {
     const x0 = signLeft ? 7 : 2, x1 = signLeft ? w - 2 : w - 7;
     for (let f = 1; f < floors; f++) windowRow(r, rng, win, x0, x1, floorAt(f, SHOP_GF) + SILL, howMany(win, x0, x1));
     upright(r, (SHOPS[kind] ?? SHOPS.konbini).bg === WHITE ? '#2fa36b' : (SHOPS[kind] ?? SHOPS.konbini).bg, WHITE, signLeft ? 1 : w - 6, SHOP_GF + 3, 5, top - SHOP_GF - 6, (SHOPS[kind] ?? SHOPS.konbini).name);
-    flatRoof(r, wall, 0, top, w, 12); rooftop(r, v, 0, top, w);
+    flatTop(r, v, wall, top, w);
   }],
   shop: ['Shop', [32, 40, 48], (r, rng, b, wall, roof, w) => {
     const v = V(rng);
@@ -480,7 +474,7 @@ const DEFS = {
     WINDOWS.shop(r, gx, 0, gw, 12);
     for (let i = gx + 2; i + 4 <= gx + gw - 2; i += 6) { r(INK, i, 2, 4, 4); r('#7f9ab4', i + 1, 3, 2, 2); }   // washers
     DOORS.glass(r, doorRight ? w - 8 : 2);
-    flatRoof(r, wall, 0, SHOP_GF, w, 12); rooftop(r, v, 0, SHOP_GF, w);
+    flatTop(r, v, wall, SHOP_GF, w);
   }],
   kissaten: ['Café (kissaten)', [30, 34, 40], (r, rng, b, wall, roof, w) => {
     const v = V(rng), top = floorAt(2), front = v.pick([DARKWOOD, '#5a3a28', '#2f4a3a']), aw = v.pick(AWNINGS);
@@ -502,7 +496,7 @@ const DEFS = {
     WINDOWS.shop(r, doorRight ? 1 : 12, 0, w - 13, 12, FRAME, '#dfe8ec');
     shelves(r, rng, doorRight ? 2 : 13, 1, w - 15, 3, [RED, '#3f7fd6', '#f2c230', '#2fa36b', WHITE, '#d46a8e']);
     DOORS.auto(r, doorRight ? w - 11 : 1);
-    flatRoof(r, wall, 0, SHOP_GF, w, 12); rooftop(r, v, 0, SHOP_GF, w);
+    flatTop(r, v, wall, SHOP_GF, w);
   }],
   sushi: ['Sushi restaurant', [32, 36, 42], (r, rng, b, wall, roof, w) => {
     const v = V(rng), floors = v.chance(0.75) ? 2 : 1, top = floorAt(floors), norenC = v.pick([NAVY, '#7a2a22', '#2f4a3a']);
@@ -534,7 +528,7 @@ const DEFS = {
     r('#dfe8ec', 2, 0, w - 4, 5); r(WHITE, 1, 5, w - 2, 1);
     for (let i = 4; i < w - 4; i += 4) r(rng() < 0.5 ? '#b3b0a8' : '#d8b0a0', i, 3, 2, 1);
     awning(r, aw[0], aw[1], -1, 12, w + 2, 3); sign(r, WHITE, aw[0], 1, 15, w - 2, 4, 'FISH');
-    flatRoof(r, wall, 0, SHOP_GF, w, 12); rooftop(r, v, 0, SHOP_GF, w);
+    flatTop(r, v, wall, SHOP_GF, w);
   }],
   udonSoba: ['Udon / soba shop', [32, 36, 42], (r, rng, b, wall, roof, w) => {
     const v = V(rng), floors = v.chance(0.7) ? 2 : 1, top = floorAt(floors), front = v.pick([WOOD, DARKWOOD, '#7a5a3a']);
@@ -601,7 +595,7 @@ const DEFS = {
     sign(r, signC, WHITE, 2, 12, w - 4, 4, 'BANK');
     WINDOWS.shop(r, 2, 0, w - 21, 12); DOORS.auto(r, w - 17);
     r(CONCRETE, w - 5, 0, 4, 10); r(INK, w - 4, 5, 2, 3);                   // ATM
-    flatRoof(r, wall, 0, top, w, 12); rooftop(r, v, 0, top, w);
+    flatTop(r, v, wall, top, w);
   }],
   clinic: ['Clinic', [36, 40, 46], (r, rng, b, wall0, roof, w) => {
     const v = V(rng), floors = v.int(1, 3), top = floorAt(floors), wall = v.pick(['#b9b8b0', '#e8e4dc', '#d8e0e4']);
@@ -613,7 +607,7 @@ const DEFS = {
       if (f === 1) icon(r, 5, floorAt(1) + SILL, CROSS, { g: '#2fa36b', w: WHITE });
       windowRow(r, rng, 'aluPair', f === 1 ? 12 : 2, w - 2, floorAt(f) + SILL, f === 1 ? howMany('aluPair', 12, w - 2) : howMany('aluPair', 2, w - 2));
     }
-    flatRoof(r, wall, 0, top, w, 12); rooftop(r, v, 0, top, w);
+    flatTop(r, v, wall, top, w);
   }],
   fireStation: ['Fire station', [50, 56, 66], (r, rng, b, wall0, roof, w) => {
     const v = V(rng), bw = w - 10, top = floorAt(2, SHOP_GF), wall = v.pick(['#d8d0c4', '#c8b8a8', '#e8e4dc']);
@@ -635,7 +629,7 @@ const DEFS = {
     for (let f = 1; f < floors; f++) windowRow(r, rng, 'neon', x0, x1, floorAt(f) + SILL, howMany('neon', x0, x1, 3));
     upright(r, WHITE, '#d8302a', signLeft ? 1 : w - 5, GF + 1, 4, top - GF - 3, 'KARAOKE', [RED, '#3f7fd6', '#d46a8e', '#f2c230']);
     WINDOWS.shop(r, 2, 0, w - 14, 12, FRAME, v.pick(['#7a6aa8', '#a85a8a', '#5a7aa8'])); DOORS.glass(r, w - 10); r(v.pick(['#f2a040', '#e870a0', '#6ac8f2']), 2, 13, w - 8, 2);
-    flatRoof(r, wall, 0, top, w, 12); rooftop(r, v, 0, top, w);
+    flatTop(r, v, wall, top, w);
   }],
   woodApartment: ['Wooden apartment', [40, 48, 56], (r, rng, b, wall0, roof, w) => {
     const v = V(rng), bw = w - 6, top = floorAt(2), wall = v.pick(['#b8ae9c', '#c8b898', '#a8a8a0']), doorC = v.pick(['#8a6a4a', '#6a7f94', '#7a5a4a']);
@@ -966,20 +960,4 @@ export function buildingSolids(b) {
     return { x: L + x0, y: y - Math.round(top * k), w: x1 - x0, h: Math.round(top * k) - Math.round(bottom * k) + 1 };
   });
   return [{ x: L, y: y - h, w, h: h + 1 }];
-}
-
-/**
- * A street to stand buildings along: the sidewalk from `baseY` (the
- * buildings' ground line), the road, the far sidewalk, then grass.
- */
-export function drawStreet(g, W, H, { baseY = Math.round(H * 0.7), x0 = 0 } = {}) {
-  const side = 8, road = 20;
-  g.fillStyle = '#9fb08d'; g.fillRect(0, 0, W, H);
-  g.fillStyle = '#d8d2c4'; g.fillRect(0, baseY, W, side);
-  g.fillStyle = '#c4bdae'; for (let x = -((x0) % 8); x < W; x += 8) g.fillRect(x, baseY, 1, side);
-  g.fillStyle = '#9a9890'; g.fillRect(0, baseY + side, W, 1);
-  g.fillStyle = '#6f7378'; g.fillRect(0, baseY + side + 1, W, road);
-  g.fillStyle = '#e8e4d8'; for (let x = -((x0) % 16); x < W; x += 16) g.fillRect(x, baseY + side + 1 + road / 2 - 1, 8, 1);
-  g.fillStyle = '#9a9890'; g.fillRect(0, baseY + side + road + 1, W, 1);
-  g.fillStyle = '#d8d2c4'; g.fillRect(0, baseY + side + road + 2, W, side);
 }

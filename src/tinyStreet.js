@@ -14,11 +14,10 @@
 // Plain ES module, no dependencies (it borrows the buildings' painter).
 
 import { makePainter } from './tinyBuildings.js';
-import { seeded } from './tinyCharacters.js';
+import { seeded, shade } from './tinyCharacters.js';
 
 const INK = '#2f3236', WHITE = '#f2f2ee', RED = '#d8443c', METAL = '#6a6f76', DARK = '#4a4e54';
 const LAMP = '#fff2c0', WOOD = '#8a6440', LIGHTWOOD = '#b88a58', STONE = '#a8a49a', CONCRETE = '#b0aca2';
-const shade = (hex, f) => '#' + [1, 3, 5].map((i) => Math.max(0, Math.min(255, Math.round(parseInt(hex.slice(i, i + 2), 16) * f))).toString(16).padStart(2, '0')).join('');
 const pick = (rng, a) => a[Math.floor(rng() * a.length)];
 
 /**

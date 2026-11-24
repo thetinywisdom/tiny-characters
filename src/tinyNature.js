@@ -12,9 +12,8 @@
 // town): patterns repeat on even steps.
 
 import { makePainter } from './tinyBuildings.js';
-import { seeded } from './tinyCharacters.js';
+import { canvasOf, seeded, shade } from './tinyCharacters.js';
 
-const shade = (hex, f) => '#' + [1, 3, 5].map((i) => Math.max(0, Math.min(255, Math.round(parseInt(hex.slice(i, i + 2), 16) * f))).toString(16).padStart(2, '0')).join('');
 const BARK = '#6b4a2a', DARK_BARK = '#4a3424';
 
 // --- pieces (r: the buildings' painter, (dx, up) from the bottom left) ---------
@@ -184,7 +183,7 @@ function plantImage(defs, type, variant, salt) {
   if (cache.has(key)) return cache.get(key);
   const [, w, h, draw] = defs[type];
   const cw = w + MX * 2, ch = h + MY * 2;
-  const c = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(cw, ch) : Object.assign(document.createElement('canvas'), { width: cw, height: ch });
+  const c = canvasOf(cw, ch);
   draw(makePainter(c.getContext('2d'), MX, h + MY, 1), seeded(variant * 131 + salt), Math.floor(w / 2));
   const img = { c, cw, ch, w, h };
   cache.set(key, img);

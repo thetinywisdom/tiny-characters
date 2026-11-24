@@ -18,13 +18,12 @@
 // Units are canvas pixels. Plain ES module, no dependencies.
 
 import { BUILDINGS, buildingSize, buildingSolids, drawBuilding } from './tinyBuildings.js';
-import { drawCharacter } from './tinyCharacters.js';
 import { drawCat, drawDog } from './tinyAnimals.js';
 import { drawMonster } from './tinyMonsters.js';
-import { BUSHES, TREES, drawBush, drawTerrain, drawTree } from './tinyNature.js';
+import { BUSHES, drawBush, drawTerrain, drawTree } from './tinyNature.js';
 import { PROPS, drawProp, drawWire, poleTops, propLights, propSolid } from './tinyStreet.js';
 import { drawVehicle, drawVehicleBeams, vehicleLights } from './tinyTraffic.js';
-import { seeded as seededRng } from './tinyCharacters.js';
+import { canvasOf, drawCharacter, seeded as seededRng } from './tinyCharacters.js';
 
 const CELL = 4;                                          // path-finding grid
 /** Street sizes at a scale: a street is 7 + 18 + 7 px top to bottom, a cross street 6 + 18 + 6 across. */
@@ -375,6 +374,7 @@ const mix = (a, b, u) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(a.slice(
  * glass, signs, neon, lanterns), then soft light round lamps, vending
  * machines, traffic lights and cars' lights. night: 0 (day) to 1.
  */
+let beamLayer = null;
 function drawNight(g, view, items, night, dpx) {
   const dusk = Math.max(0, 1 - Math.abs(night - 0.35) / 0.35);              // the warm light of dusk, early in the evening
   g.save();
@@ -390,10 +390,11 @@ function drawNight(g, view, items, night, dpx) {
     // (so the light falls on the road, not over the cars), then added to the picture
     const vehicles = items.filter((it) => it.s?.vehicle).map((it) => it.s);
     if (vehicles.length) {
-      const res = dpx;
-      const L = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(view.w * res, view.h * res) : Object.assign(document.createElement('canvas'), { width: view.w * res, height: view.h * res });
-      const lg = L.getContext('2d');
-      lg.setTransform(res, 0, 0, res, -view.x * res, -view.y * res);
+      // one layer, kept and cleared each frame (made again only when the view's size changes)
+      if (!beamLayer || beamLayer.width !== view.w * dpx || beamLayer.height !== view.h * dpx) beamLayer = canvasOf(view.w * dpx, view.h * dpx);
+      const L = beamLayer, lg = L.getContext('2d');
+      lg.setTransform(1, 0, 0, 1, 0, 0); lg.globalCompositeOperation = 'source-over'; lg.clearRect(0, 0, L.width, L.height);
+      lg.setTransform(dpx, 0, 0, dpx, -view.x * dpx, -view.y * dpx);
       lg.globalCompositeOperation = 'lighter';
       for (const v of vehicles) drawVehicleBeams(lg, v);
       lg.globalCompositeOperation = 'destination-out';
@@ -422,7 +423,7 @@ const TERRAIN_OF = { gravel: 'gravel', sand: 'sand', paving: 'cobble', water: 'w
 function drawGround(layout) {
   const { W, H, streets, crossStreets, areas = [], k } = layout;
   const { SIDE, ROAD, STREET, VSIDE, VSTREET } = streetDims(k), m = (v) => Math.round(v * k);
-  const c = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(W, H) : Object.assign(document.createElement('canvas'), { width: W, height: H });
+  const c = canvasOf(W, H);
   const g = c.getContext('2d');
   const R = (col, x, y, w, h) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
   drawTerrain(g, { type: 'grass', x: 0, y: 0, w: W, h: H, scale: k, seed: 3 });

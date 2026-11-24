@@ -42,8 +42,10 @@ export const LEGWEAR = ['trousers', 'shorts', 'skirt'];
 export const CARRY = ['backpack', 'bag', 'briefcase', 'umbrella', 'stick', 'boxes'];
 
 const WHITE = '#f2f2ee', RED = '#e8402f';
-/** A colour darker (f < 1) or lighter (f > 1). */
-const shade = (hex, f) => '#' + [1, 3, 5].map((i) => Math.max(0, Math.min(255, Math.round(parseInt(hex.slice(i, i + 2), 16) * f))).toString(16).padStart(2, '0')).join('');
+/** A colour darker (f < 1) or lighter (f > 1) (the other modules use this one). */
+export const shade = (hex, f) => '#' + [1, 3, 5].map((i) => Math.max(0, Math.min(255, Math.round(parseInt(hex.slice(i, i + 2), 16) * f))).toString(16).padStart(2, '0')).join('');
+/** A canvas of its own, w x h (an OffscreenCanvas where there is one) (the other modules use this one). */
+export const canvasOf = (w, h) => (typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(w, h) : Object.assign(document.createElement('canvas'), { width: w, height: h }));
 /** Is a colour light (so a white collar would not show on it)? */
 const light = (hex) => [1, 3, 5].reduce((a, i) => a + parseInt(hex.slice(i, i + 2), 16), 0) > 600;
 const DEFAULT_HAT = { cap: RED, wide: '#d8b860' };

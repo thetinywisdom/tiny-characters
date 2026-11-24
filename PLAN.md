@@ -209,6 +209,16 @@ bubble lab, so games can use them and they can grow.
     with an angled camera and outlines; the owner: all bad, forget it). All
     of it removed; the people stay flat.
 
+30. **Clean-up** (the owner: remove useless stuff, make it lightweight):
+    one `shade` and one `canvasOf` (exported from tinyCharacters) instead of
+    8 and 5 copies; unused imports, variables and arguments gone (ESLint
+    clean but for style); `drawStreet` removed (left over from the first
+    one-street demo, used nowhere); `aDoor` (both branches the same) and
+    `DW` removed; the buildings' flat roof with things on it written once
+    (`flatTop`, 8 places); the night's headlight layer and the combat
+    reactions' sprite canvas are kept and cleared instead of made again
+    every frame. Every picture checked the same before and after (210).
+
 ## Next (only when the owner asks)
 
 1. Speech with them (floating pixel text from tiny-ui-kit) in the demo.
