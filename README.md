@@ -189,6 +189,29 @@ drawTownView(g, town, { x: viewX, y: viewY, w: 200, h: 150 }, [you, ...others], 
 | `drawDog(g, { x, y, breed, coat, collar, facing, walking }, t)` | A dog. `breed`: `shiba`, `corgi`, `dachshund`, `poodle`, `pug`, `labrador`, `husky`, `dalmatian` (`DOG_BREEDS`); it wags its tail standing still. |
 | `catFor(seed)`, `dogFor(breed, seed)` | A coat (and a breed for `'random'`) from a seed. |
 
+## Monsters
+
+`src/tinyMonsters.js`: seven monsters with four variants each, four views like
+the people, walking (or floating, or flying) and, unlike the faceless people,
+eyes.
+
+```js
+import { drawMonster, MONSTERS } from './src/tinyMonsters.js';
+drawMonster(g, { type: 'zombie', variant: 'schoolgirl', x, y, facing: 'left', walking: true }, now / 1000);
+```
+
+| `type` | `variant` (or 0-3) |
+| --- | --- |
+| `zombie` | `office`, `schoolgirl`, `farmer`, `rotten` (arms reaching, a slow shamble) |
+| `werewolf` | `grey`, `brown`, `black`, `white` (taller than a person, snout, claws, tail, glowing eyes) |
+| `ghostGirl` | `white dress`, `yurei` (white kimono, triangle headband), `red dress`, `pale blue` (floating, long hair over her face) |
+| `reaper` | `black`, `purple`, `navy`, `bone` (hooded robe, glowing eyes, a scythe; floating) |
+| `spider` | `black widow`, `tarantula`, `huntsman`, `poison` (giant, eight walking legs) |
+| `skeleton` | `plain`, `warrior` (helmet, shield, sword), `pirate` (bandana, eyepatch, cutlass), `mage` (robe, staff with a glowing orb) |
+| `skull` | `fire`, `blue fire`, `green fire`, `purple fire` (a flying skull in flickering flames) |
+
+The catalogue shows them all under Monsters.
+
 ## Nature
 
 `src/tinyNature.js`: 15 trees, 10 bushes and 10 terrains, scaled with crisp

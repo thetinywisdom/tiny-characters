@@ -116,6 +116,10 @@ bubble lab, so games can use them and they can grow.
     once at their real size and scaled as an image (no more size-by-seed
     scaling); the seed mirrors them; birch bark bands; forest crowns stay
     off the roads.
+17. **Monsters** (`src/tinyMonsters.js`): zombies, werewolves, the ghost
+    girl, the reaper with a scythe, giant spiders, skeletons and flaming
+    skulls, four variants each, four views, walking / floating / flying,
+    with eyes; a Monsters group in the catalogue (28 cards).
 
 ## Next (only when the owner asks)
 

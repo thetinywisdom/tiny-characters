@@ -24,6 +24,9 @@ src/tinyAnimals.js     cats and dogs: drawCat, drawDog, CAT_COATS,
                        DOG_BREEDS, catFor, dogFor
 src/tinyNature.js      trees, bushes, terrains: drawTree, drawBush,
                        drawTerrain, TREES, BUSHES, TERRAINS
+src/tinyMonsters.js    monsters: drawMonster, MONSTERS (zombie, werewolf,
+                       ghostGirl, reaper, spider, skeleton, skull; 4
+                       variants each; four views)
 src/tinyTown.js        the 2D town map: makeTown, drawTownView,
                        DEFAULT_TOWN (layout, ground, walkable ground,
                        path finding, place names)
@@ -253,6 +256,22 @@ face, paws, tail), `spots`, `face` (a pug's dark face), `plain`.
   the back (a shade darker so it shows on a plain coat)
 - a dog standing still wags its tail
 A new breed is an entry in `DOG_BREEDS` (and coats in `DOG_COATS`).
+
+## How monsters are drawn (src/tinyMonsters.js)
+
+`drawMonster` picks the variant (index or name), sets up `R` (mirrored for
+left) and `W` (never mirrored), and calls the type's function with `side`,
+`back`, `t` and `walking`. Each type is drawn like the people (feet at y,
+the body from `B`, the head from `Hd`) with its own sizes: the werewolf is
+taller (18 px, hunched, legs bent like a wolf's), floaters (`ghostGirl`,
+`reaper`) bob with `sin(t)` above a small shadow and have no feet, the
+ghost girl is drawn at 0.88 alpha, the flaming skull flies at head height
+with a flame shape of three colours that leans back when it flies
+sideways and flickers. Variants are rows of colours / gear in the
+`ZOMBIES`, `WOLVES`, `GIRLS`, `REAPERS`, `SPIDERS`, `FIRES` tables; the
+skeleton's are drawn in code (warrior, pirate, mage). Monsters have eyes
+(the people do not). A new variant: add a row to the table and its name to
+`MONSTERS`; check all four views at real size next to a person.
 
 ## How nature is drawn (src/tinyNature.js)
 

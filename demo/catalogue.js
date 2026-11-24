@@ -2,6 +2,7 @@ import { BUILDINGS, PARTS, SHOP_TYPES, SIGN_FONT, drawBuilding, drawPart } from 
 import { LOOKS, drawCharacter, lookFor } from '../src/tinyCharacters.js';
 import { CAT_COATS, DOG_BREEDS, dogFor, drawCat, drawDog } from '../src/tinyAnimals.js';
 import { BUSHES, TERRAINS, TREES, drawBush, drawTerrain, drawTree } from '../src/tinyNature.js';
+import { MONSTERS, drawMonster } from '../src/tinyMonsters.js';
 
 // The catalogue: every person, animal and building, with filters (group,
 // kind, search) and a seed per card (type it, or roll it with 🎲). The copy
@@ -48,6 +49,16 @@ for (const [breed, { label }] of Object.entries(DOG_BREEDS)) {
     code: (seed) => `drawDog(g, { x, y, ...dogFor('${breed}', ${seed}), collar: '${dog(seed).collar}', facing, walking }, t)` });
 }
 
+// monsters: each variant, walking (or floating) and turning round
+const MONSTER_KIND = { zombie: 'Undead', skeleton: 'Undead', skull: 'Undead', ghostGirl: 'Ghosts', reaper: 'Ghosts', werewolf: 'Beasts', spider: 'Beasts' };
+for (const [type, { label, variants }] of Object.entries(MONSTERS)) variants.forEach((variant) => {
+  const big = type === 'spider' || type === 'werewolf';
+  items.push({ id: `monster.${type}.${variant.replace(/ /g, '-')}`, label: `${label}: ${variant}`, group: 'Monsters', tags: [MONSTER_KIND[type], label.split(' (')[0]], seed: 0, noSeed: true,
+    w: big ? 26 : 22, h: 24, px: 5,
+    draw: (g, seed, t, anim) => drawMonster(g, { type, variant, x: big ? 13 : 11, y: 21, walking: anim, facing: turning(t, anim) }, t),
+    code: () => `drawMonster(g, { type: '${type}', variant: '${variant}', x, y, facing, walking }, t)` });
+});
+
 // trees, bushes and terrains
 const JAPANESE_NATURE = ['maple', 'sakura', 'pine', 'cedar', 'bamboo', 'ginkgo', 'azalea', 'paddy'];
 for (const [type, { label, w, h }] of Object.entries(TREES)) items.push({ id: `nature.tree.${type}`, label, group: 'Nature', tags: ['Trees', ...(JAPANESE_NATURE.includes(type) ? ['Japanese'] : [])], seed: 1,
@@ -87,7 +98,7 @@ for (const [id, { label, w, h }] of Object.entries(PARTS)) {
 }
 
 // --- filters ---------------------------------------------------------------------
-const GROUPS = ['All', 'People', 'Animals', 'Buildings', 'Doors & windows', 'Nature'];
+const GROUPS = ['All', 'People', 'Animals', 'Monsters', 'Buildings', 'Doors & windows', 'Nature'];
 const state = { g: 'All', t: new Set(), q: '' };
 const fromHash = () => {
   const h = new URLSearchParams(location.hash.slice(1));
@@ -118,7 +129,7 @@ const chip = (text, pressed, onClick, n) => {
 };
 function renderFilters() {
   $('#groups').replaceChildren(...GROUPS.map((g) => chip(g, state.g === g, () => { state.g = g; state.t.clear(); update(); }, items.filter((it) => g === 'All' || it.group === g).length)));
-  const ORDER = ['Adults', 'Kids', 'Elderly', 'Uniforms', 'Random', 'Cats', 'Dogs', 'Trees', 'Bushes', 'Terrain', 'Doors', 'Windows', 'Wood', 'Glass', 'Japanese', 'European', 'Mosque', 'Homes', 'Shops & food', 'Civic', 'Worship', 'Low', 'Tall', 'Changes shape'];
+  const ORDER = ['Adults', 'Kids', 'Elderly', 'Uniforms', 'Random', 'Cats', 'Dogs', 'Undead', 'Ghosts', 'Beasts', 'Zombie', 'Werewolf', 'Ghost girl', 'Reaper', 'Giant spider', 'Skeleton', 'Flaming skull', 'Trees', 'Bushes', 'Terrain', 'Doors', 'Windows', 'Wood', 'Glass', 'Japanese', 'European', 'Mosque', 'Homes', 'Shops & food', 'Civic', 'Worship', 'Low', 'Tall', 'Changes shape'];
   const tags = [...new Set(items.filter(inGroup).flatMap((it) => it.tags))].sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
   // each kind's count: how many you would see with it on
   $('#tags').replaceChildren(...tags.map((t) => chip(t, state.t.has(t), () => { state.t.has(t) ? state.t.delete(t) : state.t.add(t); update(); },
@@ -192,7 +203,7 @@ document.fonts.load(`16px ${SIGN_FONT}`).then(() => cards.forEach((v) => paint(v
 // people and cats move; buildings are drawn again only when their seed changes
 function frame(now) {
   last = now / 1000;
-  if ($('#animate').checked) for (const v of cards) if (!v.card.hidden && (v.it.group === 'People' || v.it.group === 'Animals' || v.it.animated)) paint(v, last);
+  if ($('#animate').checked) for (const v of cards) if (!v.card.hidden && (v.it.group === 'People' || v.it.group === 'Animals' || v.it.group === 'Monsters' || v.it.animated)) paint(v, last);
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
