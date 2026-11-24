@@ -120,6 +120,10 @@ bubble lab, so games can use them and they can grow.
     girl, the reaper with a scythe, giant spiders, skeletons and flaming
     skulls, four variants each, four views, walking / floating / flying,
     with eyes; a Monsters group in the catalogue (28 cards).
+18. **Monsters in the town**: zombies on the streets, ghost girls round the
+    shrine, a reaper by the chapel, skeletons in the schoolyard, werewolves,
+    giant spiders and flaming skulls roaming, each at its own speed; a
+    Hide / Show monsters button.
 
 ## Next (only when the owner asks)
 

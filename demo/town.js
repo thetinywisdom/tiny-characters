@@ -39,6 +39,15 @@ function newPeople() {
     people.push(owner, { dog: true, ...dogFor(breed, 1 + Math.floor(rng() * 99)), collar: ['#d8443c', '#3f7fd6', '#2fa36b', '#f2c230'][i % 4], owner, x: owner.x - 6, y: owner.y, talk: 0 });
   }
   you = { ...randomCharacter(rng), body: '#f2f2ee', x: town.pad + Math.round(196 * town.scale), y: town.pad + Math.round(204 * town.scale), you: true, talk: 0, path: null };
+  // monsters, each somewhere that suits it
+  const M = (monster, variant, within) => walker({ monster, variant }, rng, within);
+  for (let v = 0; v < 4; v++) people.push(M('zombie', v));                              // zombies shamble the streets
+  for (let v = 0; v < 2; v++) people.push(M('werewolf', Math.floor(rng() * 4)));
+  people.push(M('ghostGirl', 1, shrine), M('ghostGirl', 0, shrine), M('ghostGirl', 2), M('ghostGirl', 3));  // ghosts drift round the shrine
+  people.push(M('reaper', 0, square), M('reaper', Math.floor(rng() * 4)));             // a reaper by the chapel
+  people.push(M('skeleton', 0, yard), M('skeleton', 3, yard), M('skeleton', 1), M('skeleton', 2));
+  for (let v = 0; v < 2; v++) people.push(M('spider', Math.floor(rng() * 4)));
+  for (let v = 0; v < 3; v++) people.push(M('skull', Math.floor(rng() * 4)));
   people.push(you);
 }
 newPeople();
@@ -53,7 +62,7 @@ canvas.addEventListener('pointerdown', (e) => {
   document.body.dataset.active = 'town';
   const r = canvas.getBoundingClientRect();
   const x = view.x + (e.clientX - r.left) / r.width * VW, y = view.y + (e.clientY - r.top) / r.height * VH;
-  const hit = people.filter((p) => p !== you && !p.cat && !p.dog && Math.abs(p.x - x) < 5 && y > p.y - 17 && y < p.y + 3).sort((a, b) => Math.abs(a.x - x) - Math.abs(b.x - x))[0];
+  const hit = people.filter((p) => p !== you && !p.cat && !p.dog && !p.monster && Math.abs(p.x - x) < 5 && y > p.y - 17 && y < p.y + 3).sort((a, b) => Math.abs(a.x - x) - Math.abs(b.x - x))[0];
   if (hit) { hit.talk = 2; return; }
   // a building: walk to its door; anywhere else you can stand: walk there
   const b = town.buildings.find((b) => buildingSolids(b).some((s) => x >= s.x && x < s.x + s.w && y >= s.y && y < s.y + s.h))
@@ -62,6 +71,11 @@ canvas.addEventListener('pointerdown', (e) => {
   if (!town.blocked(to.x, to.y)) you.path = town.findPath(you, to);
 });
 document.querySelector('#newTown').onclick = newPeople;
+// monsters: their speeds (a zombie shambles, a werewolf runs), and a button to hide them
+const MONSTER_SPEED = { zombie: 7, werewolf: 26, ghostGirl: 9, reaper: 11, spider: 18, skeleton: 13, skull: 16 };
+let showMonsters = true;
+const monstersButton = document.querySelector('#monsters');
+monstersButton.onclick = () => { showMonsters = !showMonsters; monstersButton.textContent = showMonsters ? 'Hide monsters' : 'Show monsters'; monstersButton.setAttribute('aria-pressed', showMonsters); };
 
 /** A dog keeps a little behind its owner: it trots after them when they get away. */
 function heel(d, dt) {
@@ -106,10 +120,10 @@ function frame(now) {
     if (p === you) continue;
     if (p.dog) { heel(p, dt); continue; }
     if (p.talking) { p.walking = false; continue; }
-    if (p.path) { if (follow(p, p.cat ? 18 : 14, dt)) { p.walking = false; p.wait = 1 + Math.random() * 4; } continue; }
+    if (p.path) { if (follow(p, p.monster ? MONSTER_SPEED[p.monster] : p.cat ? 18 : 14, dt)) { p.walking = false; p.wait = 1 + Math.random() * 4; } continue; }
     p.walking = false;
     if ((p.wait -= dt) > 0) continue;
-    const range = (p.cat ? 70 : 170) * town.scale;
+    const range = (p.cat ? 70 : p.monster ? 220 : 170) * town.scale;
     let to = town.randomSpot(Math.random, p.within);
     for (let k = 0; k < 6 && Math.hypot(to.x - p.x, to.y - p.y) > range; k++) to = town.randomSpot(Math.random, p.within);
     p.path = town.findPath(p, to);
@@ -122,7 +136,7 @@ function frame(now) {
     w: VW, h: VH,
   };
   g.setTransform(D, 0, 0, D, 0, 0);
-  drawTownView(g, town, view, people, t, { dpx: D });
+  drawTownView(g, town, view, showMonsters ? people : people.filter((p) => !p.monster), t, { dpx: D });
   const name = town.placeAt(you.x, you.y);
   if (name !== shown) { shown = name; here.textContent = name; }
   requestAnimationFrame(frame);

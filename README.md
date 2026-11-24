@@ -210,7 +210,11 @@ drawMonster(g, { type: 'zombie', variant: 'schoolgirl', x, y, facing: 'left', wa
 | `skeleton` | `plain`, `warrior` (helmet, shield, sword), `pirate` (bandana, eyepatch, cutlass), `mage` (robe, staff with a glowing orb) |
 | `skull` | `fire`, `blue fire`, `green fire`, `purple fire` (a flying skull in flickering flames) |
 
-The catalogue shows them all under Monsters.
+The catalogue shows them all under Monsters. In the demo's town they roam
+too (zombies on the streets, ghost girls round the shrine, a reaper by the
+chapel, skeletons in the schoolyard, werewolves, giant spiders and flaming
+skulls everywhere); **Hide monsters** under the town hides them.
+`drawTownView` draws any sprite with `monster: type` (and `variant`).
 
 ## Nature
 

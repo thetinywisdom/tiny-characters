@@ -20,6 +20,7 @@
 import { BUILDINGS, buildingSize, buildingSolids, drawBuilding } from './tinyBuildings.js';
 import { drawCharacter } from './tinyCharacters.js';
 import { drawCat, drawDog } from './tinyAnimals.js';
+import { drawMonster } from './tinyMonsters.js';
 import { BUSHES, TREES, drawBush, drawTerrain, drawTree } from './tinyNature.js';
 import { seeded as seededRng } from './tinyCharacters.js';
 
@@ -306,7 +307,8 @@ function drawGround(layout) {
 
 /**
  * Draw the part of `town` in `view` ({ x, y, w, h }) into `g`: the ground,
- * then the buildings and `sprites` (people, and cats with `cat: true`)
+ * then the buildings and `sprites` (people; cats `cat: true`; dogs `dog: true`;
+ * monsters `monster: type`)
  * further back first, so whoever stands lower on the screen is in front.
  * dpx: device pixels per canvas pixel, when the canvas is drawn bigger
  * underneath (g scaled by dpx) so the signs' names can be written.
@@ -328,6 +330,7 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1 } = {}) {
   for (const it of items) {
     if (it.b) drawBuilding(g, dpx === 1 ? it.b : { ...it.b, dpx });
     else if (it.p) (it.p.kind === 'tree' ? drawTree : drawBush)(g, it.p);
+    else if (it.s.monster) drawMonster(g, { ...it.s, type: it.s.monster }, t);   // monsters: { monster: 'zombie', variant, ... }
     else (it.s.dog ? drawDog : it.s.cat ? drawCat : drawCharacter)(g, it.s, t);
   }
   g.restore();

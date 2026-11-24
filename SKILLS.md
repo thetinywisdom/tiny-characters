@@ -231,6 +231,10 @@ their own grounds in front of them.
   a building's solid ground (widened by the person's half width).
 - `findPath(from, to)`: breadth-first search on a 4 px grid of free cells,
   four directions, kept to the corners; null if `to` is blocked or cut off.
+- Monsters in the demo: walkers with `monster: type, variant` (some kept to
+  an area with `within`), each at its own speed (`MONSTER_SPEED`: a zombie
+  7 px/s, a werewolf 26); they cannot be tapped to talk; the Hide / Show
+  monsters button filters them out of the sprites drawn (they keep moving).
 - The demo: you move with the keys (each axis checked on its own, so you
   slide along walls) or along a path to where you tapped (a building: its
   door, `doorOf`); townspeople take short trips (`randomSpot`, then a path)
