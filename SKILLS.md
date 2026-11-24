@@ -32,8 +32,8 @@ src/tinyCombat.js      weapons and fights: drawWeapon, drawArmed,
                        REACTIONS
 src/tinyStreet.js      street things: drawProp, PROPS, propSolid,
                        propLights, poleTops, drawWire
-src/tinyVoxel.js       the 3D block renderer: voxelSprite, KY (people and
-                       vehicles are drawn with it)
+src/tinyVoxel.js       the 3D block renderer: voxelSprite, KY (the vehicles,
+                       and the 3D people preview)
 src/tinyTraffic.js     vehicles and traffic: drawVehicle, VEHICLES,
                        makeTraffic (lanes, lights, turns, buses)
 src/tinyTown.js        the 2D town map: makeTown, drawTownView,
@@ -56,10 +56,12 @@ demo/demo.css          the demo page's look (light and dark)
 .nojekyll              tells GitHub Pages to serve the files as they are
 ```
 
-## How a person is drawn in 3D (drawCharacter)
+## A preview: people in 3D (drawCharacter3D; NOT the default)
 
-The owner saw the 3D vehicles and asked for the people to be made the same
-way (they look more alive). `drawCharacter` builds a person from pixel-sized
+The owner asked to try the vehicles' 3D approach on the people and to SEE
+IT FIRST: it is only a preview (index.html?people=3d, `people3d` in
+drawTownView); everything else draws people flat (`drawCharacter`, below).
+`drawCharacter3D` builds a person from pixel-sized
 blocks (`personBlocks`: a Map 'u,v,z' -> colour; u forward, v across, z up
 from the soles) and draws it with `voxelSprite` (src/tinyVoxel.js, shared
 with the vehicles): from in front and above, walls full height, tops at 0.6
@@ -86,11 +88,10 @@ brims, shoulders and an umbrella show from above like the buildings' roofs.
 - 8 headings (`p.heading`, or `p.facing`), every sprite made once per look,
   moment (step, bob) and heading and kept (`PEOPLE`); the gold line for
   `you` is drawn under the feet
-To add a look part: add its blocks in `personBlocks` and check it from all
-8 headings. `drawCharacterFlat` is the old flat drawing (below), kept for
-reference.
+A look part added to the flat drawing needs its blocks in `personBlocks`
+too while the preview is kept.
 
-## The old flat drawing (drawCharacterFlat; feet at x, y; one canvas pixel = one pixel)
+## How a person is drawn (feet at x, y; one canvas pixel = one pixel)
 
 - **no shadow** (the owner's decision: shadows under people looked odd);
   only floating and flying monsters (ghost girl, reaper, flaming skull) have

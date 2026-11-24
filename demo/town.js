@@ -82,6 +82,8 @@ monstersButton.onclick = () => { showMonsters = !showMonsters; monstersButton.te
 // the time of day: an hour every 8 seconds, from 4 in the afternoon (so the
 // evening comes soon); the button keeps it day or night instead
 let hour = 16, timeMode = 'passing';
+// a preview for the owner: people drawn in 3D (index.html?people=3d); not the default
+const PEOPLE_3D = new URLSearchParams(location.search).get('people') === '3d';
 const timeButton = document.querySelector('#time'), clock = document.querySelector('#clock');
 timeButton.onclick = () => {
   timeMode = { passing: 'day', day: 'night', night: 'passing' }[timeMode];
@@ -163,7 +165,7 @@ function frame(now) {
     w: VW, h: VH,
   };
   g.setTransform(D, 0, 0, D, 0, 0);
-  drawTownView(g, town, view, [...shownPeople, ...traffic.vehicles], t, { dpx: D, night: nightAt(hour) });
+  drawTownView(g, town, view, [...shownPeople, ...traffic.vehicles], t, { dpx: D, night: nightAt(hour), people3d: PEOPLE_3D });
   const name = town.placeAt(you.x, you.y);
   if (name !== shown) { shown = name; here.textContent = name; }
   requestAnimationFrame(frame);

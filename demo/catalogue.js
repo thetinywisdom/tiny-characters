@@ -33,7 +33,7 @@ const items = [];
 for (const [name, [label, tags]] of Object.entries(PEOPLE)) {
   if (name !== 'random' && name !== 'kid' && !LOOKS[name]) continue;
   items.push({ id: `person.${name}`, label, group: 'People', tags, seed: name === 'random' || name === 'kid' ? 1 : 0, w: 24, h: 26, px: 5,
-    draw: (g, seed, t, anim) => drawCharacter(g, { ...lookFor(name, seed), x: 12, y: 22, walking: anim, heading: anim ? 90 - Math.floor(t / 0.9) * 45 : 90 }, t),   // turning round through 8 headings
+    draw: (g, seed, t, anim) => drawCharacter(g, { ...lookFor(name, seed), x: 12, y: 22, walking: anim, facing: anim ? ['down', 'right', 'up', 'left'][Math.floor(t / 1.5) % 4] : 'down' }, t),
     code: (seed) => `drawCharacter(g, { ...lookFor('${name}', ${seed}), x, y }, t)` });
 }
 // animals walk and turn round like the people

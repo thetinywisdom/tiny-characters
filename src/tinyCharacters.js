@@ -3,7 +3,8 @@
 // rectangles on a low-resolution canvas (about 5 x 15 pixels), then the
 // canvas is scaled up with hard pixels (CSS `image-rendering: pixelated`).
 //
-//   drawCharacter(g, person, t)   one person, feet at (person.x, person.y), in 3D (tinyVoxel)
+//   drawCharacter(g, person, t)   one person, feet at (person.x, person.y)
+//   drawCharacter3D(g, person, t) the same person in 3D: a preview (index.html?people=3d)
 //   drawStage(g, W, H)            the lab's grass strip and path
 //   randomCharacter(rng)          a random look
 //   LOOKS                         starter looks (salaryman, grandma ...)
@@ -60,8 +61,8 @@ function frameOf(p, bob = 0) {
 }
 
 /**
- * The old flat drawing of a person (kept for reference; drawCharacter draws
- * them in 3D): feet at (p.x, p.y), into a 2D context `g` of a low-res canvas. `t` (seconds) drives the talking bob and the walking step.
+ * Draw one person with their feet at (p.x, p.y), into a 2D context `g` of a
+ * low-res canvas. `t` (seconds) drives the talking bob and the walking step.
  *  - talking: the body and head bob up a pixel, six times a second
  *  - walking: the legs take turns lifting a pixel, eight steps a second
  *  - you: a gold line under the feet (the player)
@@ -71,7 +72,7 @@ function frameOf(p, bob = 0) {
  * Everyone has hands, shoes, a darker right side, and a collar and hem on a
  * plain top. No eyes: the people are faceless.
  */
-export function drawCharacterFlat(g, p, t = 0) {
+export function drawCharacter(g, p, t = 0) {
   const x = Math.round(p.x), y = Math.round(p.y);
   const talkBob = p.talking && Math.floor(t * 6) % 2 ? -1 : 0;
   const step = p.walking ? Math.floor(t * 8) % 2 : -1;      // which leg is lifted (-1: standing)
@@ -293,9 +294,10 @@ function personSprite(p, step, bob, heading) {
  * bob and the walking step: legs and arms swing front and back.
  * Looks (all optional, see SKILLS.md): kid, size, hairStyle, fringe,
  * moustache, hat, hatColor, top, trim, legwear, shoes, carry, carryColor.
- * No eyes: the people are faceless. drawCharacterFlat is the old flat drawing.
+ * No eyes: the people are faceless. A PREVIEW for the owner to look at
+ * (index.html?people=3d); drawCharacter (flat) is what everything uses.
  */
-export function drawCharacter(g, p, t = 0) {
+export function drawCharacter3D(g, p, t = 0) {
   const talkBob = p.talking && Math.floor(t * 6) % 2 ? 1 : 0;
   const step = p.walking ? Math.floor(t * 8) % 2 : -1;
   const bob = talkBob || (p.walking && step === 1 ? 1 : 0);

@@ -34,8 +34,10 @@ bubble lab, so games can use them and they can grow.
   building (storeys 16 / 19 / 13, doors 6 × 12 and 10 × 12, windows 5 × 6,
   9 × 6, 5 × 8, sills 4 above the floor), and detailed types that show what
   they are (wood, glass, sliding, shoji, steel ...).
-- People (Nov 2026): drawn in 3D like the vehicles (blocks, 8 headings),
-  same sizes and looks; walking up shows the back. The town is drawn 1.5 times bigger than the people.
+- People (Nov 2026): four views (front, back, both sides); walking up shows
+  the back.
+- How to work (Nov 2026): show the owner a preview of any change to how
+  things look before switching everything over. The town is drawn 1.5 times bigger than the people.
 - People (Nov 2026): no eyes, they stay faceless; different sizes are fine
   (tall, short, kids); everyone gets hands, shoes, a shaded side, a collar and
   hem on plain tops, and sometimes a fringe, so they look less generic.
@@ -199,13 +201,11 @@ bubble lab, so games can use them and they can grow.
     one smooth pool of light on the road ahead of each car, never over a
     car; small glows on the lamps themselves.
 
-29. **People in 3D** (the owner: like the vehicles, it looks better and
-    alive): every person is a small figure of pixel blocks drawn with the
-    shared renderer (src/tinyVoxel.js): tops of heads, hat brims and
-    umbrellas seen from above, light from the upper left, 8 headings, legs
-    and arms swinging front and back; every look kept (hair, hats, tops,
-    legwear, carried things, sizes, kids); `drawCharacterFlat` keeps the
-    old drawing. The catalogue's people turn through 8 headings.
+29. **People in 3D, as a preview only** (the owner asked to try the
+    vehicles' approach on the people; I first switched everyone over, the
+    owner said to show it first, so it was put back): `drawCharacter3D`
+    (blocks, the shared src/tinyVoxel.js renderer, 8 headings, every look)
+    shows only at index.html?people=3d; the flat people stay the default.
 
 ## Next (only when the owner asks)
 
@@ -249,4 +249,4 @@ bubble lab, so games can use them and they can grow.
 
 ## Open questions for the owner
 
-None right now.
+- People in 3D (index.html?people=3d): keep the flat people, or switch?
