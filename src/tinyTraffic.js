@@ -21,6 +21,7 @@
 // Plain ES module, no dependencies (seeded from tinyCharacters).
 
 import { seeded } from './tinyCharacters.js';
+import { KY, voxelSprite } from './tinyVoxel.js';
 
 const INK = '#2f3236', WHITE = '#f2f2ee', METAL = '#a8aeb4', DARK = '#3a3f44';
 const LAMP = '#fff2c0', TAIL = '#e8403a', GLASS = '#5d7590', TYRE = '#26282c', ORANGE = '#f2a040';
@@ -29,7 +30,6 @@ const shade = (hex, f) => '#' + [1, 3, 5].map((i) => Math.max(0, Math.min(255, M
 /** Body colours: white and silver most, then black, red, blue, a few bright ones. */
 export const CAR_COLORS = ['#f2f2ee', '#f2f2ee', '#c8ccd0', '#c8ccd0', '#3a3d42', '#c8402c', '#2f5f9a', '#3f7a5a', '#e8c840', '#8a5a7a', '#d87a3a'];
 const TAXI_COLORS = [['#f2c230', '#3a3d42'], ['#3a3d42', '#f2c230'], ['#3f8a5a', '#f2f2ee'], ['#f2f2ee', '#2f5f9a']];
-const KY = 0.6;                                  // how much of a top shows: depth x 0.6 (the buildings' roofs too)
 
 // --- the shapes ---------------------------------------------------------------------
 // A shape is a function (u, v, z, c, c2) -> colour or null for the block at u
@@ -116,57 +116,19 @@ const SHAPES = {
   } },
 };
 
-// --- the renderer -------------------------------------------------------------------
-// Each screen pixel looks into the scene along the view (from above and in
-// front); the first block it meets gives its colour, shaded by which face it
-// is: tops light, faces towards the light brighter, faces away darker.
-const LIGHT = [-0.45, 0.89];
+// --- drawing them (tinyVoxel) ----------------------------------------------------------
 const SPRITES = new Map();
-const canvasOf = (w, h) => (typeof document !== 'undefined' ? Object.assign(document.createElement('canvas'), { width: w, height: h }) : new OffscreenCanvas(w, h));
 const DIRS = 16;
+// glass: the sloped windscreen and rear window one tone (no steps), the side windows darker; lamps unshaded
+const tone = (col, f, face) => (col === GLASS ? (face === 'side' ? 0.8 : 1.04) : col === LAMP || col === TAIL || col === ORANGE ? 1 : f);
 /** The sprite of a vehicle at one of 16 headings: { canvas, ox, oy } (where its ground middle is). */
 function sprite(type, c, c2, dir) {
   const key = `${type}|${c}|${c2}|${dir}`;
-  if (SPRITES.has(key)) return SPRITES.get(key);
-  const S = SHAPES[type], th = (dir / DIRS) * Math.PI * 2, cs = Math.cos(th), sn = Math.sin(th);
-  const hl = S.L / 2, hw = S.W / 2, top = S.H + 1;
-  // the screen box: the corners of the shape
-  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-  for (const u of [-hl, hl]) for (const v of [-hw, hw]) for (const z of [0, top]) {
-    const X = u * cs - v * sn, Y = (u * sn + v * cs) * KY - z;
-    x0 = Math.min(x0, X); x1 = Math.max(x1, X); y0 = Math.min(y0, Y); y1 = Math.max(y1, Y);
+  if (!SPRITES.has(key)) {
+    const S = SHAPES[type];
+    SPRITES.set(key, voxelSprite((bu, bv, bz) => S.shape(bu + 0.5, bv + 0.5, bz + 0.5, c, c2), S, (dir / DIRS) * 360, tone));
   }
-  x0 = Math.floor(x0) - 1; y0 = Math.floor(y0) - 1; x1 = Math.ceil(x1) + 1; y1 = Math.ceil(y1) + 1;
-  const w = x1 - x0, h = y1 - y0, cv = canvasOf(w, h), g = cv.getContext('2d');
-  const cell = (q) => Math.floor(q);
-  for (let py = 0; py < h; py++) for (let px = 0; px < w; px++) {
-    const X = x0 + px + 0.5, sy = y0 + py + 0.5;
-    let prev = null;
-    for (let z = top; z >= 0; z -= 0.2) {
-      // the line of sight: Y * KY - z = sy, nearer to you as z rises
-      const Y = (sy + z) / KY, u = X * cs + Y * sn, v = -X * sn + Y * cs;
-      const bu = cell(u), bv = cell(v), bz = cell(z);
-      const col = S.shape(bu + 0.5, bv + 0.5, bz + 0.5, c, c2);
-      if (col) {
-        let f = 1.1, face = 'top';                                      // a top
-        if (prev && prev[2] === bz) {
-          let n;
-          if (prev[0] !== bu) { const s = prev[0] > bu ? 1 : -1; n = [s * cs, s * sn]; face = 'end'; }
-          else { const s = prev[1] > bv ? 1 : -1; n = [-s * sn, s * cs]; face = 'side'; }
-          f = 0.74 + 0.3 * Math.max(0, n[0] * LIGHT[0] + n[1] * LIGHT[1]);
-        }
-        // glass: the sloped windscreen and rear window one tone (no steps), the side windows darker
-        if (col === GLASS) f = face === 'side' ? 0.8 : 1.04;
-        if (col === LAMP || col === TAIL || col === ORANGE) f = 1;
-        g.fillStyle = shade(col, f); g.fillRect(px, py, 1, 1);
-        break;
-      }
-      prev = [bu, bv, bz];
-    }
-  }
-  const out = { canvas: cv, ox: -x0, oy: -y0 };
-  SPRITES.set(key, out);
-  return out;
+  return SPRITES.get(key);
 }
 
 const HEADING = { right: 0, down: 90, left: 180, up: 270 };

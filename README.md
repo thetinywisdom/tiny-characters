@@ -2,8 +2,10 @@
 
 The little pixel people from **Tiny City Builder**'s bubble lab, and the
 town's buildings to go with them. A person is about
-5 × 15 pixels each, drawn with a handful of rectangles on a low-resolution
-canvas and scaled up with hard pixels. Plain JavaScript, no dependencies.
+5 × 15 pixels, a small 3D figure of pixel-sized blocks seen from in front and
+above (like the vehicles), so they turn round as one solid thing, on a
+low-resolution canvas scaled up with hard pixels. Plain JavaScript, no
+dependencies.
 
 **Try it:** https://thetinywisdom.github.io/tiny-characters/ (GitHub Pages,
 served from `main`). Or open `index.html` through any static server for the demo:
@@ -82,7 +84,7 @@ size. `LOOKS` has starter looks like the catalogue's: `man`, `woman`, `boy`,
 
 | Export | What it does |
 | --- | --- |
-| `drawCharacter(g, person, t)` | Draws one person. `talking`: bobs a pixel six times a second; `walking`: the legs take turns lifting a pixel; `you`: a gold line under the feet; `facing`: a pixel of hair at the back of the head. |
+| `drawCharacter(g, person, t)` | Draws one person in 3D, feet at (x, y). `heading` (degrees: 0 right, 90 towards you, 180 left, 270 away; 8 steps) or `facing` (`'down'`, `'up'`, `'left'`, `'right'`); `talking`: bobs a pixel six times a second; `walking`: legs and arms swing front and back; `you`: a gold line under the feet. `drawCharacterFlat` is the old flat drawing. |
 | `LOOKS` | Starter looks to spread into a person. |
 | `drawStage(g, W, H)` | The lab's grass with a path across it. |
 | `randomCharacter(rng)` | A random look: colours from `BODY_COLORS`, `HAIR_COLORS`, `SKIN_COLORS`, `LEG_COLORS`; sometimes a kid, another hairstyle, a hat, a jacket, a skirt, something to carry. |
