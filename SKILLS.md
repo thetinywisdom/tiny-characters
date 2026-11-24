@@ -472,8 +472,9 @@ unless that crossing's cars have red (the walk signal is green then).
    are always lit
 3. soft glows (`lighter`, radial gradients) round every light:
    `propLights` (lamps warm, vending machines white, a traffic light's lit
-   lamp and walk signal) and `vehicleLights` (headlights ahead, red tail
-   lights behind)
+   lamp and walk signal) and `vehicleLights` (two headlamps and two tail
+   lights on the vehicle's lamps, each shown only when its end faces you,
+   and two beams on the road ahead, further out when it drives away)
 A new building's lights come for free if it uses the shared colours (`LIT`,
 `CURTAIN`, `GLASS` ...); a new thing that shines gets `lights` in its
 `DEFS` entry. The demo's clock (`hour`, `nightAt` in demo/town.js): night

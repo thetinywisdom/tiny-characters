@@ -189,7 +189,9 @@ bubble lab, so games can use them and they can grow.
     beside it) with arches, hubs, bumpers, plates, twin lamps, grille, side
     skirt, doors, mirrors, sloped glass; cars swing round as they turn and
     only turn into room; the lanes fixed to the left (east-bound in the
-    north half); buses serve their stops on the kerb side.
+    north half); buses serve their stops on the kerb side. At night: two
+    headlights and two tail lights on the lamps (not one in the middle),
+    each beam on the road, lamps on the far end hidden.
 
 ## Next (only when the owner asks)
 

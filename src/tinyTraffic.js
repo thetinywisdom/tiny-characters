@@ -198,11 +198,23 @@ export function drawVehicle(g, v) {
   g.drawImage(s.canvas, Math.round(v.x) - s.ox, Math.round(v.y) - s.oy);
 }
 
-/** A vehicle's lights at night: headlights ahead of it, tail lights behind: [{ x, y, r, c }]. */
+/**
+ * A vehicle's lights at night, two at each end on its lamps: headlights
+ * (each with a beam on the road ahead) and red tail lights: [{ x, y, r, c }].
+ */
 export function vehicleLights(v) {
   const S = SHAPES[v.type] ?? SHAPES.car, th = ((v.heading ?? HEADING[v.facing ?? 'right']) * Math.PI) / 180;
-  const at = (u, z) => ({ x: v.x + u * Math.cos(th), y: v.y + u * Math.sin(th) * KY - z });
-  return [{ ...at(S.L / 2 + 4, 2), r: 11, c: '#fff2c0' }, { ...at(-S.L / 2, 3.5), r: 4, c: '#e8403a' }];
+  const cs = Math.cos(th), sn = Math.sin(th);
+  const at = (u, w, z) => ({ x: v.x + u * cs - w * sn, y: v.y + (u * sn + w * cs) * KY - z });
+  const hl = S.L / 2, side = S.W / 2 - 1.6, z = 4.8, out = [];
+  // a lamp shows only when its end of the vehicle faces you (or side on); the beams always light the road
+  const frontShows = sn > -0.35, backShows = sn < 0.35;
+  for (const w of [-side, side]) {
+    if (frontShows) out.push({ ...at(hl, w, z), r: 3.5, c: '#fff8d8' });   // a headlamp
+    out.push({ ...at(hl + (frontShows ? 6 : 17), w * 1.2, 0.5), r: 7, c: '#fff2c0' });   // its beam on the road (beyond the car when it drives away)
+    if (backShows) out.push({ ...at(-hl, w, z), r: 3, c: '#e8403a' });     // a tail light
+  }
+  return out;
 }
 
 // --- the traffic -------------------------------------------------------------------
