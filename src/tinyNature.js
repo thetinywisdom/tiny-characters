@@ -12,10 +12,10 @@
 // town): patterns repeat on even steps.
 
 import { makePainter } from './tinyBuildings.js';
-import { COLORS, seeded } from './tinyCharacters.js';
+import { seeded } from './tinyCharacters.js';
 
 const shade = (hex, f) => '#' + [1, 3, 5].map((i) => Math.max(0, Math.min(255, Math.round(parseInt(hex.slice(i, i + 2), 16) * f))).toString(16).padStart(2, '0')).join('');
-const BARK = '#6b4a2a', DARK_BARK = '#4a3424', SHADOW = COLORS.shadow;
+const BARK = '#6b4a2a', DARK_BARK = '#4a3424';
 
 // --- pieces (r: the buildings' painter, (dx, up) from the bottom left) ---------
 /** A rounded clump of leaves: an ellipse lit from the top left, darker below and on the right. */
@@ -37,34 +37,33 @@ function sprinkle(r, rng, cx, cy, rx, ry, colours, n) {
     r(colours[Math.floor(rng() * colours.length)], cx + dx, cy + dy, 1, 1);
   }
 }
-const shadowUnder = (r, cx, w) => r(SHADOW, cx - Math.floor(w / 2), -1, w, 2);
 const trunk = (r, cx, h, c = BARK, w = 2) => { r(c, cx - Math.floor(w / 2), 0, w, h); r(shade(c, 0.75), cx - Math.floor(w / 2) + w - 1, 0, 1, h); };
 
 // --- trees: [label, width, height, draw(r, rng, cx)] --------------------------
 const TREE_DEFS = {
   oak: ['Oak', 19, 22, (r, rng, cx) => {
-    shadowUnder(r, cx, 15); trunk(r, cx, 9, BARK, 3);
+    trunk(r, cx, 9, BARK, 3);
     blob(r, cx - 3, 12, 6, 5, '#5f8f4a'); blob(r, cx + 3, 13, 6, 5, '#5f8f4a'); blob(r, cx, 16, 7, 5, '#6a9a52');
   }],
   maple: ['Japanese maple', 17, 19, (r, rng, cx) => {
-    shadowUnder(r, cx, 13); trunk(r, cx, 7, DARK_BARK);
+    trunk(r, cx, 7, DARK_BARK);
     blob(r, cx - 3, 10, 5, 4, '#c8402c'); blob(r, cx + 3, 11, 5, 4, '#d85a34'); blob(r, cx, 14, 6, 4, '#e8703a');
     sprinkle(r, rng, cx, 12, 7, 5, ['#f2a040', '#a8301f'], 8);
   }],
   sakura: ['Cherry blossom', 19, 20, (r, rng, cx) => {
-    shadowUnder(r, cx, 15); trunk(r, cx, 8, '#4a3434', 2);
+    trunk(r, cx, 8, '#4a3434', 2);
     r('#4a3434', cx - 4, 8, 4, 1); r('#4a3434', cx + 2, 9, 4, 1);           // branches
     blob(r, cx - 4, 12, 5, 4, '#f2b8c8'); blob(r, cx + 4, 12, 5, 4, '#f2b8c8'); blob(r, cx, 15, 6, 4, '#f6c8d4');
     sprinkle(r, rng, cx, 13, 8, 5, ['#ffffff', '#e898b0'], 10);
     for (let i = 0; i < 5; i++) r('#f2b8c8', cx - 8 + Math.floor(rng() * 8) * 2, 0, 1, 1);   // petals on the ground
   }],
   pine: ['Japanese pine', 21, 21, (r, rng, cx) => {
-    shadowUnder(r, cx, 13);
+    
     r(DARK_BARK, cx - 1, 0, 2, 6); r(DARK_BARK, cx, 6, 2, 5); r(DARK_BARK, cx + 1, 11, 2, 5); r(DARK_BARK, cx - 4, 9, 4, 1);  // a crooked trunk
     blob(r, cx - 5, 10, 5, 2, '#3f6a44'); blob(r, cx + 4, 14, 6, 2, '#3f6a44'); blob(r, cx + 1, 18, 4, 2, '#4a7a4e');
   }],
   cedar: ['Cedar', 11, 32, (r, rng, cx) => {
-    shadowUnder(r, cx, 9); trunk(r, cx, 4, BARK);
+    trunk(r, cx, 4, BARK);
     for (let k = 0; k < 28; k++) {                                         // a tall narrow cone
       const hw = Math.max(0, Math.round(5 - k * 5 / 28));
       r(k % 4 === 1 ? '#2f5a3c' : '#3a6a48', cx - hw, 4 + k, hw * 2 + 1, 1);
@@ -72,19 +71,19 @@ const TREE_DEFS = {
     }
   }],
   fir: ['Fir', 15, 24, (r, rng, cx) => {
-    shadowUnder(r, cx, 11); trunk(r, cx, 4, BARK);
+    trunk(r, cx, 4, BARK);
     for (const [base, w, h] of [[3, 7, 8], [9, 6, 7], [15, 4, 7]]) {      // three tiers
       for (let k = 0; k < h; k++) { const hw = Math.round(w - k * w / h); r(k === 0 ? '#2f5a3c' : '#3f7048', cx - hw, base + k, hw * 2 + 1, 1); r('#2a4a34', cx + hw, base + k, 1, 1); }
     }
   }],
   birch: ['Birch', 15, 22, (r, rng, cx) => {
-    shadowUnder(r, cx, 9);
+    
     r('#eeeae0', cx - 1, 0, 2, 14); r('#d8d4ca', cx, 0, 1, 14); for (const y of [2, 6, 10]) r(INKISH, cx - 1, y, 2, 1);   // white bark with dark bands
     blob(r, cx, 16, 5, 6, '#8ab45a');
     sprinkle(r, rng, cx, 16, 5, 6, ['#a8c870'], 6);
   }],
   palm: ['Palm', 19, 24, (r, rng, cx) => {
-    shadowUnder(r, cx, 9);
+    
     for (let k = 0; k < 18; k += 2) { const x = cx - 1 + Math.round(k / 6); r('#b89a6a', x, k, 2, 2); r('#8a7048', x, k + 1, 2, 1); }   // ringed, leaning trunk
     const top = cx + 2;
     for (const [dx, dy] of [[-1, 0], [-2, -1], [-3, -1], [-4, -2], [-5, -3], [1, 0], [2, -1], [3, -1], [4, -2], [5, -3], [0, 1], [-1, 2], [1, 2]]) { r('#4a8a4e', top + dx, 19 + dy, 1, 1); r('#3a7040', top + dx, 18 + dy, 1, 1); }   // fronds, 2 thick
@@ -92,41 +91,41 @@ const TREE_DEFS = {
     r('#6a4a2a', top - 1, 17, 1, 1); r('#6a4a2a', top + 1, 17, 1, 1);      // coconuts
   }],
   willow: ['Weeping willow', 21, 20, (r, rng, cx) => {
-    shadowUnder(r, cx, 17); trunk(r, cx, 9, BARK);
+    trunk(r, cx, 9, BARK);
     blob(r, cx, 14, 9, 5, '#8aa85a');
     for (let i = -8; i <= 8; i += 2) r(i % 4 ? '#7a9a4e' : '#9ab86a', cx + i, 3 + Math.abs(i) % 3, 1, 9);   // hanging strands
   }],
   ginkgo: ['Ginkgo', 15, 22, (r, rng, cx) => {
-    shadowUnder(r, cx, 11); trunk(r, cx, 8, BARK);
+    trunk(r, cx, 8, BARK);
     blob(r, cx, 14, 6, 7, '#e8c040');
     sprinkle(r, rng, cx, 14, 6, 7, ['#f2d860', '#c8a030'], 8);
     for (let i = 0; i < 4; i++) r('#e8c040', cx - 6 + Math.floor(rng() * 6) * 2, 0, 1, 1);
   }],
   bamboo: ['Bamboo', 15, 26, (r, rng, cx) => {
-    shadowUnder(r, cx, 13);
+    
     for (const [dx, h] of [[-5, 20], [-2, 24], [1, 22], [4, 19]]) {
       r('#6aa04a', cx + dx, 0, 1, h); for (let y = 3; y < h; y += 4) r('#4a7a34', cx + dx, y, 1, 1);   // stalks and joints
       r('#5a9a44', cx + dx - 2, h - 2, 2, 1); r('#7ab45a', cx + dx + 1, h - 1, 2, 1); r('#5a9a44', cx + dx - 1, h, 3, 1);  // leaves at the top
     }
   }],
   apple: ['Apple tree', 17, 18, (r, rng, cx) => {
-    shadowUnder(r, cx, 13); trunk(r, cx, 7, BARK, 2);
+    trunk(r, cx, 7, BARK, 2);
     blob(r, cx, 12, 7, 5, '#5f9a4a');
     sprinkle(r, rng, cx, 12, 7, 5, ['#d8443c', '#e8603a'], 9);
   }],
   poplar: ['Poplar', 9, 28, (r, rng, cx) => {
-    shadowUnder(r, cx, 7); trunk(r, cx, 5, BARK);
+    trunk(r, cx, 5, BARK);
     blob(r, cx, 16, 3, 11, '#5f9a4e');
   }],
   cypress: ['Cypress', 9, 25, (r, rng, cx) => {
-    shadowUnder(r, cx, 7); trunk(r, cx, 3, DARK_BARK);
+    trunk(r, cx, 3, DARK_BARK);
     for (let k = 0; k < 21; k++) {                                         // a dark flame
       const hw = k < 6 ? Math.min(3, 1 + Math.floor(k / 2)) : Math.max(0, Math.round(3 - (k - 6) * 3 / 15));
       r(k % 4 === 2 ? '#2a4a34' : '#355a40', cx - hw, 3 + k, hw * 2 + 1, 1);
     }
   }],
   bare: ['Bare tree (winter)', 17, 20, (r, rng, cx) => {
-    shadowUnder(r, cx, 11); trunk(r, cx, 10, '#5a4a3a', 2);
+    trunk(r, cx, 10, '#5a4a3a', 2);
     const B = '#5a4a3a';
     for (const [x, y, dx] of [[cx, 10, -1], [cx + 1, 10, 1], [cx - 3, 13, -1], [cx + 4, 13, 1], [cx, 13, 0]]) for (let k = 0; k < 5; k++) r(B, x + dx * k, y + k, 1, 1);
     for (const [x, y] of [[cx - 6, 17], [cx - 4, 18], [cx + 6, 17], [cx + 3, 18], [cx, 18], [cx - 2, 16], [cx + 2, 16]]) r(shade(B, 0.85), x, y, 1, 1);
@@ -136,32 +135,32 @@ const INKISH = '#3a3a3a';
 
 // --- bushes ---------------------------------------------------------------------
 const BUSH_DEFS = {
-  round: ['Round shrub', 11, 8, (r, rng, cx) => { shadowUnder(r, cx, 11); blob(r, cx, 4, 5, 3, '#5f8f4a'); }],
+  round: ['Round shrub', 11, 8, (r, rng, cx) => { blob(r, cx, 4, 5, 3, '#5f8f4a'); }],
   hedge: ['Boxwood hedge', 15, 7, (r, rng, cx) => {
-    shadowUnder(r, cx, 15); r('#4a7a3e', cx - 7, 0, 15, 6); r('#5f8f4a', cx - 7, 4, 15, 2); r('#6f9f58', cx - 6, 5, 13, 1);
+    r('#4a7a3e', cx - 7, 0, 15, 6); r('#5f8f4a', cx - 7, 4, 15, 2); r('#6f9f58', cx - 6, 5, 13, 1);
     for (let i = -6; i < 7; i += 4) r('#3f6a36', cx + i, 1, 1, 1);
   }],
-  azalea: ['Azalea', 11, 8, (r, rng, cx) => { shadowUnder(r, cx, 11); blob(r, cx, 4, 5, 3, '#4f7f42'); sprinkle(r, rng, cx, 4, 5, 3, ['#e870a0', '#f2a0c0'], 10); }],
+  azalea: ['Azalea', 11, 8, (r, rng, cx) => { blob(r, cx, 4, 5, 3, '#4f7f42'); sprinkle(r, rng, cx, 4, 5, 3, ['#e870a0', '#f2a0c0'], 10); }],
   hydrangea: ['Hydrangea', 11, 8, (r, rng, cx) => {
-    shadowUnder(r, cx, 11); blob(r, cx, 4, 5, 3, '#4f7f42');
+    blob(r, cx, 4, 5, 3, '#4f7f42');
     for (const [dx, dy] of [[-3, 4], [1, 5], [3, 3], [-1, 2]]) { const c = rng() < 0.5 ? '#7a8ad8' : '#a080c8'; r(c, cx + dx, dy, 2, 2); r(shade(c, 1.2), cx + dx, dy + 1, 1, 1); }
   }],
-  rose: ['Rose bush', 11, 8, (r, rng, cx) => { shadowUnder(r, cx, 11); blob(r, cx, 4, 5, 3, '#3f6a3a'); sprinkle(r, rng, cx, 4, 5, 3, ['#d8303a', '#e85060'], 7); }],
+  rose: ['Rose bush', 11, 8, (r, rng, cx) => { blob(r, cx, 4, 5, 3, '#3f6a3a'); sprinkle(r, rng, cx, 4, 5, 3, ['#d8303a', '#e85060'], 7); }],
   lavender: ['Lavender', 11, 8, (r, rng, cx) => {
-    shadowUnder(r, cx, 11); r('#7a9a6a', cx - 4, 0, 9, 2);
+    r('#7a9a6a', cx - 4, 0, 9, 2);
     for (let i = -4; i <= 4; i += 2) { const h = 4 + Math.floor(rng() * 3); r('#7a9a6a', cx + i, 2, 1, h - 2); r('#9a7ac8', cx + i, h, 1, 2); }
   }],
   fern: ['Fern', 13, 7, (r, rng, cx) => {
-    shadowUnder(r, cx, 11);
+    
     for (const [dir, len] of [[-1, 5], [1, 5], [-1, 3], [1, 3], [0, 5]]) for (let k = 0; k < len; k++) r(k % 2 ? '#4a8a44' : '#5f9f52', cx + dir * k, Math.min(6, 1 + k + (dir ? 0 : 1)) - (dir && k > 2 ? 1 : 0), 1, 1);
   }],
   pampas: ['Pampas grass', 11, 14, (r, rng, cx) => {
-    shadowUnder(r, cx, 9); r('#8a9a6a', cx - 3, 0, 7, 3);
+    r('#8a9a6a', cx - 3, 0, 7, 3);
     for (const [dx, h] of [[-3, 10], [-1, 13], [1, 12], [3, 9]]) { r('#9aa878', cx + dx, 2, 1, h - 5); r('#eee4c8', cx + dx, h - 3, 1, 3); r('#e0d4b0', cx + dx, h - 4, 1, 1); }
   }],
-  holly: ['Holly (berries)', 11, 8, (r, rng, cx) => { shadowUnder(r, cx, 11); blob(r, cx, 4, 5, 3, '#2f5a36'); sprinkle(r, rng, cx, 4, 5, 3, ['#d8303a'], 6); }],
+  holly: ['Holly (berries)', 11, 8, (r, rng, cx) => { blob(r, cx, 4, 5, 3, '#2f5a36'); sprinkle(r, rng, cx, 4, 5, 3, ['#d8303a'], 6); }],
   cactus: ['Cactus', 9, 12, (r, rng, cx) => {
-    shadowUnder(r, cx, 7); r('#5a9a54', cx - 1, 0, 3, 11); r('#4a8044', cx + 1, 0, 1, 11);
+    r('#5a9a54', cx - 1, 0, 3, 11); r('#4a8044', cx + 1, 0, 1, 11);
     r('#5a9a54', cx - 3, 4, 2, 1); r('#5a9a54', cx - 3, 5, 1, 3); r('#5a9a54', cx + 2, 6, 2, 1); r('#5a9a54', cx + 3, 7, 1, 2);   // arms
     r('#e870a0', cx, 11, 1, 1);                                            // a flower
   }],

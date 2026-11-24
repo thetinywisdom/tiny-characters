@@ -49,7 +49,10 @@ demo/demo.css          the demo page's look (light and dark)
 
 ## How a person is drawn (feet at x, y; one canvas pixel = one pixel)
 
-- shadow: 7 × 2 at (x − 3, y), `COLORS.shadow`: 30% black (`rgba(0, 0, 0, 0.3)`), so it darkens any ground; every shadow (animals, monsters, plants) uses it
+- **no shadow** (the owner's decision: shadows under people looked odd);
+  only floating and flying monsters (ghost girl, reaper, flaming skull) have
+  one, in `COLORS.shadow` (30% black, `rgba(0, 0, 0, 0.3)`); people,
+  animals, walking monsters, trees and bushes have none
 - body: 5 × 6 at (x − 2, y − 9), `body`
 - legs: two 2 × 3 at (x − 2, y − 3) and (x + 1, y − 3), `legs`
 - head: 3 × 4 at (x − 1, y − 13), `skin`; hair: 3 × 2 on top, `hair`

@@ -98,7 +98,6 @@ function quad(g, a, t, spec, [main, second, pattern], dog) {
 
   if (side) {
     const x0 = -Math.floor(bw / 2), hx = spec.cat ? x0 + bw - 2 : x0 + bw - 1;
-    R(COLORS.shadow, x0 - 1, 0, bw + 2, 1);
     // legs: the far pair darker; walking, the pairs take turns
     const legs = [[x0, 0], [x0 + 1, 1], [x0 + bw - 2, 1], [x0 + bw - 1, 0]];
     for (const [lx, far] of legs) {
@@ -132,7 +131,6 @@ function quad(g, a, t, spec, [main, second, pattern], dog) {
   }
   // front and back: the chest (or the rump), two legs, the head above
   const fw = dog ? Math.min(bw, hw + 2) : hw, fx = -Math.floor(fw / 2), hx = -Math.floor(hw / 2);   // the shoulders wider than the head
-  R(COLORS.shadow, fx - 1, 0, fw + 2, 1);
   const legsAt = [fx, fx + fw - 1];
   legsAt.forEach((lx, i) => {
     const lifted = step === i, h = lifted ? Math.max(1, lh - 1) : lh;

@@ -7,7 +7,8 @@
 //
 // facing: 'down' (the front; also nothing), 'up' (the back), 'left', 'right'.
 // variant: 0-3 or a variant's name. t (seconds) drives walking, floating,
-// flickering fire. Unlike the faceless people, monsters have eyes.
+// flickering fire. Unlike the faceless people, monsters have eyes. Only
+// floating and flying monsters (ghost girl, reaper, skull) have a shadow.
 
 import { COLORS } from './tinyCharacters.js';
 
@@ -49,7 +50,6 @@ const ZOMBIES = [
 function zombie({ R, W, y, v, side, back, t, walking }) {
   const z = ZOMBIES[v], step = walking ? Math.floor(t * 4) % 2 : -1;      // a slow shamble
   const B = -9, Hd = -13, blood = '#7a2a22';
-  R(COLORS.shadow, -3, 0, 7, 2);
   // legs: one drags (lifts less)
   for (const [dx, lifted] of [[-2, step === 0], [1, step === 1]]) {
     const h = lifted ? 2 : 3;
@@ -92,7 +92,6 @@ function werewolf({ R, W, y, v, side, back, t, walking }) {
   const f = WOLVES[v], fur = f.fur, dark = shade(fur, 0.72), light = shade(fur, 1.22), claw = '#f2efe8';
   const step = walking ? Math.floor(t * 6) % 2 : -1;
   const B = -11, Hd = -15;                                                  // taller than a person, hunched
-  R(COLORS.shadow, -4, 0, 9, 2);
   // legs bent like a wolf's: thigh, shin, a clawed foot
   for (const [dx, lifted] of [[-3, step === 0], [1, step === 1]]) {
     const up = lifted ? 1 : 0;
@@ -195,7 +194,6 @@ const SPIDERS = [
 function spider({ R, W, v, side, back, t, walking }) {
   const p = SPIDERS[v], step = walking ? Math.floor(t * 10) % 2 : 0, eye = '#e8402f';
   const leg = p.leg, band = p.bands ? p.mark : shade(leg, 1.25);
-  R(COLORS.shadow, -7, 0, 15, 2);
   // eight legs: up from the body, then down to the ground; walking, they take turns
   const legs = (dir) => [[2, 0], [3, 1], [3, 2], [2, 3]].forEach(([out, i]) => {
     const lift = (i + (dir > 0 ? 0 : 1) + step) % 2 ? 1 : 0;
@@ -234,7 +232,6 @@ function spider({ R, W, v, side, back, t, walking }) {
 const BONE = '#e8e2d0', BONE_SHADE = '#b8b2a0';
 function skeleton({ R, W, v, side, back, t, walking }) {
   const step = walking ? Math.floor(t * 8) % 2 : -1, B = -9, Hd = -13;
-  R(COLORS.shadow, -3, 0, 7, 2);
   // thin bone legs, a pelvis, a spine, ribs
   for (const [dx, lifted] of [[-1, step === 0], [1, step === 1]]) { const h = lifted ? 2 : 3; R(BONE, dx, -3, 1, h); R(BONE, dx + (dx < 0 ? -1 : 0), -3 + h - 1, 2, 1); }
   if (v === 3) { R('#4a2a6a', -2, B, 5, 8); R('#3a1f54', 2, B, 1, 8); R('#6a4a8a', -2, B + 7, 5, 1); }   // the mage's robe

@@ -86,8 +86,7 @@ export function drawCharacter(g, p, t = 0) {
   const body = p.body ?? BODY_COLORS[0], legs = p.legs ?? COLORS.ink, skin = p.skin ?? SKIN_COLORS[1], hair = p.hair ?? COLORS.ink;
   const carry = p.carry, carryColor = p.carryColor ?? DEFAULT_CARRY[carry];
   const wear = p.legwear ?? 'trousers';
-  // shadow, and a backpack behind the body (only seen from the side)
-  R(COLORS.shadow, -3, 0, 7, 2);
+  // no shadow (only floating and flying things have one); a backpack behind the body (only seen from the side)
   if (carry === 'backpack' && side) R(carryColor, -4, p.kid ? B - 1 : B, 2, p.kid ? 3 : 4);
   // legs (walking: one lifts a pixel, then the other); shorts and skirts show
   // skin; shoes are the bottom row; the right leg's outer column in shade
