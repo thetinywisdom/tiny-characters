@@ -21,16 +21,20 @@ const INK = '#2f3236', STEEL = '#d8dce0', STEEL2 = '#9aa0a8', WOOD = '#8a5a2e', 
 export const WEAPONS = {
   sword: { label: 'Sword' }, axe: { label: 'Axe' }, spear: { label: 'Spear' }, bow: { label: 'Bow' }, shield: { label: 'Shield' },
 };
-/** Attacks with a weapon: name -> { label, weapon, duration (s) }. */
+/**
+ * Attacks with a weapon: name -> { label, weapon, duration (s), reach, range }.
+ * reach: 'front' (what is ahead of the attacker, within range px), 'around'
+ * (everything within range px: the axe's 360 swing) or 'self' (a block).
+ */
 export const ACTIONS = {
-  slash: { label: 'Sword slash', weapon: 'sword', duration: 0.45 },
-  stab: { label: 'Sword stab', weapon: 'sword', duration: 0.4 },
-  axeSwing: { label: 'Axe swing', weapon: 'axe', duration: 0.55 },
-  chop: { label: 'Axe chop', weapon: 'axe', duration: 0.6 },
-  spearSwing: { label: 'Spear swing', weapon: 'spear', duration: 0.55 },
-  spearStab: { label: 'Spear stab', weapon: 'spear', duration: 0.45 },
-  shoot: { label: 'Bow shot', weapon: 'bow', duration: 1.0 },
-  defend: { label: 'Shield defend', weapon: 'shield', duration: 0.6 },
+  slash: { label: 'Sword slash', weapon: 'sword', duration: 0.45, reach: 'front', range: 10 },
+  stab: { label: 'Sword stab', weapon: 'sword', duration: 0.4, reach: 'front', range: 13 },
+  axeSwing: { label: 'Axe swing (360)', weapon: 'axe', duration: 0.8, reach: 'around', range: 14 },   // a full spin: hits all round
+  chop: { label: 'Axe chop', weapon: 'axe', duration: 0.6, reach: 'front', range: 10 },
+  spearSwing: { label: 'Spear swing', weapon: 'spear', duration: 0.55, reach: 'front', range: 15 },
+  spearStab: { label: 'Spear stab', weapon: 'spear', duration: 0.45, reach: 'front', range: 20 },
+  shoot: { label: 'Bow shot', weapon: 'bow', duration: 1.0, reach: 'front', range: 74 },
+  defend: { label: 'Shield defend', weapon: 'shield', duration: 0.6, reach: 'self', range: 0 },
 };
 /** Each monster's own skills: name -> { label, monster, duration }. */
 export const SKILLS = {
@@ -143,9 +147,16 @@ const POSES = {
   },
   stab: (u) => { const k = u < 0.3 ? -span(u, 0, 0.3) : u < 0.55 ? ease(span(u, 0.3, 0.55)) : 1 - span(u, 0.55, 1); return { hand: [1 + k * 5, 2], angle: 0, lean: k > 0.5 ? 1 : 0, trail: u > 0.3 && u < 0.55 }; },
   axeSwing: (u) => {
-    if (u < 0.35) { const k = ease(span(u, 0, 0.35)); return { hand: [lerp(1, -2, k), lerp(3, 0, k)], angle: lerp(-60, -170, k) }; }
-    if (u < 0.65) { const k = ease(span(u, 0.35, 0.65)); return { hand: [lerp(-2, 3, k), lerp(0, 2, k)], angle: lerp(-170, 40, k), lean: 1, trail: true }; }
-    const k = span(u, 0.65, 1); return { hand: [lerp(3, 1, k), lerp(2, 3, k)], angle: lerp(40, -60, k) };
+    // a wind-up, then one full turn: the axe goes all the way round the body
+    // (angles here are on the screen, for facing right) and the fighter turns
+    // through every view with it; a ring of motion all round
+    if (u < 0.2) { const k = ease(span(u, 0, 0.2)); return { hand: [lerp(1, -1, k), lerp(3, 2, k)], angle: lerp(-60, -170, k) }; }
+    if (u < 0.85) {
+      const k = span(u, 0.2, 0.85), a = 0 + k * 360, r = a * Math.PI / 180;
+      const facing = ['right', 'down', 'left', 'up'][Math.floor(((a + 45) % 360) / 90)];
+      return { spin: true, facing, hand: [Math.round(Math.cos(r) * 4), Math.round(Math.sin(r) * 2) + 2], angle: a, whirl: k, trail: true };
+    }
+    const k = span(u, 0.85, 1); return { hand: [1, 3], angle: lerp(0, -60, k), dust: k < 0.8 ? k : 0 };
   },
   chop: (u) => {
     if (u < 0.45) { const k = ease(span(u, 0, 0.45)); return { hand: [lerp(1, 0, k), lerp(3, -4, k)], angle: lerp(-60, -110, k) }; }
@@ -168,7 +179,9 @@ const POSES = {
 /** Draw a person holding person.weapon (standing or walking). */
 export function drawArmed(g, p, t = 0) { drawPersonPose(g, p, POSES.hold(0), p.weapon ?? 'sword', t, 0); }
 
-function drawPersonPose(g, p, pose, weapon, t, u, poseFn) {
+function drawPersonPose(g, p0, pose, weapon, t, u, poseFn) {
+  const p = pose.facing ? { ...p0, facing: pose.spin ? pose.facing : p0.facing } : p0;
+  const { sx: sx0 } = facingOf(p0);
   const { sx, side, back } = facingOf(p);
   const lean = (pose.lean ?? 0) * (side ? sx : 0), crouch = pose.crouch ?? 0;
   const body = { ...p, x: p.x + lean, y: p.y + crouch, walking: p.walking && !poseFn };
@@ -176,8 +189,10 @@ function drawPersonPose(g, p, pose, weapon, t, u, poseFn) {
   // seen from the front the weapon is held to the side; from the back, it is behind
   const hx = (h) => (side ? sx * h : (back ? -1 : 1) * Math.max(2, h));
   const shoulder = [p.x + lean + (side ? sx : 2), p.y + crouch + B + 1];
-  const hand = [shoulder[0] + hx(pose.hand[0]), shoulder[1] + pose.hand[1]];
-  const angle = side ? (sx > 0 ? pose.angle : 180 - pose.angle) : (back ? 180 - pose.angle : pose.angle);
+  // a spin is drawn round the middle of the body, its angle on the screen (mirrored only for an attacker facing left)
+  const mid = [p.x, p.y + crouch + B + 2];
+  const hand = pose.spin ? [mid[0] + sx0 * pose.hand[0], mid[1] + pose.hand[1]] : [shoulder[0] + hx(pose.hand[0]), shoulder[1] + pose.hand[1]];
+  const angle = pose.spin ? (sx0 > 0 ? pose.angle : 180 - pose.angle) : side ? (sx > 0 ? pose.angle : 180 - pose.angle) : (back ? 180 - pose.angle : pose.angle);
   const wside = side ? sx : back ? -1 : 1;
   const sleeve = p.body ?? '#f2f2ee', skin = p.skin ?? '#e2b08e';
   const drawWeaponNow = () => {
@@ -189,8 +204,16 @@ function drawPersonPose(g, p, pose, weapon, t, u, poseFn) {
       if (pose.flash) { px(g, WHITE, hand[0] + (side ? sx * 4 : 0), hand[1] - 4); px(g, WHITE, hand[0] + (side ? sx * 5 : 2), hand[1] - 2, 1, 2); px(g, '#fff2b0', hand[0] + (side ? sx * 4 : 1), hand[1] + 1); }
     } else if (pose.bow) drawWeapon(g, { weapon: 'bow', x: hand[0], y: hand[1], side: wside, pull: pose.pull, arrow: pose.arrow });
     else {
+      // a spin leaves a ring of motion round the body, as far round as the axe has gone
+      if (pose.spin) {
+        const end = angle, start = end - (sx0 > 0 ? 1 : -1) * Math.min(300, pose.whirl * 360 + 40);
+        for (let k = 0; k <= 24; k++) {
+          const a = lerp(start, end, k / 24) * Math.PI / 180;
+          px(g, k > 18 ? '#f4f8ff' : k > 10 ? '#d8e4f0' : '#b8c8d8', mid[0] + Math.cos(a) * 11, mid[1] + Math.sin(a) * 6);
+        }
+      }
       // a trail where the tip has just been
-      if (pose.trail && poseFn) for (const back of [0.05, 0.1, 0.15]) {
+      if (pose.trail && poseFn && !pose.spin) for (const back of [0.05, 0.1, 0.15]) {
         const q = poseFn(Math.max(0, u - back)), qa = side ? (sx > 0 ? q.angle : 180 - q.angle) : q.angle;
         const qh = [shoulder[0] + hx(q.hand[0]), shoulder[1] + q.hand[1]], len = weapon === 'spear' ? 12 : weapon === 'axe' ? 7 : 8;
         const r = qa * Math.PI / 180;
@@ -201,7 +224,8 @@ function drawPersonPose(g, p, pose, weapon, t, u, poseFn) {
     }
     if (pose.dust) for (const [dx, k] of [[4, 1], [7, 0.6], [9, 0.3]]) { const d = pose.dust; px(g, '#c8bca8', p.x + sx * (dx + d * 3), p.y - 1 - d * 2 * k, 2, 1); }
   };
-  if (back) { drawWeaponNow(); drawCharacter(g, body, t); }
+  const behind = pose.spin ? Math.sin(angle * Math.PI / 180) < -0.2 : back;   // in a spin, the axe goes behind the body on the far side
+  if (behind) { drawWeaponNow(); drawCharacter(g, body, t); }
   else { drawCharacter(g, body, t); drawWeaponNow(); }
   // an arrow in flight
   if (pose.fly >= 0) {

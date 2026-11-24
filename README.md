@@ -233,9 +233,14 @@ drawAction(g, zombie, 'dead', now - diedAt, t);                            // fa
 | Kind | Names |
 | --- | --- |
 | Weapons (`WEAPONS`, `drawWeapon`) | `sword`, `axe`, `spear`, `bow`, `shield` |
-| Attacks (`ACTIONS`) | `slash`, `stab` (sword), `axeSwing`, `chop` (axe), `spearSwing`, `spearStab` (spear), `shoot` (bow: the arrow flies), `defend` (shield) |
+| Attacks (`ACTIONS`) | `slash`, `stab` (sword), `axeSwing` (a 360 spin that hits all round), `chop` (axe), `spearSwing`, `spearStab` (spear), `shoot` (bow: the arrow flies), `defend` (shield) |
 | Monster skills (`SKILLS`) | `bite` (zombie), `claw` (werewolf), `curse` (ghost girl), `scythe` (reaper), `webShot` and `webTrap` (spider), `boneThrow` (skeleton), `fireball` (flaming skull) |
 | Reactions (`REACTIONS`) | `hit` (flashes white, recoils), `shoved` (slides back), `dead` (falls over; a ghost fades away, a skeleton falls into bones, a skull bursts, a spider flips over) |
+
+Each attack says what it reaches (`ACTIONS[name].reach`: `front`, `around`
+or `self`, and `range` in pixels), so a game can tell what it hits: the
+axe swing reaches everything within 14 px all round; the others reach
+ahead.
 
 The actor is anything the library draws: a person, `{ cat: true }`,
 `{ dog: true }`, `{ monster: type, variant }`. The catalogue shows them all

@@ -134,6 +134,10 @@ bubble lab, so games can use them and they can grow.
     defend; each monster's skills (bite, claw, curse, scythe, web shot, web
     trap, bone throw, fireball); hit, shoved back, dead (with special deaths
     for ghosts, skeletons, skulls, spiders); a Combat group in the catalogue.
+21. **Axe swing is a 360 spin** (the owner: it should affect everything
+    round the character): a wind-up, one full turn through every view, a
+    ring of motion; actions now say their reach (`front`, `around`, `self`)
+    and range.
 
 ## Next (only when the owner asks)
 

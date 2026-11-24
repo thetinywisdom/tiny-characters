@@ -293,7 +293,12 @@ it can be paused, scrubbed or replayed.
   `pull`; the shield is a round face.
 - Attacks are poses (`POSES`): the hand (from the shoulder), the weapon's
   angle, a lean, a crouch, a trail (the tip's last positions, drawn
-  faded), dust, a flying arrow. `drawPersonPose` draws the person, an arm
+  faded), dust, a flying arrow. The axe swing is a spin (`spin: true`): its
+  angle is on the screen (mirrored only when facing left), the hand circles
+  the middle of the body, the fighter turns through the four views
+  (`facing` per frame), the axe goes behind the body on the far side, and a
+  ring of motion grows round them. `reach` / `range` on each action tell a
+  game what it hits. `drawPersonPose` draws the person, an arm
   from the shoulder to the hand, then the weapon (behind the body when they
   face away). Angles are for facing right and are mirrored for the left.
 - Skills (`drawSkill`) draw the monster, then their effect: a lunge and a
