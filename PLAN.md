@@ -45,6 +45,10 @@ bubble lab, so games can use them and they can grow.
   step; no twin tails, beard, helmet, tank top; none of the "maybe" parts
   (flu mask, wings, bulky build, shoes or boots: too small to matter).
 
+- Building seeds (Nov 2026): a seed changes the building itself (width,
+  floors, windows' kind, number and spacing, door, roof, details), not only
+  its colours; all on the shared door and window sizes.
+
 ## Done
 
 1. **First version**: the library (`src/tinyCharacters.js`: draw a person,
@@ -140,6 +144,14 @@ bubble lab, so games can use them and they can grow.
     round the character): a quick wind-up, one fast full turn (0.42 s in
     all) through every view, a ring of motion; actions now say their reach (`front`, `around`, `self`)
     and range.
+22. **Smarter building seeds** (the owner: seeds only changed colours, so
+    every seed was the same building): each type has two or three widths
+    and its seed picks the width, floors, window kind / number / spacing,
+    door kind / side / colour, roof (flat, pitched, hipped; colour; chimneys,
+    dormers, towers, rooftop units) and details; `buildingSize` per seed;
+    the seed is mixed first (neighbouring seeds chose alike); the town picks
+    seeds that fit each block and row; the Buildings sheet shows three seeds
+    of each.
 
 ## Next (only when the owner asks)
 
@@ -150,6 +162,11 @@ bubble lab, so games can use them and they can grow.
    machines, signs, bus stop, benches) and vehicles.
 
 ## Known issues and small ideas
+
+- A shop's ground floor is the same for every seed of its kind (the shop
+  kind sets it); the seed changes the width, roof and what is above.
+- The town's back row is packed from the left, so narrower seeds leave a
+  gap at its right end.
 
 - Sign text is drawn by the canvas, so its edges are a little soft (not
   snapped to the pixel grid like everything else).

@@ -121,14 +121,36 @@ Every building faces you: a front wall, then its roof **seen from above**
 (8–18 rows, as in a top-down town map: this is what gives a building its
 depth), windows, a door, and one or two details that make it that building.
 Each is an entry in `DEFS` in `src/tinyBuildings.js`:
-`[label, width, draw(r, rng, b, wall, roof)]`. The height in `BUILDINGS` is
-measured from the drawing (the top of its highest rectangle, the tallest of
-40 seeds), so it always includes the roof and anything on it.
+`[label, widths, draw(r, rng, b, wall, roof, w)]`.
 
-**Buildings that vary by seed** (the mosque): draw every choice from `rng`
-(the building's seed), keep the width fixed, and add a few seeds that show
-the variations to `VARIED` in `demo/town.js` (the Buildings sheet shows
-each). The mosque picks its wall, dome colour (green, gold, blue, white,
+**The seed changes the building, not only its colours** (the owner: a seed
+must not just recolour the same building). `drawBuilding` mixes the seed
+into `rng` (neighbouring seeds would otherwise choose alike), takes the
+wall, the roof colour, then one of the type's `widths`; `draw` gets that
+width `w` and makes every other choice from `rng`, through `V(rng)`
+(`pick`, `chance`, `int`):
+- floors (house 1-2, apartment 4-6, office 5-7, karaoke 3-5, Dutch house
+  3-5, parking garage 2-4 levels, school 2-3 ...)
+- windows: their kind (`oneWindow`: sash, pair, alu, aluPair, tall,
+  shuttered, arched, leaded, shoji, neon; widths in `WW`) and how many,
+  spread evenly with `windowRow(r, rng, kind, x0, x1, up, n)` (`howMany`
+  gives how many fit; nothing is drawn where there is no room)
+- the door: kind, side (left, middle, right), colour (`DOOR_COLOURS`)
+- the roof: flat, pitched or hipped (`aRoof`), its depth and colour
+  (`HOUSE_ROOFS`), chimneys, dormers, a clock tower, a bell tower, an
+  antenna, things on a flat roof (`rooftop`: AC units, a plant room)
+- details: balconies, awnings (`AWNINGS`), which side an upright sign is on,
+  noren colours, the Dutch gable (stepped, bell, triangle), flower boxes,
+  a roof garden, the number of garages ...
+Every size still comes from `STOREY` and the door / window kit, so every
+seed is on the same grid. `buildingSize(b)` is the size for that seed
+(drawn once with a measuring painter, cached); `BUILDINGS[type]` has the
+largest any of 40 seeds makes (`w`, `h`, so a card sized from it fits every
+seed) and the `widths`. Seeds are stable: the same seed always draws the
+same building. The torii, koban, gas station and mosque keep one width (the
+gas station and torii have open ground in `OPEN` measured on that width).
+
+The mosque picks its wall, dome colour (green, gold, blue, white,
 teal) and size (radius 7–10), trim colour, one or two minarets (50–63 px,
 a single one left or right), small side domes, one or two arched windows
 each side. Its pieces: `dome` (a half disc lit on the left) and
@@ -225,7 +247,11 @@ their own grounds in front of them.
 - Layout (`DEFAULT_TOWN`): `streets` (the top of each; a street is 7 px
   sidewalk, 18 px road, 7 px sidewalk), `crossStreets` (left edges; 6 + 18 + 6
   px, from the first street to the last), `rows` (a ground line, a left edge
-  and building types packed 2 px apart, `'shop:ramen'` for a shop kind),
+  and building types packed 2 px apart, `'shop:ramen'` for a shop kind;
+  `makeTown` gives each a seed that fits: it tries seeds until one is no
+  taller than the room under the street above, and if the row is too wide
+  for the room before the next cross street it swaps the pick that saves
+  the most for its narrowest fitting seed, until it fits),
   `buildings` (placed one by one), `areas` (`gravel`, `sand`, `paving`
   grounds with a name; the shrine's has stepping stones). A row's buildings
   must end before the next cross street; a block's buildings must be lower
@@ -359,7 +385,9 @@ only those in view.
   top row; add its name to the caption).
 - **A new building:** add an entry to `DEFS` (look at the catalogue's
   builder for what makes it that building, then keep only what shows at this
-  size); the Buildings sheet picks it up. Put it in the town by adding it to
+  size) with two or three widths, and let the seed choose its floors,
+  windows, door and roof (see above); the Buildings sheet shows three seeds
+  of different sizes. Put it in the town by adding it to
   a row of `DEFAULT_TOWN` (tall ones in the back row only). Check it next to
   a person.
 - **Change the town:** edit `DEFAULT_TOWN`; render the whole map once
@@ -368,8 +396,7 @@ only those in view.
 - **Put something new in the catalogue:** people come from `PEOPLE` (a
   starter look and its kinds), buildings from `BUILDINGS` automatically;
   give a new building its kind in `KIND` (Homes, Shops & food, Civic,
-  Worship) and `EUROPEAN` if it is, and add it to `SHAPE_BY_SEED` if its
-  seed changes its shape, not only its colours (all in `demo/catalogue.js`).
+  Worship) and `EUROPEAN` if it is (in `demo/catalogue.js`).
   Each card's code line must draw exactly what the card shows.
 - **A new colour:** add it to the list (`BODY_COLORS`, `THING_COLORS` ...);
   `snapToPalette` uses all the lists.

@@ -121,13 +121,36 @@ export function makeTown(layout0 = DEFAULT_TOWN) {
   const layout = scaled(layout0), { W, H, streets, crossStreets, k } = layout;
   const { STREET, VSTREET } = streetDims(k);
   const buildings = layout.buildings.map((b, i) => ({ seed: i + 1, ...b }));
+  // each row's buildings get seeds that fit: no taller than the room up to the
+  // street above, and together no wider than the room up to the next cross
+  // street (seeds change a building's width, floors and roof, so try a few)
+  const townSeed = layout.seed ?? 7, gap = Math.round(2 * k);
   for (const row of layout.rows) {
+    const above = streets.filter((sy) => sy < row.y).pop();
+    const maxH = above === undefined ? Infinity : row.y - above - STREET;
+    const end = row.y > streets[0] ? (crossStreets.find((sx) => sx > row.x) ?? W - layout.pad) : W - layout.pad;
+    const picks = row.list.map((item, i) => {
+      const [type, shopType] = item.split(':'), fits = [];
+      for (let t = 0; t < 40 && fits.length < 8; t++) {
+        const seed = 1 + ((townSeed * 7919 + (row.y * 31 + row.x) * 131 + i * 977 + t * 7) % 9973);
+        const size = buildingSize({ type, shopType, seed, scale: k });
+        if (size.h <= maxH) fits.push({ seed, w: size.w });
+      }
+      if (!fits.length) { console.warn(`tinyTown: no seed of ${type} fits under the street above`); fits.push({ seed: 1, w: buildingSize({ type, shopType, seed: 1, scale: k }).w }); }
+      return { type, shopType, fits, pick: fits[0] };
+    });
+    const total = () => picks.reduce((n, p) => n + p.pick.w + gap, 0);
+    // too wide: swap the pick that would save the most for its narrowest fit, until it fits
+    while (row.x + total() > end) {
+      let best = null, save = 0;
+      for (const p of picks) { const narrow = p.fits.reduce((a, f) => (f.w < a.w ? f : a)); if (p.pick.w - narrow.w > save) { save = p.pick.w - narrow.w; best = [p, narrow]; } }
+      if (!best) { console.warn(`tinyTown: the row at (${row.x}, ${row.y}) is too wide`); break; }
+      best[0].pick = best[1];
+    }
     let x = row.x;
-    for (const item of row.list) {
-      const [type, shopType] = item.split(':');
-      const { w } = buildingSize({ type, scale: k });
-      buildings.push({ type, shopType, x: x + w / 2, y: row.y, seed: buildings.length + 1, scale: k });
-      x += w + Math.round(2 * k);
+    for (const p of picks) {
+      buildings.push({ type: p.type, shopType: p.shopType, x: x + p.pick.w / 2, y: row.y, seed: p.pick.seed, scale: k });
+      x += p.pick.w + gap;
     }
   }
   const areas = layout.areas;

@@ -102,9 +102,16 @@ restaurant, flower shop, fishmonger, udon / soba shop, family restaurant,
 takoyaki stand, police station (koban), post office, bank, clinic, fire station, karaoke,
 wooden apartment, parking garage, gas station, and the old town: Tudor
 cottage, Mediterranean villa, Dutch canal house, French country house,
-Scandinavian house, stone chapel; and a mosque (not in the catalogue), whose
-`seed` picks its wall, dome colour and size, one or two minarets, side
-domes, windows and trim, so every seed is a different mosque.
+Scandinavian house, stone chapel; and a mosque (not in the catalogue).
+
+**Each seed is a different building**, not the same one recoloured: the seed
+picks its width (two or three per type), its floors, its windows (kind, how
+many, how spaced), its door (kind, side, colour), its roof (flat, pitched or
+hipped, colour, chimneys, dormers, towers, what is on a flat roof) and
+details like balconies, awnings and which side a sign is on. Everything
+stays on the same door and window sizes. The mosque's seed picks its wall,
+dome, minarets, side domes, windows and trim. The Buildings sheet shows
+three seeds of each; the town picks seeds that fit each block.
 
 ```js
 import { BUILDINGS, drawBuilding, drawStreet } from './src/tinyBuildings.js';
@@ -117,13 +124,13 @@ drawBuilding(g, { type: 'shop', shopType: 'ramen', x: 120, y: 104, seed: 3 });
 
 | Export | What it does |
 | --- | --- |
-| `drawBuilding(g, b)` | One building `{ type, x, y, seed, shopType, wall, roof, scale, dpx }`: centred on `x`, ground line at `y`. `seed` picks the wall and roof colours and which windows are lit; `scale` draws it bigger with crisp pixels (the town uses 1.5); `dpx` lets its signs write their names (see below). |
+| `drawBuilding(g, b)` | One building `{ type, x, y, seed, shopType, wall, roof, scale, dpx }`: centred on `x`, ground line at `y`. `seed` picks its width, floors, windows, door, roof and colours (see above); `scale` draws it bigger with crisp pixels (the town uses 1.5); `dpx` lets its signs write their names (see below). |
 | `SIGN_FONT` | The signs' typeface: DotGothic16 (load it on the page from Google Fonts). |
-| `buildingSize(b)` | Its width and height at its scale. |
+| `buildingSize(b)` | Its width and height for its seed, at its scale. |
 | `drawPart(g, { part, x, y, seed, scale })` | One door or window from the kit the buildings are made of, centred on `x`, its bottom at `y`. |
 | `PARTS` | `id -> { label, w, h }`: `door.wood`, `door.plank`, `door.glazed`, `door.glass`, `door.steel`, `door.arched`, `door.auto`, `door.sliding`, `door.shoji`, `door.garage`, `window.sash`, `window.pair`, `window.alu`, `window.aluPair`, `window.tall`, `window.shuttered`, `window.arched`, `window.pointed`, `window.stained`, `window.round`, `window.lattice`, `window.shoji`, `window.leaded`, `window.neon`, `window.shop`. |
 | `STOREY` | The sizes every building shares: ground floor 16, a shop's 19, upper floors 13, window sills 4 above the floor. |
-| `BUILDINGS` | `type -> { label, w, h }`: name, width and height in pixels (roof included). |
+| `BUILDINGS` | `type -> { label, w, h, widths }`: name, the largest width and height any seed makes (roof included), and the widths a seed picks from. |
 | `SHOP_TYPES` | `konbini`, `ramen`, `cafe`, `bookshop`, `bakery`, `izakaya` (for `shop` and `mixedUse`). |
 | `drawStreet(g, W, H, { baseY, x0 })` | Sidewalk from `baseY`, road, far sidewalk, grass; `x0` scrolls the paving. |
 | `WALL_COLORS`, `ROOF_COLORS` | The catalogue's wall and roof colours. |
