@@ -178,7 +178,9 @@ bubble lab, so games can use them and they can grow.
     paper cars): side views now show the top from above too (bonnet, boot,
     raised cabin with side windows, rear window, roof, windscreen; the
     van's and bus's roofs; the kei truck's open bed), as the buildings show
-    their roofs.
+    their roofs. Then the front and back views (the owner: they were all
+    weird, tall boxes): the face, then a top a third of the length (bonnet,
+    a narrower cabin with mirrors, boot), same proportions as the sides.
 
 ## Next (only when the owner asks)
 

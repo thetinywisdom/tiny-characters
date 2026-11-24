@@ -410,8 +410,14 @@ cars): side on, above the side panel come 4-5 rows of the vehicle's top
 seen from above (bonnet and boot lower, then the raised cabin: its side
 windows, then rear window, roof and windscreen; a van's and a bus's long
 roof; a kei truck's open bed with its load), the far edge a shade darker;
-head on, the roof runs back above the front. A car is 22 x 12 side on, 12
-x 16 head on; a bus 40 x 18 and 14 x 26. The seed picks colours
+head on and from behind (`headOn` / `tailOn`): the front or back face (a
+shade darker than the top: bumper, lamps, grille, plate; a van's and a
+bus's tall face has its glass in it), then the top from above running back
+about a third of the length (bonnet, then the cabin a pixel narrower each
+side, with mirrors: windscreen, roof, rear window; then the boot), the far
+edge darker. Same proportions as the side views: the top shows a third of
+the vehicle's real length or width. A car is 22 x 12 side on, 12 x 14 head
+on; a bus 40 x 18 and 14 x 20. The seed picks colours
 (`CAR_COLORS`, taxi and bus liveries).
 
 **The town's junctions** come from makeTown (`junctionsOf`): for each

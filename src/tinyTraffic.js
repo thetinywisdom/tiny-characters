@@ -29,7 +29,7 @@ const TAXI_COLORS = [['#f2c230', '#3a3d42'], ['#3a3d42', '#f2c230'], ['#3f8a5a',
  * The roof shows from above, as on the buildings.
  */
 const DEFS = {
-  car: { label: 'Car', size: [[22, 12], [12, 16]],
+  car: { label: 'Car', size: [[22, 12], [12, 14]],
     side: (R, c) => {
       wheels(R, [3, 15]);
       R(c, 0, 2, 22, 4); R(shade(c, 0.72), 0, 2, 22, 1); R(shade(c, 0.85), 11, 3, 1, 3);   // the side, the door
@@ -39,9 +39,9 @@ const DEFS = {
       R(c, 4, 6, 12, 2); R(GLASS2, 5, 6, 4, 2); R(GLASS2, 10, 6, 5, 2);                    // the cabin's side windows
       R(GLASS, 4, 8, 2, 4); R(top, 6, 8, 7, 4); R(GLASS, 13, 8, 3, 4); R(edge, 4, 11, 12, 1); // rear window, roof, windscreen
     },
-    front: (R, c) => headOn(R, c, { w: 12, face: 4, glass: 3, roof: 5, rear: 2, end: 1 }),
-    back: (R, c) => tailOn(R, c, { w: 12, face: 4, glass: 2, roof: 5, rear: 3, end: 1 }) },
-  kei: { label: 'Kei car', size: [[18, 13], [11, 15]],
+    front: (R, c) => headOn(R, c, { w: 12, face: 4, bonnet: 2, screen: 2, roof: 3, rear: 1, boot: 1 }),
+    back: (R, c) => tailOn(R, c, { w: 12, face: 4, bonnet: 1, screen: 1, roof: 3, rear: 2, boot: 2 }) },
+  kei: { label: 'Kei car', size: [[18, 13], [11, 12]],
     side: (R, c) => {
       wheels(R, [2, 12]);
       R(c, 0, 2, 18, 4); R(shade(c, 0.72), 0, 2, 18, 1); R(shade(c, 0.85), 8, 3, 1, 3); R(LAMP, 17, 4, 1, 1); R(TAIL, 0, 4, 1, 1);
@@ -50,13 +50,13 @@ const DEFS = {
       R(c, 0, 6, 15, 3); R(GLASS2, 1, 6, 6, 3); R(GLASS2, 8, 6, 6, 3);                     // tall side windows
       R(top, 0, 9, 12, 4); R(GLASS, 12, 9, 3, 4); R(edge, 0, 12, 15, 1);                   // the boxy roof, windscreen
     },
-    front: (R, c) => headOn(R, c, { w: 11, face: 4, glass: 3, roof: 5, rear: 2, end: 0 }),
-    back: (R, c) => tailOn(R, c, { w: 11, face: 4, glass: 3, roof: 5, rear: 2, end: 0 }) },
-  taxi: { label: 'Taxi', size: [[22, 12], [12, 17]],
+    front: (R, c) => headOn(R, c, { w: 11, face: 4, bonnet: 1, screen: 2, roof: 4, rear: 0, boot: 0 }),
+    back: (R, c) => tailOn(R, c, { w: 11, face: 3, bonnet: 0, screen: 1, roof: 4, rear: 2, boot: 0 }) },
+  taxi: { label: 'Taxi', size: [[22, 12], [12, 14]],
     side: (R, c, c2) => { DEFS.car.side(R, c); R(c2, 0, 4, 22, 1); R(WHITE, 8, 9, 4, 2); R(c2, 9, 10, 2, 1); R(shade(c2, 0.8), 8, 9, 4, 1); },
-    front: (R, c, c2) => { headOn(R, c, { w: 12, face: 4, glass: 3, roof: 5, rear: 2, end: 1 }); R(WHITE, 4, 10, 4, 2); R(c2, 5, 11, 2, 1); },
-    back: (R, c, c2) => { tailOn(R, c, { w: 12, face: 4, glass: 2, roof: 5, rear: 3, end: 1 }); R(WHITE, 4, 9, 4, 2); R(c2, 5, 10, 2, 1); } },
-  van: { label: 'Delivery van', size: [[22, 13], [12, 18]],
+    front: (R, c, c2) => { headOn(R, c, { w: 12, face: 4, bonnet: 2, screen: 2, roof: 3, rear: 1, boot: 1 }, c2); R(WHITE, 4, 10, 4, 2); R(c2, 5, 11, 2, 1); },
+    back: (R, c, c2) => { tailOn(R, c, { w: 12, face: 4, bonnet: 1, screen: 1, roof: 3, rear: 2, boot: 2 }, c2); R(WHITE, 4, 9, 4, 2); R(c2, 5, 10, 2, 1); } },
+  van: { label: 'Delivery van', size: [[22, 13], [12, 14]],
     side: (R, c, c2) => {
       wheels(R, [3, 15]);
       R(c, 0, 2, 22, 7); R(shade(c, 0.72), 0, 2, 22, 1); R(c2, 0, 5, 17, 2); R(shade(c, 0.85), 16, 3, 1, 6);
@@ -64,9 +64,9 @@ const DEFS = {
       const top = shade(c, 1.1), edge = shade(c, 0.86);
       R(top, 0, 9, 19, 4); R(GLASS, 19, 9, 3, 4); R(edge, 0, 12, 22, 1); R(shade(top, 0.94), 0, 10, 19, 1);   // the long roof from above
     },
-    front: (R, c, c2) => headOn(R, c, { w: 12, face: 4, glass: 3, roof: 9, rear: 0, end: 1 }, c2),
-    back: (R, c, c2) => { tailOn(R, c, { w: 12, face: 6, glass: 0, roof: 9, rear: 2, end: 0 }); R(shade(c, 0.8), 6, 1, 1, 6); R(c2, 0, 4, 12, 1); } },
-  keiTruck: { label: 'Kei truck', size: [[20, 12], [11, 17]],
+    front: (R, c, c2) => headOn(R, c, { w: 12, face: 7, faceGlass: 3, bonnet: 0, screen: 0, roof: 6, rear: 0, boot: 0 }, c2),
+    back: (R, c, c2) => { tailOn(R, c, { w: 12, face: 7, backGlass: 2, bonnet: 0, screen: 0, roof: 6, rear: 0, boot: 0 }, c2); R(shade(c, 0.7), 6, 2, 1, 6); } },
+  keiTruck: { label: 'Kei truck', size: [[20, 12], [11, 14]],
     side: (R, c, c2) => {
       wheels(R, [2, 13]);
       const top = shade(c, 1.12), edge = shade(c, 0.86);
@@ -78,17 +78,21 @@ const DEFS = {
     },
     front: (R, c, c2) => {
       wheels(R, [0, 9], 2);
-      R(c, 0, 1, 11, 4); R(shade(c, 0.72), 0, 1, 11, 1); R(LAMP, 1, 3, 2, 1); R(LAMP, 8, 3, 2, 1); R(DARK, 4, 2, 3, 1);
-      R(GLASS, 1, 5, 9, 2); R(shade(c, 1.12), 1, 7, 9, 3);
-      R(shade(c, 0.8), 0, 10, 11, 7); R('#8a8a84', 1, 10, 9, 6); R(c2, 3, 11, 5, 3);
+      const top = shade(c, 1.12);
+      R(c, 0, 1, 11, 4); R(shade(c, 0.72), 0, 1, 11, 1); R(LAMP, 1, 3, 2, 1); R(LAMP, 8, 3, 2, 1); R(DARK, 4, 2, 3, 1);   // the cab's flat front
+      R(c, 0, 5, 11, 2); R(GLASS, 1, 5, 9, 2);                                               // its windscreen
+      R(top, 0, 7, 11, 2);                                                                   // its roof
+      R(shade(c, 0.8), 0, 9, 11, 5); R('#8a8a84', 1, 9, 9, 4); R(c2, 3, 10, 5, 2); R(shade(c2, 1.15), 3, 11, 5, 1);   // the open bed behind, a load
     },
     back: (R, c, c2) => {
       wheels(R, [0, 9], 2);
-      R(c, 0, 1, 11, 3); R(shade(c, 0.72), 0, 1, 11, 1); R(TAIL, 1, 2, 2, 1); R(TAIL, 8, 2, 2, 1); R(WHITE, 4, 2, 3, 1);
-      R(shade(c, 0.8), 0, 4, 11, 6); R('#8a8a84', 1, 4, 9, 5); R(c2, 3, 5, 5, 3);
-      R(c, 1, 10, 9, 2); R(GLASS2, 2, 11, 7, 1); R(shade(c, 1.12), 1, 12, 9, 3); R(GLASS, 2, 15, 7, 1);
+      const top = shade(c, 1.12);
+      R(c, 0, 1, 11, 3); R(shade(c, 0.72), 0, 1, 11, 1); R(TAIL, 1, 2, 2, 1); R(TAIL, 8, 2, 2, 1); R(WHITE, 4, 2, 3, 1);   // the tailgate
+      R(shade(c, 0.8), 0, 4, 11, 5); R('#8a8a84', 1, 4, 9, 5); R(c2, 3, 5, 5, 2); R(shade(c2, 1.15), 3, 6, 5, 1);     // the bed, a load
+      R(c, 0, 9, 11, 2); R(GLASS2, 2, 9, 7, 1);                                              // the cab's back, its little window
+      R(top, 0, 11, 11, 3);                                                                  // its roof
     } },
-  bus: { label: 'Bus', size: [[40, 18], [14, 26]],
+  bus: { label: 'Bus', size: [[40, 18], [14, 20]],
     side: (R, c, c2) => {
       wheels(R, [5, 30]);
       R(c, 0, 2, 40, 11); R(shade(c, 0.72), 0, 2, 40, 1); R(c2, 0, 4, 40, 2);
@@ -102,40 +106,61 @@ const DEFS = {
     },
     front: (R, c, c2) => {
       wheels(R, [0, 12], 2);
-      R(c, 0, 1, 14, 5); R(shade(c, 0.72), 0, 1, 14, 1); R(c2, 0, 3, 14, 1); R(LAMP, 1, 3, 2, 1); R(LAMP, 11, 3, 2, 1);
-      R(GLASS, 1, 6, 12, 6); R(INK, 1, 12, 12, 2); R('#f2a040', 3, 12, 8, 1);
-      R(shade(c, 1.1), 0, 14, 14, 12); R(METAL, 4, 17, 6, 5);
+      const top = shade(c, 1.1);
+      R(c, 0, 1, 14, 11); R(shade(c, 0.72), 0, 1, 14, 1); R(c2, 0, 3, 14, 1); R(LAMP, 1, 2, 2, 1); R(LAMP, 11, 2, 2, 1);   // the tall front
+      R(GLASS, 1, 5, 12, 5); R(INK, 6, 5, 1, 5); R(INK, 1, 10, 12, 2); R('#f2a040', 3, 11, 8, 1);                  // windscreen, destination
+      R(top, 0, 12, 14, 8); R(shade(top, 0.94), 0, 15, 14, 1); R(METAL, 4, 14, 6, 3); R(shade(METAL, 0.8), 4, 14, 6, 1); R(shade(c, 0.86), 0, 19, 14, 1);   // the roof running back
     },
     back: (R, c, c2) => {
       wheels(R, [0, 12], 2);
-      R(c, 0, 1, 14, 10); R(shade(c, 0.72), 0, 1, 14, 1); R(c2, 0, 3, 14, 1); R(TAIL, 1, 4, 2, 2); R(TAIL, 11, 4, 2, 2); R(GLASS2, 2, 7, 10, 3);
-      R(shade(c, 1.1), 0, 11, 14, 13); R(METAL, 4, 16, 6, 5); R(GLASS, 1, 24, 12, 2);
+      const top = shade(c, 1.1);
+      R(c, 0, 1, 14, 11); R(shade(c, 0.72), 0, 1, 14, 1); R(c2, 0, 3, 14, 1); R(TAIL, 1, 4, 2, 2); R(TAIL, 11, 4, 2, 2); R(WHITE, 6, 2, 2, 1);
+      R(GLASS2, 2, 7, 10, 3); R(DARK, 2, 6, 10, 1);                                          // rear window, engine grille
+      R(top, 0, 12, 14, 8); R(shade(top, 0.94), 0, 16, 14, 1); R(METAL, 4, 15, 6, 3); R(shade(METAL, 0.8), 4, 15, 6, 1); R(shade(c, 0.86), 0, 19, 14, 1);
     } },
 };
 
 function wheels(R, xs, w = 4) { for (const x of xs) { R(INK, x, 0, w, w === 4 ? 3 : 2); if (w === 4) R(METAL, x + 1, 1, 2, 1); } }
-/** Seen from the front: bumper, lamps, windscreen, then the roof running back, the rear window, the boot. */
+/**
+ * Head on, with depth like the side views: the front face (bumper, lamps,
+ * grille; a van's and a bus's tall front has its windscreen in it), then
+ * the top seen from above, running back a third of the length: bonnet,
+ * windscreen, roof (the cabin a pixel narrower each side), rear window,
+ * boot, the far edge a shade darker.
+ */
 function headOn(R, c, o, stripe) {
-  const { w } = o;
+  const { w } = o, face = shade(c, 0.9), top = shade(c, 1.14), edge = shade(c, 0.8);
   wheels(R, [0, w - 2], 2);
   let y = 1;
-  R(c, 0, y, w, o.face); R(shade(c, 0.72), 0, y, w, 1); R(LAMP, 1, y + 2, 2, 1); R(LAMP, w - 3, y + 2, 2, 1); R(DARK, 4, y + 1, w - 8, 2); R(WHITE, Math.floor(w / 2) - 1, y, 2, 1);
-  if (stripe) R(stripe, 0, y + 3, w, 1);
-  y += o.face; R(GLASS, 1, y, w - 2, o.glass); R(c, 0, y, 1, o.glass); R(c, w - 1, y, 1, o.glass);
-  y += o.glass; R(shade(c, 1.12), 1, y, w - 2, o.roof);
-  y += o.roof; if (o.rear) R(GLASS2, 2, y, w - 4, o.rear);
-  y += o.rear; if (o.end) R(c, 1, y, w - 2, o.end);
+  R(face, 0, y, w, o.face); R(shade(c, 0.66), 0, y, w, 1); R(LAMP, 1, y + 1, 2, 1); R(LAMP, w - 3, y + 1, 2, 1); R(DARK, 4, y + 1, w - 8, 1); R(WHITE, Math.floor(w / 2) - 1, y, 2, 1);
+  if (stripe && o.face > 4) R(stripe, 0, y + 2, w, 1);
+  if (o.faceGlass) { R(GLASS, 1, y + o.face - o.faceGlass, w - 2, o.faceGlass); R(face, Math.floor(w / 2), y + o.face - o.faceGlass, 1, o.faceGlass); }
+  y += o.face;
+  if (o.bonnet) { R(top, 0, y, w, o.bonnet); R(shade(top, 1.08), 0, y, w, 1); y += o.bonnet; }
+  // the cabin, a pixel narrower each side: windscreen (with mirrors), roof, rear window
+  if (o.screen) { R(c, 1, y, w - 2, o.screen); R(GLASS, 2, y, w - 4, o.screen); R(face, 0, y, 1, 1); R(face, w - 1, y, 1, 1); y += o.screen; }
+  const inset = o.screen || o.rear ? 1 : 0;
+  R(top, inset, y, w - inset * 2, o.roof); y += o.roof;
+  if (o.rear) { R(c, 1, y, w - 2, o.rear); R(GLASS2, 2, y, w - 4, o.rear); y += o.rear; }
+  if (o.boot) { R(top, 0, y, w, o.boot); y += o.boot; }
+  R(edge, o.boot ? 0 : inset, y - 1, o.boot ? w : w - inset * 2, 1);
 }
-/** Seen from behind: bumper, tail lamps, rear window, the roof, the windscreen far off, the bonnet. */
-function tailOn(R, c, o) {
-  const { w } = o;
+/** From behind: the back (bumper, tail lamps, plate), then from above the boot, rear window, roof, windscreen, bonnet. */
+function tailOn(R, c, o, stripe) {
+  const { w } = o, face = shade(c, 0.9), top = shade(c, 1.14), edge = shade(c, 0.8);
   wheels(R, [0, w - 2], 2);
   let y = 1;
-  R(c, 0, y, w, o.face); R(shade(c, 0.72), 0, y, w, 1); R(TAIL, 1, y + 2, 2, 1); R(TAIL, w - 3, y + 2, 2, 1); R(WHITE, Math.floor(w / 2) - 1, y + 1, 2, 1);
-  y += o.face; if (o.glass) { R(GLASS2, 1, y, w - 2, o.glass); R(c, 0, y, 1, o.glass); R(c, w - 1, y, 1, o.glass); }
-  y += o.glass; R(shade(c, 1.12), 1, y, w - 2, o.roof);
-  y += o.roof; if (o.rear) R(GLASS, 2, y, w - 4, o.rear);
-  y += o.rear; if (o.end) R(c, 1, y, w - 2, o.end);
+  R(face, 0, y, w, o.face); R(shade(c, 0.66), 0, y, w, 1); R(TAIL, 1, y + 2, 2, 1); R(TAIL, w - 3, y + 2, 2, 1); R(WHITE, Math.floor(w / 2) - 1, y + 1, 2, 1);
+  if (stripe && o.face > 4) R(stripe, 0, y + 3, w, 1);
+  if (o.backGlass) { R(GLASS2, 1, y + o.face - o.backGlass - 1, Math.floor(w / 2) - 2, o.backGlass); R(GLASS2, Math.ceil(w / 2) + 1, y + o.face - o.backGlass - 1, Math.floor(w / 2) - 2, o.backGlass); }
+  y += o.face;
+  if (o.boot) { R(top, 0, y, w, o.boot); y += o.boot; }
+  if (o.rear) { R(c, 1, y, w - 2, o.rear); R(GLASS2, 2, y, w - 4, o.rear); y += o.rear; }
+  const inset = o.screen || o.rear ? 1 : 0;
+  R(top, inset, y, w - inset * 2, o.roof); y += o.roof;
+  if (o.screen) { R(c, 1, y, w - 2, o.screen); R(GLASS, 2, y, w - 4, o.screen); y += o.screen; }
+  if (o.bonnet) { R(top, 0, y, w, o.bonnet); y += o.bonnet; }
+  R(edge, o.bonnet ? 0 : inset, y - 1, o.bonnet ? w : w - inset * 2, 1);
 }
 
 const SIZE = Object.fromEntries(Object.entries(DEFS).map(([k, d]) => [k, { side: d.size[0], front: d.size[1] }]));
