@@ -27,6 +27,9 @@ src/tinyNature.js      trees, bushes, terrains: drawTree, drawBush,
 src/tinyMonsters.js    monsters: drawMonster, MONSTERS (zombie, werewolf,
                        ghostGirl, reaper, spider, skeleton, skull; 4
                        variants each; four views)
+src/tinyCombat.js      weapons and fights: drawWeapon, drawArmed,
+                       drawAction, drawActor, WEAPONS, ACTIONS, SKILLS,
+                       REACTIONS
 src/tinyTown.js        the 2D town map: makeTown, drawTownView,
                        DEFAULT_TOWN (layout, ground, walkable ground,
                        path finding, place names)
@@ -279,6 +282,30 @@ sideways and flickers. Variants are rows of colours / gear in the
 skeleton's are drawn in code (warrior, pirate, mage). Monsters have eyes
 (the people do not). A new variant: add a row to the table and its name to
 `MONSTERS`; check all four views at real size next to a person.
+
+## How combat is drawn (src/tinyCombat.js)
+
+Everything is a function of `u`, the progress 0-1 (`time / duration`), so
+it can be paused, scrubbed or replayed.
+- Weapons are drawn along a line from the hand at an angle (`along`,
+  `across`): grip, guard and blade for a sword, a head for an axe, a long
+  shaft for a spear; the bow is a curve with a string pulled back by
+  `pull`; the shield is a round face.
+- Attacks are poses (`POSES`): the hand (from the shoulder), the weapon's
+  angle, a lean, a crouch, a trail (the tip's last positions, drawn
+  faded), dust, a flying arrow. `drawPersonPose` draws the person, an arm
+  from the shoulder to the hand, then the weapon (behind the body when they
+  face away). Angles are for facing right and are mirrored for the left.
+- Skills (`drawSkill`) draw the monster, then their effect: a lunge and a
+  bite, claw streaks, curse rings, a scythe's crescent, a web ball and a
+  web net, a spinning bone, a fireball with a tail; projectiles fly along
+  the facing direction.
+- Reactions (`drawReaction`) draw the actor into a small canvas (`sprite`)
+  so it can flash white (source-atop), be turned a quarter to lie down, be
+  flipped (a spider) or faded (a ghost).
+A new attack: a pose function in `POSES` and an entry in `ACTIONS`; a new
+skill: a case in `drawSkill` and an entry in `SKILLS`. Check every frame
+(a strip of six) next to a person.
 
 ## How nature is drawn (src/tinyNature.js)
 

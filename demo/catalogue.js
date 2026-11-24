@@ -3,6 +3,7 @@ import { LOOKS, drawCharacter, lookFor } from '../src/tinyCharacters.js';
 import { CAT_COATS, DOG_BREEDS, dogFor, drawCat, drawDog } from '../src/tinyAnimals.js';
 import { BUSHES, TERRAINS, TREES, drawBush, drawTerrain, drawTree } from '../src/tinyNature.js';
 import { MONSTERS, drawMonster } from '../src/tinyMonsters.js';
+import { ACTIONS, REACTIONS, SKILLS, WEAPONS, drawAction, drawWeapon } from '../src/tinyCombat.js';
 
 // The catalogue: every person, animal and building, with filters (group,
 // kind, search) and a seed per card (type it, or roll it with 🎲). The copy
@@ -59,6 +60,25 @@ for (const [type, { label, variants }] of Object.entries(MONSTERS)) variants.for
     code: () => `drawMonster(g, { type: '${type}', variant: '${variant}', x, y, facing, walking }, t)` });
 });
 
+// combat: weapons, attacks, monster skills, reactions, each playing on a loop
+const loop = (t, d) => t % (d + 0.7);
+const FIGHTER = { ...LOOKS.man, skin: '#e2b08e' };
+for (const [weapon, { label }] of Object.entries(WEAPONS)) items.push({ id: `combat.weapon.${weapon}`, label, group: 'Combat', tags: ['Weapons'], seed: 0, noSeed: true, w: 20, h: 18, px: 7,
+  draw: (g) => drawWeapon(g, { weapon, x: weapon === 'bow' || weapon === 'shield' ? 9 : 6, y: weapon === 'bow' || weapon === 'shield' ? 9 : 14, angle: -45 }),
+  code: () => `drawWeapon(g, { weapon: '${weapon}', x, y, angle: -45 })` });
+for (const [action, { label, weapon, duration }] of Object.entries(ACTIONS)) items.push({ id: `combat.attack.${action}`, label, group: 'Combat', tags: ['Attacks'], seed: 0, noSeed: true, w: weapon === 'bow' ? 64 : 34, h: 26, px: 5, animated: true,
+  draw: (g, seed, t) => drawAction(g, { ...FIGHTER, x: 12, y: 22, facing: 'right', weapon }, action, loop(t, duration), t),
+  code: () => `drawAction(g, { ...person, weapon: '${weapon}', facing }, '${action}', secondsSinceItBegan, t)` });
+for (const [skill, { label, monster, duration }] of Object.entries(SKILLS)) items.push({ id: `combat.skill.${skill}`, label, group: 'Combat', tags: ['Monster skills'], seed: 0, noSeed: true, w: 72, h: 28, px: 4, wide: true, animated: true,
+  draw: (g, seed, t) => drawAction(g, { monster, variant: 0, x: monster === 'spider' || monster === 'werewolf' ? 12 : 9, y: 25, facing: 'right' }, skill, loop(t, duration), t),
+  code: () => `drawAction(g, { monster: '${monster}', variant, x, y, facing }, '${skill}', secondsSinceItBegan, t)` });
+const REACTORS = [['person', FIGHTER], ['skeleton', { monster: 'skeleton', variant: 0 }], ['ghost girl', { monster: 'ghostGirl', variant: 0 }], ['flaming skull', { monster: 'skull', variant: 0 }], ['giant spider', { monster: 'spider', variant: 0 }]];
+for (const [reaction, { label, duration }] of Object.entries(REACTIONS)) for (const [who, actor] of reaction === 'dead' ? REACTORS : REACTORS.slice(0, 1)) {
+  items.push({ id: `combat.reaction.${reaction}${who === 'person' ? '' : '.' + who.replace(/ /g, '-')}`, label: who === 'person' ? label : `${label}: ${who}`, group: 'Combat', tags: ['Reactions'], seed: 0, noSeed: true, w: 34, h: 26, px: 5, animated: true,
+    draw: (g, seed, t) => drawAction(g, { ...actor, x: 20, y: 22, facing: 'right' }, reaction, loop(t, duration + (reaction === 'dead' ? 0.8 : 0)), t),
+    code: () => `drawAction(g, { ...actor, facing }, '${reaction}', secondsSinceItBegan, t)` });
+}
+
 // trees, bushes and terrains
 const JAPANESE_NATURE = ['maple', 'sakura', 'pine', 'cedar', 'bamboo', 'ginkgo', 'azalea', 'paddy'];
 for (const [type, { label, w, h }] of Object.entries(TREES)) items.push({ id: `nature.tree.${type}`, label, group: 'Nature', tags: ['Trees', ...(JAPANESE_NATURE.includes(type) ? ['Japanese'] : [])], seed: 1,
@@ -98,7 +118,7 @@ for (const [id, { label, w, h }] of Object.entries(PARTS)) {
 }
 
 // --- filters ---------------------------------------------------------------------
-const GROUPS = ['All', 'People', 'Animals', 'Monsters', 'Buildings', 'Doors & windows', 'Nature'];
+const GROUPS = ['All', 'People', 'Animals', 'Monsters', 'Combat', 'Buildings', 'Doors & windows', 'Nature'];
 const state = { g: 'All', t: new Set(), q: '' };
 const fromHash = () => {
   const h = new URLSearchParams(location.hash.slice(1));
@@ -129,7 +149,7 @@ const chip = (text, pressed, onClick, n) => {
 };
 function renderFilters() {
   $('#groups').replaceChildren(...GROUPS.map((g) => chip(g, state.g === g, () => { state.g = g; state.t.clear(); update(); }, items.filter((it) => g === 'All' || it.group === g).length)));
-  const ORDER = ['Adults', 'Kids', 'Elderly', 'Uniforms', 'Random', 'Cats', 'Dogs', 'Undead', 'Ghosts', 'Beasts', 'Zombie', 'Werewolf', 'Ghost girl', 'Reaper', 'Giant spider', 'Skeleton', 'Flaming skull', 'Trees', 'Bushes', 'Terrain', 'Doors', 'Windows', 'Wood', 'Glass', 'Japanese', 'European', 'Mosque', 'Homes', 'Shops & food', 'Civic', 'Worship', 'Low', 'Tall', 'Changes shape'];
+  const ORDER = ['Adults', 'Kids', 'Elderly', 'Uniforms', 'Random', 'Cats', 'Dogs', 'Weapons', 'Attacks', 'Monster skills', 'Reactions', 'Undead', 'Ghosts', 'Beasts', 'Zombie', 'Werewolf', 'Ghost girl', 'Reaper', 'Giant spider', 'Skeleton', 'Flaming skull', 'Trees', 'Bushes', 'Terrain', 'Doors', 'Windows', 'Wood', 'Glass', 'Japanese', 'European', 'Mosque', 'Homes', 'Shops & food', 'Civic', 'Worship', 'Low', 'Tall', 'Changes shape'];
   const tags = [...new Set(items.filter(inGroup).flatMap((it) => it.tags))].sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
   // each kind's count: how many you would see with it on
   $('#tags').replaceChildren(...tags.map((t) => chip(t, state.t.has(t), () => { state.t.has(t) ? state.t.delete(t) : state.t.add(t); update(); },

@@ -216,6 +216,31 @@ chapel, skeletons in the schoolyard, werewolves, giant spiders and flaming
 skulls everywhere); **Hide monsters** under the town hides them.
 `drawTownView` draws any sprite with `monster: type` (and `variant`).
 
+## Combat
+
+`src/tinyCombat.js`: weapons, attacks, each monster's own skills, and what
+happens to whoever is on the other end. Everything is drawn from the time
+since it began, so a game decides when things happen.
+
+```js
+import { drawAction, drawArmed, drawWeapon } from './src/tinyCombat.js';
+drawArmed(g, { ...person, weapon: 'sword' }, t);                           // holding a weapon
+const running = drawAction(g, { ...person, weapon: 'axe', facing: 'right' }, 'chop', now - startedAt, t);
+drawAction(g, { monster: 'spider', variant: 0, x, y, facing: 'left' }, 'webTrap', now - startedAt, t);
+drawAction(g, zombie, 'dead', now - diedAt, t);                            // false once it has finished
+```
+
+| Kind | Names |
+| --- | --- |
+| Weapons (`WEAPONS`, `drawWeapon`) | `sword`, `axe`, `spear`, `bow`, `shield` |
+| Attacks (`ACTIONS`) | `slash`, `stab` (sword), `axeSwing`, `chop` (axe), `spearSwing`, `spearStab` (spear), `shoot` (bow: the arrow flies), `defend` (shield) |
+| Monster skills (`SKILLS`) | `bite` (zombie), `claw` (werewolf), `curse` (ghost girl), `scythe` (reaper), `webShot` and `webTrap` (spider), `boneThrow` (skeleton), `fireball` (flaming skull) |
+| Reactions (`REACTIONS`) | `hit` (flashes white, recoils), `shoved` (slides back), `dead` (falls over; a ghost fades away, a skeleton falls into bones, a skull bursts, a spider flips over) |
+
+The actor is anything the library draws: a person, `{ cat: true }`,
+`{ dog: true }`, `{ monster: type, variant }`. The catalogue shows them all
+under Combat.
+
 ## Nature
 
 `src/tinyNature.js`: 15 trees, 10 bushes and 10 terrains, scaled with crisp

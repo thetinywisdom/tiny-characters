@@ -129,6 +129,11 @@ bubble lab, so games can use them and they can grow.
 19. **Shadows**: removed from people, animals, walking monsters, trees and
     bushes; only floating and flying monsters keep one, 30% black
     (`COLORS.shadow`); `snapToPalette` skips it.
+20. **Combat** (`src/tinyCombat.js`): sword, axe, spear, bow, shield;
+    slash, stab, axe swing, chop, spear swing, spear stab, bow shot, shield
+    defend; each monster's skills (bite, claw, curse, scythe, web shot, web
+    trap, bone throw, fireball); hit, shoved back, dead (with special deaths
+    for ghosts, skeletons, skulls, spiders); a Combat group in the catalogue.
 
 ## Next (only when the owner asks)
 
