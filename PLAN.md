@@ -160,18 +160,23 @@ bubble lab, so games can use them and they can grow.
     benches, bins, bikes in a rack, a post box, pot plants, stop signs,
     manholes; placed in the town; a Street group in the catalogue.
 
+24. **Cars and traffic lights** (`src/tinyTraffic.js`): cars, kei cars,
+    taxis, delivery vans, kei trucks and buses in four views; driving on
+    the left; traffic lights at every junction (Japanese: lamps side by
+    side, a walk signal) that cars wait at; turns at junctions; buses
+    waiting at the bus stops; cars stopping for anyone in front; people on
+    foot cross only at the zebra crossings and wait for the green man;
+    vehicles in the catalogue (Street, Vehicles). The stop signs left the
+    town (lights at every junction), but stay in the catalogue.
+
 ## Next (only when the owner asks)
 
 1. Speech with them (floating pixel text from tiny-ui-kit) in the demo.
 2. **More town**: a station plaza and a back alley like the catalogue's
    areas, a park (meadow, pond, trees), street props in the back gardens.
-3. **Cars and traffic lights** (next, agreed): cars, a bus, a taxi, a kei
-   truck, bikes driving in lanes and turning at crossings; traffic lights
-   at the crossings that cars and people wait for; people cross only at
-   the crossings.
-4. **Day and night** (agreed, after the cars): windows light up, lamps,
+3. **Day and night** (next, agreed): windows light up, lamps,
    vending machines and neon glow.
-5. Small life: pigeons that scatter, laundry on balconies, shopkeepers,
+4. Small life: pigeons that scatter, laundry on balconies, shopkeepers,
    steam from the ramen shop, people chatting or sitting on benches.
 
 ## Known issues and small ideas
@@ -185,8 +190,8 @@ bubble lab, so games can use them and they can grow.
   snapped to the pixel grid like everything else).
 
 - Nobody goes inside buildings yet (tapping one walks you to its door).
-- Townspeople cross roads anywhere their path goes, not only at crossings,
-  and walk through each other.
+- Townspeople walk through each other; cars can overlap for a moment when
+  one turns into a lane just ahead of another; nobody rides a bicycle yet.
 - Sign text is a row of pixels, not letters. Real kana would need at least
   5 px tall signs; could try for a few (ラーメン, コンビニ) if the owner wants.
 

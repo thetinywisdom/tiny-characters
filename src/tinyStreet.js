@@ -4,6 +4,7 @@
 // box, pot plants, a stop sign; drawn in the buildings' pixel style.
 //
 //   drawProp(g, p)      one thing { type, x, y, seed, scale }: centred on x, standing on y
+//                       (a traffic light also takes lit: 'green' | 'yellow' | 'red')
 //   PROPS               type -> { label, w, h, depth } (pixels at scale 1)
 //   propSolid(p)        the ground it takes, { x, y, w, h }, so people walk round it
 //   propLights(p)       where it gives light at night: [{ x, y, r }]
@@ -89,6 +90,15 @@ const DEFS = {
     r(c, 0, 2, 5, 2); r(c, 1, 4, 3, 2); r(shade(c, 1.2), 1, 4, 1, 1);
     if (rng() < 0.5) { const f = pick(rng, [RED, '#f2c230', '#d46a8e', WHITE]); r(f, 1, 3, 1, 1); r(f, 3, 5, 1, 1); }
   }],
+  // Japanese signals: lamps side by side, green (a blue green), yellow, red;
+  // a walk signal below (red above, green under). p.lit: 'green' | 'yellow' | 'red'
+  trafficLight: ['Traffic light', 8, 19, 2, (r, rng, p) => {
+    const lit = p.lit ?? 'green', walk = lit === 'red';
+    r(METAL, 3, 0, 1, 16); r(METAL, 2, 0, 3, 1);
+    r(DARK, 0, 16, 8, 3); r(INK, 0, 18, 8, 1);
+    r(lit === 'green' ? '#3fd0a0' : '#34463f', 1, 16, 2, 2); r(lit === 'yellow' ? '#f2c230' : '#4a4636', 3, 16, 2, 2); r(lit === 'red' ? '#e8403a' : '#4a3434', 5, 16, 2, 2);
+    r(DARK, 4, 6, 4, 6); r(walk ? '#4a3434' : '#e8403a', 5, 9, 2, 2); r(walk ? '#3fd0a0' : '#34463f', 5, 7, 2, 2);
+  }],
   stopSign: ['Stop sign (tomare)', 5, 14, 1, (r) => {
     r(METAL, 2, 0, 1, 10);
     r(RED, 0, 12, 5, 2); r(RED, 1, 11, 3, 1); r(RED, 2, 10, 1, 1); r(WHITE, 1, 13, 3, 1);
@@ -105,11 +115,11 @@ export function drawProp(g, p) {
   const def = DEFS[p.type];
   if (!def) return;
   const k = p.scale ?? 1;
-  def[4](makePainter(g, left(p, k), Math.round(p.y), k), seeded((p.seed ?? 1) * 131 + 17));
+  def[4](makePainter(g, left(p, k), Math.round(p.y), k), seeded((p.seed ?? 1) * 131 + 17), p);
 }
 
 // poles and lamps take only the ground under their pole: [dx, w]
-const FOOT = { utilityPole: [4, 2], streetLamp: [0, 3], oldLamp: [1, 3], stopSign: [2, 1] };
+const FOOT = { trafficLight: [3, 1], utilityPole: [4, 2], streetLamp: [0, 3], oldLamp: [1, 3], stopSign: [2, 1] };
 /** The ground it stands on, which nobody walks through: { x, y, w, h }. */
 export function propSolid(p) {
   const { w, depth } = PROPS[p.type], k = p.scale ?? 1, [fx, fw] = FOOT[p.type] ?? [0, w];

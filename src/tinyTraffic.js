@@ -1,0 +1,288 @@
+// Tiny Traffic: cars, kei cars, taxis, vans, kei trucks and buses, drawn in
+// the people's pixel style (one canvas pixel = one pixel, like the people),
+// and the traffic of a town: lanes (driving on the left, as in Japan),
+// traffic lights at the junctions, turns, buses stopping at the bus stops,
+// cars stopping for anyone in front of them.
+//
+//   drawVehicle(g, v, t)        one vehicle { type, x, y, facing, color, seed }:
+//                               centred on x, its wheels on y
+//   VEHICLES                    type -> { label, side: [len, h], front: [w, h] }
+//   makeTraffic(town, opts)     { vehicles, update(dt, t, walkers), mayCross(x, y, nx, ny),
+//                               lightAt(junction, axis) }
+//
+// Plain ES module, no dependencies (seeded from tinyCharacters).
+
+import { seeded } from './tinyCharacters.js';
+
+const INK = '#2f3236', WHITE = '#f2f2ee', RED = '#d8443c', METAL = '#9aa0a6', DARK = '#3a3f44';
+const LAMP = '#fff2c0', TAIL = '#e8403a', GLASS = '#7f9ab4', GLASS2 = '#55687a';
+const shade = (hex, f) => '#' + [1, 3, 5].map((i) => Math.max(0, Math.min(255, Math.round(parseInt(hex.slice(i, i + 2), 16) * f))).toString(16).padStart(2, '0')).join('');
+
+/** Body colours: white and silver most, then black, red, blue, a few bright ones. */
+export const CAR_COLORS = ['#f2f2ee', '#f2f2ee', '#c8ccd0', '#c8ccd0', '#3a3d42', '#c8402c', '#2f5f9a', '#3f7a5a', '#e8c840', '#8a5a7a', '#d87a3a'];
+const TAXI_COLORS = [['#f2c230', '#3a3d42'], ['#3a3d42', '#f2c230'], ['#3f8a5a', '#f2f2ee'], ['#f2f2ee', '#2f5f9a']];
+
+/**
+ * Each: label, its size ([[length, height] side on, [width, height] head on]), and its drawings: side(R, c) facing right, front(R, c) and
+ * back(R, c). R(colour, dx, up, w, h) draws from the bottom-left.
+ * The roof shows from above, as on the buildings.
+ */
+const DEFS = {
+  car: { label: 'Car', size: [[22, 11], [12, 16]],
+    side: (R, c) => {
+      wheels(R, [3, 15]);
+      R(c, 0, 2, 22, 4); R(shade(c, 0.72), 0, 2, 22, 1); R(shade(c, 0.85), 11, 3, 1, 3);
+      R(LAMP, 21, 4, 1, 1); R(TAIL, 0, 4, 1, 1);
+      R(c, 4, 6, 14, 3); R(GLASS, 5, 6, 5, 2); R(GLASS, 11, 6, 5, 2); R(GLASS2, 17, 6, 1, 2);
+      R(shade(c, 1.12), 5, 9, 12, 2);
+    },
+    front: (R, c) => headOn(R, c, { w: 12, face: 4, glass: 3, roof: 5, rear: 2, end: 1 }),
+    back: (R, c) => tailOn(R, c, { w: 12, face: 4, glass: 2, roof: 5, rear: 3, end: 1 }) },
+  kei: { label: 'Kei car', size: [[18, 12], [11, 15]],
+    side: (R, c) => {
+      wheels(R, [2, 12]);
+      R(c, 0, 2, 18, 4); R(shade(c, 0.72), 0, 2, 18, 1); R(LAMP, 17, 4, 1, 1); R(TAIL, 0, 4, 1, 1);
+      R(c, 1, 6, 16, 4); R(GLASS, 2, 7, 6, 2); R(GLASS, 9, 7, 6, 2); R(GLASS2, 16, 7, 1, 2);
+      R(shade(c, 1.12), 1, 10, 15, 2);
+    },
+    front: (R, c) => headOn(R, c, { w: 11, face: 4, glass: 3, roof: 5, rear: 2, end: 0 }),
+    back: (R, c) => tailOn(R, c, { w: 11, face: 4, glass: 3, roof: 5, rear: 2, end: 0 }) },
+  taxi: { label: 'Taxi', size: [[22, 13], [12, 17]],
+    side: (R, c, c2) => { DEFS.car.side(R, c); R(c2, 0, 4, 22, 1); R(WHITE, 9, 11, 4, 2); R(c2, 10, 12, 2, 1); },
+    front: (R, c, c2) => { headOn(R, c, { w: 12, face: 4, glass: 3, roof: 5, rear: 2, end: 1 }); R(WHITE, 4, 10, 4, 2); R(c2, 5, 11, 2, 1); },
+    back: (R, c, c2) => { tailOn(R, c, { w: 12, face: 4, glass: 2, roof: 5, rear: 3, end: 1 }); R(WHITE, 4, 9, 4, 2); R(c2, 5, 10, 2, 1); } },
+  van: { label: 'Delivery van', size: [[22, 13], [12, 18]],
+    side: (R, c, c2) => {
+      wheels(R, [3, 15]);
+      R(c, 0, 2, 22, 9); R(shade(c, 0.72), 0, 2, 22, 1); R(c2, 0, 5, 17, 2);
+      R(GLASS, 17, 7, 4, 3); R(GLASS2, 21, 7, 1, 3); R(LAMP, 21, 4, 1, 1); R(TAIL, 0, 4, 1, 1); R(shade(c, 0.85), 16, 3, 1, 7);
+      R(shade(c, 1.1), 0, 11, 21, 2);
+    },
+    front: (R, c, c2) => headOn(R, c, { w: 12, face: 4, glass: 3, roof: 9, rear: 0, end: 1 }, c2),
+    back: (R, c, c2) => { tailOn(R, c, { w: 12, face: 6, glass: 0, roof: 9, rear: 2, end: 0 }); R(shade(c, 0.8), 6, 1, 1, 6); R(c2, 0, 4, 12, 1); } },
+  keiTruck: { label: 'Kei truck', size: [[20, 11], [11, 17]],
+    side: (R, c, c2) => {
+      wheels(R, [2, 13]);
+      R(c, 13, 2, 7, 8); R(GLASS, 15, 6, 4, 3); R(GLASS2, 19, 6, 1, 3); R(LAMP, 19, 3, 1, 1); R(shade(c, 1.12), 13, 10, 6, 1);
+      R(c, 0, 2, 13, 3); R(shade(c, 0.72), 0, 2, 20, 1); R(TAIL, 0, 3, 1, 1);
+      R('#8a8a84', 0, 5, 13, 2); R(shade(c, 0.85), 0, 5, 1, 2); R(c2, 3, 5, 4, 3); R(shade(c2, 0.8), 3, 5, 4, 1);   // the bed and a load
+    },
+    front: (R, c, c2) => {
+      wheels(R, [0, 9], 2);
+      R(c, 0, 1, 11, 4); R(shade(c, 0.72), 0, 1, 11, 1); R(LAMP, 1, 3, 2, 1); R(LAMP, 8, 3, 2, 1); R(DARK, 4, 2, 3, 1);
+      R(GLASS, 1, 5, 9, 2); R(shade(c, 1.12), 1, 7, 9, 3);
+      R(shade(c, 0.8), 0, 10, 11, 7); R('#8a8a84', 1, 10, 9, 6); R(c2, 3, 11, 5, 3);
+    },
+    back: (R, c, c2) => {
+      wheels(R, [0, 9], 2);
+      R(c, 0, 1, 11, 3); R(shade(c, 0.72), 0, 1, 11, 1); R(TAIL, 1, 2, 2, 1); R(TAIL, 8, 2, 2, 1); R(WHITE, 4, 2, 3, 1);
+      R(shade(c, 0.8), 0, 4, 11, 6); R('#8a8a84', 1, 4, 9, 5); R(c2, 3, 5, 5, 3);
+      R(c, 1, 10, 9, 2); R(GLASS2, 2, 11, 7, 1); R(shade(c, 1.12), 1, 12, 9, 3); R(GLASS, 2, 15, 7, 1);
+    } },
+  bus: { label: 'Bus', size: [[40, 16], [14, 26]],
+    side: (R, c, c2) => {
+      wheels(R, [5, 30]);
+      R(c, 0, 2, 40, 11); R(shade(c, 0.72), 0, 2, 40, 1); R(c2, 0, 4, 40, 2);
+      for (let x = 2; x < 30; x += 5) R(GLASS, x, 8, 4, 3);
+      R(GLASS2, 32, 3, 4, 9); R(INK, 34, 3, 1, 9);                            // the door
+      R(GLASS, 37, 6, 3, 6); R(INK, 37, 11, 3, 1); R('#f2a040', 37, 11, 2, 1); // windscreen, destination
+      R(LAMP, 39, 4, 1, 1); R(TAIL, 0, 5, 1, 2);
+      R(shade(c, 1.1), 0, 13, 40, 3); R(METAL, 12, 14, 10, 2);               // roof, air conditioning
+    },
+    front: (R, c, c2) => {
+      wheels(R, [0, 12], 2);
+      R(c, 0, 1, 14, 5); R(shade(c, 0.72), 0, 1, 14, 1); R(c2, 0, 3, 14, 1); R(LAMP, 1, 3, 2, 1); R(LAMP, 11, 3, 2, 1);
+      R(GLASS, 1, 6, 12, 6); R(INK, 1, 12, 12, 2); R('#f2a040', 3, 12, 8, 1);
+      R(shade(c, 1.1), 0, 14, 14, 12); R(METAL, 4, 17, 6, 5);
+    },
+    back: (R, c, c2) => {
+      wheels(R, [0, 12], 2);
+      R(c, 0, 1, 14, 10); R(shade(c, 0.72), 0, 1, 14, 1); R(c2, 0, 3, 14, 1); R(TAIL, 1, 4, 2, 2); R(TAIL, 11, 4, 2, 2); R(GLASS2, 2, 7, 10, 3);
+      R(shade(c, 1.1), 0, 11, 14, 13); R(METAL, 4, 16, 6, 5); R(GLASS, 1, 24, 12, 2);
+    } },
+};
+
+function wheels(R, xs, w = 4) { for (const x of xs) { R(INK, x, 0, w, w === 4 ? 3 : 2); if (w === 4) R(METAL, x + 1, 1, 2, 1); } }
+/** Seen from the front: bumper, lamps, windscreen, then the roof running back, the rear window, the boot. */
+function headOn(R, c, o, stripe) {
+  const { w } = o;
+  wheels(R, [0, w - 2], 2);
+  let y = 1;
+  R(c, 0, y, w, o.face); R(shade(c, 0.72), 0, y, w, 1); R(LAMP, 1, y + 2, 2, 1); R(LAMP, w - 3, y + 2, 2, 1); R(DARK, 4, y + 1, w - 8, 2); R(WHITE, Math.floor(w / 2) - 1, y, 2, 1);
+  if (stripe) R(stripe, 0, y + 3, w, 1);
+  y += o.face; R(GLASS, 1, y, w - 2, o.glass); R(c, 0, y, 1, o.glass); R(c, w - 1, y, 1, o.glass);
+  y += o.glass; R(shade(c, 1.12), 1, y, w - 2, o.roof);
+  y += o.roof; if (o.rear) R(GLASS2, 2, y, w - 4, o.rear);
+  y += o.rear; if (o.end) R(c, 1, y, w - 2, o.end);
+}
+/** Seen from behind: bumper, tail lamps, rear window, the roof, the windscreen far off, the bonnet. */
+function tailOn(R, c, o) {
+  const { w } = o;
+  wheels(R, [0, w - 2], 2);
+  let y = 1;
+  R(c, 0, y, w, o.face); R(shade(c, 0.72), 0, y, w, 1); R(TAIL, 1, y + 2, 2, 1); R(TAIL, w - 3, y + 2, 2, 1); R(WHITE, Math.floor(w / 2) - 1, y + 1, 2, 1);
+  y += o.face; if (o.glass) { R(GLASS2, 1, y, w - 2, o.glass); R(c, 0, y, 1, o.glass); R(c, w - 1, y, 1, o.glass); }
+  y += o.glass; R(shade(c, 1.12), 1, y, w - 2, o.roof);
+  y += o.roof; if (o.rear) R(GLASS, 2, y, w - 4, o.rear);
+  y += o.rear; if (o.end) R(c, 1, y, w - 2, o.end);
+}
+
+const SIZE = Object.fromEntries(Object.entries(DEFS).map(([k, d]) => [k, { side: d.size[0], front: d.size[1] }]));
+/** Every vehicle: type -> { label, side: [length, height], front: [width, height] }. */
+export const VEHICLES = Object.fromEntries(Object.entries(DEFS).map(([k, d]) => [k, { label: d.label, side: d.size[0], front: d.size[1] }]));
+
+/**
+ * Draw one vehicle { type, x, y, facing, color, color2, seed }: centred on x,
+ * its wheels on y. facing: 'left' | 'right' (side on), 'down' (its front),
+ * 'up' (its back). Without a colour the seed picks one.
+ */
+export function drawVehicle(g, v) {
+  const d = DEFS[v.type] ?? DEFS.car, s = SIZE[v.type] ?? SIZE.car;
+  const rng = seeded((v.seed ?? 1) * 53 + 5);
+  const [tc, tc2] = TAXI_COLORS[Math.floor(rng() * TAXI_COLORS.length)];
+  const c = v.color ?? (v.type === 'taxi' ? tc : v.type === 'bus' ? ['#f2f2ee', '#e8c840', '#3f7a5a'][Math.floor(rng() * 3)] : CAR_COLORS[Math.floor(rng() * CAR_COLORS.length)]);
+  const c2 = v.color2 ?? (v.type === 'taxi' ? tc2 : v.type === 'bus' ? '#2f7ac8' : v.type === 'keiTruck' ? '#b88a58' : '#3f7fd6');
+  const facing = v.facing ?? 'right', side = facing === 'left' || facing === 'right';
+  const [w] = side ? s.side : s.front, L = Math.round(v.x - w / 2), Y = Math.round(v.y);
+  const flip = facing === 'left';
+  const R = (col, dx, up, rw, rh) => { g.fillStyle = col; g.fillRect(L + (flip ? w - dx - rw : dx), Y - up - rh, rw, rh); };
+  if (side) d.side(R, c, c2); else if (facing === 'down') d.front(R, c, c2); else d.back(R, c, c2);
+}
+
+// --- the traffic -------------------------------------------------------------------
+
+/** A traffic light's colour for one direction ('h' along the streets, 'v' along the cross streets) at time t. */
+function signal(jn, axis, t) {
+  const u = (t + jn.j * 5 + jn.i * 1.7) % 16;
+  const h = u < 6 ? 'green' : u < 7.5 ? 'yellow' : u < 8.5 ? 'red' : 'red';
+  const v = u < 8.5 ? 'red' : u < 14.5 ? 'green' : u < 15.5 ? 'yellow' : 'red';
+  return axis === 'h' ? h : v;
+}
+
+/**
+ * The traffic of a town made by makeTown: `cars` cars, kei cars, taxis,
+ * vans and kei trucks, and `buses` buses. Cars drive on the left, wait at
+ * red lights, turn at junctions, keep their distance and stop for anyone in
+ * front of them; buses keep to the streets with bus stops and wait at each.
+ * Hand `vehicles` to drawTownView with the people (they sort with them).
+ */
+export function makeTraffic(town, { cars = 16, buses = 2, seed = 5 } = {}) {
+  const rng = seeded(seed);
+  const { streets, crossStreets, junctions, W } = town, { SIDE, ROAD, VSIDE } = town.dims;
+  const last = streets.length - 1, CRUISE = 30;
+  const hLanes = streets.flatMap((sy, i) => [
+    { kind: 'h', i, dir: 1, y: sy + SIDE + ROAD - 2 },                       // on the left: east-bound in the lower lane
+    { kind: 'h', i, dir: -1, y: sy + SIDE + Math.floor(ROAD / 2) - 1 }]);
+  const vLanes = crossStreets.flatMap((sx, j) => [
+    { kind: 'v', j, dir: 1, x: sx + VSIDE + Math.round(ROAD * 0.73) },        // south-bound on the east side
+    { kind: 'v', j, dir: -1, x: sx + VSIDE + Math.round(ROAD * 0.27) }]);
+  // bus stops: those on a street's far sidewalk, served by its east-bound lane
+  const stops = town.props.filter((p) => p.type === 'busStop').map((p) => ({ x: p.x, lane: hLanes.find((l) => l.dir === 1 && Math.abs(streets[l.i] + town.dims.STREET - p.y) < 6) })).filter((s) => s.lane);
+  const busLanes = [...new Set(stops.map((s) => s.lane))];
+
+  const TYPES = ['car', 'car', 'car', 'car', 'kei', 'kei', 'taxi', 'taxi', 'van', 'keiTruck'];
+  const size = (v) => (v.lane.kind === 'h' ? SIZE[v.type].side : SIZE[v.type].front);
+  const along = (v) => (v.lane.kind === 'h' ? v.x : v.y);
+  // the front and back of a vehicle along its lane
+  const front = (v) => { const [l, h] = size(v); return v.lane.kind === 'h' ? v.x + v.lane.dir * l / 2 : v.lane.dir > 0 ? v.y : v.y - h; };
+  const back = (v) => { const [l, h] = size(v); return v.lane.kind === 'h' ? v.x - v.lane.dir * l / 2 : v.lane.dir > 0 ? v.y - h : v.y; };
+  const facingOf = (lane) => (lane.kind === 'h' ? (lane.dir > 0 ? 'right' : 'left') : lane.dir > 0 ? 'down' : 'up');
+  const vehicles = [];
+  const make = (type, lane, s) => {
+    const v = { vehicle: true, type, seed: 1 + Math.floor(rng() * 9999), lane, speed: CRUISE, wait: 0, served: new Set(), from: lane.i ?? -1 };
+    if (lane.kind === 'h') { v.x = s; v.y = lane.y; } else { v.x = lane.x; v.y = s; }
+    v.facing = facingOf(lane);
+    return v;
+  };
+  const clear = (lane, s, room) => !vehicles.some((o) => o.lane === lane && Math.abs(along(o) - s) < room);
+  for (let n = 0; n < buses && busLanes.length; n++) { const lane = busLanes[n % busLanes.length], s = 40 + rng() * (W - 80); if (clear(lane, s, 50)) vehicles.push(make('bus', lane, s)); }
+  for (let tries = 0; vehicles.length < cars + buses && tries < 400; tries++) {
+    const lane = hLanes[Math.floor(rng() * hLanes.length)], s = 20 + rng() * (W - 40);
+    if (clear(lane, s, 34)) vehicles.push(make(TYPES[Math.floor(rng() * TYPES.length)], lane, s));
+  }
+
+  const lightAt = (jn, axis, t) => signal(jn, axis, t);
+  /** How far v may go before it must stop: the vehicle ahead, a red light, someone in the way. */
+  function room(v, t, walkers) {
+    const d = v.lane.dir, f = front(v);
+    let free = Infinity;
+    for (const o of vehicles) if (o !== v && o.lane === v.lane && (along(o) - along(v)) * d > 0) free = Math.min(free, (back(o) - f) * d - 3);
+    // traffic lights
+    for (const jn of junctions) {
+      let stop;
+      if (v.lane.kind === 'h' && jn.i === v.lane.i) stop = d > 0 ? jn.crossings[0].x - 2 : jn.box.x + jn.box.w + 2;
+      else if (v.lane.kind === 'v' && jn.j === v.lane.j) {
+        if (d > 0 && jn.i > 0) stop = jn.crossings.find((c) => c.axis === 'v' && c.y < jn.sy).y - 2;
+        else if (d < 0 && jn.i < last) { const c = jn.crossings.find((c) => c.axis === 'v' && c.y > jn.sy); stop = c.y + c.h + 2; }
+      }
+      if (stop === undefined) continue;
+      const dd = (stop - f) * d;
+      if (dd < -1 || dd > 40) continue;
+      const light = signal(jn, v.lane.kind, t);
+      if (light === 'red' || (light === 'yellow' && dd > 4)) free = Math.min(free, dd);
+    }
+    // anyone in front (people, animals, monsters, you)
+    for (const p of walkers) {
+      if (p.vehicle) continue;
+      if (v.lane.kind === 'h') { const a = (p.x - f) * d; if (a > -2 && a < 12 && p.y > v.y - 13 && p.y < v.y + 4) free = Math.min(free, a - 3); }
+      else { const a = (p.y - f) * d; if (a > -2 && a < 12 && Math.abs(p.x - v.x) < 8) free = Math.min(free, a - 3); }
+    }
+    return free;
+  }
+
+  /** Turn v onto another lane at its current spot. */
+  function turn(v, lane) {
+    if (lane.kind === 'h') { v.y = lane.y; v.from = lane.i; } else { v.x = lane.x; v.from = v.lane.i; }
+    v.lane = lane; v.facing = facingOf(lane); v.speed = Math.min(v.speed, 14);
+  }
+
+  function update(dt, t, walkers = []) {
+    for (const v of vehicles) {
+      if (v.wait > 0) { v.wait -= dt; v.walking = false; continue; }
+      const free = room(v, t, walkers);
+      const target = free <= 0 ? 0 : Math.min(v.type === 'bus' ? CRUISE * 0.8 : CRUISE, free * 3);
+      v.speed += Math.max(-90 * dt, Math.min(40 * dt, target - v.speed));
+      const step = Math.max(0, Math.min(v.speed * dt, Math.max(0, free)));
+      const d = v.lane.dir, before = along(v);
+      if (v.lane.kind === 'h') v.x += d * step; else v.y += d * step;
+      const now = along(v);
+      // a bus waits at its stops
+      if (v.type === 'bus') for (const s of stops) if (s.lane === v.lane && !v.served.has(s) && (before - s.x) * (now - s.x) <= 0) { v.served.add(s); v.wait = 2.5; }
+      // turns
+      if (v.type !== 'bus') {
+        if (v.lane.kind === 'h') {
+          for (const l of vLanes) if ((before - l.x) * (now - l.x) < 0 || before === l.x) {
+            const can = l.dir > 0 ? v.lane.i < last : v.lane.i > 0;
+            if (can && rng() < 0.3) { turn(v, l); break; }
+          }
+        } else {
+          for (const l of hLanes) if ((before - l.y) * (now - l.y) < 0) {
+            const forced = (d > 0 && l.i === last && l.dir > 0) || (d < 0 && l.i === 0 && l.dir < 0);
+            if (forced || (l.i !== v.from && rng() < 0.3)) { turn(v, l); break; }
+          }
+        }
+      }
+      // out of town: come back in somewhere else
+      if (v.lane.kind === 'h' && (v.x < -40 || v.x > W + 40)) {
+        const lanes = v.type === 'bus' ? busLanes : hLanes, lane = lanes[Math.floor(rng() * lanes.length)], s = lane.dir > 0 ? -30 : W + 30;
+        if (clear(lane, s, 40)) {
+          Object.assign(v, make(v.type === 'bus' ? 'bus' : TYPES[Math.floor(rng() * TYPES.length)], lane, s));
+        }
+      }
+    }
+    // the traffic lights' colours
+    for (const p of town.props) if (p.type === 'trafficLight') { const jn = junctions.find((j) => `${j.i},${j.j}` === p.junction); p.lit = signal(jn, p.axis, t); }
+  }
+
+  /**
+   * May someone at (x, y) step to (nx, ny)? Not onto a crossing while its
+   * cars have green or yellow (anywhere else on foot is up to them).
+   */
+  function mayCross(x, y, nx, ny, t) {
+    if (!town.roadAt(nx, ny) || town.roadAt(x, y)) return true;
+    const c = town.crossingAt(nx, ny);
+    return !c || signal(c.junction, c.axis, t) === 'red';
+  }
+
+  return { vehicles, update, mayCross, lightAt };
+}

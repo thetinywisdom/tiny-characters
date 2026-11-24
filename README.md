@@ -179,7 +179,7 @@ drawTownView(g, town, { x: viewX, y: viewY, w: 200, h: 150 }, [you, ...others], 
 
 | Export | What it does |
 | --- | --- |
-| `makeTown(layout)` | A town: `{ W, H, buildings, props, wires, areas, blocked(x, y), findPath(from, to), randomSpot(rng, within), placeAt(x, y), doorOf(building), ground }`. |
+| `makeTown(layout)` | A town: `{ W, H, streets, crossStreets, junctions, roadAt(x, y), crossingAt(x, y), buildings, props, wires, areas, blocked(x, y), findPath(from, to), randomSpot(rng, within), placeAt(x, y), doorOf(building), ground }`. |
 | `drawTownView(g, town, view, sprites, t)` | The part of the town in `view`: ground, then buildings, trees, bushes, people, cats (`cat: true`) and dogs (`dog: true`) further back first. |
 | `DEFAULT_TOWN` | The demo's layout: `scale` (1.5: the town is drawn that much bigger, the people stay 15 px), `streets`, `crossStreets`, `rows` of buildings, single `buildings`, `props` (street things), `areas` with their own ground (all at scale 1; `makeTown` multiplies them). |
 | `buildingSolids(b)` (tinyBuildings.js) | The ground a building takes; you can step between a torii's posts and under a gas station's canopy. |
@@ -277,7 +277,7 @@ pixel style: utility poles (with a lamp, sometimes a transformer, the
 yellow-and-black guard and an address plate) and the wires between them,
 street lamps, old street lamps, stone lanterns (tōrō), vending machines,
 a bus stop, benches, bins, bikes in a rack, a red post box, pot plants and
-a stop sign (tomare). The catalogue has them all (Street).
+a stop sign (tomare) and traffic lights. The catalogue has them all (Street).
 
 | Export | What it does |
 | --- | --- |
@@ -290,8 +290,40 @@ In the town, `makeTown` puts utility poles along the far side of every
 street with wires between them, street lamps along the cross streets and
 vending machines (and bins) where a row of buildings ends; the layout's
 `props` add bus stops, benches, stone lanterns by the shrine's path, old
-lamps in the square, a bike rack at the school, a post box and stop signs.
+lamps in the square, a bike rack at the school and a post box; two traffic
+lights at every junction.
 The roads have manholes.
+
+## Traffic
+
+`src/tinyTraffic.js`: cars, kei cars, taxis, delivery vans, kei trucks and
+buses, in four views (side on both ways, front, back) at the people's size,
+and a town's traffic.
+
+```js
+import { makeTraffic } from './src/tinyTraffic.js';
+
+const traffic = makeTraffic(town, { cars: 18, buses: 2 });
+// each frame:
+traffic.update(dt, t, people);                       // lights change, cars drive, stop, turn
+drawTownView(g, town, view, [...people, ...traffic.vehicles], t);
+// before someone on foot steps onto a road:
+if (!traffic.mayCross(p.x, p.y, nextX, nextY, t)) { /* wait for the green man */ }
+```
+
+| Export | What it does |
+| --- | --- |
+| `drawVehicle(g, { type, x, y, facing, color, seed })` | One vehicle (`VEHICLES`: `car`, `kei`, `taxi`, `van`, `keiTruck`, `bus`), centred on `x`, wheels on `y`; `facing` `'left'`, `'right'`, `'down'` (its front), `'up'` (its back). The seed picks the colour. |
+| `makeTraffic(town, { cars, buses, seed })` | `{ vehicles, update(dt, t, walkers), mayCross(x, y, nx, ny, t), lightAt(junction, axis, t) }`. |
+
+How it behaves: cars drive on the left, as in Japan; every junction has
+traffic lights (green, yellow, red side by side, and a walk signal) that
+cars wait at; cars turn at junctions, keep their distance, and stop for
+anyone in front of them (you too); buses keep to the streets with bus stops
+and wait at each one; cars leaving town come back in somewhere else. People
+on foot cross the roads only at the zebra crossings and wait for the green
+man there (you can still walk anywhere with the keys). The catalogue has
+the vehicles (Street, Vehicles), turning round.
 
 Speech for these people (floating pixel text, the design picked in the
 bubble lab) lives in **tiny-ui-kit** (`src/ui/pixelOverlay.js`).

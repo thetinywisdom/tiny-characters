@@ -32,6 +32,8 @@ src/tinyCombat.js      weapons and fights: drawWeapon, drawArmed,
                        REACTIONS
 src/tinyStreet.js      street things: drawProp, PROPS, propSolid,
                        propLights, poleTops, drawWire
+src/tinyTraffic.js     vehicles and traffic: drawVehicle, VEHICLES,
+                       makeTraffic (lanes, lights, turns, buses)
 src/tinyTown.js        the 2D town map: makeTown, drawTownView,
                        DEFAULT_TOWN (layout, ground, walkable ground,
                        path finding, place names)
@@ -394,6 +396,43 @@ over the sidewalk). Nothing goes where it would cover a building or another
 thing (`fits`). Poles on the same street are wired (`town.wires`, drawn
 over everything). Garden plants keep clear of things. Manholes are part of
 the ground picture.
+
+## How traffic works (src/tinyTraffic.js)
+
+**Vehicles** are drawn at the people's size (one canvas pixel = one pixel,
+not scaled with the town): `DEFS[type]` has `size: [[length, height] side
+on, [width, height] head on]` and `side(R, c, c2)` (facing right; left is
+mirrored), `front` and `back` (`headOn` / `tailOn`: bumper, lamps, glass,
+then the roof running back, seen from above like the buildings' roofs).
+`R(colour, dx, up, w, h)` draws from the bottom-left. A car is 22 x 11
+side on, 12 x 16 head on; a bus 40 x 16 and 14 x 26. The seed picks colours
+(`CAR_COLORS`, taxi and bus liveries).
+
+**The town's junctions** come from makeTown (`junctionsOf`): for each
+street x cross street, the `box` where the roads cross, its zebra
+`crossings` (`axis` 'h' over the street, west of the junction; 'v' over the
+cross street, north and south of it) and two `signals` (traffic light
+props: one for the street's traffic at the north-west corner, one for the
+cross street's at the south-east). `roadAt(x, y)` / `crossingAt(x, y)`; the
+path-finding grid treats road as blocked except at crossings, so people on
+foot only cross there (`blocked`, which the keys use, still lets you walk
+on roads).
+
+**The traffic** (`makeTraffic`): lanes on the left (`hLanes`: east-bound in
+the lower half of a street, west-bound in the upper; `vLanes`: south-bound
+on the east side of a cross street, north-bound on the west). The lights
+(`signal`): a 16 s cycle per junction, offset by its place (street green
+6 s, yellow 1.5, all red 1, cross street green 6, yellow 1, all red), set
+on the traffic light props each update. Each update, `room(v)` is how far
+a vehicle may go: to the back of the one ahead in its lane, to the stop
+line of a red (or late yellow) light, to anyone standing in front of it;
+it speeds up (40 px/s²) and brakes (90) toward 30 px/s (a bus 24). Turns:
+passing a cross street's lane, a car may turn into it (30 %); going along a
+cross street it may turn at each street and must turn at the last one.
+Buses stay on the east-bound lanes of streets with bus stops and wait 2.5
+s at each. Vehicles leaving the town on a street come back in at the edge
+of another. `mayCross` stops someone on foot from stepping onto a crossing
+unless that crossing's cars have red (the walk signal is green then).
 
 ## Common tasks
 

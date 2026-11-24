@@ -23,6 +23,7 @@ import { drawCat, drawDog } from './tinyAnimals.js';
 import { drawMonster } from './tinyMonsters.js';
 import { BUSHES, TREES, drawBush, drawTerrain, drawTree } from './tinyNature.js';
 import { PROPS, drawProp, drawWire, poleTops, propSolid } from './tinyStreet.js';
+import { drawVehicle } from './tinyTraffic.js';
 import { seeded as seededRng } from './tinyCharacters.js';
 
 const CELL = 4;                                          // path-finding grid
@@ -109,7 +110,7 @@ export const DEFAULT_TOWN = {
     { type: 'postBox', x: 252, y: 139 }, { type: 'bikeRack', x: 226, y: 404 }, { type: 'bench', x: 356, y: 404 },
     { type: 'stoneLantern', x: 72, y: 378 }, { type: 'stoneLantern', x: 108, y: 378 }, { type: 'stoneLantern', x: 72, y: 398 }, { type: 'stoneLantern', x: 108, y: 398 },
     { type: 'bench', x: 30, y: 380 }, { type: 'oldLamp', x: 408, y: 410 }, { type: 'oldLamp', x: 552, y: 410 },
-    { type: 'bench', x: 452, y: 410 }, { type: 'bench', x: 508, y: 410 }, { type: 'stopSign', x: 186, y: 150 }, { type: 'stopSign', x: 376, y: 150 },
+    { type: 'bench', x: 452, y: 410 }, { type: 'bench', x: 508, y: 410 },
     { type: 'plantPot', x: 200, y: 106 }, { type: 'plantPot', x: 380, y: 196 }, { type: 'bins', x: 196, y: 280 },
   ],
   plants: [
@@ -128,6 +129,25 @@ export const DEFAULT_TOWN = {
 
 
 /**
+ * Where the streets meet the cross streets: for each, the box where the
+ * roads cross, the zebra crossings next to it (`axis` 'h' over the street,
+ * 'v' over the cross street) and where its two traffic lights stand (one for
+ * the street's traffic at the near corner, one for the cross street's).
+ */
+function junctionsOf(layout) {
+  const { streets, crossStreets, k } = layout, { SIDE, ROAD, STREET, VSIDE, VSTREET } = streetDims(k), m = (v) => Math.round(v * k);
+  const out = [];
+  streets.forEach((sy, i) => crossStreets.forEach((sx, j) => {
+    const crossings = [{ axis: 'h', x: sx - m(9), y: sy + SIDE, w: m(7), h: ROAD }];
+    if (i > 0) crossings.push({ axis: 'v', x: sx + VSIDE, y: sy - m(6), w: ROAD, h: m(5) });
+    if (i < streets.length - 1) crossings.push({ axis: 'v', x: sx + VSIDE, y: sy + STREET + 1, w: ROAD, h: m(5) });
+    out.push({ i, j, sx, sy, box: { x: sx + VSIDE, y: sy + SIDE, w: ROAD, h: ROAD }, crossings,
+      signals: [{ axis: 'h', x: sx - m(13), y: sy + SIDE - 2 }, { axis: 'v', x: sx + VSTREET + m(4), y: sy + STREET - 2 }] });
+  }));
+  return out;
+}
+
+/**
  * The things along the streets: utility poles (with lamps) on the far
  * sidewalk of every street, wired together; street lamps at the edges of the
  * cross streets; vending machines (and bins) where a row of buildings ends
@@ -137,6 +157,8 @@ export const DEFAULT_TOWN = {
 function placeProps(layout, buildings, rowEnds) {
   const { W, streets, crossStreets, k, pad } = layout, { STREET, VSTREET } = streetDims(k), m = (v) => Math.round(v * k);
   const props = [...layout.props];
+  // a traffic light at two corners of every junction (tinyTraffic sets their colours)
+  for (const jn of junctionsOf(layout)) for (const sg of jn.signals) props.push({ type: 'trafficLight', x: sg.x, y: sg.y, axis: sg.axis, junction: `${jn.i},${jn.j}`, lit: sg.axis === 'h' ? 'green' : 'red', seed: 1, scale: k });
   const box = (p) => { const { w, h } = PROPS[p.type]; return { x: p.x - (w * k) / 2, y: p.y - h * k, w: w * k, h: h * k }; };
   const hit = (a, b, pad = 1) => a.x < b.x + b.w + pad && b.x < a.x + a.w + pad && a.y < b.y + b.h + pad && b.y < a.y + a.h + pad;
   const pictures = buildings.map((b) => { const { w, h } = buildingSize(b); return { x: b.x - w / 2, y: b.y - h, w, h }; });
@@ -214,6 +236,12 @@ export function makeTown(layout0 = DEFAULT_TOWN) {
   const { pad } = layout;
   const top = streets[0] + 2, bottom = streets[streets.length - 1] + STREET - 3;   // above the first street and below the last: forest
   const onStreet = (y) => streets.some((sy) => y >= sy + 2 && y <= sy + STREET - 2);
+  // the roads, and the crossings people cross them at
+  const { SIDE, ROAD, VSIDE } = streetDims(k), lastStreet = streets[streets.length - 1];
+  const junctions = junctionsOf(layout), crossings = junctions.flatMap((jn) => jn.crossings.map((c) => ({ ...c, junction: jn })));
+  const roadAt = (x, y) => streets.some((sy) => y >= sy + SIDE && y < sy + SIDE + ROAD)
+    || (y >= streets[0] + SIDE && y < lastStreet + SIDE + ROAD && crossStreets.some((sx) => x >= sx + VSIDE && x < sx + VSIDE + ROAD));
+  const crossingAt = (x, y) => crossings.find((c) => x >= c.x && x < c.x + c.w && y >= c.y && y < c.y + c.h);
   // trees block at the trunk, bushes at their base, a pond everywhere
   let plants = layout.plants.map((p) => ({ ...p, type: p.tree ?? p.bush, kind: p.tree ? 'tree' : 'bush' }));
   const rng = seededRng(layout.seed ?? 7);
@@ -260,7 +288,11 @@ export function makeTown(layout0 = DEFAULT_TOWN) {
   // the path-finding grid: a cell is free if its centre is
   const gw = Math.ceil(W / CELL), gh = Math.ceil(H / CELL);
   const free = new Uint8Array(gw * gh);
-  for (let cy = 0; cy < gh; cy++) for (let cx = 0; cx < gw; cx++) free[cy * gw + cx] = blocked(cx * CELL + 2, cy * CELL + 2) ? 0 : 1;
+  for (let cy = 0; cy < gh; cy++) for (let cx = 0; cx < gw; cx++) {
+    // people on foot go round buildings and things, and over the roads only at the crossings
+    const x = cx * CELL + 2, y = cy * CELL + 2;
+    free[cy * gw + cx] = blocked(x, y) || (roadAt(x, y) && !crossingAt(x, y)) ? 0 : 1;
+  }
   const freeCells = [];
   for (let i = 0; i < free.length; i++) if (free[i]) freeCells.push(i);
   const cellOf = (x, y) => Math.max(0, Math.min(gh - 1, Math.floor(y / CELL))) * gw + Math.max(0, Math.min(gw - 1, Math.floor(x / CELL)));
@@ -332,7 +364,7 @@ export function makeTown(layout0 = DEFAULT_TOWN) {
     const [a1, a2] = poleTops(poles[i - 1]), [b1, b2] = poleTops(poles[i]);
     wires.push([a1, b1, Math.round((b1.x - a1.x) / 22)], [a2, b2, Math.round((b2.x - a2.x) / 18)]);
   }
-  return { W, H, pad, scale: k, buildings, plants, props, wires, areas, solids, blocked, findPath, randomSpot, placeAt, doorOf, ground: drawGround(layout) };
+  return { W, H, pad, scale: k, streets, crossStreets, dims: streetDims(k), junctions, roadAt, crossingAt, buildings, plants, props, wires, areas, solids, blocked, findPath, randomSpot, placeAt, doorOf, ground: drawGround(layout) };
 }
 
 /** The town's ground (grass, grounds, streets, cross streets, crossings) on a canvas of its own. */
@@ -393,8 +425,8 @@ function drawGround(layout) {
 
 /**
  * Draw the part of `town` in `view` ({ x, y, w, h }) into `g`: the ground,
- * then the buildings and `sprites` (people; cats `cat: true`; dogs `dog: true`;
- * monsters `monster: type`)
+ * then the buildings, street things and `sprites` (people; cats `cat: true`;
+ * dogs `dog: true`; monsters `monster: type`; vehicles `vehicle: true`)
  * further back first, so whoever stands lower on the screen is in front.
  * dpx: device pixels per canvas pixel, when the canvas is drawn bigger
  * underneath (g scaled by dpx) so the signs' names can be written.
@@ -412,12 +444,13 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1 } = {}) {
   for (const a of town.areas) if (a.ground === 'water' && a.x < view.x + view.w && a.x + a.w > view.x && a.y < view.y + view.h && a.y + a.h > view.y) drawTerrain(g, { type: 'water', x: a.x, y: a.y, w: a.w, h: a.h, scale: town.scale, seed: a.x + a.y, t });
   for (const p of town.props) if (p.x > view.x - 20 && p.x < view.x + view.w + 20 && p.y > view.y && p.y < view.y + view.h + 50) items.push({ y: p.y, prop: p });
   for (const p of town.plants) if (p.x > view.x - 30 && p.x < view.x + view.w + 30 && p.y > view.y && p.y < view.y + view.h + 60) items.push({ y: p.y, p });
-  for (const s of sprites) if (s.x > view.x - 8 && s.x < view.x + view.w + 8 && s.y > view.y - 2 && s.y < view.y + view.h + 24) items.push({ y: s.y, s });
+  for (const s of sprites) if (s.x > view.x - 24 && s.x < view.x + view.w + 24 && s.y > view.y - 2 && s.y < view.y + view.h + 24) items.push({ y: s.y, s });
   items.sort((a, b) => a.y - b.y || (a.b ? -1 : 1));
   for (const it of items) {
     if (it.b) drawBuilding(g, dpx === 1 ? it.b : { ...it.b, dpx });
     else if (it.prop) drawProp(g, it.prop);
     else if (it.p) (it.p.kind === 'tree' ? drawTree : drawBush)(g, it.p);
+    else if (it.s.vehicle) drawVehicle(g, it.s);                                   // cars, buses: { vehicle: true, type, facing, ... }
     else if (it.s.monster) drawMonster(g, { ...it.s, type: it.s.monster }, t);   // monsters: { monster: 'zombie', variant, ... }
     else (it.s.dog ? drawDog : it.s.cat ? drawCat : drawCharacter)(g, it.s, t);
   }

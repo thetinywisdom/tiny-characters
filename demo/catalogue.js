@@ -5,6 +5,7 @@ import { BUSHES, TERRAINS, TREES, drawBush, drawTerrain, drawTree } from '../src
 import { MONSTERS, drawMonster } from '../src/tinyMonsters.js';
 import { ACTIONS, REACTIONS, SKILLS, WEAPONS, drawAction, drawWeapon } from '../src/tinyCombat.js';
 import { PROPS, drawProp } from '../src/tinyStreet.js';
+import { VEHICLES, drawVehicle } from '../src/tinyTraffic.js';
 
 // The catalogue: every person, animal and building, with filters (group,
 // kind, search) and a seed per card (type it, or roll it with 🎲). The copy
@@ -118,10 +119,21 @@ for (const [id, { label, w, h }] of Object.entries(PARTS)) {
 
 // the things on the streets
 const PROP_TAGS = { utilityPole: ['Lights', 'Japanese'], streetLamp: ['Lights'], oldLamp: ['Lights', 'European'], stoneLantern: ['Lights', 'Japanese'], vendingMachine: ['Lights', 'Japanese'],
-  bench: ['Seats'], busStop: ['Seats'], postBox: ['Japanese'], stopSign: ['Japanese'] };
+  bench: ['Seats'], busStop: ['Seats'], postBox: ['Japanese'], stopSign: ['Japanese'], trafficLight: ['Lights', 'Japanese'] };
+const LIGHT_CYCLE = ['green', 'green', 'yellow', 'red', 'red'];
 for (const [type, { label, w, h }] of Object.entries(PROPS)) items.push({ id: `street.${type}`, label, group: 'Street', tags: PROP_TAGS[type] ?? ['Things'], seed: 1,
-  w: w + 8, h: h + 4, px: 0, draw: (g, seed) => drawProp(g, { type, x: (w + 8) / 2, y: h + 2, seed }),
-  code: (seed) => `drawProp(g, { type: '${type}', x, y, seed: ${seed} })` });
+  w: w + 8, h: h + 4, px: 0, animated: type === 'trafficLight',
+  draw: (g, seed, t, moving) => drawProp(g, { type, x: (w + 8) / 2, y: h + 2, seed, lit: moving ? LIGHT_CYCLE[Math.floor(t / 1.2) % 5] : 'green' }),
+  code: (seed) => `drawProp(g, { type: '${type}', x, y, seed: ${seed}${type === 'trafficLight' ? ", lit: 'green'" : ''} })` });
+// vehicles, turning round to show their four sides
+const VIEWS = ['right', 'down', 'left', 'up'];
+for (const [type, { label, side, front }] of Object.entries(VEHICLES)) {
+  const w = Math.max(side[0], front[0]) + 8, h = Math.max(side[1], front[1]) + 4;
+  items.push({ id: `street.vehicle.${type}`, label, group: 'Street', tags: ['Vehicles', ...(type === 'kei' || type === 'keiTruck' || type === 'taxi' ? ['Japanese'] : [])], seed: 1,
+    w, h, px: 0, animated: true,
+    draw: (g, seed, t, moving) => drawVehicle(g, { type, x: w / 2, y: h - 2, seed, facing: moving ? VIEWS[Math.floor(t / 1.2) % 4] : 'right' }),
+    code: (seed) => `drawVehicle(g, { type: '${type}', x, y, facing: 'right', seed: ${seed} })` });
+}
 
 // --- filters ---------------------------------------------------------------------
 const GROUPS = ['All', 'People', 'Animals', 'Monsters', 'Combat', 'Buildings', 'Doors & windows', 'Street', 'Nature'];
@@ -155,7 +167,7 @@ const chip = (text, pressed, onClick, n) => {
 };
 function renderFilters() {
   $('#groups').replaceChildren(...GROUPS.map((g) => chip(g, state.g === g, () => { state.g = g; state.t.clear(); update(); }, items.filter((it) => g === 'All' || it.group === g).length)));
-  const ORDER = ['Adults', 'Kids', 'Elderly', 'Uniforms', 'Random', 'Cats', 'Dogs', 'Weapons', 'Attacks', 'Monster skills', 'Reactions', 'Undead', 'Ghosts', 'Beasts', 'Zombie', 'Werewolf', 'Ghost girl', 'Reaper', 'Giant spider', 'Skeleton', 'Flaming skull', 'Trees', 'Bushes', 'Terrain', 'Doors', 'Windows', 'Wood', 'Glass', 'Japanese', 'European', 'Mosque', 'Homes', 'Shops & food', 'Civic', 'Worship', 'Low', 'Tall', 'Lights', 'Seats', 'Things'];
+  const ORDER = ['Adults', 'Kids', 'Elderly', 'Uniforms', 'Random', 'Cats', 'Dogs', 'Weapons', 'Attacks', 'Monster skills', 'Reactions', 'Undead', 'Ghosts', 'Beasts', 'Zombie', 'Werewolf', 'Ghost girl', 'Reaper', 'Giant spider', 'Skeleton', 'Flaming skull', 'Trees', 'Bushes', 'Terrain', 'Doors', 'Windows', 'Wood', 'Glass', 'Japanese', 'European', 'Mosque', 'Homes', 'Shops & food', 'Civic', 'Worship', 'Low', 'Tall', 'Lights', 'Seats', 'Things', 'Vehicles'];
   const tags = [...new Set(items.filter(inGroup).flatMap((it) => it.tags))].sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
   // each kind's count: how many you would see with it on
   $('#tags').replaceChildren(...tags.map((t) => chip(t, state.t.has(t), () => { state.t.has(t) ? state.t.delete(t) : state.t.add(t); update(); },

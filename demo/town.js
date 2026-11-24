@@ -2,6 +2,7 @@ import { BUILDINGS, SIGN_FONT, buildingSize, buildingSolids, drawBuilding } from
 import { LOOKS, facingFor, randomCharacter, seeded } from '../src/tinyCharacters.js';
 import { CAT_COATS, DOG_BREEDS, dogFor } from '../src/tinyAnimals.js';
 import { drawTownView, makeTown } from '../src/tinyTown.js';
+import { makeTraffic } from '../src/tinyTraffic.js';
 
 // The town: a 2D map of streets and blocks. The view follows you (the gold
 // line): arrow keys / WASD, or tap where to go (tap a building to walk to its
@@ -15,6 +16,7 @@ const D = 4;
 canvas.width = VW * D; canvas.height = VH * D;
 const here = document.querySelector('#here');
 const town = makeTown();
+const traffic = makeTraffic(town, { cars: 18, buses: 2 });
 const area = (name) => town.areas.find((a) => a.name === name);
 
 let people, you, seed = 11;
@@ -85,11 +87,12 @@ function heel(d, dt) {
   else { d.walking = false; d.facing = o.facing ?? 'down'; }
 }
 
-/** Walk p along its path at `speed` px/s; true when it has arrived. */
+/** Walk p along its path at `speed` px/s (waiting at a crossing while its cars have green); true when it has arrived. */
 function follow(p, speed, dt) {
   const q = p.path?.[0];
   if (!q) { p.path = null; return true; }
   const ex = q.x - p.x, ey = q.y - p.y, d = Math.hypot(ex, ey), step = speed * dt;
+  if (d > 0 && !p.flying && !traffic.mayCross(p.x, p.y, p.x + ex / d * (step + 2), p.y + ey / d * (step + 2), t)) { p.walking = false; p.facing = facingFor(ex, ey, p.facing); return false; }
   if (d <= step) { p.x = q.x; p.y = q.y; p.path.shift(); }
   else { p.x += ex / d * step; p.y += ey / d * step; }
   if (Math.hypot(ex, ey) > 0.3) p.facing = facingFor(ex, ey, p.facing);
@@ -129,6 +132,8 @@ function frame(now) {
     p.path = town.findPath(p, to);
     if (!p.path) p.wait = 1;
   }
+  const shownPeople = showMonsters ? people : people.filter((p) => !p.monster);
+  traffic.update(dt, t, shownPeople);
   // the view follows you
   view = {
     x: Math.round(Math.max(0, Math.min(town.W - VW, you.x - VW / 2))),
@@ -136,7 +141,7 @@ function frame(now) {
     w: VW, h: VH,
   };
   g.setTransform(D, 0, 0, D, 0, 0);
-  drawTownView(g, town, view, showMonsters ? people : people.filter((p) => !p.monster), t, { dpx: D });
+  drawTownView(g, town, view, [...shownPeople, ...traffic.vehicles], t, { dpx: D });
   const name = town.placeAt(you.x, you.y);
   if (name !== shown) { shown = name; here.textContent = name; }
   requestAnimationFrame(frame);
