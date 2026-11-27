@@ -21,6 +21,17 @@ function shifted(r0, ox) {
   return r;
 }
 
+/**
+ * A sign whose name fills the whole board (as the old one-colour signs did), the
+ * board edged like the kit's sign. Falls back to the kit's letter marks.
+ */
+function bigSign(r, bg, fg, dx, up, w, h, text) {
+  const f = r.force ?? r;
+  f(shade(bg, 0.7), dx, up, w, h); f(bg, dx + 1, up + 1, w - 2, h - 2);
+  if (r.text && r.text(text, fg, dx, up, w, h)) return;
+  sign(r, bg, fg, dx, up, w, h, '');
+}
+
 export const PART = {
   fishmonger: {
     approved: false,
@@ -49,8 +60,8 @@ export const PART = {
         r(shade(c, 0.6), x + 4, 6, 1, 1); r(shade(c, 0.6), x + 4, 4, 1, 1);    // the forked tail
       }
       r(WHITE, 2, 9, w - 4, 1); r(shade(WHITE, 0.85), 2, 8, w - 4, 1);         // the counter's white edge
-      sign(r, WHITE, aw[0], 1, 21, w - 2, 7, 'FISH');
-      awning(r, aw[0], aw[1], -1, 17, w + 2, 5);
+      bigSign(r, WHITE, aw[0], 1, 21, w - 2, 7, 'FISH');
+      awning(r, aw[0], aw[1], -1, 16, w + 2, 5);                              // a row lower than a shop's: the big FISH sign clear above it
       flatTop(r, v, wall, SHOP_GF, w);
     },
   },
@@ -112,7 +123,7 @@ export const PART = {
       const rc = v.pick(['#d0603e', '#7a3a32', '#4a5560']);
       pitched(r, rc, -1, GF, bw + 2, 21, 2);
       r(signC, -1, GF, bw + 2, 2); r(shade(signC, 1.2), -1, GF + 1, bw + 2, 1);   // the fascia in the chain's colour
-      sign(r0, signC, WHITE, 0, 32, 13, 9, 'DINER');                          // the pole's sign, in front of the eave
+      bigSign(r0, signC, WHITE, 0, 33, 12, 8, 'DINER');                          // the pole's sign, in front of the eave
     },
   },
 
@@ -123,9 +134,10 @@ export const PART = {
       const BODY = '#e8e0d0', DARK = '#3a3f44', BALL = '#c09060';
       r(BODY, 0, 0, w, SHOP_GF); r(shade(BODY, 0.86), w - 2, 0, 2, SHOP_GF); r(shade(BODY, 1.04), 0, 0, 1, SHOP_GF);
       flatRoof(r, BODY, 0, SHOP_GF, w, 12);
-      // the open window: the stall inside, price cards on the back wall
+      // the open window: the stall inside, a shelf of sauce, mayonnaise and aonori at the back
       r(DARK, 2, 9, w - 4, 9); r(shade(DARK, 0.8), 2, 16, w - 4, 2);
-      for (let x = 7; x + 3 <= w - 7; x += 5) { r(PAPER, x, 12, 3, 4); r(INK, x + 1, 13, 1, 2); }
+      r(shade(DARK, 1.3), 3, 13, w - 6, 1);
+      for (let x = 6, k = 0; x + 1 <= w - 6; x += 3, k++) r(['#7a3a32', '#f2efe0', '#5f8f5a'][k % 3], x, 14, 1, 2);
       // the counter: wood, a lit top, a red octopus on its front
       r(DARKWOOD, 0, 0, w, 7);
       for (let x = 4; x < w; x += 4) r(shade(DARKWOOD, 0.82), x, 1, 1, 6);
@@ -134,12 +146,12 @@ export const PART = {
       const ox = Math.floor(w / 2) - 3;
       r(DARKWOOD, ox - 1, 0, 9, 7);
       icon(r, ox, 1, ['..rrr..', '.rrrrr.', '.wwwww.', '.rrrrr.', 'r.r.r.r'], { r: '#d8443c', w: WHITE });
-      // the griddle: rows of balls in their hollows
-      r('#2a2c30', 3, 9, w - 6, 3);
+      // the iron griddle on the counter: two rows of balls in their hollows
+      r('#2a2c30', 3, 9, w - 6, 3); r(shade('#2a2c30', 1.4), 3, 11, w - 6, 1);
+      for (let x = 6; x + 3 <= w - 4; x += 4) { r(shade(BALL, 0.82), x, 11, 3, 1); }
       for (let x = 4; x + 3 <= w - 4; x += 4) { r(BALL, x, 9, 3, 2); r(shade(BALL, 1.2), x, 10, 2, 1); }
-      for (let x = 6; x + 2 <= w - 5; x += 4) { r(shade(BALL, 0.8), x, 11, 2, 1); }
       awning(r, aw[0], aw[1], -1, 17, w + 2, 5);
-      sign(r, '#e0d2b0', '#7a3a32', 0, 22, w, 9, 'TAKOYAKI');
+      bigSign(r, '#e0d2b0', '#7a3a32', 0, 22, w, 9, 'TAKOYAKI');
       lantern(r, v.chance(0.5) ? 2 : w - 5, 10);
     },
   },
@@ -157,19 +169,17 @@ export const PART = {
       const x0 = signLeft ? 11 : 3, x1 = signLeft ? w - 3 : w - 11;
       for (let f = 1; f < floors; f++) windowRow(r, rng, 'neon', x0, x1, floorAt(f) + SILL, n);
       // the upright sign, a chase of bulbs either side
-      const sx = signLeft ? 2 : w - 8, sh = top - GF - 6, BULBS = ['#e8603a', '#f2a040', '#e870a0', '#6ac8f2'];
-      for (const bx of [sx - 1, sx + 6]) for (let k = 0, y = GF + 3; y < GF + 2 + sh; y += 2, k++) r(BULBS[k % 4], bx, y, 1, 1);
-      r(METAL, sx + 1, GF + 1, 1, 2); r(METAL, sx + 4, GF + 1, 1, 2);
-      upright(r, WHITE, '#d8302a', sx, GF + 3, 6, sh, 'KARAOKE');
+      const sx = signLeft ? 2 : w - 9, sh = top - GF - 6, BULBS = ['#e8603a', '#f2a040', '#e870a0', '#6ac8f2'];
+      for (const bx of [sx - 1, sx + 7]) for (let k = 0, y = GF + 3; y < GF + 3 + sh; y += 2, k++) r(BULBS[k % 4], bx, y, 1, 1);
+      r(METAL, sx + 1, GF + 1, 1, 2); r(METAL, sx + 5, GF + 1, 1, 2);       // its brackets
+      const f = r.force ?? r;
+      f(shade(WHITE, 0.7), sx, GF + 3, 7, sh); f(WHITE, sx + 1, GF + 4, 5, sh - 2);
+      if (!(r.text && r.text('KARAOKE', '#d8302a', sx, GF + 3, 7, sh, true))) upright(r, WHITE, '#d8302a', sx, GF + 3, 7, sh, '');
       // the lobby: tinted glass, a glass door, a neon bar over them
       const glassC = v.pick(['#7a6aa8', '#a85a8a', '#5a7aa8']);
       WINDOWS.shop(r, 3, 0, w - 21, 18, FRAME, glassC); DOORS.glass(r, w - 15);
       const neonC = v.pick(['#f2a040', '#e870a0', '#6ac8f2']);
       r('#1f1f24', 3, 19, w - 12, 4); r(neonC, 4, 20, w - 14, 2);
-      // a menu board standing outside
-      const mx = Math.round((w - 21) / 2) - 1;
-      r(LIGHTWOOD, mx, 0, 1, 8); r(LIGHTWOOD, mx + 5, 0, 1, 8); r(INK, mx, 2, 6, 6); r(WHITE, mx + 1, 3, 4, 4);
-      r(RED, mx + 1, 6, 4, 1); r(INK, mx + 1, 4, 3, 1);
       flatTop(r, v, wall, top, w);
     },
   },

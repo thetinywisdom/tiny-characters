@@ -8,7 +8,7 @@
 import { shade, seeded } from '../tinyCharacters.js';
 import {
   V, floorAt, DOORS, WINDOWS, WW, oneWindow, SHOPS, shopFront, upright, laundry, flatRoof, flatTop, aRoof, pitched,
-  INK, WHITE, LIT, GOLD, WOOD, DARKWOOD, CONCRETE, METAL, LANTERN, HOUSE_ROOFS, DOOR_COLOURS,
+  INK, WHITE, LIT, CONCRETE, METAL, LANTERN, HOUSE_ROOFS, DOOR_COLOURS,
 } from '../tinyBuildingsFull.js';
 
 const GF = 24, SG = 28, FL = 20, SILL = 6;                               // the kit's storeys (FULL_STOREY)
@@ -59,9 +59,9 @@ function wallLamp(r, dx, up) {
   r(INK, dx, up, 3, 1); r(LIT, dx, up + 1, 3, 3); r(shade(LIT, 1.06), dx, up + 3, 1, 1); r(INK, dx - 1, up + 4, 5, 1); r(INK, dx + 1, up + 5, 1, 1);
 }
 /** A railing: a top rail at `up` (lit on top), balusters every `step` below it down to `from`. */
-function railing(r, c, dx, w, from, up, step = 3) {
-  for (let x = dx; x < dx + w; x += step) r(shade(c, 0.86), x, from, 1, up - from);
-  r(shade(c, 0.86), dx + w - 1, from, 1, up - from);
+function railing(r, c, dx, w, from, up, step = 3, bar = shade(c, 0.86)) {
+  for (let x = dx; x < dx + w; x += step) r(bar, x, from, 1, up - from);
+  r(bar, dx + w - 1, from, 1, up - from);
   r(c, dx, up, w, 1); r(shade(c, 1.08), dx, up, w, 1);
 }
 
@@ -116,11 +116,11 @@ export const PART = {
       r(wall, 0, 0, w, top); edges(r, wall, 0, w, 0, top);
       for (let f = 1; f < floors; f++) {
         const up = floorAt(f);
-        if (balcony) r(shade(wall, 0.84), 1, up + 2, w - 2, 4);           // the balcony's back wall, in its shade
+        if (balcony) r(shade(wall, 0.7), 1, up + 2, w - 2, 4);           // the balcony's back wall, in its shade
         row(r, rng, kind, 3, w - 3, up + SILL + (balcony ? 1 : 0), n);
         if (balcony) {
           r(shade(BAL, 0.62), 1, up, w - 2, 1); r(shade(BAL, 0.9), 1, up + 1, w - 2, 1);   // the slab: its underside, its face
-          railing(r, BAL, 1, w - 2, up + 2, up + 6, 3);
+          railing(r, BAL, 1, w - 2, up + 2, up + 6, 3, shade(BAL, 0.96));
           if (b.laundry) laundry(r, b, f, 3, w - 3, up + 6, f === floors - 1);
         } else band(r, wall, 0, w, up);
       }
@@ -159,7 +159,6 @@ export const PART = {
         DOORS.steel(r, ux, up, doorC);
         r(shade(wall, 0.72), ux + 10, up + SILL + 9, 9, 1);               // a little hood over the window
         WINDOWS.alu(r, rng, ux + 11, up + SILL);
-        r(INK, ux + 11, up + SILL - 1, 7, 1);                             // the window's grille rail
       }
       // the corridor along the upper floor: its slab, the railing (it hides the doors' feet)
       r(shade(wall, 0.6), 0, GF - 1, bw, 1); r(shade(RAIL, 1.0), 0, GF, bw, 2); r(shade(RAIL, 1.2), 0, GF + 1, bw, 1);
@@ -167,9 +166,11 @@ export const PART = {
       if (b.laundry) laundry(r, b, 1, 3, bw - 3, GF + 6, true);
       // the outside stairs: a landing at the corridor, steps down to the right, a post
       r(RAIL, bw, GF, 6, 2); r(shade(RAIL, 1.2), bw, GF + 1, 6, 1);
-      for (let k = 1; k <= 11; k++) { const x = bw + 1 + Math.floor(k / 2), up = GF - k * 2; r(shade(RAIL, 1.15), x, up, 3, 1); r(shade(RAIL, 0.75), x, up - 1, 3, 1); }
-      for (let k = 0; k <= 11; k++) r(RAIL, bw + 1 + Math.floor(k / 2), GF + 5 - k * 2, 1, 2);   // the handrail
-      r(shade(RAIL, 0.8), bw + 7, 0, 1, GF);                              // the post
+      for (let k = 1; k <= 12; k++) {                                     // the steps: a lit tread, a riser, the stringer at their end
+        const x = bw + Math.floor((k + 1) / 2), up = GF - k * 2;
+        r(shade(RAIL, 1.2), x, up + 1, 3, 1); r(shade(RAIL, 0.8), x, up, 3, 1); r(shade(RAIL, 0.6), x + 3, up, 1, 2);
+      }
+      r(shade(RAIL, 0.6), bw + 3, 0, 1, 10);                              // a post under the flight
       if (v.chance(0.5)) { r(shade(wall, 0.8), 0, top - 1, bw, 1); flatRoof(r, wall, 0, top, bw, 18); }
       else { r(shade(wall, 0.75), 0, top - 2, bw, 2); pitched(r, v.pick(['#4a5560', '#6a4a3a']), -3, top, bw + 6, 18); }
     },
@@ -216,6 +217,7 @@ export const PART = {
         const fl = floorAt(f), up = fl + SILL;
         r(shade(wall, 0.9), 2, fl, w - 4, 1);                             // the floor's line
         if (ribbon) {
+          r(shade(wall, 0.74), bx - 1, up, bwid + 2, 10);                // the opening's reveal
           r(METAL, bx, up, bwid, 9); r(glassC, bx + 1, up + 1, bwid - 2, 7);
           r(shade(glassC, 0.85), bx + 1, up + 7, bwid - 2, 1);           // the top of the glass in shade
           for (let i = 0; i < pn; i++) { const x = bx + i * 6; r(mull, x, up + 1, 1, 7); r(shade(glassC, 1.2), x + 1, up + 4, 1, 2); r(shade(glassC, 1.2), x + 2, up + 5, 1, 1); }
@@ -223,6 +225,7 @@ export const PART = {
           r(shade(METAL, 0.75), bx, up, bwid, 1);                         // the sill
         } else for (let i = 0; i < wn; i++) {
           const x = wx + i * 10;
+          r(shade(wall, 0.74), x - 1, up, 9, 10);                        // the opening's reveal
           r(METAL, x, up, 7, 9); r(glassC, x + 1, up + 1, 5, 7); r(METAL, x + 1, up + 5, 5, 1);   // a transom
           r(shade(glassC, 1.2), x + 1, up + 2, 1, 2); r(shade(METAL, 0.75), x - 1, up, 9, 1);
         }

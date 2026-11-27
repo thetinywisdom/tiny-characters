@@ -48,7 +48,8 @@ function window(r, dx, w, o = {}) {
       const bar = r.force ? (cc, ...a) => r.force('#26282c', ...a) : r;   // the bars stay dark against a lit shop at night
       r(shade(frame, 0.8), dx + 1, 16, w - 2, 1);                         // the shadow under the top rail
       for (let i = 1; i < n; i++) bar(frame, xs[i], y0, 1, 17 - y0);
-      for (const p of panes) if (p.w >= 6) { r(HI, p.x + 1, 11, 1, 2); r(HI, p.x + 2, 13, 1, 2); r(HI, p.x + 3, 15, 1, 1); }
+      const hi = o.hi ?? HI;
+      for (const p of panes) if (p.w >= 6) { r(hi, p.x + 1, 11, 1, 2); r(hi, p.x + 2, 13, 1, 2); r(hi, p.x + 3, 15, 1, 1); }
     },
   };
 }
@@ -73,11 +74,11 @@ function hisashi(r, c, w, up) {
   for (let x = 0; x < w + 2; x += 3) r(shade(c, 0.8), x - 1, up + 1, 1, 1);
 }
 /** Goods in 2 x 2 blocks on shelves (a shelf line every 4 rows), from a stream of their own. */
-function goods(r, g, x, w, y0, rows, colours, shelf = '#c8ccd0') {
+function goods(r, g, x, w, y0, rows, colours, shelf = '#c8ccd0', iw = 2) {
   for (let j = 0; j < rows; j++) {
     const y = y0 + j * 4;
     r(shelf, x, y, w, 1);
-    for (let i = 1; i + 2 <= w; i += 3) { const c = colours[Math.floor(g() * colours.length)]; r(c, x + i, y + 1, 2, 2); r(shade(c, 1.2), x + i, y + 2, 1, 1); }
+    for (let i = 1; i + iw <= w; i += iw + 1) { const c = colours[Math.floor(g() * colours.length)]; r(c, x + i, y + 1, iw, 2); r(shade(c, 1.2), x + i, y + 2, 1, 1); }
   }
 }
 
@@ -182,6 +183,108 @@ export const PART = {
       const v = V(rng), kind = shopFront(r, rng, w, b.shopType ?? KINDS[Math.floor(rng() * KINDS.length)], wall, b.seed ?? 1);
       flatRoof(r, wall, 0, SG, w, Math.round(v.int(12, 14) * 1.5)); rooftop(r, v, 0, SG, w);
       return kind;
+    },
+  },
+  laundromat: {
+    approved: false,
+    draw(r, rng, b, wall, roof, w) {
+      const v = V(rng), f = lit(r);
+      r(shade(wall, 0.9), 0, 18, w, SG - 18); r(shade(wall, 0.75), 0, 18, w, 1);
+      sign(r, v.pick(['#e8e0d0', WHITE, '#d8e8f0']), '#3f7fd6', 1, 21, w - 2, 7, 'LAUNDROMAT');
+      const doorRight = v.chance(0.6), gx = doorRight ? 2 : 12, gw = w - 14;
+      pier(r, wall, 0, 2, 18); pier(r, wall, w - 2, 2, 18); pier(r, wall, doorRight ? w - 12 : 11, 1, 18);
+      const win = window(r, gx, gw, { riser: 0, pane: 99 });
+      f('#e8ecee', win.x, 15, win.w, 1);                                  // the strip light
+      const n = Math.floor((old(w) - 18) / 6) + 1, step = Math.min(10, Math.floor((win.w - 2 + 2) / n)), x0 = win.x + Math.floor((win.w - (n - 1) * step - 7) / 2);
+      for (let i = 0; i < n; i++) {                                       // the washers: a panel, a dial, a round door
+        const x = x0 + i * step, cols = { l: '#f4f6f4', b: '#e2e5e2', s: '#c4c8c8', p: '#c8ccd0', d: INK, k: '#5a5f66', f: '#7a7e84' };
+        icon(f, x, 1, ['lllllls', 'ppppdps', 'bbkkkbs', 'bk...ks', 'bk...ks', 'bk...ks', 'bbkkkbs', 'bbbbbbs', 'ffffff.'], cols);
+        r(GLASS2, x + 2, 4, 3, 3); r(HI, x + 2, 6, 1, 1);
+      }
+      win.shine();
+      DOORS.glass(r, doorRight ? w - 11 : 2);
+      flatTop(r, v, wall, SG, w);
+    },
+  },
+  kissaten: {
+    approved: false,
+    draw(r, rng, b, wall, roof, w) {
+      const v = V(rng), top = floorAt(2), front = v.pick([DARKWOOD, '#5a3a28', '#2f4a3a']), aw = v.pick(AWNINGS);
+      const doorRight = v.chance(0.65);
+      r(wall, 0, GF, w, top - GF); r(shade(wall, 0.85), 0, GF, w, 1);
+      r(front, 0, 0, w, GF); r(shade(front, 1.25), 0, 0, 1, GF); r(shade(front, 0.75), w - 1, 0, 1, GF);
+      r(shade(front, 0.7), 0, 0, w, 2); r(shade(front, 1.3), 0, GF - 1, w, 1);   // the plinth, the cornice
+      const gx = doorRight ? 3 : 15, win = window(r, gx, w - 18, { frame: WOOD, glass: LIGHTWOOD, riserC: shade(front, 1.15), pane: 8, hi: '#e0c48a' });
+      r(PAPER, win.x, win.y0, win.w, 5); r(WOOD, win.x, win.y0 + 5, win.w, 1);   // lace half-curtains on a rod
+      for (let x = win.x + 1; x < win.x + win.w; x += 2) r(shade(PAPER, 0.88), x, win.y0, 1, 4);
+      for (let x = win.x; x < win.x + win.w; x += 2) r(LIGHTWOOD, x, win.y0 + 4, 1, 1);
+      r(WOOD, win.x, 13, win.w, 1);                                       // the transom bar
+      win.shine();
+      DOORS.glazed(r, doorRight ? w - 12 : 3);
+      awn(r, aw[0], aw[1], -1, 22, w + 2);
+      windowRow(r, rng, v.pick(['sash', 'pair']), 3, w - 3, floorAt(1) + SILL, v.int(1, 2));
+      aRoof(r, v.pick(['pitched', 'hipped']), wall, b.roof ?? v.pick(['#5a4a48', '#4a5560', '#7a3a32']), 2, top, w - 4, 21);
+    },
+  },
+  pharmacy: {
+    approved: false,
+    draw(r, rng, b, wall, roof, w) {
+      const v = V(rng), f = lit(r), g = seeded((b.seed ?? 1) * 53 + 17);
+      r(shade(wall, 0.9), 0, 18, w, SG - 18); r(shade(wall, 0.75), 0, 18, w, 1);
+      sign(r, '#eef2e8', '#2fa36b', 11, 21, w - 12, 7, 'PHARMACY');
+      icon(f, 2, 21, CROSS, { g: '#2fa36b', w: WHITE });                  // the green cross, lit at night
+      const doorRight = v.chance(0.7), gx = doorRight ? 2 : 19, gw = w - 21;
+      pier(r, wall, 0, 2, 18); pier(r, wall, w - 2, 2, 18); pier(r, wall, doorRight ? w - 19 : 18, 1, 18);
+      const win = window(r, gx, gw, { glass: '#dfe8ec', riserC: shade(WHITE, 0.85) });
+      burn(rng, 3 * oldShelf(old(w) - 15));
+      goods(f, g, win.x, win.w, win.y0, 3, [RED, '#3f7fd6', '#f2c230', '#2fa36b', WHITE, '#d46a8e'], '#a8b4b8', 3);
+      win.shine();
+      DOORS.auto(r, doorRight ? w - 18 : 2);
+      flatTop(r, v, wall, SG, w);
+    },
+  },
+  florist: {
+    approved: false,
+    draw(r, rng, b, wall, roof, w) {
+      const v = V(rng), floors = v.int(1, 3), top = floorAt(floors, SG), aw = v.pick(AWNINGS), f = lit(r), g = seeded((b.seed ?? 1) * 53 + 23), wo = old(w);
+      const FL = [RED, '#f2c230', '#d46a8e', WHITE, '#7a6aa8'], LEAF = '#5f8f5a';
+      r(wall, 0, 0, w, top);
+      pier(r, wall, 0, 2, 18); pier(r, wall, w - 2, 2, 18); pier(r, wall, w - 12, 1, 18);
+      const win = window(r, 2, w - 14, {});
+      for (const p of win.panes) {                                        // plants in pots on a shelf inside
+        f(shade(WHITE, 0.85), p.x, win.y0 + 6, p.w, 1);
+        for (let x = p.x + 1; x + 3 <= p.x + p.w; x += 4) {
+          f('#a8664a', x, win.y0 + 7, 3, 2); f(LEAF, x, win.y0 + 9, 3, 2); f(shade(LEAF, 1.25), x, win.y0 + 10, 1, 1);
+          if (g() < 0.5) f(FL[Math.floor(g() * FL.length)], x + 1, win.y0 + 11, 1, 1);
+        }
+      }
+      win.shine();
+      DOORS.glass(r, w - 11);
+      awn(r, aw[0], aw[1], -1, 21, w + 2); sign(r, WHITE, '#d46a8e', 4, 21, w - 8, 7, 'FLOWERS');
+      const nw = Math.max(1, Math.floor((wo - 4 - 6) / 11));
+      for (let fl = 1; fl < floors; fl++) {
+        const up = floorAt(fl, SG);
+        r(shade(wall, 0.82), 0, up, w, 1);
+        windowRow(r, rng, 'alu', 3, w - 3, up + SILL, nw);
+        const gap = (w - 6 - nw * 7) / (nw + 1);
+        for (let i = 0; i < nw; i++) {                                    // a window box under each window
+          const x = Math.round(3 + gap + i * (7 + gap));
+          r('#8a6440', x - 1, up + 1, 9, 3); r(shade('#8a6440', 1.2), x - 1, up + 3, 9, 1); r(shade('#8a6440', 0.8), x + 7, up + 1, 1, 2); r(LEAF, x - 1, up + 4, 9, 1);
+          for (let j = 0; j < 9; j += 2) r(FL[Math.floor(g() * FL.length)], x - 1 + j, up + 4 + (j % 4 ? 0 : 1), 1, 1);
+        }
+      }
+      const np = Math.floor((wo - 14 - 1) / 5) + 1;
+      for (let i = 0; i < np; i++) {                                      // pots of flowers out in front
+        const x = 3 + i * 8, c = [0, 1, 2, 3].map(() => FL[Math.floor(rng() * FL.length)]);
+        r('#8a6440', x, 0, 6, 4); r(shade('#8a6440', 1.2), x, 3, 6, 1); r(shade('#8a6440', 0.8), x + 5, 0, 1, 3);
+        r(LEAF, x, 4, 6, 2); r(shade(LEAF, 0.8), x + 1, 4, 4, 1);
+        r(c[0], x, 6, 2, 2); r(c[1], x + 2, 7, 2, 2); r(c[2], x + 4, 6, 2, 2); r(c[3], x + 1, 9, 1, 1); r(c[3], x + 4, 8, 1, 1);
+      }
+      flatRoof(r, wall, 0, top, w, 15);
+      if (v.chance(0.6)) for (let x = 4; x + 7 <= w - 4; x += 9) {        // a roof garden
+        r('#8a6440', x, top + 3, 7, 4); r(shade('#8a6440', 1.2), x, top + 6, 7, 1); r(shade('#8a6440', 0.8), x + 6, top + 3, 1, 3);
+        r(LEAF, x + 1, top + 7, 5, 2); r(shade(LEAF, 1.2), x + 1, top + 8, 2, 1); r(LEAF, x + 2, top + 9, 3, 1);
+      }
     },
   },
 };
