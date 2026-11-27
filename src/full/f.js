@@ -106,7 +106,7 @@ const KIOSK_GOODS = ['#3f7fd6', '#f2c230', '#2fa36b', '#f2f2ee', '#d46a8e'];
 
 export const PART = {
   shrine: {
-    approved: false,
+    approved: true,
     draw(r, rng, b) {                                                    // a torii and the hall, side by side
       torii(shifted(r, 3), rng);
       shrineHall(shifted(r, 48), rng, b, 60);
@@ -114,18 +114,18 @@ export const PART = {
   },
 
   torii: {
-    approved: false,
+    approved: true,
     open: [[7, 5, 4, 0], [27, 5, 4, 0]],                                 // the posts' feet: walk between them
     draw(r, rng) { torii(r, rng); },
   },
 
   shrineHall: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall, roof, w) { shrineHall(r, rng, b, w); },
   },
 
   mosque: {
-    approved: false,
+    approved: true,
     draw(r, rng) {
       const pick = (a) => a[Math.floor(rng() * a.length)];
       const wall = pick(['#f2efe8', '#e8dcc0', '#dcc49c', '#e6d6c4']);
@@ -180,7 +180,7 @@ export const PART = {
   },
 
   stoneChapel: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall0, roof, w) {
       const v = V(rng), wall = v.pick(['#8f8a80', '#a89a88', '#7a7a78']), top = v.int(22, 26), T = Math.round(top * 1.5);
       const W = w % 2 ? w : w - 1, c = (W - 1) / 2, g = seeded((b.seed ?? 1) * 61 + 29);   // drawn odd-wide, so it is symmetric
@@ -228,7 +228,7 @@ export const PART = {
   },
 
   kiosk: {
-    approved: false,
+    approved: true,
     draw(r, rng, b) {
       const RED = '#c8402c', f = lit(r), g = seeded((b.seed ?? 1) * 67 + 31);
       const cols = [0, 1, 2, 3].map(() => KIOSK_GOODS[Math.floor(rng() * KIOSK_GOODS.length)]);   // the old shelf's four (its rng)

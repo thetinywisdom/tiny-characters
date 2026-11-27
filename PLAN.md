@@ -403,15 +403,26 @@ bubble lab, so games can use them and they can grow.
     still the same building (same rng calls, checked); nothing else changed
     a pixel.
 
+53. **Full-size buildings, batch 2: every building is redrawn.** Approved and live:
+    the wooden apartment (its stairs now a plain ladder, the owner's note), fire
+    station (a FIRE STATION sign on the red band), parking garage (no cars on its
+    roof, the owner), gas station (a SHOP sign on the kiosk; the same walk-in ground
+    under the canopy), school (windows centred), toilets (the door signs no longer
+    cut off), shrine, torii, shrine hall (small stone lanterns either side), mosque,
+    stone chapel, kiosk, the four stations, the yakitori alley stall, and the old
+    town's Tudor cottage, Mediterranean villa, Dutch canal house (the ground floor's
+    door and window now under the windows above, the owner), French country house,
+    Scandinavian house. New lights at night: the parking garage's strip lights, the
+    pumps and prices, the departure board and station clock, the kiosk, the stone
+    lanterns, the mosque's door lamp, lattice windows. Same rng choices as before;
+    nothing else changed a pixel.
+
 ## In progress
 
 - **Redrawing everything at full size (E)**, in batches reviewed on a review page
-  (https://claude.ai/artifact/4QAkLRYE9m2mcs5caQUZzB). Batch 2 (the last 22 buildings: the
-  wooden apartment with a ladder, fire station, parking garage, gas station, school, toilets,
-  shrine, torii, shrine hall, mosque, stone chapel, kiosk, the four stations, alley stall,
-  Tudor cottage, Mediterranean villa, Dutch canal house, French country house, Scandinavian
-  house) is drawn (parts `src/full/e.js` .. `h.js`) and waiting for the owner's review.
-  Then street things, trees and bushes, the ground and streets.
+  (https://claude.ai/artifact/4QAkLRYE9m2mcs5caQUZzB). Every building is done (batches 1-2).
+  Next: street things (props), then trees and bushes, then the ground and streets (the
+  town's terrain and road drawing), each in batches of about 20 with the same review.
 
 ## Next (only when the owner asks)
 

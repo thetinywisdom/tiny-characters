@@ -53,7 +53,7 @@ export const PART = {
   // plaster, the upper floor jettied out over the ground floor, leaded windows,
   // a steep gable with its king post and collar, a tall brick chimney.
   tudorCottage: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall0, roof, w) {
       const v = V(rng), wall = v.pick(['#ece0c4', '#f2ead8', '#e0d0b0']), beam = v.pick(['#3a2a22', '#2a2a2e']), top = floorAt(2);
       const ow = old(w), g = extra(b, 1), lit = shade(beam, 1.45), stone = '#9a9080';
@@ -113,7 +113,7 @@ export const PART = {
   // little iron balconies upstairs, blind arches over the ground windows, an
   // arched door in a stone surround, a hipped roof of round (barrel) tiles.
   mediterraneanVilla: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall0, roof, w) {
       const v = V(rng), floors = v.chance(0.75) ? 2 : 1, top = floorAt(floors), wall = v.pick(['#f0e8d8', '#f2e0c0', '#e8d8d0']);
       const shut = v.pick(['#3f5f9a', '#3f7a5a', '#7a3a32', '#2f6a8a']), ow = old(w), g = extra(b, 2);
@@ -171,7 +171,7 @@ export const PART = {
   // a door with a fanlight, and a stepped, bell or plain gable with a round
   // window and the hoisting beam at its top.
   dutchCanalHouse: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall0, roof, w) {
       const v = V(rng), floors = v.int(3, 5), top = floorAt(floors), trim = '#f2efe8';
       const wall = v.pick(['#6a5a8a', '#8a3a32', '#3f5a4a', '#2c3a5a', '#b8863a']), gableKind = v.pick(['stepped', 'stepped', 'bell', 'triangle']);
@@ -192,12 +192,17 @@ export const PART = {
         if (c === WIN) { r(shade(WIN, 1.25), x + 1, up + 9, 1, 2); r(shade(WIN, 1.25), x + 5, up + 9, 1, 2); }
         r(shade(trim, 0.7), x - 1, up - 1, 11, 1);                         // the sill
       };
+      const cols = evenRow(1, w - 1, n, 9);                               // the window columns, every floor
       for (let f = 1; f < floors; f++) {
         r(shade(wall, 0.8), 0, floorAt(f), w, 1);
-        for (const x of evenRow(1, w - 1, n, 9)) sash(x, floorAt(f) + 3);
+        for (const x of cols) sash(x, floorAt(f) + 3);
       }
-      const doorRight = v.chance(0.5), dx = doorRight ? w - 13 : 4;
-      sash(doorRight ? 4 : w - 13, 4);
+      // the ground floor lines up with the floors above (the owner): with two columns the door
+      // and the window stand under them; a narrow house (one column) has its door under it
+      const doorRight = v.chance(0.5);
+      let dx;
+      if (n === 2) { dx = doorRight ? cols[1] : cols[0]; sash(doorRight ? cols[0] : cols[1], 4); }
+      else { dx = cols[0]; pane(rng); }                                     // (the window it no longer has still takes its rng call)
       const doorC = v.pick(['#2a4a3a', '#3a2a4a', '#5a2a2a']);
       r(trim, dx - 1, 0, 11, 23); r(shade(trim, 0.75), dx + 9, 0, 1, 22);  // the door's case, a fanlight over it
       r(GLASS, dx, 19, 9, 3); r(trim, dx + 3, 19, 1, 3); r(trim, dx + 5, 19, 1, 3);
@@ -243,7 +248,7 @@ export const PART = {
   // casements between louvred shutters, a door in a stone surround, a steep
   // hipped slate roof with dormers, stone chimneys.
   frenchCountryHouse: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall0, roof, w) {
       const v = V(rng), wall = v.pick(['#c8b08c', '#d8c8a8', '#b89870']), shut = v.pick(['#3c4a5a', '#5a7a8a', '#7a8a5a', '#8a5a4a']), top = floorAt(2);
       const ow = old(w), g = extra(b, 4), frame = '#ece6da', stone = shade(wall, 1.1);
@@ -293,7 +298,7 @@ export const PART = {
   // --- the Scandinavian house: painted vertical boards, white corner boards and
   // eaves, cross-barred windows under little crowns, a hood over the door.
   scandinavianHouse: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall0, roof, w) {
       const v = V(rng), floors = v.chance(0.7) ? 2 : 1, top = floorAt(floors), wall = v.pick(['#a83a32', '#d8a840', '#3f6a8a', '#e8e4dc', '#5a7a4a']);
       const trim = wall === '#e8e4dc' ? '#4a5560' : WHITE, ow = old(w), g = extra(b, 5), stone = '#8a8a84';

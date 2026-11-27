@@ -31,14 +31,6 @@ function carFront(r, c, x, up) {
   r(c, x + 1, up + 5, 8, 3); r('#7f93a8', x + 2, up + 5, 6, 2); r('#a8bccc', x + 2, up + 6, 1, 1);   // the cabin, the windscreen
   r(shade(c, 1.1), x + 2, up + 7, 6, 1);                                  // the roof
 }
-/** A car parked on a roof, seen from above (7 wide, 11 deep), its near end at up. */
-function carTop(r, c, x, up) {
-  r(INK, x - 1, up + 1, 1, 2); r(INK, x + 7, up + 1, 1, 2); r(INK, x - 1, up + 8, 1, 2); r(INK, x + 7, up + 8, 1, 2);   // tyres
-  r(shade(c, 0.75), x, up, 7, 11); r(c, x, up + 1, 7, 9);
-  r('#7f93a8', x + 1, up + 2, 5, 2);                                      // the rear window
-  r(shade(c, 1.12), x + 1, up + 4, 5, 3); r(shade(c, 1.25), x + 1, up + 6, 2, 1);   // the roof, lit
-  r('#7f93a8', x + 1, up + 7, 5, 2); r('#a8bccc', x + 1, up + 8, 1, 1);    // the windscreen
-}
 
 // The parking sign's P, the school's clock, the toilets' people.
 const P = ['bbbbbbbb', 'bwwwwwbb', 'bwwbbwwb', 'bwwbbwwb', 'bwwwwwbb', 'bwwbbbbb', 'bwwbbbbb', 'bwwbbbbb', 'bbbbbbbb'];
@@ -48,7 +40,7 @@ const WOMAN = ['.www.', '.www.', '.....', '.www.', '.www.', 'wwwww', '.w.w.', '.
 
 export const PART = {
   fireStation: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall0, roof, w) {
       const v = V(rng), ow = old(w), obw = ow - 10, bw = w - 15, top = floorAt(2, SHOP_GF);
       const wall = v.pick(['#d8d0c4', '#c8b8a8', '#e8e4dc']), BAND = '#a83028';
@@ -84,7 +76,7 @@ export const PART = {
   },
 
   parkingGarage: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall0, roof, w) {
       const v = V(rng), levels = v.int(2, 4), slab = '#c9c4ba', DARK = '#3a3f44', ow = old(w);
       for (let l = 0; l < levels; l++) {
@@ -104,10 +96,9 @@ export const PART = {
       const ru = levels * FL;
       flatRoof(r, slab, 0, ru, w, 21);
       for (let x = 4; x < w - 14; x += 13) r(shade('#d9d2c0', 1.06), x, ru + 3, 1, 14);   // the bays' lines
-      for (let k = 0, i = 5; i < ow - 12; i += 9, k++) if (rng() < 0.6) {
-        const c = ['#e8402f', WHITE, '#3f7fd6', INK][Math.floor(rng() * 4)];
-        carTop(r, c === INK ? '#33363c' : c, 7 + k * 13, ru + 4);
-      }
+      // no cars on the roof (the owner), just the empty bays; the old drawing's choices for them
+      // are still taken from the rng so the count of rng calls stays the same
+      for (let i = 5; i < ow - 12; i += 9) if (rng() < 0.6) rng();
       const f = r.force ?? r;                                             // the P sign: lit at night
       r(INK, w - 9, ru + 2, 1, 3);
       icon(f, w - 13, ru + 5, P, { b: '#3f7fd6', w: WHITE });
@@ -115,7 +106,7 @@ export const PART = {
   },
 
   gasStation: {
-    approved: false,
+    approved: true,
     // the walk-in ground (full-size pixels): the price sign's pole, the canopy's posts, the
     // pumps, the kiosk, and the ground behind the canopy's front (you walk under its first 14 rows)
     open: [[6, 2, 5, 0], [21, 3, 5, 0], [36, 6, 5, 0], [57, 6, 5, 0], [75, 3, 5, 0], [83, 19, 33, 0], [0, 102, 60, 14]],
@@ -156,7 +147,7 @@ export const PART = {
   },
 
   school: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall0, roof, w) {
       const v = V(rng), floors = v.int(2, 3), top = floorAt(floors), wall = b.wall ?? v.pick(['#e4e0d6', '#f2efe8', '#d8d0c4']);
       walls(r, wall, 0, w, top);
@@ -186,7 +177,7 @@ export const PART = {
   },
 
   toilets: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall0, roof, w) {
       const wall = '#e8e0d0', TILE = '#b8b4a8';
       r(wall, 0, 0, 66, GF); edges(r, wall, 0, 66, 0, GF);

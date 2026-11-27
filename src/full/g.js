@@ -19,7 +19,7 @@ const GF = 24, SILL = 6;                                                  // the
 
 export const PART = {
   station: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall0, roof, w) {
       const v = V(rng), wall = v.pick(['#e8e0d0', '#f2efe8', '#d8d0c4']), line = v.pick(['#2f8a5a', '#2c6fd0', '#c8402c']), top = 30;
       // the old drawing's window rows (one pane each): counted from its sizes
@@ -47,7 +47,7 @@ export const PART = {
   },
 
   stationModern: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall0, roof, w) {
       const base = '#b8bcc0', frame = '#9aa0a8', top = 48, mid = Math.round(w / 2);
       const UP = '#6f8aa6', UPHI = '#8fb0cc', bar = r;
@@ -96,7 +96,7 @@ export const PART = {
   },
 
   stationBrick: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall0, roof, w) {
       const brick = '#b8503a', stone = '#ece4d4', top = 42, mid = Math.round(w / 2), pw = 44, p0 = mid - pw / 2, SLATE = '#4a5560';
       r(brick, 0, 0, w, top);
@@ -142,7 +142,7 @@ export const PART = {
   },
 
   stationWooden: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall0, roof, w) {
       const wood = '#8a5a3a', plaster = '#f2ead8', top = 27, mid = Math.round(w / 2), TILE = '#4a4442';
       r(plaster, 0, 0, w, top);
@@ -174,7 +174,7 @@ export const PART = {
   },
 
   alleyStall: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall0, roof, w) {
       const v = V(rng), front = v.pick([DARKWOOD, '#5a3a28', '#3a2a22']), g = seeded((b.seed ?? 1) * 59 + 7);
       r(front, 0, 0, w, GF);

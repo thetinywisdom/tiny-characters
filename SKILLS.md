@@ -25,9 +25,13 @@ src/tinyBuildings.js   the buildings (plain ES module, imports seeded from
 src/tinyBuildingsFull.js  the full-size kit (storeys, doors, windows, roofs,
                        signs, awnings ...) and FULL, the buildings drawn at
                        full size (see Full-size drawings)
-src/full/a.js .. d.js  the full-size buildings, in four parts (written in
-                       parallel; FULL spreads them in). Each entry has
-                       approved: true once the owner approved it
+src/full/a.js .. h.js  the full-size buildings, in eight parts (written in
+                       parallel; FULL spreads them in; a-d batch 1, e-h batch
+                       2). Each entry has approved: true once the owner
+                       approved it; the parts export their shared helpers
+                       (a: row, edges, band, plinth, chimney, railing ...;
+                       b: pier, window, awn, dark, goods ...; c: shifted,
+                       bigSign; d: evenRow, windows, walls)
 src/tinyAnimals.js     cats and dogs: drawCat, drawDog, CAT_COATS,
                        DOG_BREEDS, catFor, dogFor
 src/tinyNature.js      trees, bushes, terrains: drawTree, drawBush,

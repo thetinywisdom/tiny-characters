@@ -145,7 +145,7 @@ export const PART = {
   },
 
   woodApartment: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall0, roof, w) {
       const v = V(rng), bw = w - 9, top = floorAt(2), wall = v.pick(['#b8ae9c', '#c8b898', '#a8a8a0']), doorC = v.pick(['#8a6a4a', '#6a7f94', '#7a5a4a']);
       const RAIL = '#7a6a5a';
