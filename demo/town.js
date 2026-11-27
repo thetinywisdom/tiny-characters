@@ -23,7 +23,8 @@ const area = (name) => town.areas.find((a) => a.name === name);
 let people, you, seed = 11, players = [], ball = null;
 const keys = new Set();
 function walker(look, rng, within, cat = false) {
-  const at = town.randomSpot(rng, within);
+  let at = town.randomSpot(rng, within);
+  for (let k = 0; k < 12 && people?.some((q) => Math.abs(q.x - at.x) < 6 && Math.abs(q.y - at.y) < 4); k++) at = town.randomSpot(rng, within);   // not on top of someone
   return { ...look, ...at, within, cat, path: null, wait: rng() * 3, talk: 0 };
 }
 function newPeople() {
@@ -154,19 +155,42 @@ function chatting(p) {
   return true;
 }
 
-// what flies or floats over cars rather than waiting for them
+// what flies or floats over cars and people rather than waiting for them
 const FLIERS = new Set(['ghostGirl', 'reaper', 'skull']);
+/**
+ * Is someone else standing where p would stand at (x, y)? Everyone on foot keeps a little room round
+ * them (about a person's width across, a little front to back); a dog and its owner, the flying
+ * monsters, and hidden monsters are left out.
+ */
+function crowded(p, x, y) {
+  if (FLIERS.has(p.monster)) return null;
+  for (const q of people) {
+    if (q === p || q.owner === p || p.owner === q || FLIERS.has(q.monster) || (q.monster && !showMonsters)) continue;
+    if (Math.abs(q.x - x) < 4.5 && Math.abs(q.y - y) < 2.5) return q;
+  }
+  return null;
+}
 /** Walk p along its path at `speed` px/s (waiting at a crossing while its cars have green); true when it has arrived. */
 function follow(p, speed, dt) {
   const q = p.path?.[0];
   if (!q) { p.path = null; return true; }
   const ex = q.x - p.x, ey = q.y - p.y, d = Math.hypot(ex, ey), step = speed * dt;
   if (d > 0 && !p.flying && !traffic.mayCross(p.x, p.y, p.x + ex / d * (step + 2), p.y + ey / d * (step + 2), t)) { p.walking = false; p.facing = facingFor(ex, ey, p.facing); return false; }
-  // a car (or the train) in the way: wait for it to go by (flying and floating monsters pass over)
-  const ahead = traffic.hits(p.x + ex / Math.max(d, 1e-6) * (step + 3), p.y + ey / Math.max(d, 1e-6) * (step + 3));
-  if (d > 0 && ahead && !FLIERS.has(p.monster) && !traffic.hits(p.x, p.y)) {
+  // a car (or the train) in the way: wait for it to go by (flying and floating monsters pass over);
+  // someone in the way: step round them if there is room, else wait
+  const ux = ex / Math.max(d, 1e-6), uy = ey / Math.max(d, 1e-6);
+  const ahead = traffic.hits(p.x + ux * (step + 3), p.y + uy * (step + 3));
+  const here = crowded(p, p.x, p.y), there = crowded(p, p.x + ux * (step + 1), p.y + uy * (step + 1));
+  // someone in the way: unless already overlapping them and this step takes them apart
+  let inWay = d > 0 && !ahead && !!there && (there !== here || Math.hypot(there.x - p.x - ux * step, there.y - p.y - uy * step) < Math.hypot(there.x - p.x, there.y - p.y));
+  if (inWay && p.path.length === 1 && d < 8 && p !== you) { p.path = null; p.walking = false; return true; }   // where they were going is taken: stop short
+  if (inWay) for (const s of here ? [] : [1, -1]) {                                   // a side step (across the way it walks), a pixel at a time
+    const sx = p.x - uy * s * 1.2, sy = p.y + ux * s * 0.8;
+    if (!town.blocked(sx, sy) && !crowded(p, sx, sy) && !traffic.hits(sx, sy)) { p.x = sx; p.y = sy; inWay = false; break; }
+  }
+  if (d > 0 && (inWay || (ahead && !FLIERS.has(p.monster) && !traffic.hits(p.x, p.y)))) {
     p.walking = false; p.facing = facingFor(ex, ey, p.facing);
-    // kept waiting too long (a car that waits for them in turn): give up and go somewhere else
+    // kept waiting too long (a car, or someone, that waits for them in turn): give up and go somewhere else
     if ((p.blocked = (p.blocked ?? 0) + dt) > 2 && p !== you) { p.blocked = 0; p.path = null; p.wait = 0.5; }
     return false;
   }
@@ -192,7 +216,7 @@ function frame(now) {
     you.facing = facingFor(dx, dy, you.facing);
     const nx = you.x + dx * 36 * dt, ny = you.y + dy * 24 * dt;
     // walls, things, and cars: you cannot walk through any of them (but you can step out of one you are already in)
-    const free = (x, y) => !town.blocked(x, y) && (!traffic.hits(x, y) || traffic.hits(you.x, you.y));
+    const free = (x, y) => !town.blocked(x, y) && (!traffic.hits(x, y) || traffic.hits(you.x, you.y)) && (!crowded(you, x, y) || crowded(you, you.x, you.y));
     if (free(nx, you.y)) you.x = nx;
     if (free(you.x, ny)) you.y = ny;
   } else if (you.path) follow(you, 36, dt);
@@ -208,8 +232,10 @@ function frame(now) {
     p.walking = false;
     if ((p.wait -= dt) > 0) continue;
     const range = (p.cat ? 70 : p.monster ? 220 : 170) * town.scale;
+    // somewhere near enough, where nobody stands or is heading
+    const taken = (s) => people.some((q) => q !== p && ((Math.abs(q.x - s.x) < 6 && Math.abs(q.y - s.y) < 4) || (q.path && q.path.length && Math.hypot(q.path[q.path.length - 1].x - s.x, q.path[q.path.length - 1].y - s.y) < 6)));
     let to = town.randomSpot(Math.random, p.within);
-    for (let k = 0; k < 6 && Math.hypot(to.x - p.x, to.y - p.y) > range; k++) to = town.randomSpot(Math.random, p.within);
+    for (let k = 0; k < 10 && (Math.hypot(to.x - p.x, to.y - p.y) > range || taken(to)); k++) to = town.randomSpot(Math.random, p.within);
     p.path = town.findPath(p, to);
     if (!p.path) p.wait = 1;
   }

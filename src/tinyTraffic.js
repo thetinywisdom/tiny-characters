@@ -268,8 +268,9 @@ export function makeTraffic(town, { cars = 16, buses = 2, seed = 5 } = {}) {
   const back = (v) => along(v) - v.lane.dir * half(v);
   const headingOf = (lane) => (lane.kind === 'h' ? (lane.dir > 0 ? 0 : 180) : lane.dir > 0 ? 90 : 270);
   const vehicles = [];
+  let made = 0;
   const make = (type, lane, s) => {
-    const v = { vehicle: true, type, seed: 1 + Math.floor(rng() * 9999), lane, speed: CRUISE, wait: 0, served: new Set(), from: lane.i ?? -1 };
+    const v = { vehicle: true, id: ++made, type, seed: 1 + Math.floor(rng() * 9999), lane, speed: CRUISE, wait: 0, served: new Set(), from: lane.i ?? -1 };
     if (lane.kind === 'h') { v.x = s; v.y = lane.y; } else { v.x = lane.x; v.y = s; }
     v.heading = v.target = headingOf(lane);
     return v;
@@ -288,6 +289,18 @@ export function makeTraffic(town, { cars = 16, buses = 2, seed = 5 } = {}) {
     return { ahead: dx * Math.cos(th) + dy * Math.sin(th), side: -dx * Math.sin(th) + dy * Math.cos(th) };
   }
   /**
+   * How far vehicle v can go before it touches vehicle o ahead of it (ground units), or null when o is not in
+   * its way: o's body, turned with its own heading, measured along v's heading and across it.
+   */
+  function gapTo(v, o) {
+    const { ahead, side } = local(v, o.x, o.y), V = VEHICLES[v.type], O = VEHICLES[o.type];
+    const turn = (((o.heading ?? 0) - (v.heading ?? 0)) * Math.PI) / 180, c = Math.abs(Math.cos(turn)), sn = Math.abs(Math.sin(turn));
+    const along = (c * O.length + sn * O.width) / 2, across = (sn * O.length + c * O.width) / 2;
+    if (Math.abs(side) >= V.width / 2 + across - 1 || ahead <= 0) return null;     // (side by side in the next lane is fine)
+    const gap = ahead - along - V.length / 2;
+    return gap < 26 ? gap : null;                                        // only what is close ahead
+  }
+  /**
    * The vehicle (or the train) whose body stands on (x, y), with `margin`
    * pixels round it, or null: so nobody walks into one.
    */
@@ -304,6 +317,13 @@ export function makeTraffic(town, { cars = 16, buses = 2, seed = 5 } = {}) {
     const d = v.lane.dir, f = front(v);
     let free = Infinity;
     for (const o of vehicles) if (o !== v && o.lane === v.lane && (along(o) - along(v)) * d > 0) free = Math.min(free, (back(o) - f) * d - 3);
+    // any other vehicle in its way, whichever way it faces (crossing a junction, turning): by their footprints;
+    // when two are in each other's way, the one made first goes
+    for (const o of vehicles) if (o !== v && o.type !== 'train' && o.lane !== v.lane) {
+      const gap = gapTo(v, o);
+      if (gap === null || (gapTo(o, v) !== null && v.id < o.id)) continue;
+      free = Math.min(free, (gap - 3) * (v.lane.kind === 'h' ? 1 : KY));
+    }
     // traffic lights
     for (const jn of junctions) {
       let stop;

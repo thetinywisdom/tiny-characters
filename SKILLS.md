@@ -249,6 +249,23 @@ after 2 s of waiting (so a car and a person never wait for each other for
 good), and the keys will not walk you into one (`window.tinyTown.traffic.hits`
 in the console).
 
+**Cars never pass through cars:** besides keeping their distance in a lane,
+each car looks ahead for any other vehicle by their footprints (`gapTo(v,
+o)`: o's body turned with its own heading, measured along v's heading and
+across it; within 26 px ahead), so cars crossing a junction or turning stop
+for each other; when two are in each other's way, the one made first goes
+(`id`), so they never wait for each other. Measured: 3 simulated minutes,
+10 overlaps before, none after, traffic moving as much.
+
+**People never pass through people** (demo/town.js `crowded`): everyone on
+foot keeps a little room (4.5 px across, 2.5 front to back); a walker steps
+round someone in the way if there is room, else waits (and after 2 s goes
+elsewhere); people who overlap may only move apart; spawn points and trips
+avoid spots where someone stands or is heading, and a walker whose spot is
+taken stops short. A dog and its owner, and the flying monsters, are left
+out. The keys will not walk you through anyone. Measured: a minute and a
+half of the live town, 311 overlaps before, 1 after (a dog brushing past).
+
 **Trains** (tinyTraffic, when the town has a railway): one train of four
 carriages (`drawTrain`, side on, drawn at the people's size), slowing for
 and stopping 3 s at each station building's middle, leaving town and coming
