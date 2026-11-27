@@ -354,6 +354,9 @@ bubble lab, so games can use them and they can grow.
     of a car's headlights shows in their day colours tinted by that light, in
     the light's own steps (full, half, none).
 
+47. **A blue basketball court** (the owner): the court is blue (#3f86c8),
+    the run-off round it a deeper blue; the lines stay white.
+
 ## Next (only when the owner asks)
 
 Nothing agreed yet: ask the owner, then mock up the options (pictures

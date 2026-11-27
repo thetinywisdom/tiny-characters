@@ -672,9 +672,9 @@ function drawGround(layout) {
 /** A sports court on the ground: a blue run-off, an orange court, white lines, a chain-link fence round it with a gate in the top. */
 function drawCourt(g, a, k) {
   const R = (col, x, y, w, h) => { g.fillStyle = col; g.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }, m = (v) => Math.round(v * k);
-  R('#3f6f9a', a.x, a.y, a.w, a.h);
+  R('#2f5a80', a.x, a.y, a.w, a.h);                                       // the edge round it: a deeper blue
   const cx = a.x + m(10), cy = a.y + m(8), cw = a.w - m(20), ch = a.h - m(16), line = '#f2f2ee';
-  R('#c8743a', cx, cy, cw, ch);
+  R('#3f86c8', cx, cy, cw, ch);                                           // the court: blue (the owner, Nov 2026)
   R(line, cx, cy, cw, 1); R(line, cx, cy + ch - 1, cw, 1); R(line, cx, cy, 1, ch); R(line, cx + cw - 1, cy, 1, ch); R(line, cx + Math.round(cw / 2), cy, 1, ch);
   for (const kx of [cx, cx + cw - m(22)]) { R(line, kx, cy + Math.round(ch / 2) - m(10), m(22), 1); R(line, kx, cy + Math.round(ch / 2) + m(10), m(22), 1); R(line, kx === cx ? kx + m(22) : kx, cy + Math.round(ch / 2) - m(10), 1, m(20)); }   // the keys
   g.strokeStyle = line; g.lineWidth = 1; g.beginPath(); g.ellipse(cx + cw / 2, cy + ch / 2, m(10), m(7), 0, 0, Math.PI * 2); g.stroke();

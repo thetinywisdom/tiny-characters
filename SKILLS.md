@@ -234,7 +234,8 @@ hidden, so in a town nobody can stand there (see the map rules below).
 their own):** `railway: { y, h }` (a band of gravel, sleepers and rails;
 solid but where a cross street crosses it, `railAt`; crossing gates are
 placed at each level crossing, after the other props); areas: `ground:
-'court'` (`drawCourt`: run-off, court, lines, keys, a chain-link fence with
+'court'` (`drawCourt`: run-off in deep blue, the court in blue (the owner's
+choice),  lines, keys, a chain-link fence with
 a `gate` gap at the top; `fence: true` makes the fence solid), `shape:
 'ellipse'` (drawn and redrawn clipped), `ring: true` (a dirt path round
 inside it), `koi: true` (on water: `drawPondLife`, koi circling and two

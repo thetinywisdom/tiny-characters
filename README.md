@@ -162,7 +162,7 @@ not fit.
 and blocks, with the shrine grounds, a schoolyard and an old-town square;
 and in the south a pond park (koi, ducks, a path round it, cherry trees), a
 playground (swings, a slide, a sandbox, a drinking fountain, toilets), a
-fenced basketball court (kids passing a ball, floodlights at night), a
+fenced blue basketball court (kids passing a ball, floodlights at night), a
 railway with level crossings (a train runs along it and stops at each
 station; the gates come down, cars and people wait), four stations (a small
 one and three big ones: modern glass, classic brick, Japanese wooden) with
