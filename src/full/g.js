@@ -8,11 +8,12 @@
 import { shade, seeded } from '../tinyCharacters.js';
 import {
   V, DOORS, WINDOWS, sign, noren, lantern, pitched, flatRoof, flatTop, dome,
-  INK, WHITE, GOLD, CONCRETE, GLASS, GLASS2, HI, WOOD, DARKWOOD, LIGHTWOOD, FRAME, METAL, PAPER,
+  INK, WHITE, GOLD, CONCRETE, WOOD, DARKWOOD, LIGHTWOOD, FRAME, METAL, PAPER,
 } from '../tinyBuildingsFull.js';
 import { old, oldMany, oldFits, edges } from './a.js';
 import { dark, glowLattice } from './b.js';
 import { walls, windows } from './d.js';
+import { bigSign } from './c.js';
 
 const GF = 24, SILL = 6;                                                  // the kit's storeys (FULL_STOREY)
 
@@ -26,21 +27,21 @@ export const PART = {
       const nL = oldFits('aluPair', 2, odx - 4) ? oldMany('aluPair', 2, odx - 4) : 0;
       const nR = oldFits('aluPair', odx + 14, ow - 2) ? oldMany('aluPair', odx + 14, ow - 2) : 0;
       walls(r, wall, 0, w, top);
-      r(line, 0, top - 3, w, 1); r(shade(wall, 0.84), 0, top - 2, w, 2);    // a stripe in the line's colour under the eaves
+      r(line, 0, top - 2, w, 1); r(shade(wall, 0.84), 0, top - 1, w, 1);    // a stripe in the line's colour under the eaves
       const dx = Math.round(w / 2) - 8;
       r(shade(wall, 0.72), dx - 2, 0, 20, 19); r(shade(wall, 0.84), dx - 2, 0, 1, 19);   // the doorway, set back
       DOORS.auto(r, dx);
       r(shade(CONCRETE, 0.9), dx - 3, 0, 22, 1);                           // the step
       // a concrete canopy over the doors: its underside in shade, its edge lit
-      r(shade(wall, 0.6), dx - 5, 18, 26, 1); r(shade(wall, 0.82), dx - 5, 19, 26, 2); r(shade(wall, 1.06), dx - 5, 20, 26, 1);
-      sign(r, line, WHITE, 3, 21, w - 6, 7, 'STATION');
+      r(shade(wall, 0.6), dx - 5, 18, 26, 1); r(shade(wall, 1.06), dx - 5, 19, 26, 1);
+      sign(r, line, WHITE, 3, 20, w - 6, 8, 'STATION');
       if (nL) windows(r, rng, 'aluPair', wall, 3, dx - 4, SILL, nL);
       if (nR) windows(r, rng, 'aluPair', wall, dx + 20, w - 3, SILL, nR);
-      // a timetable by the door, and a wall clock on the other side
+      // a timetable by the door, the line's map on the other side
       r(shade(wall, 0.6), dx - 9, 5, 6, 9); r(PAPER, dx - 8, 6, 4, 7);
       for (let y = 7; y < 13; y += 2) r('#8a8a88', dx - 8, y, 3, 1);
       r(line, dx - 8, 12, 4, 1);
-      r(INK, dx + 19, 10, 5, 5); r(WHITE, dx + 20, 11, 3, 3); r(INK, dx + 21, 12, 1, 2); r(INK, dx + 21, 12, 2, 1);
+      r(shade(wall, 0.6), dx + 19, 7, 6, 7); r(PAPER, dx + 20, 8, 4, 5); r(line, dx + 20, 10, 4, 1); r(INK, dx + 21, 10, 1, 1); r(INK, dx + 23, 10, 1, 1);
       flatTop(r, v, wall, top, w);
     },
   },
@@ -49,18 +50,17 @@ export const PART = {
     approved: false,
     draw(r, rng, b, wall0, roof, w) {
       const base = '#b8bcc0', frame = '#9aa0a8', top = 48, mid = Math.round(w / 2);
-      const UP = '#6f8aa6', UPHI = '#8fb0cc', bar = dark(r, '#26282c');
+      const UP = '#6f8aa6', UPHI = '#8fb0cc', bar = r;
       r(base, 0, 0, w, top); edges(r, base, 0, w, 0, top);
-      // the ground floor: a wall of glass (the concourse, lit at night), mullions every 9 px
+      // the ground floor: a wall of glass (dark at night, as before: only the doors shine), mullions every 9 px
       r(frame, 0, 0, w, 2); r(shade(frame, 0.8), 0, 0, w, 1);
-      r(GLASS2, 2, 2, w - 4, 19); r(GLASS, 2, 17, w - 4, 4);
+      r(UP, 2, 2, w - 4, 19); r(UPHI, 2, 16, w - 4, 5);
       // ticket gates inside, either side of the doors
       for (const gx of [mid - 46, mid - 40, mid - 34, mid + 31, mid + 37, mid + 43]) {
-        bar('#c8ccd0', gx, 2, 3, 6); bar(shade('#c8ccd0', 0.7), gx + 2, 2, 1, 6); bar(INK, gx, 7, 3, 1); bar('#2f8a5a', gx, 6, 1, 1);
+        bar('#c8ccd0', gx, 2, 4, 7); bar(shade('#c8ccd0', 0.72), gx + 3, 2, 1, 7); bar(INK, gx, 8, 4, 1); bar('#2f8a5a', gx + 1, 7, 2, 1);
       }
       for (let x = 2; x <= w - 3; x += 9) bar(frame, x, 2, 1, 19);
       bar(frame, w - 3, 2, 1, 19);
-      for (let x = 2; x < w - 8; x += 9) { r(HI, x + 2, 10, 1, 3); r(HI, x + 3, 12, 1, 2); }   // the glass catches the light
       // the band between the floors
       r(frame, 0, 21, w, 3); r(shade(frame, 1.15), 0, 23, w, 1); r(shade(frame, 0.8), 0, 21, w, 1);
       // the upper floor: the hall, an escalator going up, the departure board
@@ -111,7 +111,7 @@ export const PART = {
       for (const x of cols) for (const up of [6, 26]) {
         r(stone, x - 1, up - 1, 9, 1); r(shade(stone, 0.8), x - 1, up - 2, 9, 1);   // the stone sill
         WINDOWS.arched(r, rng, x, up, '#3a3f44');
-        r(stone, x + 2, up + 12, 3, 1); r(stone, x + 3, up + 13, 1, 1);  // the keystone
+        r(stone, x + 2, up + 11, 3, 2); r(shade(stone, 0.85), x + 2, up + 11, 3, 1);   // the keystone
       }
       // the stone pavilion in the middle: pilasters, two arched doors, a round window, the name
       const PH = 48;
@@ -137,7 +137,7 @@ export const PART = {
         const hw = Math.round(Math.sqrt(rad * rad - k * k)), o = Math.round(hw * 0.5);
         r(shade(COPPER, 0.86), mid - o, dy + k, 1, 1); r(shade(COPPER, 0.86), mid + o, dy + k, 1, 1);
       }
-      r(GOLD, mid, dy + rad, 1, 6); r(GOLD, mid - 1, dy + rad + 2, 3, 2); r(shade(GOLD, 1.2), mid - 1, dy + rad + 3, 1, 1);
+      r(shade(GOLD, 0.8), mid - 1, dy + rad, 3, 2); r(shade(GOLD, 1.15), mid - 1, dy + rad + 1, 1, 1); r(GOLD, mid, dy + rad + 2, 1, 5);   // a ball and a spike
     },
   },
 
@@ -159,7 +159,7 @@ export const PART = {
       r(shade(wood, 0.7), 0, 0, w, 1);
       // two sets of lattice doors that slide, a lintel over them
       for (const dx of [mid - 17, mid + 1]) DOORS.sliding(r, dx);
-      r(wood, mid - 1, 0, 2, 18);
+      r(wood, mid - 1, 0, 2, 18); r(wood, mid - 18, 0, 1, 18); r(wood, mid + 17, 0, 1, 18);
       r(DARKWOOD, mid - 18, 18, 36, 2); r(shade(DARKWOOD, 1.25), mid - 18, 19, 36, 1);
       r(shade(plaster, 0.92), mid - 18, 20, 36, 1);
       // the head beam, in the shade of the eaves
@@ -182,12 +182,13 @@ export const PART = {
       r(shade(front, 1.25), 0, 0, 1, GF); r(shade(front, 0.75), w - 1, 0, 1, GF);
       r(shade(front, 0.65), 0, 0, w, 2);
       const lw = w - 26;
-      glowLattice(r, 5, SILL, lw, 9);
+      glowLattice(r, 5, SILL, lw, 8);
       r(shade(front, 0.7), 4, SILL - 2, lw + 2, 1);
       DOORS.sliding(r, w - 18);
       noren(r, v.pick(['#8a3a2a', '#2c3652', '#2f4a3a']), w - 20, 10, 20, 8);
-      sign(r, LIGHTWOOD, INK, 2, 17, w - 22, 6, 'YAKITORI');
-      lantern(r, 0, 9); lantern(r, w - 4, 16);
+      r(INK, 3, 23, 1, 1); r(INK, w - 22, 23, 1, 1);                       // the sign's hooks
+      bigSign(r, LIGHTWOOD, INK, 1, 16, w - 20, 7, 'YAKITORI');
+      lantern(r, 0, 8); lantern(r, w - 4, 16);
       if (g() < 0.6) {                                                    // a beer crate by the wall, bottles in it
         const c = g() < 0.5 ? '#d8443c' : '#e8b830', x = 6;
         r(shade(c, 0.75), x, 0, 8, 5); r(c, x, 1, 8, 3); r(shade(c, 1.15), x, 4, 8, 1); r(shade(c, 0.7), x + 2, 2, 4, 1);
