@@ -13,7 +13,7 @@
 // town): patterns repeat on even steps.
 
 import { makePainter, usesFull } from './tinyBuildings.js';
-import { FULL_TREES, FULL_BUSHES } from './tinyNatureFull.js';
+import { FULL_TREES, FULL_BUSHES, FULL_TERRAINS } from './tinyNatureFull.js';
 import { canvasOf, seeded, shade } from './tinyCharacters.js';
 
 const BARK = '#6b4a2a', DARK_BARK = '#4a3424';
@@ -246,6 +246,12 @@ export const TERRAINS = {
  * pixels (2 per pixel at scale 1.5), so they stay even.
  */
 export function drawTerrain(g, { type, x, y, w, h, seed = 1, scale = 1, t = 0 }) {
+  const f = FULL_TERRAINS[type];
+  if (usesFull(f)) {                                                       // redrawn at full size: one pattern pixel = one person pixel
+    g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip();
+    f.draw(g, { x, y, w, h, seed, t, rng: seeded(seed * 977 + 5) });
+    g.restore(); return;
+  }
   const rng = seeded(seed * 977 + 5), c = Math.max(1, Math.round(scale));   // c: the size of one pattern pixel
   const R = (col, px, py, pw = c, ph = c) => { g.fillStyle = col; g.fillRect(x + px, y + py, pw, ph); };
   const each = (step, fn) => { for (let py = 0; py < h; py += step * c) for (let px = 0; px < w; px += step * c) fn(px, py); };

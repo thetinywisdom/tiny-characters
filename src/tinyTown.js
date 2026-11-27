@@ -17,7 +17,8 @@
 //    front of them that you can walk into
 // Units are canvas pixels. Plain ES module, no dependencies.
 
-import { BUILDINGS, buildingSize, buildingSolids, drawBuilding, cooks } from './tinyBuildings.js';
+import { BUILDINGS, buildingSize, buildingSolids, drawBuilding, cooks, usesFull } from './tinyBuildings.js';
+import { FULL_GROUND } from './tinyGroundFull.js';
 import { drawCat, drawDog } from './tinyAnimals.js';
 import { drawMonster } from './tinyMonsters.js';
 import { BUSHES, drawBush, drawTerrain, drawTree } from './tinyNature.js';
@@ -624,8 +625,12 @@ function drawGround(layout) {
     const y0 = streets[i] + STREET, y1 = streets[i + 1];
     for (let x = pad, j = 0; x < W - pad; x += m(48), j++) drawTerrain(g, { type: j % 2 ? 'meadow' : 'tallGrass', x: x + m(6), y: y0 + m(3), w: m(30), h: Math.min(m(14), y1 - y0 - m(6)), scale: k, seed: x + i });
   }
+  const full = (name) => (usesFull(FULL_GROUND[name]) ? FULL_GROUND[name] : null);   // pieces redrawn at full size (tinyGroundFull.js)
+  const terrain = (a) => (ctx, x = a.x, y = a.y, w = a.w, h = a.h, type = TERRAIN_OF[a.ground] ?? a.ground, seed = a.x + a.y) => drawTerrain(ctx, { type, x, y, w, h, scale: k, seed });
   for (const a of areas) {
-    if (a.ground === 'court') { drawCourt(g, a, k); continue; }
+    if (a.ground === 'court') { (full('court')?.draw ?? drawCourt)(g, a, k); continue; }
+    if (a.shape === 'ellipse' && full('pond')) { full('pond').draw(g, a, k, terrain(a)); continue; }
+    if (a.ring && full('ringPath')) { terrain(a)(g); full('ringPath').draw(g, a, k, terrain(a)); if (a.path) (full('steppingStones')?.draw ?? ((g2) => oldStones(g2, a, m)))(g, a, k); continue; }
     if (a.shape === 'ellipse') { g.save(); g.beginPath(); g.ellipse(a.x + a.w / 2, a.y + a.h / 2, a.w / 2, a.h / 2, 0, 0, Math.PI * 2); g.clip(); }
     drawTerrain(g, { type: TERRAIN_OF[a.ground] ?? a.ground, x: a.x, y: a.y, w: a.w, h: a.h, scale: k, seed: a.x + a.y });
     if (a.shape === 'ellipse') { g.restore(); g.strokeStyle = '#8a8a80'; g.lineWidth = 1; g.beginPath(); g.ellipse(a.x + a.w / 2, a.y + a.h / 2, a.w / 2, a.h / 2, 0, 0, Math.PI * 2); g.stroke(); }
@@ -634,8 +639,18 @@ function drawGround(layout) {
       g.save(); g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); g.ellipse(cx, cy, rx - wd, ry - wd, 0, 0, Math.PI * 2); g.clip('evenodd');
       drawTerrain(g, { type: 'dirt', x: a.x, y: a.y, w: a.w, h: a.h, scale: k, seed: a.x + 7 }); g.restore();
     }
-    if (a.path) for (let y = a.path.y0; y < a.y + a.h; y += m(5)) R('#c9c2b0', a.path.x, y, a.path.w, m(4));  // stepping stones
+    if (a.path) (full('steppingStones')?.draw ?? ((g2) => oldStones(g2, a, m)))(g, a, k);
   }
+  const dims = { W, H, streets, crossStreets, k, SIDE, ROAD, STREET, VSIDE, VSTREET, pad, m };
+  if (full('streets')) full('streets').draw(g, dims); else oldStreets(g, dims);
+  if (layout.railway) { if (full('railway')) full('railway').draw(g, layout.railway, dims); else oldRailway(g, layout.railway, dims); }
+  return c;
+}
+/** Stepping stones along an area's path (the old drawing). */
+function oldStones(g, a, m) { g.fillStyle = '#c9c2b0'; for (let y = a.path.y0; y < a.y + a.h; y += m(5)) g.fillRect(a.path.x, y, a.path.w, m(4)); }
+/** The streets, cross streets, kerbs, markings, crossings and manholes (the old drawing). */
+function oldStreets(g, { W, streets, crossStreets, SIDE, ROAD, STREET, VSIDE, VSTREET, pad, m }) {
+  const R = (col, x, y, w, h) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
   const y0 = streets[0], y1 = streets[streets.length - 1] + STREET;
   // cross streets' sidewalks, then the streets across them, then the cross streets' roads
   for (const x of crossStreets) R('#d8d2c4', x, y0, VSTREET, y1 - y0);
@@ -667,9 +682,11 @@ function drawGround(layout) {
       }
     }
   }
-  // the railway: gravel, sleepers and two rails right across; at a level crossing the road goes over it
-  const rail = layout.railway;
-  if (rail) {
+}
+/** The railway (the old drawing): gravel, sleepers and two rails right across; at a level crossing the road goes over it. */
+function oldRailway(g, rail, { W, crossStreets, VSIDE, VSTREET, ROAD, m }) {
+  const R = (col, x, y, w, h) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
+  {
     R('#9a958a', 0, rail.y, W, rail.h); R('#8a857a', 0, rail.y, W, 1);
     const top = rail.y + Math.round(rail.h * 0.2), bot = rail.y + Math.round(rail.h * 0.72);
     for (let x = 0; x < W; x += m(4)) R('#6a5040', x, rail.y + m(2), m(2), rail.h - m(4));
@@ -677,7 +694,6 @@ function drawGround(layout) {
     for (const y of [top, bot]) { R('#c8ccd0', 0, y, W, 1); R('#7a7e84', 0, y + 1, W, 1); }
     for (const sx of crossStreets) for (const y of [rail.y - 1, rail.y + rail.h]) for (let x = sx; x < sx + VSTREET; x += m(4)) R(x % m(8) < m(4) ? '#f2c230' : '#2f3236', x, y, m(4), 1);   // striped edges
   }
-  return c;
 }
 
 /**
@@ -737,8 +753,10 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0
   }
   // water ripples, drawn again each frame
   for (const a of town.areas) if (a.ground === 'water' && a.x < view.x + view.w && a.x + a.w > view.x && a.y < view.y + view.h && a.y + a.h > view.y) {
+    const water = (ctx) => drawTerrain(ctx, { type: 'water', x: a.x, y: a.y, w: a.w, h: a.h, scale: town.scale, seed: a.x + a.y, t });
+    if (a.shape === 'ellipse' && usesFull(FULL_GROUND.pond)) { FULL_GROUND.pond.water(g, a, town.scale, water); if (a.koi) drawPondLife(g, a, t); continue; }   // a pixel-edged pond (full size)
     if (a.shape === 'ellipse') { g.save(); g.beginPath(); g.ellipse(a.x + a.w / 2, a.y + a.h / 2, a.w / 2 - 0.5, a.h / 2 - 0.5, 0, 0, Math.PI * 2); g.clip(); }
-    drawTerrain(g, { type: 'water', x: a.x, y: a.y, w: a.w, h: a.h, scale: town.scale, seed: a.x + a.y, t });
+    water(g);
     if (a.koi) drawPondLife(g, a, t);
     if (a.shape === 'ellipse') g.restore();
   }

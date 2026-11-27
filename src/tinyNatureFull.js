@@ -12,6 +12,9 @@
 import { PART as N1 } from './full/n1.js';
 import { PART as N2 } from './full/n2.js';
 import { PART as N3 } from './full/n3.js';
+import { PART as T1 } from './full/t1.js';
 
 export const FULL_TREES = { ...N1, ...N2 };
 export const FULL_BUSHES = { ...N3 };
+/** Terrains at full size: type -> { approved, draw(g, { x, y, w, h, seed, t, rng }) } (in canvas pixels, clipped to the rectangle). */
+export const FULL_TERRAINS = { ...T1 };
