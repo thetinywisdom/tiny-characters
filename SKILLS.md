@@ -22,6 +22,9 @@ src/tinyBuildings.js   the buildings (plain ES module, imports seeded from
                        tinyCharacters.js): drawBuilding, BUILDINGS,
                        SHOP_TYPES, buildingSolids, WALL_COLORS, ROOF_COLORS,
                        setRedraw; the old (scale-1) drawings in DEFS
+src/tinyStreetFull.js  FULL_PROPS: the street things at full size (parts
+                       src/full/p1.js .. p3.js); drawProp uses them once
+                       approved; propScale(type) gives 1.5 for those
 src/tinyBuildingsFull.js  the full-size kit (storeys, doors, windows, roofs,
                        signs, awnings ...) and FULL, the buildings drawn at
                        full size (see Full-size drawings)
@@ -276,6 +279,13 @@ building, more detail", not a redesign).
   size. `buildingSize` and `buildingSolids` follow. `BUILDINGS[type]` gives
   `scale: 1.5` and sizes at that scale for a full-size type; the catalogue
   and the Buildings sheet draw those at 1.5.
+- **Street things** (`FULL_PROPS`, `src/tinyStreetFull.js`): `{ approved, draw(r, rng,
+  p) }`, drawn by `drawProp` with the painter at `p.scale / 1.5`; sizes, feet, glows
+  (`propLights`) and wire ends (`poleTops`) stay in scale-1 pixels, and a full drawing
+  puts those spots at the old place times 1.5 (lamp heads under their glows, the
+  crossarm's ends, the bench seat, the swing bar, the slide's ladder and chute, the
+  hoop, the wall's top). `drawSwings` (tinyLife.js) draws the full frame through
+  `drawProp` and the chains and seats on the full grid when the swings are redrawn.
 - **Which are used:** `setRedraw('approved')` (the default: those with
   `approved: true`), `'all'` (also those in review), `'none'` (the old ones);
   the pages read `?redraw=` from the address at load.

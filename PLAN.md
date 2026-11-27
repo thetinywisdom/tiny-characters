@@ -417,13 +417,21 @@ bubble lab, so games can use them and they can grow.
     lanterns, the mosque's door lamp, lattice windows. Same rng choices as before;
     nothing else changed a pixel.
 
+54. **Full-size street things (batch 3), all 25 approved and live:** utility pole (the
+    wires still hang from its crossarm), street lamp, old lamp, stone lantern, traffic
+    light, floodlight, plaza clock, red lantern, level crossing gate, stop sign, vending
+    machine, bench, bus stop, bins, bikes in a rack, post box, pot plant, drinking
+    fountain, swings (also when kids ride them), slide, sandbox, basketball hoop, block
+    wall, crates, AC unit. Lamp heads sit under their night glows, the bench seat, the
+    swings, the slide and the wall top where they were, so sitting, swinging, sliding
+    and the napping cat work as before. The catalogue shows them at the town's size.
+
 ## In progress
 
 - **Redrawing everything at full size (E)**, in batches reviewed on a review page
   (https://claude.ai/artifact/4QAkLRYE9m2mcs5caQUZzB). Every building is done (batches 1-2).
-  Batch 3 (the 25 street things, `FULL_PROPS` in `src/tinyStreetFull.js`, parts
-  `src/full/p1.js` .. `p3.js`; the swings in use drawn at full size too) is drawn and waiting
-  for the owner's review. Then trees and bushes, then the ground and streets.
+  Every building and every street thing is done (batches 1-3). Next: trees and bushes
+  (batch 4), then the ground and streets.
 
 ## Next (only when the owner asks)
 

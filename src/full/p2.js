@@ -13,7 +13,7 @@ const pick = (rng, a) => a[Math.floor(rng() * a.length)];
 export const PART = {
   // 11 x 17: the body, a lit window of drinks (two shelves of three, a row of buttons
   // under each), the coin slot and its little display, the flap where the can comes out
-  vendingMachine: { approved: false, draw(r, rng) {
+  vendingMachine: { approved: true, draw(r, rng) {
     const c = pick(rng, ['#d8443c', '#2f6fb8', '#e8e8e4', '#2f8a5a', '#f08a2c']), E = shade(c, 0.72);
     r(c, 0, 0, 11, 17); r(shade(c, 0.8), 10, 0, 1, 17); r(shade(c, 1.12), 0, 1, 1, 15);   // the body, its side, a lit edge
     r(DARK, 0, 0, 11, 1);                                                               // its foot
@@ -36,7 +36,7 @@ export const PART = {
 
   // 18 x 8: dark iron legs, the front edge, the seat (old up 3 times 1.5: up 4 and 5,
   // where the sitters' thighs go), the backrest of two slats
-  bench: { approved: false, draw(r) {
+  bench: { approved: true, draw(r) {
     for (const dx of [1, 15]) { r(DARK, dx, 0, 2, 4); r(shade(DARK, 1.25), dx, 0, 1, 4); r(shade(DARK, 0.8), dx, 0, 2, 1); }   // the legs
     r(shade(WOOD, 0.8), 0, 3, 18, 1);                                                   // the front edge
     r(LIGHTWOOD, 0, 4, 18, 2); r(shade(LIGHTWOOD, 1.1), 0, 5, 18, 1);                   // the seat
@@ -46,7 +46,7 @@ export const PART = {
 
   // 30 x 24: two posts, the glass back with an advert, a bench, the blue roof; beside it
   // the sign post: the timetable and the round bus sign with its white band
-  busStop: { approved: false, draw(r) {
+  busStop: { approved: true, draw(r) {
     const G = '#c8dcea';
     r(G, 2, 6, 20, 13); r(shade(G, 0.9), 2, 6, 20, 1); r(shade(G, 0.94), 2, 12, 20, 1);   // the glass, its frame bar
     r(WHITE, 4, 14, 1, 3); r(WHITE, 6, 16, 1, 1);                                       // glints
@@ -65,7 +65,7 @@ export const PART = {
   } },
 
   // 13 x 9: a blue and a green bin, lids, an opening and a white label each
-  bins: { approved: false, draw(r) {
+  bins: { approved: true, draw(r) {
     for (const [dx, c] of [[0, '#3f7fd6'], [7, '#2fa36b']]) {
       r(c, dx, 0, 6, 7); r(shade(c, 0.85), dx + 5, 0, 1, 7); r(shade(c, 1.15), dx, 0, 1, 7); r(shade(c, 0.7), dx, 0, 6, 1);   // the body
       r(shade(c, 0.75), dx, 7, 6, 2); r(shade(c, 0.9), dx, 8, 6, 1);                    // the lid
@@ -75,7 +75,7 @@ export const PART = {
   } },
 
   // 24 x 9: two bikes in a ground rack, wheels with hubs, frame, saddle, handlebar, maybe a basket
-  bikeRack: { approved: false, draw(r, rng) {
+  bikeRack: { approved: true, draw(r, rng) {
     r(METAL, 0, 0, 24, 1);
     for (const bx of [0, 12]) {
       const c = pick(rng, ['#d8443c', '#3f7fd6', WHITE, '#2fa36b', '#f2c230', INK]), hi = c === WHITE ? shade(c, 0.9) : shade(c, c === INK ? 1.6 : 1.15);
@@ -93,7 +93,7 @@ export const PART = {
   } },
 
   // 6 x 12: the red Japanese post box, a rounded top, the slot, a white 〒
-  postBox: { approved: false, draw(r) {
+  postBox: { approved: true, draw(r) {
     const S = shade(RED, 0.8);
     r(RED, 0, 0, 6, 10); r(S, 5, 0, 1, 10); r(shade(RED, 1.15), 0, 1, 1, 9);            // the body
     r(RED, 1, 10, 4, 1); r(S, 4, 10, 1, 1); r(RED, 2, 11, 2, 1);                        // the rounded top
@@ -103,7 +103,7 @@ export const PART = {
   } },
 
   // 8 x 9: a terracotta pot with a rim, a bushy plant in two clumps, maybe flowers
-  plantPot: { approved: false, draw(r, rng, p) {
+  plantPot: { approved: true, draw(r, rng, p) {
     const T = '#a8664a';
     r(T, 1, 0, 6, 2); r(shade(T, 0.8), 5, 0, 2, 2); r(shade(T, 0.7), 1, 0, 6, 1);        // the pot
     r(shade(T, 1.12), 0, 2, 8, 1); r(shade(T, 0.85), 6, 2, 2, 1);                       // its rim
@@ -117,7 +117,7 @@ export const PART = {
   } },
 
   // 9 x 17: a concrete column on a foot, a push button, the basin with water in it, the spout
-  drinkingFountain: { approved: false, draw(r) {
+  drinkingFountain: { approved: true, draw(r) {
     const C = CONCRETE, B = '#c8c4ba';
     r(shade(C, 0.8), 1, 0, 7, 1);                                                       // the foot
     r(C, 2, 1, 6, 11); r(shade(C, 0.85), 6, 1, 2, 11); r(shade(C, 1.1), 2, 1, 1, 11);   // the column

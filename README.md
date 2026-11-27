@@ -19,8 +19,8 @@ python3 -m http.server 8000   # then open http://localhost:8000
 ## Working on it
 
 Everything is being redrawn at full size: one building pixel is one person
-pixel (the old drawings were stretched by 1.5). Every building is done; street
-things, trees and the ground come next. Add `?redraw=all` to the address to
+pixel (the old drawings were stretched by 1.5). Every building and street
+thing is done; trees and the ground come next. Add `?redraw=all` to the address to
 see drawings still in review too (`?redraw=none` shows the old drawings).
 
 Agents and contributors: start with `CLAUDE.md` (the owner's rules and how

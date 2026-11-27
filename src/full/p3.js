@@ -25,7 +25,7 @@ const newStream = (p, n) => seeded(((p?.seed ?? 1) * 7919 + n) >>> 0);
 export const PART = {
   // --- swings: two red posts and a bar (45 x 33), two blue seats on chains ---
   swings: {
-    approved: false,
+    approved: true,
     draw(r, rng, p) {
       const lite = shade(RED, 1.16), dim = shade(RED, 0.8), CLAMP = '#8a9096';
       for (const x of [0, 42]) {
@@ -50,7 +50,7 @@ export const PART = {
 
   // --- slide: a ladder up to a yellow top (33 x 27), the chute down to the right ---
   slide: {
-    approved: false,
+    approved: true,
     draw(r) {
       const L = GREY, LL = shade(GREY, 1.2), LD = shade(GREY, 0.78);
       for (const x of [0, 7]) { r(L, x, 0, 2, 21); r(LL, x, 0, 1, 21); }           // the ladder's rails
@@ -72,7 +72,7 @@ export const PART = {
 
   // --- sandbox: a wooden frame round the sand (39 x 15), a castle, a heap, a bucket ---
   sandbox: {
-    approved: false,
+    approved: true,
     draw(r, rng, p) {
       const W = '#8a6440', WL = shade(W, 1.22), WD = shade(W, 0.78), SAND = '#e8d8a8', HEAP = '#c8b888';
       const s = newStream(p, 3);
@@ -99,7 +99,7 @@ export const PART = {
 
   // --- basketball hoop: a pole (15 x 36), the backboard, the rim and net ---
   hoop: {
-    approved: false,
+    approved: true,
     draw(r) {
       r(DARK, 5, 0, 5, 1); r(GREY, 6, 1, 3, 23); r(shade(GREY, 1.2), 6, 1, 1, 23); r(shade(GREY, 0.78), 8, 1, 1, 23);   // the base, the pole
       r(shade(GREY, 0.78), 6, 23, 3, 1);
@@ -121,7 +121,7 @@ export const PART = {
 
   // --- block wall: concrete blocks, three courses (36 x 11), a cap on top (the cat naps on it) ---
   blockWall: {
-    approved: false,
+    approved: true,
     draw(r, rng, p) {
       const B = '#b8b4aa', M = '#a29e94', CAP = '#d0ccc2', s = newStream(p, 5);
       r(B, 0, 0, 36, 9);
@@ -141,7 +141,7 @@ export const PART = {
 
   // --- crates: two side by side and one on top (15 x 12), slats and a hand hole ---
   crates: {
-    approved: false,
+    approved: true,
     draw(r, rng, p) {
       const s = newStream(p, 7);
       r(shade('#8a6440', 0.7), 7, 0, 1, 6);                                          // the gap between the two below
@@ -158,7 +158,7 @@ export const PART = {
 
   // --- AC unit (outdoor): a pale box (15 x 12), the round fan behind its grille, a side grille ---
   acUnit: {
-    approved: false,
+    approved: true,
     draw(r) {
       const BODY = '#d8dce0', EDGE = '#b8bcc0', RIM = '#8a9096', FAN = '#5a5f66';
       r(BODY, 0, 1, 15, 11); r(shade(BODY, 1.05), 0, 11, 15, 1); r(EDGE, 0, 1, 15, 1);   // the box, its lit top, its foot

@@ -27,7 +27,7 @@ export const PART = {
   // 15 x 45: the concrete pole (lit left, shaded right) with step bolts, the yellow and
   // black guard at its foot, the blue address plate, the crossarm (wires from its ends) with
   // four insulators, maybe a transformer, a lamp on an arm (its face under the glow)
-  utilityPole: { approved: false, draw(r, rng) {
+  utilityPole: { approved: true, draw(r, rng) {
     const C = CONCRETE, ARM = '#8a867c', TR = '#9aa0a6';
     r(C, 6, 0, 3, 44); r(shade(C, 1.1), 6, 0, 1, 44); r(shade(C, 0.82), 8, 0, 1, 44);
     r(shade(C, 1.16), 6, 44, 3, 1);                                         // the cap
@@ -54,7 +54,7 @@ export const PART = {
   } },
 
   // 9 x 29: a plate at the foot, the pole, the arm, the head (its lit face under the glow at 6.75, 21.75)
-  streetLamp: { approved: false, draw(r) {
+  streetLamp: { approved: true, draw(r) {
     r(DARK, 0, 0, 4, 1); r(METAL, 0, 1, 4, 1); r(shade(METAL, 1.25), 0, 1, 1, 1);   // the foot
     r(METAL, 1, 2, 2, 25); r(shade(METAL, 1.25), 1, 2, 1, 25);              // the pole
     r(METAL, 1, 26, 7, 1); r(shade(METAL, 1.25), 2, 27, 5, 1); r(METAL, 1, 27, 1, 1);   // the arm, rounded at the top
@@ -64,7 +64,7 @@ export const PART = {
 
   // 8 x 26: the old black lamp: a foot, a post, the lantern box with two panes (the glow at
   // 3.75, 20.25), its roof and knob
-  oldLamp: { approved: false, draw(r) {
+  oldLamp: { approved: true, draw(r) {
     const HI = shade(INK, 1.45);
     r(INK, 1, 0, 6, 1); r(INK, 2, 1, 4, 1); r(HI, 2, 1, 1, 1);             // the foot
     r(INK, 3, 2, 2, 14); r(HI, 3, 2, 1, 14);                               // the post
@@ -76,7 +76,7 @@ export const PART = {
 
   // 8 x 15: a stone lantern: the foot, the post, the platform, the fire box (the glow at 3.75, 9),
   // the roof with its turned-up eaves, the knob
-  stoneLantern: { approved: false, draw(r) {
+  stoneLantern: { approved: true, draw(r) {
     const S = STONE, D = shade(S, 0.76), L = shade(S, 1.12);
     r(D, 0, 0, 8, 1); r(S, 0, 1, 8, 1); r(L, 0, 1, 1, 1); r(S, 1, 2, 6, 1); r(L, 1, 2, 6, 1);   // the foot
     r(S, 3, 3, 2, 3); r(L, 3, 3, 1, 3);                                     // the post
@@ -90,7 +90,7 @@ export const PART = {
   // red: 3 x 3 at dx 2, 5, 8, where the old ones fell when stretched, so the glows at 3, 6, 9
   // and 25.5 sit on them), the walk signal on the pole (red above, green under, centred on
   // dx 9). p.lit: 'green' | 'yellow' | 'red'
-  trafficLight: { approved: false, draw(r, rng, p) {
+  trafficLight: { approved: true, draw(r, rng, p) {
     const lit = p.lit ?? 'green', walk = lit === 'red';
     const lamp = (on, onC, offC, dx, up, w, h) => {
       r(on ? onC : offC, dx, up, w, h);
@@ -109,7 +109,7 @@ export const PART = {
 
   // 9 x 54: a tall pole on a concrete foot with a hatch, the head of two lamps facing down
   // (under the glow at 4.5, 48.75)
-  floodlight: { approved: false, draw(r) {
+  floodlight: { approved: true, draw(r) {
     const P = '#6a6f76';
     r(CONCRETE, 2, 0, 5, 2); r(shade(CONCRETE, 1.1), 2, 1, 5, 1);          // the foot
     r(P, 3, 2, 3, 46); r(shade(P, 1.25), 3, 2, 1, 46); r(shade(P, 0.8), 5, 2, 1, 46);   // the pole
@@ -120,7 +120,7 @@ export const PART = {
 
   // 12 x 42: a post on a plinth, a collar, the square clock: a cream case, a dark rim, the
   // white face with four marks and two hands
-  plazaClock: { approved: false, draw(r) {
+  plazaClock: { approved: true, draw(r) {
     const CASE = '#e8e0d0';
     r(DARK, 3, 0, 6, 2); r(shade(DARK, 1.3), 3, 1, 6, 1);                  // the plinth
     r(METAL, 5, 2, 2, 28); r(shade(METAL, 1.25), 5, 2, 1, 28);              // the post
@@ -143,7 +143,7 @@ export const PART = {
 
   // 6 x 23: a red paper lantern on a post, its ribs, a highlight, black caps; it swings with
   // p.sway (-1, 0, 1); the glow at 3, 18
-  redLantern: { approved: false, draw(r, rng, p) {
+  redLantern: { approved: true, draw(r, rng, p) {
     const s = p?.sway ?? 0, R = '#d8402f';
     r(DARK, 2, 0, 2, 14); r(shade(DARK, 1.3), 2, 0, 1, 14);                 // the post
     r(INK, 1 + s, 14, 4, 1);                                                // the bottom cap
@@ -160,7 +160,7 @@ export const PART = {
 
   // 36 x 24: the striped post, its two lamps under the X sign (the glows at 0.75 and 5.25,
   // 19.5), the boom on its pivot: across the road when p.down, else up; p.flash: which lamp
-  crossingGate: { approved: false, draw(r, rng, p) {
+  crossingGate: { approved: true, draw(r, rng, p) {
     const ON = '#ff4a3a', OFF = '#6a3434';
     r(WHITE, 2, 0, 3, 18); r(shade(WHITE, 0.9), 4, 0, 1, 18);               // the post, black bands
     for (const up of [3, 8, 13]) { r(INK, 2, up, 3, 2); r(shade(INK, 1.3), 2, up + 1, 3, 1); }
@@ -174,7 +174,7 @@ export const PART = {
   } },
 
   // 8 x 21: the post, the red upside-down triangle with a white rim and the white letters
-  stopSign: { approved: false, draw(r) {
+  stopSign: { approved: true, draw(r) {
     r(METAL, 3, 0, 2, 14); r(shade(METAL, 1.25), 3, 0, 1, 14);
     pix(r, 0, 13, [
       'WWWWWWWW',
