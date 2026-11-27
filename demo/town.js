@@ -7,7 +7,7 @@ import { drawSpeech, emote, moodFor, sayDuration, speak } from '../src/tinySpeec
 import { makeLife } from './life.js';
 
 // The town: a 2D map of streets and blocks. The view follows you (the gold
-// line): arrow keys / WASD, or tap where to go (tap a building to walk to its
+// ring): arrow keys / WASD, or tap where to go (tap a building to walk to its
 // door); tap someone to make them talk. Everyone walks round the buildings.
 // The keys move whoever is in the canvas you tapped last (the town at first).
 const canvas = document.querySelector('#town'), g = canvas.getContext('2d');
@@ -80,14 +80,23 @@ addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
 addEventListener('blur', () => keys.clear());
 
 let view = { x: 0, y: 0, w: VW, h: VH };
-canvas.addEventListener('pointerdown', (e) => {
-  document.body.dataset.active = 'town';
+/** Where a pointer event is in the town, and who (a person, an animal, a monster) is under it. */
+function pointAt(e) {
   const r = canvas.getBoundingClientRect();
   const x = view.x + (e.clientX - r.left) / r.width * VW, y = view.y + (e.clientY - r.top) / r.height * VH;
-  // tap someone (a person, an animal, a monster): they stop and say a line that suits them
   const tall = (p) => (p.cat || p.dog ? 10 : p.monster ? 20 : 17);
-  const hit = people.filter((p) => p !== you && !p.away && (showMonsters || !p.monster) && Math.abs(p.x - x) < 5 && y > p.y - tall(p) && y < p.y + 3).sort((a, b) => Math.abs(a.x - x) - Math.abs(b.x - x))[0];
-  if (hit) { const said = speak(hit, t); hit.talk = Math.min(4, sayDuration(said.text) - 0.8); return; }
+  const who = people.filter((p) => p !== you && !p.away && (showMonsters || !p.monster) && Math.abs(p.x - x) < 5 && y > p.y - tall(p) && y < p.y + 3).sort((a, b) => Math.abs(a.x - x) - Math.abs(b.x - x))[0];
+  return { x, y, who };
+}
+// point at someone (a mouse): a white ring under them, and the hand cursor
+let pointed = null;
+canvas.addEventListener('pointermove', (e) => { if (e.pointerType !== 'mouse') return; pointed = pointAt(e).who ?? null; canvas.style.cursor = pointed ? 'pointer' : ''; });
+canvas.addEventListener('pointerleave', () => { pointed = null; canvas.style.cursor = ''; });
+canvas.addEventListener('pointerdown', (e) => {
+  document.body.dataset.active = 'town';
+  const { x, y, who: hit } = pointAt(e);
+  // tap someone: they stop and say a line that suits them (a white ring under them while they say it)
+  if (hit) { const said = speak(hit, t); hit.talk = Math.min(4, sayDuration(said.text) - 0.8); hit.ringUntil = t + sayDuration(said.text); return; }
   // a building: walk to its door; anywhere else you can stand: walk there
   const b = town.buildings.find((b) => buildingSolids(b).some((s) => x >= s.x && x < s.x + s.w && y >= s.y && y < s.y + s.h))
     ?? town.buildings.find((b) => { const { w, h } = buildingSize(b); return Math.abs(x - b.x) <= w / 2 && y <= b.y && y >= b.y - h; });
@@ -274,6 +283,7 @@ function frame(now) {
     y: Math.round(Math.max(0, Math.min(town.H - VH, you.y - VH * 0.6))),
     w: VW, h: VH,
   };
+  for (const p of people) p.ring = p === pointed || (p.ringUntil ?? 0) > t ? '#ffffff' : undefined;
   g.setTransform(D, 0, 0, D, 0, 0);
   drawTownView(g, town, view, [...shownPeople, ...smallLife.sprites, ...traffic.vehicles, ...(ball ? [ball] : [])], t, { dpx: D, night: nightAt(hour), above: smallLife.above });
   // lines and icon bubbles over everything (and bright at night)

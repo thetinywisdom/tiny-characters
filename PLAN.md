@@ -320,6 +320,11 @@ bubble lab, so games can use them and they can grow.
     walking step's gap closed** (option B from a mock-up: the hips stretch up
     on the bob, the bounce stays). `drawStage` stays in the library.
 
+43. **A ring instead of the gold line** (the owner chose from mock-ups: the
+    thin pixel ring, still, no pulse): gold round your feet; a white one
+    under whoever the mouse points at (with the hand cursor), or whoever you
+    tap while they say their line (phones have no hover).
+
 ## Next (only when the owner asks)
 
 Nothing agreed yet: ask the owner (pictures first). Ideas: weather and time

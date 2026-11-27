@@ -24,7 +24,7 @@ import { BUSHES, drawBush, drawTerrain, drawTree } from './tinyNature.js';
 import { PROPS, drawProp, drawWire, poleTops, propLights, propSolid } from './tinyStreet.js';
 import { drawPose, drawSwings, drawSteam, drawPetals } from './tinyLife.js';
 import { drawVehicle, drawVehicleBeams, vehicleLights } from './tinyTraffic.js';
-import { canvasOf, drawCharacter, seeded as seededRng } from './tinyCharacters.js';
+import { canvasOf, drawCharacter, drawRing, seeded as seededRng } from './tinyCharacters.js';
 
 const CELL = 4;                                          // path-finding grid
 /** Street sizes at a scale: a street is 7 + 18 + 7 px top to bottom, a cross street 6 + 18 + 6 across. */
@@ -649,6 +649,7 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0
     else if (it.s.ball) drawBall(ctx, it.s);                                     // a ball { ball: true, x, y, h (its height off the ground) }
     else if (it.s.draw) it.s.draw(ctx, it.s, t);                                // anything with its own drawing: { draw(g, s, t), x, y } (pigeons, rubbish...)
     else if (it.s.pose) drawPose(ctx, it.s, t);                                  // someone sitting, riding, sweeping... (tinyLife POSES)
+    else if (it.s.ring && (it.s.monster || it.s.cat || it.s.dog)) { drawRing(ctx, it.s.x, it.s.y, it.s.ring); drawItem(ctx, { s: { ...it.s, ring: null } }); }   // pointed at: a ring under them
     else if (it.s.monster) drawMonster(ctx, { ...it.s, type: it.s.monster }, t); // monsters: { monster: 'zombie', variant, ... }
     else (it.s.dog ? drawDog : it.s.cat ? drawCat : drawCharacter)(ctx, it.s, t);
   };

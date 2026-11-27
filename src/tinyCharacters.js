@@ -5,6 +5,7 @@
 //
 //   drawCharacter(g, person, t)   one person, feet at (person.x, person.y)
 //   drawStage(g, W, H)            the lab's grass strip and path
+//   drawRing(g, x, y, colour)     a thin ring round the feet (you: gold; pointed at: white)
 //   randomCharacter(rng)          a random look
 //   LOOKS                         starter looks (salaryman, grandma ...)
 //   snapToPalette(g, W, H)        hard edges, only the palette's colours
@@ -64,7 +65,8 @@ function frameOf(p, bob = 0) {
  * low-res canvas. `t` (seconds) drives the talking bob and the walking step.
  *  - talking: the body and head bob up a pixel, six times a second
  *  - walking: the legs take turns lifting a pixel, eight steps a second
- *  - you: a gold line under the feet (the player)
+ *  - you: a thin gold ring round the feet (the player); ring: a ring of that
+ *    colour (the demo: white under whoever the pointer is over, or was tapped)
  * facing: 'down' (the front; also nothing), 'up' (the back), 'left', 'right'.
  * Looks (all optional, see SKILLS.md): kid, size, hairStyle, fringe,
  * moustache, hat, hatColor, top, trim, legwear, shoes, carry, carryColor.
@@ -73,6 +75,7 @@ function frameOf(p, bob = 0) {
  */
 export function drawCharacter(g, p, t = 0) {
   const x = Math.round(p.x), y = Math.round(p.y);
+  if (p.you || p.ring) drawRing(g, x, y, p.ring ?? COLORS.gold);   // round the feet, under everything
   const talkBob = p.talking && Math.floor(t * 6) % 2 ? -1 : 0;
   const step = p.walking ? Math.floor(t * 8) % 2 : -1;      // which leg is lifted (-1: standing)
   const walkBob = p.walking && step === 1 ? -1 : 0;
@@ -180,8 +183,16 @@ export function drawCharacter(g, p, t = 0) {
     R(COLORS.ink, 2, Hd - 2, 1, 7);
     R(carryColor, -5, Hd - 3, 11, 1); R(carryColor, -4, Hd - 4, 9, 1); R(carryColor, -2, Hd - 5, 5, 1); R(COLORS.ink, 0, Hd - 6);
   }
-  // the player's gold line
-  if (p.you) R(COLORS.gold, -3, 1, 7, 1);
+}
+
+/**
+ * A thin ring on the ground round someone's feet at (x, y): 13 x 5 pixels, its
+ * back row hidden behind the legs (draw it before them). The owner's choice
+ * (Nov 2026): gold under you, white under whoever you point at.
+ */
+export function drawRing(g, x, y, c = COLORS.gold) {
+  x = Math.round(x); y = Math.round(y); g.fillStyle = c;
+  for (const [dx, dy, w] of [[-3, -2, 7], [-5, -1, 2], [4, -1, 2], [-6, 0, 1], [6, 0, 1], [-5, 1, 2], [4, 1, 2], [-3, 2, 7]]) g.fillRect(x + dx, y + dy, w, 1);
 }
 
 /**

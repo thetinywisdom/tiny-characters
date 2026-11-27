@@ -82,14 +82,18 @@ demo/demo.css          the demo page's look (light and dark)
 - talking: body, head and hair 1 px up on every other sixth of a second
 - walking: one leg 1 px shorter, eight steps a second, the body bobbing up
   on the second step; facing left / right: one hair pixel at the back
-- you: a 7 × 1 gold line under the feet
+- you: a thin gold ring round the feet (`drawRing`, 13 × 5, drawn first so its
+  back row hides behind the legs); `ring: colour` gives anyone one (the demo:
+  white under whoever the mouse points at, or who was tapped, while they talk;
+  tinyTown draws it under cats, dogs and monsters too; posed people get it
+  from drawPose). The owner chose the thin ring, still (no pulse)
 
 Every look is drawn with `R(colour, dx, dy, w, h)`: a rectangle at
 (x + dx, y + dy), mirrored when facing left, so "back" is negative dx and
 "front" positive. Rows come from `frameOf(p, bob)`: `legH` (3, a kid 2),
 `bodyH` (6, a kid 4), `B` the body top (−9) and `Hd` the head top (−13).
 Draw order: shadow, backpack, legs, body, top, skirt, boxes, head, hair,
-moustache, hat, things in the hand, the gold line.
+moustache, hat, things in the hand, the gold ring.
 
 - sizes: kid legs 2 rows, body 4 (11 px); short body 5 (14 px); tall legs 4,
   body 7 (17 px); `frameOf` gives the rows, so every part follows

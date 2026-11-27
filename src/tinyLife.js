@@ -16,7 +16,7 @@
 //
 // Plain ES module.
 
-import { drawCharacter, shade } from './tinyCharacters.js';
+import { drawCharacter, drawRing, shade } from './tinyCharacters.js';
 import { drawWeapon } from './tinyCombat.js';
 
 const INK = '#2f3236', WHITE = '#f2f2ee';
@@ -108,6 +108,7 @@ export const POSES = {
 /** Draw a person in their pose (p.pose.kind); without one, as usual. */
 export function drawPose(g, p, t = 0) {
   const fn = POSES[p.pose?.kind];
+  if (fn && (p.you || p.ring)) drawRing(g, p.x, p.y, p.ring ?? '#f2c230');
   if (fn) fn(g, p, t); else drawCharacter(g, p, t);
 }
 
