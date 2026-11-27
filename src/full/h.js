@@ -34,6 +34,10 @@ function louvres(r, c, dx, up, ww, h) {
     r(shade(c, 0.6), sx, up, 3, 1);
   }
 }
+/** A wall lamp at the first of the spots xs that is clear of the things in busy ([x0, x1] ranges). */
+function lampBy(r, busy, xs, up, w) {
+  for (const x of xs) if (x >= 3 && x + 5 <= w - 2 && !busy.some(([a, z]) => x - 2 < z && x + 5 > a)) return wallLamp(r, x, up);
+}
 /** A brick chimney's pot on top (terracotta), 2 wide. */
 function pot(r, dx, up) { r('#b0643a', dx, up, 2, 3); r(shade('#b0643a', 1.2), dx, up, 1, 3); r(shade('#b0643a', 0.7), dx - 1, up + 2, 4, 1); }
 /** A stone chimney (rough courses, a slab cap). */
@@ -86,14 +90,22 @@ export const PART = {
       }
       // the gable: the roof running back behind it, the face timbered
       const roofC = v.pick(['#4a3a32', '#5a5a4a', '#6a5a3a']);
-      gable(r, roofC, wall, -3, top, w + 6, 21, 18);
+      gable(r, roofC, wall, -3, top, w + 6, 21, 39);
+      const half = Math.floor((w + 6) / 2);
+      for (let k = 0; k < 39; k++) {                                       // the roof running back, its tile joints staggered
+        if (k % 3 === 2) continue;
+        const inset = k < 21 ? 1 + Math.round(k * (half - 1) / 21) : half + 1;   // clear of the gable's face
+        for (let x = 1 + (Math.floor(k / 3) % 2) * 2; x < w + 5; x += 4) {
+          if ((x >= inset - 2 && x <= w + 6 - inset + 1) || (x >= half - 2 && x <= half + 1)) continue;
+          r(x < half ? shade(roofC, 0.68) : shade(roofC, 0.88), x - 3, top + k, 1, 1);
+        }
+      }
       const mid = Math.round(w / 2);
       r(beam, mid - 1, top, 2, 16); r(lit, mid - 1, top, 1, 16);         // the king post
       r(beam, mid - 12, top + 7, 24, 2); r(lit, mid - 12, top + 8, 24, 1);   // the collar
-      for (const s of [-1, 1]) for (let k = 0; k < 4; k++) r(beam, mid + s * (4 + k * 2) - (s < 0 ? 1 : 0), top + 9 + k, 2, 1);   // struts
       const cx = v.pick([4, ow - 8]) === 4 ? 6 : w - 12;
-      chimney(r, cx, top + 12, 6, 20, '#9a4a3a');
-      pot(r, cx + 2, top + 32);
+      chimney(r, cx, top + 21, 6, 16, '#9a4a3a');
+      pot(r, cx + 2, top + 37);
     },
   },
 
@@ -134,7 +146,7 @@ export const PART = {
       r(se, dx + 2, 19, 5, 4); r(st, dx + 3, 19, 3, 3);                   // the keystone
       r(shade(CONCRETE, 1.05), dx - 3, 0, 15, 1);                         // the step
       DOORS.arched(r, dx, 1, '#6a4a3a');
-      if (g() < 0.6) wallLamp(r, g() < 0.5 ? dx - 7 : dx + 13, 12);
+      if (g() < 0.6) lampBy(r, gx.map((x) => [x, x + 11]), g() < 0.5 ? [dx - 7, dx + 13] : [dx + 13, dx - 7], 12, w);
       if (v.chance(0.6)) for (const x of gx) {                            // window boxes of geraniums
         r('#a8664a', x + 1, 1, 9, 3); r(shade('#a8664a', 1.15), x + 1, 3, 9, 1); r(shade('#a8664a', 0.75), x + 1, 1, 9, 1);
         r('#5f8f5a', x + 1, 4, 9, 2); r(shade('#5f8f5a', 1.25), x + 2, 5, 2, 1);
@@ -145,8 +157,13 @@ export const PART = {
       const roofC = v.pick(['#c0603a', '#d0783a', '#a85030']), d = Math.round(v.int(13, 16) * 1.5);
       pitched(r, roofC, -3, top, w + 6, d, 3);
       const f = Math.round(d * 0.7);
-      for (let k = 1; k < f; k++) for (let x = -3 + k + 1; x < w + 3 - k - 1; x += 3) { r(shade(roofC, 0.78), x, top + k, 1, 1); r(shade(roofC, 1.1), x + 1, top + k, 1, 1); }
-      for (let x = -2; x < w + 2; x += 3) r(shade(roofC, 0.45), x, top, 1, 1);   // the tiles' round ends at the eaves
+      for (let k = 1; k < f; k++) {                                       // rows of barrel tiles: a lit crest, a shaded channel
+        const x0 = -3 + k, x1 = w + 3 - k, course = k % 4 === 0;
+        r(course ? shade(roofC, 0.9) : roofC, x0, top + k, x1 - x0, 1);
+        for (let x = 0; x < x1; x += 3) { if (x >= x0) r(shade(roofC, course ? 0.68 : 0.76), x, top + k, 1, 1); if (x + 1 >= x0 && x + 1 < x1) r(shade(roofC, course ? 1.0 : 1.14), x + 1, top + k, 1, 1); }
+        for (let x = -3; x < 0; x += 3) { if (x >= x0) r(shade(roofC, 0.76), x, top + k, 1, 1); }
+      }
+      for (let x = -3; x < w + 3; x += 3) { r(shade(roofC, 0.45), x, top, 1, 1); r(shade(roofC, 0.95), x + 1, top, 2, 1); }   // the tiles' round ends at the eaves
     },
   },
 
@@ -159,7 +176,13 @@ export const PART = {
       const v = V(rng), floors = v.int(3, 5), top = floorAt(floors), trim = '#f2efe8';
       const wall = v.pick(['#6a5a8a', '#8a3a32', '#3f5a4a', '#2c3a5a', '#b8863a']), gableKind = v.pick(['stepped', 'stepped', 'bell', 'triangle']);
       const ow = old(w), n = ow >= 24 ? 2 : 1;
-      const bricks = (x0, y0, ww, h) => { for (let y = y0 + 2; y < y0 + h; y += 3) r(shade(wall, 0.9), x0, y, ww, 1); };
+      const bricks = (x0, y0, ww, h) => {                                 // faint brick courses, the joints staggered
+        const j = shade(wall, 0.93);
+        for (let y = y0 + 2, k = 0; y < y0 + h; y += 3, k++) {
+          r(j, x0, y, ww, 1);
+          for (let x = x0 + 2 + (k % 2) * 3; x < x0 + ww - 1; x += 6) if (y + 1 < y0 + h) r(j, x, y + 1, 1, Math.min(2, y0 + h - y - 1));
+        }
+      };
       r(wall, 0, 0, w, top); bricks(0, 0, w, top); edges(r, wall, 0, w, 0, top);
       plinth(r, wall, 0, w, '#5a5650');
       const sash = (x, up) => {                                            // a big sash window, 9 x 13, four panes
@@ -207,12 +230,12 @@ export const PART = {
         for (let k = 0; k < 16; k++) edge(k, at(k), at(Math.min(15, k + 1)));
         peak = 15;
       }
-      r(trim, 0, top, w, 1);
+      if (gableKind !== 'stepped') r(trim, 0, top, w, 1);
       const ox = half - 3, oy = top + 4;                                   // the round window
       r(trim, ox + 2, oy, 3, 7); r(trim, ox + 1, oy + 1, 5, 5); r(trim, ox, oy + 2, 7, 3);
       r(GLASS, ox + 2, oy + 1, 3, 5); r(GLASS, ox + 1, oy + 2, 5, 3); r(trim, ox + 3, oy + 1, 1, 5); r(trim, ox + 1, oy + 3, 5, 1);
-      r(DARKWOOD, half - 1, top + peak - 4, 2, 2); r(shade(DARKWOOD, 1.3), half - 1, top + peak - 3, 1, 1);   // the hoisting beam, its hook
-      r(INK, half, top + peak - 6, 1, 2); r(INK, half - 1, top + peak - 7, 1, 1);
+      r(DARKWOOD, half - 1, top + peak - 3, 2, 2); r(shade(DARKWOOD, 1.3), half - 1, top + peak - 2, 1, 1);   // the hoisting beam, its hook
+      r(INK, half, top + peak - 4, 1, 1); if (peak > 15) r(INK, half - 1, top + peak - 5, 2, 1);
     },
   },
 
@@ -247,9 +270,10 @@ export const PART = {
       r(shade(wall, 0.85), dx - 2, 19, 13, 1); r(shade(stone, 1.05), dx + 3, 19, 3, 3);
       r(shade(CONCRETE, 1.05), dx - 3, 0, 15, 1);
       DOORS.wood(r, dx, 1, v.pick(DOOR_COLOURS));
-      if (doorAt !== 'left' && oldFits('shuttered', 2, odx - 2)) for (const x of evenRow(3, dx - 3, oldHow('shuttered', 2, odx - 2, 3), 13)) casement(x, SILL - 2);
-      if (doorAt !== 'right' && oldFits('shuttered', odx + 8, ow - 2)) for (const x of evenRow(dx + 12, w - 3, oldHow('shuttered', odx + 8, ow - 2, 3), 13)) casement(x, SILL - 2);
-      if (g() < 0.5) wallLamp(r, dx < w / 2 ? dx + 13 : dx - 7, 13);
+      const busy = [];
+      if (doorAt !== 'left' && oldFits('shuttered', 2, odx - 2)) for (const x of evenRow(3, dx - 3, oldHow('shuttered', 2, odx - 2, 3), 13)) { casement(x, SILL - 2); busy.push([x, x + 13]); }
+      if (doorAt !== 'right' && oldFits('shuttered', odx + 8, ow - 2)) for (const x of evenRow(dx + 12, w - 3, oldHow('shuttered', odx + 8, ow - 2, 3), 13)) { casement(x, SILL - 2); busy.push([x, x + 13]); }
+      if (g() < 0.5) lampBy(r, busy, [dx + 13, dx - 7], 13, w);
       // the roof: a cornice, slates, dormers, chimneys
       r(shade(wall, 1.08), 0, top - 2, w, 1); r(shade(wall, 0.72), 0, top - 1, w, 1);
       const roofC = v.pick(['#3a3f44', '#4a5560', '#5a4a48']), d = Math.round(v.int(16, 19) * 1.5);
@@ -285,15 +309,16 @@ export const PART = {
       DOORS.wood(r, dx, 1, v.pick(['#2f4a5a', '#3a2a22', '#6a2a2a']));
       const win = (x, up) => {                                             // 9 wide with its crown: a window with a cross of bars
         WINDOWS.sash(r, rng, x + 1, up, 7, trim); r(trim, x + 4, up + 1, 1, 7);
-        r(trim, x, up + 9, 9, 1); r(shade(trim, 0.8), x, up + 9, 9, 1); r(trim, x, up + 10, 9, 1); r(trim, x + 2, up + 11, 5, 1);
+        r(shade(trim, 0.8), x, up + 9, 9, 1); r(trim, x, up + 10, 9, 1); r(trim, x + 3, up + 11, 3, 1);
       };
-      if (oldFits('sash', 2, odx - 2)) for (const x of evenRow(3, dx - 4, oldHow('sash', 2, odx - 2, 4), 9)) win(x, SILL);
-      if (oldFits('sash', odx + 8, ow - 2)) for (const x of evenRow(dx + 13, w - 3, oldHow('sash', odx + 8, ow - 2, 4), 9)) win(x, SILL);
+      const busy = [];
+      if (oldFits('sash', 2, odx - 2)) for (const x of evenRow(3, dx - 4, oldHow('sash', 2, odx - 2, 4), 9)) { win(x, SILL); busy.push([x, x + 9]); }
+      if (oldFits('sash', odx + 8, ow - 2)) for (const x of evenRow(dx + 13, w - 3, oldHow('sash', odx + 8, ow - 2, 4), 9)) { win(x, SILL); busy.push([x, x + 9]); }
       if (floors === 2) { const n = v.int(2, oldHow('sash', 2, ow - 2, 4)); for (const x of evenRow(3, w - 3, n, 9)) win(x, GF + SILL); }
       const roofC = v.pick(['#3a3f44', '#4a3a32', '#2f4a3a']), d = Math.round(v.int(14, 17) * 1.5);
       r(shade(roofC, 1.0), dx - 3, 21, 15, 1); r(shade(roofC, 0.6), dx - 3, 21, 15, 1); r(roofC, dx - 3, 22, 15, 1); r(shade(roofC, 1.25), dx - 2, 23, 13, 1);   // the hood over the door
       r(trim, dx - 2, 20, 1, 1); r(trim, dx + 10, 20, 1, 1);
-      if (g() < 0.6) wallLamp(r, dx < w / 2 ? dx + 13 : dx - 7, 12);
+      if (g() < 0.6) lampBy(r, busy, [dx + 13, dx - 7], 12, w);
       r(trim, -1, top - 2, w + 2, 2); r(shade(trim, 0.75), -1, top - 2, w + 2, 1);   // the white eaves board
       pitched(r, roofC, -3, top, w + 6, d);
       const cx = v.pick([5, ow - 9]) === 5 ? 8 : w - 14, cc = shade(wall, 0.7);
