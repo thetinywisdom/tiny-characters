@@ -254,6 +254,12 @@ bubble lab, so games can use them and they can grow.
     a map changes nothing elsewhere; the forest and garden filler and some
     vending machine colours were dealt once anew for it).
 
+34. **Things in the road** (the owner found two bins in the middle of a
+    cross street, on its zebra crossing): those bins and a pot plant in
+    another cross street removed, the station plaza's clock moved off the
+    cross street; makeTown now warns about any layout prop on a road or a
+    cross street's sidewalk.
+
 ## Next (only when the owner asks)
 
 1. Small life (the owner's list of ideas, not yet asked for): pigeons that scatter, laundry on balconies, shopkeepers,

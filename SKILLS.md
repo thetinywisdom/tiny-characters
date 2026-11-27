@@ -228,6 +228,10 @@ doors too big). New props: swings, slide, sandbox, drinkingFountain, hoop,
 floodlight, plazaClock, redLantern, crates, acUnit, crossingGate (`down`,
 `flash`).
 
+**A map maker's check:** `makeTown` warns in the console when a layout
+prop stands on a road or on a cross street's narrow sidewalk (it would
+block the way); crossing gates are meant to.
+
 **Stable maps:** each block's gardens and each strip of forest has its own
 random sequence (`rngFor`), and every placed prop's seed comes from where it
 stands, so adding something to a map never changes anything elsewhere

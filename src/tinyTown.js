@@ -130,7 +130,7 @@ export const DEFAULT_TOWN = {
     { type: 'stoneLantern', x: 72, y: 378 }, { type: 'stoneLantern', x: 108, y: 378 }, { type: 'stoneLantern', x: 72, y: 398 }, { type: 'stoneLantern', x: 108, y: 398 },
     { type: 'bench', x: 30, y: 380 }, { type: 'oldLamp', x: 408, y: 410 }, { type: 'oldLamp', x: 552, y: 410 },
     { type: 'bench', x: 452, y: 410 }, { type: 'bench', x: 508, y: 410 },
-    { type: 'plantPot', x: 200, y: 106 }, { type: 'plantPot', x: 380, y: 196 }, { type: 'bins', x: 196, y: 280 },
+    { type: 'plantPot', x: 200, y: 106 },
     // the park, the playground, the court
     { type: 'bench', x: 70, y: 470 }, { type: 'bench', x: 120, y: 552 }, { type: 'oldLamp', x: 30, y: 504 }, { type: 'oldLamp', x: 150, y: 504 },
     { type: 'swings', x: 240, y: 498 }, { type: 'slide', x: 290, y: 494 }, { type: 'sandbox', x: 246, y: 538 }, { type: 'drinkingFountain', x: 300, y: 540 },
@@ -138,7 +138,7 @@ export const DEFAULT_TOWN = {
     { type: 'hoop', x: 412, y: 508 }, { type: 'hoop', x: 548, y: 508 },
     { type: 'floodlight', x: 406, y: 462 }, { type: 'floodlight', x: 554, y: 462 }, { type: 'floodlight', x: 406, y: 550 }, { type: 'floodlight', x: 554, y: 550 },
     // the station plaza and the alley
-    { type: 'plazaClock', x: 200, y: 636 }, { type: 'bikeRack', x: 110, y: 638 }, { type: 'bench', x: 512, y: 636 }, { type: 'busStop', x: 300, y: 671 },
+    { type: 'plazaClock', x: 228, y: 636 }, { type: 'bikeRack', x: 110, y: 638 }, { type: 'bench', x: 512, y: 636 }, { type: 'busStop', x: 300, y: 671 },
     { type: 'redLantern', x: 318, y: 590 }, { type: 'redLantern', x: 338, y: 598 }, { type: 'redLantern', x: 318, y: 610 }, { type: 'redLantern', x: 338, y: 618 },
     { type: 'crates', x: 324, y: 602 }, { type: 'acUnit', x: 334, y: 588 }, { type: 'bins', x: 332, y: 630 }, { type: 'vendingMachine', x: 322, y: 624 },
   ],
@@ -285,6 +285,11 @@ export function makeTown(layout0 = DEFAULT_TOWN) {
   const roadAt = (x, y) => streets.some((sy) => y >= sy + SIDE && y < sy + SIDE + ROAD)
     || (y >= streets[0] + SIDE && y < lastStreet + SIDE + ROAD && crossStreets.some((sx) => x >= sx + VSIDE && x < sx + VSIDE + ROAD));
   const crossingAt = (x, y) => crossings.find((c) => x >= c.x && x < c.x + c.w && y >= c.y && y < c.y + c.h);
+  // a map maker's check: nothing of the layout's own on a road, or on a cross street's narrow sidewalk (it would block it)
+  for (const q of layout.props) if (q.type !== 'crossingGate' && (roadAt(q.x, q.y)
+    || (q.y > streets[0] && q.y < lastStreet && !onStreet(q.y) && crossStreets.some((sx) => q.x >= sx && q.x < sx + VSTREET)))) {
+    console.warn(`tinyTown: the ${q.type} at (${q.x}, ${q.y}) stands on a road or a cross street's sidewalk`);
+  }
   // trees block at the trunk, bushes at their base, a pond everywhere
   let plants = layout.plants.map((p) => ({ ...p, type: p.tree ?? p.bush, kind: p.tree ? 'tree' : 'bush' }));
   // each region has its own random sequence, so adding to a map never reshuffles the rest
