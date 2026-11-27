@@ -734,6 +734,30 @@ No build step. Serve the folder (`python3 -m http.server`), open the page,
 and check with Playwright screenshots on a desktop size and a phone
 (`devices['iPhone 13']`), with no page errors.
 
+- **Look at a place, at an hour:** in the page, `window.tinyTown` is `{ town,
+  traffic, you, people, life, hour }`; set `tinyTown.hour = 22`, move
+  `tinyTown.you.x / .y` (e.g. to an area: `town.areas.find(a => a.name ===
+  'Station plaza')`), wait a moment, screenshot `#town`. `?time=night` in the
+  address starts at night.
+- **Mock-ups for the owner:** import the modules in `page.evaluate` and draw
+  a view yourself: `drawTownView(g, town, view, sprites, t, { dpx, night,
+  lights, steam, above, petals })` on a canvas of `view.w * dpx` by `view.h *
+  dpx` with `g.setTransform(dpx, 0, 0, dpx, 0, 0)`; side by side with labels
+  (PIL), or frames into a GIF for anything that moves. For a layout change,
+  copy `DEFAULT_TOWN`, change it, `makeTown(copy)`.
+- **Traffic flows:** every second for 100 s, count how long each vehicle has
+  had `speed < 0.5` without `wait`; none should reach 15 s (if one does, log
+  who is near it: people standing on the road, a dog, a crossing).
+- **People do not overlap:** every 0.5 s for 90 s, count pairs closer than
+  3.5 px across and 2 px front to back (leave out dogs with their owners and
+  the flying monsters); about 20 is normal now. Count anyone inside a
+  vehicle's footprint (`traffic.hits(x, y, 0)`): 0.
+- **Speed:** draw 120 views across the town by day and at night with 60
+  people and the traffic: about 2 ms and 7 ms a frame.
+- **The map:** render the whole town (a view the size of `town.W` by
+  `town.H`); the console warns about any layout prop on a road or a cross
+  street's sidewalk.
+
 ## GitHub Pages
 
 The demo is served from the root of `main` (Settings → Pages → Deploy from a

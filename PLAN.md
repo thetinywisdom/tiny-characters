@@ -373,6 +373,11 @@ bubble lab, so games can use them and they can grow.
     white one under whoever you point at) are drawn again over the night, so
     the dark does not dim them; still behind the legs.
 
+50. **Hand-over docs** (the owner: for other agents to pick up the project):
+    `CLAUDE.md` rewritten (the owner's rules, where things are, how to check a
+    change, things that bit before), SKILLS' testing recipes, a "Working on
+    it" pointer in the README.
+
 ## Next (only when the owner asks)
 
 Nothing agreed yet: ask the owner, then mock up the options (pictures

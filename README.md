@@ -16,6 +16,13 @@ every look they can have, every building, and a gallery of random looks.
 python3 -m http.server 8000   # then open http://localhost:8000
 ```
 
+## Working on it
+
+Agents and contributors: start with `CLAUDE.md` (the owner's rules and how
+to check a change), then `PLAN.md` (what is done, decided and next) and
+`SKILLS.md` (how everything works). No build step: serve the folder
+(`python3 -m http.server`) and open `index.html`.
+
 ## The catalogue
 
 `catalogue.html` (linked from the demo) shows every person, animal and
