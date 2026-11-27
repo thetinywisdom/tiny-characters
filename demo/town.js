@@ -113,12 +113,17 @@ monstersButton.onclick = () => { showMonsters = !showMonsters; monstersButton.te
 // the time of day: an hour every 8 seconds, from 4 in the afternoon (so the
 // evening comes soon); the button keeps it day or night instead
 let hour = 16, timeMode = 'passing';
+// trying the night lights' styles: ?lights=bands | dither | mixed in the address (soft without it);
+// ?time=night starts at night
+const params = new URLSearchParams(location.search), LIGHTS = ['soft', 'bands', 'dither', 'mixed'].includes(params.get('lights')) ? params.get('lights') : 'soft';
 const timeButton = document.querySelector('#time'), clock = document.querySelector('#clock');
 timeButton.onclick = () => {
   timeMode = { passing: 'day', day: 'night', night: 'passing' }[timeMode];
   timeButton.textContent = `Time: ${timeMode}`;
   if (timeMode === 'day') hour = 12; else if (timeMode === 'night') hour = 22;
 };
+if (params.get('time') === 'night') timeButton.onclick();
+if (params.get('time') === 'night') timeButton.onclick();   // passing -> day -> night
 /** How dark it is at an hour: 0 by day (7 to 17), 1 at night (20 to 5), easing between. */
 function nightAt(h) {
   const ease = (u) => u * u * (3 - 2 * u);
@@ -285,7 +290,7 @@ function frame(now) {
   };
   for (const p of people) p.ring = p === pointed || (p.ringUntil ?? 0) > t ? '#ffffff' : undefined;
   g.setTransform(D, 0, 0, D, 0, 0);
-  drawTownView(g, town, view, [...shownPeople, ...smallLife.sprites, ...traffic.vehicles, ...(ball ? [ball] : [])], t, { dpx: D, night: nightAt(hour), above: smallLife.above });
+  drawTownView(g, town, view, [...shownPeople, ...smallLife.sprites, ...traffic.vehicles, ...(ball ? [ball] : [])], t, { dpx: D, night: nightAt(hour), above: smallLife.above, lights: LIGHTS });
   // lines and icon bubbles over everything (and bright at night)
   g.save(); g.translate(-view.x, -view.y); drawSpeech(g, shownPeople, t, { bounds: view }); g.restore();
   const name = town.placeAt(you.x, you.y);
