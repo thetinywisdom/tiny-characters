@@ -223,7 +223,8 @@ bubble lab, so games can use them and they can grow.
     golf club (sword moves), frying pan, pickaxe, hammer (axe moves), broom
     (spear moves), wok (shield); each weapon has a kind and does that
     kind's attacks (`actionsFor`); 23 new catalogue cards (Combat,
-    Household); every earlier picture unchanged.
+    Household); every earlier picture unchanged. The hammer then made a
+    bulky sledgehammer (the owner: too like the axe).
 
 ## Next (only when the owner asks)
 

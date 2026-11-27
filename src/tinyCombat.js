@@ -32,7 +32,7 @@ export const WEAPONS = {
   golfClub: { label: 'Golf club', kind: 'sword', len: 10, household: true },
   pan: { label: 'Frying pan', kind: 'axe', len: 8, household: true },
   pickaxe: { label: 'Pickaxe', kind: 'axe', len: 7, household: true },
-  hammer: { label: 'Hammer', kind: 'axe', len: 7, household: true },
+  hammer: { label: 'Hammer', kind: 'axe', len: 8, household: true },
   broom: { label: 'Broom', kind: 'spear', len: 13, household: true },
   wok: { label: 'Wok', kind: 'shield', len: 0, household: true },
 };
@@ -163,11 +163,15 @@ export function drawWeapon(g, { weapon, x, y, angle = -45, side = 1, pull = 0, a
       along(g, x, y, angle, [[-2, 7, WOOD]]);
       across(g, x, y, angle, 7, -3, 3, STEEL2); across(g, x, y, angle, 6, -4, -4, STEEL); across(g, x, y, angle, 6, 4, 4, STEEL);
       break;
-    case 'hammer':                                                          // a handle and a heavy head, its face out
-      along(g, x, y, angle, [[-2, 5, WOOD]]);
-      for (let i = 5; i <= 7; i++) across(g, x, y, angle, i, -3, 2, i === 7 ? STEEL : '#6a6f76');
-      across(g, x, y, angle, 6, side > 0 ? -3 : 2, side > 0 ? -3 : 2, '#4a4e54');
+    case 'hammer':                                                          // a sledgehammer: a thick handle, a big block of iron across it
+    {
+      // filled in half-pixel steps, so the head and handle stay solid at any angle
+      const r = angle * Math.PI / 180, cx = Math.cos(r), cy = Math.sin(r), at = (i, k, c) => px(g, c, x + cx * i - cy * k, y + cy * i + cx * k);
+      for (let i = -2; i <= 4.5; i += 0.5) for (let k = 0; k <= 1; k += 0.5) at(i, k, i <= 0.5 ? (k ? '#2a1e18' : '#3a2a22') : (k ? '#6a4422' : WOOD));   // the handle, two pixels thick
+      for (let i = 5; i <= 8.5; i += 0.5) for (let k = -4; k <= 5; k += 0.5) at(i, k, k <= -3.5 || k >= 4.5 ? STEEL : i >= 8 ? '#6a6f76' : '#4a4e54');   // the head and its two striking faces
+      at(8.5, -4, WHITE);
       break;
+    }
     case 'broom':                                                           // a long handle, a band, the straw spreading out
       along(g, x, y, angle, [[-6, 9, '#c8a060']]);
       across(g, x, y, angle, 10, -1, 1, '#e8402f');

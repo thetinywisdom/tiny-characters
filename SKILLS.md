@@ -346,7 +346,10 @@ it can be paused, scrubbed or replayed.
   tip is from the hand (the trail). Drawn like the others along the line
   from the hand: a bat (taped grip, wider barrel), a folded umbrella (hooked
   handle, rolled cloth, metal tip), a golf club (long shaft, head turned
-  out), a frying pan (a solid disc whatever the angle), a pickaxe, a hammer,
+  out), a frying pan (a solid disc whatever the angle), a pickaxe, a
+  sledgehammer (the owner: bulkier than the axe: a thick two-pixel handle,
+  a big block of iron the same both sides with bright striking faces,
+  filled in half-pixel steps so it stays solid at any angle),
   a broom (band, spreading straw); the wok is drawn like the shield, face
   on, its handle back towards the hand.
 A new weapon: an entry in `WEAPONS` (with its kind and len) and a case in
