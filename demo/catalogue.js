@@ -3,9 +3,10 @@ import { LOOKS, drawCharacter, lookFor } from '../src/tinyCharacters.js';
 import { CAT_COATS, DOG_BREEDS, dogFor, drawCat, drawDog } from '../src/tinyAnimals.js';
 import { BUSHES, TERRAINS, TREES, drawBush, drawTerrain, drawTree } from '../src/tinyNature.js';
 import { MONSTERS, drawMonster } from '../src/tinyMonsters.js';
-import { ACTIONS, REACTIONS, SKILLS, WEAPONS, actionsFor, drawAction, drawWeapon } from '../src/tinyCombat.js';
+import { ACTIONS, REACTIONS, SKILLS, WEAPONS, actionsFor, drawAction, drawActor, drawWeapon } from '../src/tinyCombat.js';
 import { PROPS, drawProp } from '../src/tinyStreet.js';
 import { VEHICLES, drawVehicle } from '../src/tinyTraffic.js';
+import { ICONS, SPEAKERS, drawSpeech, linesOf, sayDuration } from '../src/tinySpeech.js';
 
 // The catalogue: every person, animal and building, with filters (group,
 // kind, search) and a seed per card (type it, or roll it with 🎲). The copy
@@ -141,8 +142,23 @@ for (const [type, { label, box }] of Object.entries(VEHICLES)) {
     code: (seed) => `drawVehicle(g, { type: '${type}', x, y, heading: 30, seed: ${seed} })` });
 }
 
+// speech: the icon bubbles, and each kind of speaker saying its lines in turn (typing out, rising away)
+const SPEAKER_OF = { adult: LOOKS.man, salaryman: LOOKS.salaryman, police: LOOKS.police, kid: LOOKS.boy, student: LOOKS.schoolgirl, elderly: LOOKS.grandpa,
+  delivery: LOOKS.delivery, rainy: LOOKS.rainy, shopper: { ...LOOKS.man, carry: 'bag' }, cat: { cat: true, coat: Object.keys(CAT_COATS)[0] }, dog: { dog: true, ...dogFor('shiba', 1) } };
+const speaker = (kind) => ({ skin: '#e2b08e', ...(SPEAKER_OF[kind] ?? { monster: kind, variant: 0 }) });
+for (const icon of ICONS) items.push({ id: `speech.icon.${icon}`, label: `Icon: ${icon}`, group: 'Speech', tags: ['Icons'], seed: 0, noSeed: true, w: 20, h: 34, px: 4,
+  draw: (g, seed, t) => { const a = { ...LOOKS.woman, skin: '#e2b08e', x: 10, y: 31, mood: { icon, start: -1, until: 1e9 } }; drawCharacter(g, a, 0); drawSpeech(g, [a], t); },
+  code: () => `emote(person, '${icon}', t)` });
+for (const kind of SPEAKERS) items.push({ id: `speech.lines.${kind}`, label: `Lines: ${kind}`, group: 'Speech', tags: ['Lines'], seed: 0, noSeed: true, w: 96, h: 40, px: 0, wide: true, dpx: 6, animated: true,
+  draw: (g, seed, t, moving) => {
+    const lines = linesOf(kind), cycle = Math.max(...lines.map(sayDuration)) + 0.4, k = moving ? Math.floor(t / cycle) : 0, age = moving ? t % cycle : 3;
+    const a = { ...speaker(kind), x: 48, y: 36, facing: 'down' };
+    drawActor(g, a, t); drawSpeech(g, [{ ...a, say: { text: lines[k % lines.length], start: t - age, until: t - age + sayDuration(lines[k % lines.length]) } }], t, { bounds: { x: 0, y: 0, w: 96, h: 40 } });
+  },
+  code: () => `speak(actor, t)   // ${kind}: ${linesOf(kind).join(' / ')}` });
+
 // --- filters ---------------------------------------------------------------------
-const GROUPS = ['All', 'People', 'Animals', 'Monsters', 'Combat', 'Buildings', 'Doors & windows', 'Street', 'Nature'];
+const GROUPS = ['All', 'People', 'Animals', 'Monsters', 'Combat', 'Speech', 'Buildings', 'Doors & windows', 'Street', 'Nature'];
 const state = { g: 'All', t: new Set(), q: '' };
 const fromHash = () => {
   const h = new URLSearchParams(location.hash.slice(1));
@@ -173,7 +189,7 @@ const chip = (text, pressed, onClick, n) => {
 };
 function renderFilters() {
   $('#groups').replaceChildren(...GROUPS.map((g) => chip(g, state.g === g, () => { state.g = g; state.t.clear(); update(); }, items.filter((it) => g === 'All' || it.group === g).length)));
-  const ORDER = ['Adults', 'Kids', 'Elderly', 'Uniforms', 'Random', 'Cats', 'Dogs', 'Weapons', 'Attacks', 'Household', 'Monster skills', 'Reactions', 'Undead', 'Ghosts', 'Beasts', 'Zombie', 'Werewolf', 'Ghost girl', 'Reaper', 'Giant spider', 'Skeleton', 'Flaming skull', 'Trees', 'Bushes', 'Terrain', 'Doors', 'Windows', 'Wood', 'Glass', 'Japanese', 'European', 'Mosque', 'Homes', 'Shops & food', 'Civic', 'Worship', 'Low', 'Tall', 'Lights', 'Seats', 'Things', 'Vehicles'];
+  const ORDER = ['Adults', 'Kids', 'Elderly', 'Uniforms', 'Random', 'Cats', 'Dogs', 'Weapons', 'Attacks', 'Household', 'Monster skills', 'Reactions', 'Undead', 'Ghosts', 'Beasts', 'Zombie', 'Werewolf', 'Ghost girl', 'Reaper', 'Giant spider', 'Skeleton', 'Flaming skull', 'Trees', 'Bushes', 'Terrain', 'Doors', 'Windows', 'Wood', 'Glass', 'Japanese', 'European', 'Mosque', 'Homes', 'Shops & food', 'Civic', 'Worship', 'Low', 'Tall', 'Lights', 'Seats', 'Things', 'Vehicles', 'Icons', 'Lines'];
   const tags = [...new Set(items.filter(inGroup).flatMap((it) => it.tags))].sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
   // each kind's count: how many you would see with it on
   $('#tags').replaceChildren(...tags.map((t) => chip(t, state.t.has(t), () => { state.t.has(t) ? state.t.delete(t) : state.t.add(t); update(); },

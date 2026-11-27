@@ -3,6 +3,7 @@ import { LOOKS, facingFor, randomCharacter, seeded } from '../src/tinyCharacters
 import { CAT_COATS, DOG_BREEDS, dogFor } from '../src/tinyAnimals.js';
 import { drawTownView, makeTown } from '../src/tinyTown.js';
 import { makeTraffic } from '../src/tinyTraffic.js';
+import { drawSpeech, emote, moodFor, sayDuration, speak } from '../src/tinySpeech.js';
 
 // The town: a 2D map of streets and blocks. The view follows you (the gold
 // line): arrow keys / WASD, or tap where to go (tap a building to walk to its
@@ -41,6 +42,7 @@ function newPeople() {
     people.push(owner, { dog: true, ...dogFor(breed, 1 + Math.floor(rng() * 99)), collar: ['#d8443c', '#3f7fd6', '#2fa36b', '#f2c230'][i % 4], owner, x: owner.x - 6, y: owner.y, talk: 0 });
   }
   you = { ...randomCharacter(rng), body: '#f2f2ee', x: town.pad + Math.round(196 * town.scale), y: town.pad + Math.round(204 * town.scale), you: true, talk: 0, path: null };
+  while (town.roadAt(you.x, you.y) || town.blocked(you.x, you.y)) you.x -= 2;   // start on the sidewalk, not in the road (cars would wait for you)
   // monsters, each somewhere that suits it
   const M = (monster, variant, within) => walker({ monster, variant }, rng, within);
   for (let v = 0; v < 4; v++) people.push(M('zombie', v));                              // zombies shamble the streets
@@ -64,8 +66,10 @@ canvas.addEventListener('pointerdown', (e) => {
   document.body.dataset.active = 'town';
   const r = canvas.getBoundingClientRect();
   const x = view.x + (e.clientX - r.left) / r.width * VW, y = view.y + (e.clientY - r.top) / r.height * VH;
-  const hit = people.filter((p) => p !== you && !p.cat && !p.dog && !p.monster && Math.abs(p.x - x) < 5 && y > p.y - 17 && y < p.y + 3).sort((a, b) => Math.abs(a.x - x) - Math.abs(b.x - x))[0];
-  if (hit) { hit.talk = 2; return; }
+  // tap someone (a person, an animal, a monster): they stop and say a line that suits them
+  const tall = (p) => (p.cat || p.dog ? 10 : p.monster ? 20 : 17);
+  const hit = people.filter((p) => p !== you && (showMonsters || !p.monster) && Math.abs(p.x - x) < 5 && y > p.y - tall(p) && y < p.y + 3).sort((a, b) => Math.abs(a.x - x) - Math.abs(b.x - x))[0];
+  if (hit) { const said = speak(hit, t); hit.talk = Math.min(4, sayDuration(said.text) - 0.8); return; }
   // a building: walk to its door; anywhere else you can stand: walk there
   const b = town.buildings.find((b) => buildingSolids(b).some((s) => x >= s.x && x < s.x + s.w && y >= s.y && y < s.y + s.h))
     ?? town.buildings.find((b) => { const { w, h } = buildingSize(b); return Math.abs(x - b.x) <= w / 2 && y <= b.y && y >= b.y - h; });
@@ -105,6 +109,37 @@ function heel(d, dt) {
   else { d.walking = false; d.facing = o.facing ?? 'down'; }
 }
 
+// speech: now and then someone shows how they feel (an icon bubble), and two
+// passers-by close to each other stop and chat in icons, taking turns
+const CHAT_ICONS = ['dots', 'bang', 'note', 'heart', 'what', 'dots'];
+const chatty = (p) => p !== you && !p.monster && !p.dog && !p.cat && !p.chat && !p.talking;
+let nextChat = 3;
+function life(dt) {
+  const night = nightAt(hour);
+  for (const p of people) {
+    if (p === you || p.dog) continue;
+    p.nextMood ??= 3 + Math.random() * 15;
+    if ((p.nextMood -= dt) <= 0) { p.nextMood = 8 + Math.random() * 16; if (!p.chat && (showMonsters || !p.monster)) emote(p, moodFor(p, Math.random, { night }), t); }
+  }
+  // start a chat between two people standing or walking close together, off the road
+  if ((nextChat -= dt) <= 0) {
+    nextChat = 2 + Math.random() * 3;
+    const pool = people.filter(chatty), a = pool[Math.floor(Math.random() * pool.length)];
+    const b = a && people.find((q) => q !== a && chatty(q) && Math.abs(q.x - a.x) < 16 && Math.abs(q.y - a.y) < 6);
+    if (a && b && !town.roadAt(a.x, a.y) && !town.roadAt(b.x, b.y)) { const c = { a, b, until: t + 4 + Math.random() * 3, next: t, turn: 0 }; a.chat = b.chat = c; }
+  }
+}
+/** Two people chatting: they face each other and take turns with icon bubbles; true while it lasts. */
+function chatting(p) {
+  const c = p.chat;
+  if (!c) return false;
+  if (t > c.until) { c.a.chat = c.b.chat = null; return false; }
+  const other = p === c.a ? c.b : c.a;
+  p.walking = false; p.facing = other.x < p.x ? 'left' : 'right';
+  if (p === c.a && t >= c.next) { emote(c.turn % 2 ? c.b : c.a, CHAT_ICONS[Math.floor(Math.random() * CHAT_ICONS.length)], t, 1.1); c.turn++; c.next = t + 1.25; }
+  return true;
+}
+
 /** Walk p along its path at `speed` px/s (waiting at a crossing while its cars have green); true when it has arrived. */
 function follow(p, speed, dt) {
   const q = p.path?.[0];
@@ -141,6 +176,7 @@ function frame(now) {
     if (p === you) continue;
     if (p.dog) { heel(p, dt); continue; }
     if (p.talking) { p.walking = false; continue; }
+    if (chatting(p)) continue;
     if (p.path) { if (follow(p, p.monster ? MONSTER_SPEED[p.monster] : p.cat ? 18 : 14, dt)) { p.walking = false; p.wait = 1 + Math.random() * 4; } continue; }
     p.walking = false;
     if ((p.wait -= dt) > 0) continue;
@@ -150,6 +186,7 @@ function frame(now) {
     p.path = town.findPath(p, to);
     if (!p.path) p.wait = 1;
   }
+  life(dt);
   const shownPeople = showMonsters ? people : people.filter((p) => !p.monster);
   traffic.update(dt, t, shownPeople);
   if (timeMode === 'passing') hour = (hour + dt / 8) % 24;
@@ -164,6 +201,8 @@ function frame(now) {
   };
   g.setTransform(D, 0, 0, D, 0, 0);
   drawTownView(g, town, view, [...shownPeople, ...traffic.vehicles], t, { dpx: D, night: nightAt(hour) });
+  // lines and icon bubbles over everything (and bright at night)
+  g.save(); g.translate(-view.x, -view.y); drawSpeech(g, shownPeople, t, { bounds: view }); g.restore();
   const name = town.placeAt(you.x, you.y);
   if (name !== shown) { shown = name; here.textContent = name; }
   requestAnimationFrame(frame);
