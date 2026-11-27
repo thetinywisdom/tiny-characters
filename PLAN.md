@@ -37,7 +37,12 @@ bubble lab, so games can use them and they can grow.
 - People (Nov 2026): four views (front, back, both sides); walking up shows
   the back.
 - How to work (Nov 2026): show the owner a preview of any change to how
-  things look before switching everything over.
+  things look before switching everything over; for new things, show a
+  picture of every option (on the real town) before building, since words
+  are imagined differently.
+- Speech (Nov 2026): icon bubbles in the town, floating text (no box) when
+  you tap someone, typing out; passers-by chat in icons; lines that suit
+  the speaker; English first, code ready for Japanese and Indonesian.
 - People stay flat (Nov 2026): no 3D people (tried: the owner found every
   version bad). The town is drawn 1.5 times bigger than the people.
 - People (Nov 2026): no eyes, they stay faceless; different sizes are fine
@@ -226,12 +231,21 @@ bubble lab, so games can use them and they can grow.
     Household); every earlier picture unchanged. The hammer then made a
     bulky sledgehammer (the owner: too like the axe).
 
+32. **Speech** (`src/tinySpeech.js`; the owner saw a mock-up of every option
+    on the real town first and chose): icon bubbles over people in the town
+    (moods that suit them, sleepier at night); passers-by close together
+    stop and chat in icons, taking turns; tap someone (people, animals,
+    monsters) and they say a line that suits them as floating text that
+    types out, rises and fades; English lines for 18 kinds of speaker, with
+    Japanese and Indonesian ready to fill in; a Speech group in the
+    catalogue. Also: the player now starts on the sidewalk (they started in
+    the cross street, and turning cars queued up waiting for them).
+
 ## Next (only when the owner asks)
 
-1. Speech with them (floating pixel text from tiny-ui-kit) in the demo.
-2. **More town**: a station plaza and a back alley like the catalogue's
-   areas, a park (meadow, pond, trees), street props in the back gardens.
-3. Small life (the owner's list of ideas, not yet asked for): pigeons that scatter, laundry on balconies, shopkeepers,
+1. **More town** (next, the owner's order): a station plaza, a back alley,
+   a park, a basketball court. Show the owner pictures of each idea first.
+2. Small life (the owner's list of ideas, not yet asked for): pigeons that scatter, laundry on balconies, shopkeepers,
    steam from the ramen shop, people chatting or sitting on benches.
 
 ## Known issues and small ideas

@@ -36,6 +36,9 @@ src/tinyStreet.js      street things: drawProp, PROPS, propSolid,
 src/tinyVoxel.js       the 3D block renderer for the vehicles: voxelSprite, KY
 src/tinyTraffic.js     vehicles and traffic: drawVehicle, VEHICLES,
                        makeTraffic (lanes, lights, turns, buses)
+src/tinySpeech.js      speech: speak, emote, drawSpeech, kindOf, lineFor,
+                       moodFor, ICONS, SPEAKERS, linesOf, LANGUAGES,
+                       setLanguage
 src/tinyTown.js        the 2D town map: makeTown, drawTownView,
                        DEFAULT_TOWN (layout, ground, walkable ground,
                        path finding, place names)
@@ -500,6 +503,38 @@ A new building's lights come for free if it uses the shared colours (`LIT`,
 `CURTAIN`, `GLASS` ...); a new thing that shines gets `lights` in its
 `DEFS` entry. The demo's clock (`hour`, `nightAt` in demo/town.js): night
 from 20 to 5, day from 7 to 17, easing between.
+
+## How speech works (src/tinySpeech.js)
+
+The owner's choices: icon bubbles in the town (1C), floating text when you
+tap someone (1B), typing out (1E), passers-by chatting (1F), lines that suit
+the speaker (1G); English now, ready for Japanese and Indonesian.
+- An actor carries `say` ({ text, start, until }: floating text) or `mood`
+  ({ icon, start, until }: an icon bubble); `speak` / `emote` set them,
+  `drawSpeech` draws them (after the town and its night tint, so they stay
+  bright) and clears them when their time is up. A line hides any icon.
+- Floating text: DotGothic16 at 7 px (crisp because the town canvas is drawn
+  4x bigger underneath), white with a 1.6 px ink edge, no box; it types out
+  at 18 letters a second (placed by the whole line, so it does not jump),
+  holds 1.8 s, then rises 6 px and fades in 0.8 s (`sayDuration`); `bounds`
+  keeps it inside the view. It sits over `topOf(actor)` (a person's head
+  and hat from `headOf`; a height for monsters, cats and dogs).
+- Icon bubbles: 9 x 9, ink edge, white inside, a 2 px tail, a 5 x 5 picture
+  (`ICON_ART`); they pop up a pixel as they appear.
+- Who says what: `kindOf` reads the look (police top, boxes, a sailor or
+  gakuran uniform, kid, suit or briefcase, grey or white hair or a stick,
+  umbrella, bag, else adult; cats, dogs, each monster); `LINES[lang][kind]`
+  has the lines, `MOODS[kind]` the icons they show now and then (more Z at
+  night).
+- **Another language**: fill `LINES.ja` / `LINES.id` with the same kinds
+  (anything missing falls back to English), then `setLanguage('ja')`. When
+  writing Japanese lines for the owner, give the reading, the English and
+  grammar notes. Keep lines short (the town view is 200 px wide).
+- In the demo (demo/town.js `life`, `chatting`): everyone gets a mood every
+  8-24 s; every 2-5 s two people (not monsters, animals or you; off the
+  road) within 16 px of each other may start a chat for 4-7 s: they stop,
+  face each other and take turns with icons every 1.25 s. Tapping someone
+  makes them say a line and stop while they say it.
 
 ## Common tasks
 

@@ -343,5 +343,33 @@ building, `propLights(p)` and `vehicleLights(v)` where things give light;
 `drawVehicleBeams(g, v)` the pool of light headlamps throw on the road in
 front of a car.
 
-Speech for these people (floating pixel text, the design picked in the
-bubble lab) lives in **tiny-ui-kit** (`src/ui/pixelOverlay.js`).
+## Speech
+
+`src/tinySpeech.js`: what the people say. In the town, small **icon
+bubbles** pop up over people now and then (♥ love, ♪ a hum, … thinking,
+! surprise, ? a question, Z sleepy, the anger mark), chosen to suit them (a
+kid hums, a tired salaryman sighs, more Z at night), and two passers-by
+close to each other stop, face each other and **chat in icons**, taking
+turns. **Tap someone** (a person, an animal or a monster) and they stop and
+say a line that suits them (the salaryman: "Overtime again...", the police
+officer: "Stay safe!", a kid: "Let's play!", a zombie: "Uuurgh...") as
+**floating text**: it types itself out, then rises and fades.
+
+```js
+import { drawSpeech, emote, speak } from './src/tinySpeech.js';
+
+speak(person, t);                 // a line that suits them
+emote(person, 'heart', t);        // an icon bubble for a couple of seconds
+// each frame, after the town (so lines stay bright at night):
+drawSpeech(g, people, t, { bounds: view });
+```
+
+| Export | What it does |
+| --- | --- |
+| `speak(actor, t)` / `emote(actor, icon, t, seconds)` | Give someone a line (floating text) or an icon bubble. |
+| `drawSpeech(g, actors, t, { bounds })` | Draw every line and icon; `bounds` keeps long lines inside the view. |
+| `kindOf(actor)`, `lineFor(actor)`, `moodFor(actor, rng, { night })` | What kind of speaker someone is (salaryman, police, kid, student, elderly, delivery, rainy, shopper, adult, cat, dog, each monster), a line, a mood. |
+| `ICONS`, `SPEAKERS`, `linesOf(kind, lang)` | The icons, the kinds of speaker, a kind's lines. |
+| `LANGUAGES`, `setLanguage(code)` | English now; Japanese (`ja`) and Indonesian (`id`) are ready to be written (they fall back to English until then; the font has Japanese). |
+
+The catalogue has every icon and each speaker saying its lines (Speech).
