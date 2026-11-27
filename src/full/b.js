@@ -13,19 +13,19 @@ import {
 const SG = 28, GF = 24, SILL = 6;                                         // a shop's ground floor, a ground floor, a sill
 const KINDS = ['konbini', 'ramen', 'cafe', 'bookshop', 'bakery', 'izakaya'];   // tinyBuildings' SHOP_TYPES, in its order
 /** The painter that also paints at night (goods in a lit shop, a lit sign). */
-const lit = (r) => r.force ?? r;
+export const lit = (r) => r.force ?? r;
 /** The old width (the drawing's w is the old one times 1.5). */
 const old = (w) => Math.round(w / 1.5);
 /** Use up n of the building's rng (the old drawing's goods), so later choices stay the same. */
 const burn = (rng, n) => { for (let i = 0; i < n; i++) rng(); };
 /** How many goods the old shelves() put on a shelf w wide (one rng each). */
 /** A painter that paints by day and, at night, a dark silhouette (bars, slats, things in front of a glow). */
-const dark = (r, c0 = '#2a2018') => (r.force ? (c, ...a) => r.force(c0, ...a) : r);
-const oldShelf = (w) => (w >= 3 ? Math.floor((w - 3) / 4) + 1 : 0);
+export const dark = (r, c0 = '#2a2018') => (r.force ? (c, ...a) => r.force(c0, ...a) : r);
+export const oldShelf = (w) => (w >= 3 ? Math.floor((w - 3) / 4) + 1 : 0);
 
 // --- pieces ----------------------------------------------------------------------
 /** A pier (a narrow strip of wall at the side of a shop front): its left side lit, its right in shade. */
-function pier(r, wall, dx, w, h) {
+export function pier(r, wall, dx, w, h) {
   r(wall, dx, 0, w, h); r(shade(wall, 1.07), dx, 0, 1, h); r(shade(wall, 0.82), dx + w - 1, 0, 1, h);
   r(shade(wall, 0.7), dx, 0, w, 2);                                       // its foot
 }
@@ -35,7 +35,7 @@ function pier(r, wall, dx, w, h) {
  * Returns the glass's box { x, w, y0, y1 } for the goods, and draws the panes'
  * reflections with .shine() (after the goods: they are on the glass).
  */
-function window(r, dx, w, o = {}) {
+export function window(r, dx, w, o = {}) {
   const frame = o.frame ?? FRAME, c = o.glass ?? GLASS, rs = o.riser ?? 3, riserC = o.riserC ?? shade(frame, 1.25);
   r(frame, dx, 0, w, 18);
   if (rs) { r(riserC, dx + 1, 0, w - 2, rs); r(shade(riserC, 1.15), dx + 1, rs - 1, w - 2, 1); }
@@ -60,7 +60,7 @@ function window(r, dx, w, o = {}) {
  * line where it meets the wall), the fold, the valance, and a scalloped hem (every
  * other stripe a row longer). Stripes 3 wide. 6 rows in all, below top.
  */
-function awn(r, c1, c2, dx, top, w) {
+export function awn(r, c1, c2, dx, top, w) {
   for (let i = 0; i < w; i += 3) {
     const c = (i / 3) % 2 ? c2 : c1, sw = Math.min(3, w - i);
     r(shade(c, 0.7), dx + i, top - 1, sw, 1);                            // where it meets the wall
@@ -71,7 +71,7 @@ function awn(r, c1, c2, dx, top, w) {
   }
 }
 /** A small tiled roof (hisashi) over a wooden shop front, 3 rows, its bottom at up, eaves 2 px over each side. */
-function hisashi(r, c, w, up) {
+export function hisashi(r, c, w, up) {
   r(c, -2, up, w + 4, 3); r(shade(c, 1.3), -2, up + 2, w + 4, 1); r(shade(c, 0.6), -2, up, w + 4, 1);
   for (let x = 0; x < w + 2; x += 3) r(shade(c, 0.8), x - 1, up + 1, 1, 1);
 }
@@ -79,14 +79,14 @@ function hisashi(r, c, w, up) {
  * The kit's lattice over paper (WINDOWS.lattice in the kit), but the paper glows at night
  * (CURTAIN, one of the lit colours) and the slats stay dark in front of it.
  */
-function glowLattice(r, dx, up, w, h) {
+export function glowLattice(r, dx, up, w, h) {
   const slat = dark(r);
   r(shade(DARKWOOD, 0.72), dx - 1, up - 1, w + 2, h + 2); r(CURTAIN, dx, up, w, h);
   for (let i = dx + 1; i < dx + w; i += 2) slat(WOOD, i, up, 1, h);
   r(LIGHTWOOD, dx - 1, up - 1, w + 2, 1);
 }
 /** Goods in 2 x 2 blocks on shelves (a shelf line every 4 rows), from a stream of their own. */
-function goods(r, g, x, w, y0, rows, colours, shelf = '#c8ccd0', iw = 2) {
+export function goods(r, g, x, w, y0, rows, colours, shelf = '#c8ccd0', iw = 2) {
   for (let j = 0; j < rows; j++) {
     const y = y0 + j * 4;
     r(shelf, x, y, w, 1);

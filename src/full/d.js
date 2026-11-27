@@ -25,23 +25,23 @@ function shifted(r0, ox) {
 const oldW = (w) => Math.round(w / 1.5);
 /** How many windows the old drawing put in a row (its window widths and gap 3), so the rng is used the same. */
 const OLD_WW = { alu: 5, aluPair: 9, tall: 5 };
-const oldHowMany = (kind, x0, x1) => Math.max(1, Math.floor((x1 - x0 - 3) / (OLD_WW[kind] + 3)));
+export const oldHowMany = (kind, x0, x1) => Math.max(1, Math.floor((x1 - x0 - 3) / (OLD_WW[kind] + 3)));
 /** n things ww wide between x0 and x1 on an even step, the row centred. */
-function evenRow(x0, x1, n, ww) {
+export function evenRow(x0, x1, n, ww) {
   const gap = Math.max(1, Math.floor((x1 - x0 - n * ww) / (n + 1))), used = n * ww + (n - 1) * gap;
   const start = x0 + Math.floor((x1 - x0 - used) / 2);
   return Array.from({ length: n }, (_, i) => start + i * (ww + gap));
 }
 const FULL_WW = { alu: 7, aluPair: 13, tall: 7 };
 /** A row of windows on an even step, a concrete sill under each (the old rng: one pane each). */
-function windows(r, rng, kind, wall, x0, x1, up, n) {
+export function windows(r, rng, kind, wall, x0, x1, up, n) {
   for (const x of evenRow(x0, x1, n, FULL_WW[kind])) {
     oneWindow(r, rng, kind, x, up);
     if (kind !== 'tall') { r(shade(wall, 0.72), x - 1, up - 1, FULL_WW[kind] + 2, 1); r(shade(wall, 0.9), x, up - 2, FULL_WW[kind], 1); }
   }
 }
 /** A concrete building's edges: a plinth, the left edge lit, the right in shade. */
-function walls(r, wall, x, w, h) {
+export function walls(r, wall, x, w, h) {
   r(wall, x, 0, w, h);
   r(shade(wall, 1.08), x, 0, 1, h); r(shade(wall, 0.86), x + w - 1, 0, 1, h);
   r(shade(wall, 0.74), x, 0, w, 2); r(shade(wall, 0.9), x, 2, w, 1);

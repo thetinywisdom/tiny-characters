@@ -12,7 +12,7 @@ const GF = 24, SHOP_GF = 28, SILL = 6;
 /** The old (scale 1) width a full-size width came from. */
 const oldW = (w) => Math.round(w / 1.5);
 /** The same painter moved ox pixels to the right (text, icons and the night's force too). */
-function shifted(r0, ox) {
+export function shifted(r0, ox) {
   const r = (c, dx, up, w, h) => r0(c, dx + ox, up, w, h);
   r.k = r0.k;
   if (r0.px) r.px = (c, dx, up, w, h) => r0.px(c, dx + Math.round(ox * (r0.k ?? 1)), up, w, h);
@@ -25,7 +25,7 @@ function shifted(r0, ox) {
  * A sign whose name fills the whole board (as the old one-colour signs did), the
  * board edged like the kit's sign. Falls back to the kit's letter marks.
  */
-function bigSign(r, bg, fg, dx, up, w, h, text) {
+export function bigSign(r, bg, fg, dx, up, w, h, text) {
   const f = r.force ?? r;
   f(shade(bg, 0.7), dx, up, w, h); f(bg, dx + 1, up + 1, w - 2, h - 2);
   if (r.text && r.text(text, fg, dx, up, w, h)) return;

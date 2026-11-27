@@ -15,17 +15,17 @@ import {
 const GF = 24, SG = 28, FL = 20, SILL = 6;                               // the kit's storeys (FULL_STOREY)
 const KINDS = ['konbini', 'ramen', 'cafe', 'bookshop', 'bakery', 'izakaya'];   // tinyBuildings' SHOP_TYPES, in its order
 /** The old width (the drawing's w is the old one times 1.5; the old widths are even, so this is exact). */
-const old = (w) => Math.round(w / 1.5);
+export const old = (w) => Math.round(w / 1.5);
 /** Use up n of the building's rng (what the old drawing used it for), so later choices stay the same. */
-const burn = (rng, n) => { for (let i = 0; i < n; i++) rng(); };
+export const burn = (rng, n) => { for (let i = 0; i < n; i++) rng(); };
 
 // The old drawings' window sizes and how they counted windows: the count is a
 // choice (it uses the rng: one pane per window), so it is made as the old one made it.
 const OLD_WW = { sash: 5, pair: 9, alu: 5, aluPair: 9 };
-const oldMany = (kind, x0, x1, gap = 3) => Math.max(1, Math.floor((x1 - x0 - gap) / (OLD_WW[kind] + gap)));
-const oldFits = (kind, x0, x1) => x1 - x0 >= OLD_WW[kind] + 2;
+export const oldMany = (kind, x0, x1, gap = 3) => Math.max(1, Math.floor((x1 - x0 - gap) / (OLD_WW[kind] + gap)));
+export const oldFits = (kind, x0, x1) => x1 - x0 >= OLD_WW[kind] + 2;
 /** n windows of a kind between x0 and x1, on a regular step (whole-pixel gaps), the row centred; their sills at up. */
-function row(r, rng, kind, x0, x1, up, n, o) {
+export function row(r, rng, kind, x0, x1, up, n, o) {
   const ww = WW[kind], gap = Math.max(2, Math.floor((x1 - x0 - n * ww) / (n + 1))), span = n * ww + (n - 1) * gap;
   const start = x0 + Math.floor((x1 - x0 - span) / 2);
   for (let i = 0; i < n; i++) oneWindow(r, rng, kind, start + i * (ww + gap), up, o);
@@ -33,13 +33,13 @@ function row(r, rng, kind, x0, x1, up, n, o) {
 
 // --- pieces ----------------------------------------------------------------------
 /** A wall's edges: the left a little lit, the right in shade (light from the upper left). */
-function edges(r, wall, dx, w, up, h) { r(shade(wall, 1.05), dx, up, 1, h); r(shade(wall, 0.88), dx + w - 1, up, 1, h); }
+export function edges(r, wall, dx, w, up, h) { r(shade(wall, 1.05), dx, up, 1, h); r(shade(wall, 0.88), dx + w - 1, up, 1, h); }
 /** A band where a floor meets the next (a string course): its top lit, its underside in shade. */
-function band(r, wall, dx, w, up) { r(shade(wall, 0.8), dx, up - 1, w, 1); r(shade(wall, 1.06), dx, up, w, 1); }
+export function band(r, wall, dx, w, up) { r(shade(wall, 0.8), dx, up - 1, w, 1); r(shade(wall, 1.06), dx, up, w, 1); }
 /** A plinth along the ground, 2 rows, its top edge lit. */
-function plinth(r, wall, dx, w, c = shade(wall, 0.78)) { r(c, dx, 0, w, 2); r(shade(c, 1.12), dx, 2, w, 1); }
+export function plinth(r, wall, dx, w, c = shade(wall, 0.78)) { r(c, dx, 0, w, 2); r(shade(c, 1.12), dx, 2, w, 1); }
 /** A brick chimney w wide, h tall, its bottom at up: courses of brick, a lit side, a cap. */
-function chimney(r, dx, up, w = 6, h = 10, c = '#9a4a3a') {
+export function chimney(r, dx, up, w = 6, h = 10, c = '#9a4a3a') {
   r(c, dx, up, w, h - 2);
   for (let y = up + 1, k = 0; y < up + h - 2; y += 2, k++) {             // mortar courses, the joints staggered
     r(shade(c, 0.82), dx, y, w, 1);
@@ -49,18 +49,18 @@ function chimney(r, dx, up, w = 6, h = 10, c = '#9a4a3a') {
   r(INK, dx - 1, up + h - 2, w + 2, 2); r(shade(INK, 1.5), dx - 1, up + h - 1, w + 2, 1);   // the cap
 }
 /** A potted plant, 5 wide, 9 tall. */
-function potPlant(r, dx) {
+export function potPlant(r, dx) {
   const pot = '#a8664a', leaf = '#5f8f5a';
   r(shade(pot, 0.8), dx, 0, 5, 1); r(pot, dx, 1, 5, 3); r(shade(pot, 1.15), dx - 1, 4, 7, 1); r(shade(pot, 1.15), dx, 1, 1, 3);
   r(leaf, dx - 1, 5, 7, 2); r(leaf, dx, 7, 5, 1); r(leaf, dx + 1, 8, 3, 1);
   r(shade(leaf, 1.25), dx, 6, 2, 1); r(shade(leaf, 1.25), dx + 1, 7, 1, 1); r(shade(leaf, 0.75), dx + 4, 5, 2, 1);
 }
 /** A wall lamp by a door: a bracket, a lamp with a lit pane (it shines at night). */
-function wallLamp(r, dx, up) {
+export function wallLamp(r, dx, up) {
   r(INK, dx, up, 3, 1); r(LIT, dx, up + 1, 3, 3); r(shade(LIT, 1.06), dx, up + 3, 1, 1); r(INK, dx - 1, up + 4, 5, 1); r(INK, dx + 1, up + 5, 1, 1);
 }
 /** A railing: a top rail at `up` (lit on top), balusters every `step` below it down to `from`. */
-function railing(r, c, dx, w, from, up, step = 3, bar = shade(c, 0.86)) {
+export function railing(r, c, dx, w, from, up, step = 3, bar = shade(c, 0.86)) {
   for (let x = dx; x < dx + w; x += step) r(bar, x, from, 1, up - from);
   r(bar, dx + w - 1, from, 1, up - from);
   r(c, dx, up, w, 1); r(shade(c, 1.08), dx, up, w, 1);
@@ -165,13 +165,12 @@ export const PART = {
       r(shade(wall, 0.6), 0, GF - 1, bw, 1); r(shade(RAIL, 1.0), 0, GF, bw, 2); r(shade(RAIL, 1.2), 0, GF + 1, bw, 1);
       railing(r, RAIL, 0, bw, GF + 2, GF + 6, 3);
       if (b.laundry) laundry(r, b, 1, 3, bw - 3, GF + 6, true);
-      // the outside stairs: a landing at the corridor, steps down to the right, a post
-      r(RAIL, bw, GF, 6, 2); r(shade(RAIL, 1.2), bw, GF + 1, 6, 1);
-      for (let k = 1; k <= 12; k++) {                                     // the steps: a lit tread, a riser, the stringer at their end
-        const x = bw + Math.floor((k + 1) / 2), up = GF - k * 2;
-        r(shade(RAIL, 1.2), x, up + 1, 3, 1); r(shade(RAIL, 0.8), x, up, 3, 1); r(shade(RAIL, 0.6), x + 3, up, 1, 2);
-      }
-      r(shade(RAIL, 0.6), bw + 3, 0, 1, 10);                              // a post under the flight
+      // a ladder up to the corridor (the owner: the stairs looked bad, "maybe just a ladder"):
+      // the corridor's slab runs on to it, two rails up past the railing, a rung every 3 rows
+      r(shade(RAIL, 1.0), bw, GF, 4, 2); r(shade(RAIL, 1.2), bw, GF + 1, 4, 1);
+      r(shade(RAIL, 0.62), bw + 2, 0, 1, GF + 7); r(shade(RAIL, 0.62), bw + 6, 0, 1, GF + 7);
+      r(shade(RAIL, 0.9), bw + 2, GF + 6, 5, 1);                          // the hoop at its top
+      for (let up = 2; up < GF + 6; up += 3) r(shade(RAIL, 1.15), bw + 3, up, 3, 1);
       if (v.chance(0.5)) { r(shade(wall, 0.8), 0, top - 1, bw, 1); flatRoof(r, wall, 0, top, bw, 18); }
       else { r(shade(wall, 0.75), 0, top - 2, bw, 2); pitched(r, v.pick(['#4a5560', '#6a4a3a']), -3, top, bw + 6, 18); }
     },

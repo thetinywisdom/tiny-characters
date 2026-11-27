@@ -22,6 +22,10 @@ import { PART as PA } from './full/a.js';
 import { PART as PB } from './full/b.js';
 import { PART as PC } from './full/c.js';
 import { PART as PD } from './full/d.js';
+import { PART as PE } from './full/e.js';
+import { PART as PF } from './full/f.js';
+import { PART as PG } from './full/g.js';
+import { PART as PH } from './full/h.js';
 
 // --- colours (the same as tinyBuildings.js) --------------------------------------
 export const INK = '#2f3236', WHITE = '#f2f2ee', RED = '#d8443c', NAVY = '#2c3652', GOLD = '#f2b64a';
@@ -458,5 +462,5 @@ export const FULL = {
       pitched(r, rc, -2, top, w + 4, Math.round(v.int(12, 15) * 1.5), kind === 'hipped' ? 3 : 0);
     },
   },
-  ...PA, ...PB, ...PC, ...PD,
+  ...PA, ...PB, ...PC, ...PD, ...PE, ...PF, ...PG, ...PH,
 };
