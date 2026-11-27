@@ -71,6 +71,10 @@ bubble lab, so games can use them and they can grow.
 - The player's marker (Nov 2026): a thin gold pixel ring round your feet,
   still (no pulse), as bright at night as by day; a white ring under whoever
   you point at or tap.
+- The basketball court (Nov 2026): blue, and open (no fence).
+- Light at night (Nov 2026): flat pixel steps (A); it never washes over cars
+  or people; whoever stands inside a glow takes on its warm colour (C), by
+  the glow's own steps.
 - The walking step (Nov 2026): the body still bobs a pixel, and the hips
   stretch up so no gap opens.
 - The front page (Nov 2026): no park (the owner never used it): the town,
@@ -405,8 +409,10 @@ first, build after the owner picks). Ideas offered so far:
   mostly cats and walkers).
 - Pigeons, crows, the picnic blanket and the rubbish bags are drawn only;
   people walk over the blanket and the bags.
-- Sign text is a row of pixels, not letters. Real kana would need at least
-  5 px tall signs; could try for a few (ラーメン, コンビニ) if the owner wants.
+- Real kana on signs (ラーメン, コンビニ) could be tried on a few if the owner
+  wants (the signs are in English now, by the owner's choice).
+- The basketball court's centre circle is a smooth line, not pixels (offered
+  to redraw it as a pixel ring; waiting for the owner).
 
 - Turned down when comparing with the catalogue (do not add): twin tails,
   beard, helmet, tank top, flu mask, wings, bulky build, shoes or boots,
@@ -420,4 +426,6 @@ first, build after the owner picks). Ideas offered so far:
 
 ## Open questions for the owner
 
-None right now.
+- Redraw the basketball court's centre circle in pixels, like the ring under
+  your feet?
+- What next (see Next)?
