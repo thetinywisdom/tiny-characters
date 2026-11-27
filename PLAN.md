@@ -421,8 +421,9 @@ bubble lab, so games can use them and they can grow.
 
 - **Redrawing everything at full size (E)**, in batches reviewed on a review page
   (https://claude.ai/artifact/4QAkLRYE9m2mcs5caQUZzB). Every building is done (batches 1-2).
-  Next: street things (props), then trees and bushes, then the ground and streets (the
-  town's terrain and road drawing), each in batches of about 20 with the same review.
+  Batch 3 (the 25 street things, `FULL_PROPS` in `src/tinyStreetFull.js`, parts
+  `src/full/p1.js` .. `p3.js`; the swings in use drawn at full size too) is drawn and waiting
+  for the owner's review. Then trees and bushes, then the ground and streets.
 
 ## Next (only when the owner asks)
 
