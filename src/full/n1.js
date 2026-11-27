@@ -88,15 +88,6 @@ function branch(P, x, y, dx, dy, c, t = 2) {
   for (let k = 0; k <= n; k++) P.rect(c, Math.round(x + dx * k / n), Math.round(y + dy * k / n), t, 1);
 }
 
-/** Dark pockets in a crown, where a branch shows through. */
-function pockets(P, rng, spots, deep, wood) {
-  for (const [x, y] of spots) {
-    if (!P.has(x, y) || !P.has(x + 1, y)) continue;
-    P.set(x, y, deep); P.set(x + 1, y, deep);
-    if (wood) P.set(x + (rng() < 0.5 ? 0 : 1), y, wood);
-  }
-}
-
 const jit = (rng, n = 1) => Math.round((rng() * 2 - 1) * n);
 
 export const PART = {
@@ -136,8 +127,8 @@ export const PART = {
     P.paint(r);
   } },
 
-  // 29 x 30: a dark trunk with two spreading branches, a pale pink crown with the branches showing
-  // through, white and deep pink blossom in clusters, petals on the ground
+  // 29 x 30: a dark trunk with two spreading branches showing under a pale pink crown, a twig in it,
+  // white and deep pink blossom in clusters, petals on the ground
   sakura: { approved: false, draw(r, rng, cx) {
     const P = sheet(), WOOD = '#4a3434', K = '#f2b8c8', K2 = '#f6c8d4';
     trunk(P, rng, cx, 13, WOOD, 3, { marks: 1, foot: false });
@@ -183,13 +174,16 @@ export const PART = {
     P.paint(r);
   } },
 
-  // 17 x 48: a tall narrow cone in tiers, each tier's hem hanging a little and darker underneath
+  // 17 x 48: a tall narrow cone in tiers, lit on the left; each tier's darker hem hangs out a little (each seed its own)
   cedar: { approved: false, draw(r, rng, cx) {
     const P = sheet(), C = '#3a6a48', BAND = '#2f5a3c', EDGE = '#2a4a34', LIT = '#467a52';
     trunk(P, rng, cx, 7, BARK, 3, { marks: 1, foot: false });
+    const flare = [0, 6, 12, 18, 24, 30].map(() => [[1, 1], [1, 0], [0, 1], [1, 1]][Math.floor(rng() * 4)]);   // which hems hang out, each seed its own
     for (let k = 0; k < 40; k++) {
-      const t = k % 6, hw = Math.max(0, Math.round(7 - k * 7 / 40) + (t === 0 && k < 36 ? 1 : 0) - (t === 5 ? 1 : 0)), y = 6 + k;
-      P.rect(t === 0 ? BAND : C, cx - hw, y, hw * 2 + 1, 1);
+      const t = k % 6, [fl, fr] = t === 0 && k < 36 ? flare[k / 6] : [0, 0];
+      const hw = Math.max(0, Math.round(7.2 - k * 7.2 / 40)), y = 6 + k;
+      P.rect(t === 0 ? BAND : C, cx - hw - fl, y, hw * 2 + 1 + fl + fr, 1);
+      if (fr) P.set(cx + hw + 1, y, EDGE);
       if (t >= 2 && hw > 1) P.rect(LIT, cx - hw + (t === 2 ? 1 : 0), y, Math.max(1, Math.round(hw * 0.6)), 1);   // the lit left side
       if (hw > 0) P.rect(EDGE, cx + hw, y, 1, 1);
       if (t === 1 && hw > 2) P.rect(shade(C, 0.88), cx + Math.ceil(hw / 2), y, hw - Math.ceil(hw / 2), 1);        // the shade under the tier above
@@ -215,11 +209,15 @@ export const PART = {
     });
     // the shade each tier casts on the one below
     for (const [base, w] of tiers.slice(1)) for (let i = -w; i <= w; i++) if (P.get(cx + i, base - 2) && P.get(cx + i, base - 2) !== HEM && P.get(cx + i, base - 2) !== EDGE) P.set(cx + i, base - 2, SH);
+    for (const [base, w, h] of tiers) {                                                     // a lit tuft on each tier, each seed its own
+      const k = 2 + Math.floor(rng() * (h - 5)), hw = Math.round(w - k * w / h), x = cx - hw + 1 + Math.floor(rng() * Math.max(1, Math.ceil(hw * 0.55) - 2));
+      if (hw > 2) { P.rect(shade(LIT, 1.12), x, base + k, 2, 1); P.set(x, base + k + 1, shade(LIT, 1.12)); }
+    }
     P.set(cx, 33, C); P.set(cx, 34, LIT);
     P.paint(r);
   } },
 
-  // 23 x 33: a white trunk with dark marks, a light airy crown of small clumps, bright leaves
+  // 23 x 33: a white trunk with dark marks, an egg-shaped light crown (lit on top, shaded below), a few gaps and bright leaves
   birch: { approved: false, draw(r, rng, cx) {
     const P = sheet(), W = '#eeeae0', W2 = '#d8d4ca', INK = '#3a3a3a', G = '#8ab45a';
     P.rect(W, cx - 1, 0, 3, 21); P.rect(W2, cx + 1, 0, 1, 21); P.rect(shade(W2, 0.85), cx - 1, 0, 3, 1);

@@ -437,8 +437,10 @@ bubble lab, so games can use them and they can grow.
 
 - **Redrawing everything at full size (E)**, in batches reviewed on a review page
   (https://claude.ai/artifact/4QAkLRYE9m2mcs5caQUZzB). Every building is done (batches 1-2).
-  Every building and every street thing is done (batches 1-3). Next: trees and bushes
-  (batch 4), then the ground and streets.
+  Every building and every street thing is done (batches 1-3). Batch 4 (the 15 trees and
+  10 bushes, `FULL_TREES` / `FULL_BUSHES` in `src/tinyNatureFull.js`, parts
+  `src/full/n1.js` .. `n3.js`) is drawn and waiting for the owner's review. Then the
+  ground and streets.
 
 ## Next (only when the owner asks)
 
