@@ -18,6 +18,10 @@
 
 import { drawCharacter, drawRing, shade } from './tinyCharacters.js';
 import { drawWeapon } from './tinyCombat.js';
+import { usesFull } from './tinyBuildings.js';
+import { FULL_PROPS } from './tinyStreetFull.js';
+import { drawProp } from './tinyStreet.js';
+import { SWING_SEATS, chainColour } from './full/p3.js';
 
 const INK = '#2f3236', WHITE = '#f2f2ee';
 const px = (g, c, x, y, w = 1, h = 1) => { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), w, h); };
@@ -142,6 +146,27 @@ export function drawNappingCat(g, c, t = 0) {
  * prop.riders[i] = { angle, kid } (a person on it) or null (the seat hangs still).
  */
 export function drawSwings(g, prop, t = 0) {
+  if (usesFull(FULL_PROPS.swings)) {
+    // the full-size swings (src/full/p3.js): its frame, then the chains, kids and seats on its grid
+    drawProp(g, { ...prop, riders: undefined, frameOnly: true });
+    const k = prop.scale ?? 1, f = k / 1.5, n = (v) => Math.round(v * f), s = Math.max(1, n(1)), S = SWING_SEATS;
+    const L = Math.round(prop.x - Math.round(30 * k) / 2), y = Math.round(prop.y), top = y - n(S.top) - s;
+    S.centres.forEach((c, i) => {
+      const r = prop.riders?.[i], a = r?.angle ?? 0, dx = Math.sin(a) * f, dy = Math.cos(a) * f;
+      for (const hx of [L + n(c - S.half), L + n(c + S.half)]) {
+        px(g, S.hook, hx, top, s, s);
+        for (let d = 1; d < S.len; d++) px(g, chainColour(d), hx + dx * d, top + dy * d, s, s);
+      }
+      const ex = L + n(c) + dx * S.len, ey = top + dy * S.len;
+      if (r?.kid) {
+        const kid = { ...r.kid, facing: 'right' }, x = ex + 1;
+        upper(g, kid, x + 1, ey + 1); px(g, kid.legwear === 'skirt' ? kid.legs : legColour(kid), x - 1, ey - 1, 5, 2);
+        const lean = Math.sign(a); px(g, kid.skin ?? '#f1cdb0', x + 3, ey + 1, 2, 1); px(g, kid.skin ?? '#f1cdb0', x + 4 + Math.max(0, lean), ey + 1, 1, 3); px(g, shoes(kid), x + 4 + Math.max(0, lean), ey + 3, 2, 1);
+      }
+      px(g, S.seatTop, ex - n(S.half), ey, n(S.half * 2 + 1), s); px(g, S.seat, ex - n(S.half), ey + s, n(S.half * 2 + 1), n(S.seatH) - s);
+    });
+    return;
+  }
   const k = prop.scale ?? 1, x0 = Math.round(prop.x - 15 * k), y = Math.round(prop.y), m = (v) => Math.round(v * k);
   const red = '#c8402c';
   px(g, red, x0, y - m(21), m(2), m(21)); px(g, red, x0 + m(28), y - m(21), m(2), m(21)); px(g, red, x0, y - m(22), m(30), m(2)); px(g, shade(red, 0.8), x0, y - m(22), m(30), 1);
