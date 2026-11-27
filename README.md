@@ -19,9 +19,8 @@ python3 -m http.server 8000   # then open http://localhost:8000
 ## Working on it
 
 Everything is drawn at full size: one pixel of a building, a street thing, a
-plant or the ground is one person pixel (the old drawings were stretched by
-1.5). `?redraw=none` in the address shows the old drawings; `?redraw=all` also
-shows drawings still in review.
+plant or the ground is one person pixel (the old drawings, stretched by 1.5,
+are gone). `?redraw=all` in the address also shows drawings still in review.
 
 Agents and contributors: start with `CLAUDE.md` (the owner's rules and how
 to check a change), then `PLAN.md` (what is done, decided and next) and
@@ -131,23 +130,22 @@ drawBuilding(g, { type: 'shop', shopType: 'ramen', x: 120, y: 104, seed: 3 });
 // then the people in front of them (feet below the ground line)
 ```
 
-Every building is now **drawn at full size** (the town's size, scale 1.5,
-with one building pixel to one person pixel): `BUILDINGS[type].scale` is 1.5
-for those, and their `w`, `h` and `widths` are at that size; draw them with
-`scale: 1.5` (`drawBuilding(g, { type: 'sushi', x, y, seed, scale: 1.5 })`).
-At any other scale they are scaled from that. `setRedraw('approved' | 'all'
-| 'none')` picks which drawings are used (the address's `?redraw=` does the
-same).
+Every building is **drawn at full size** (the town's size, scale 1.5, with
+one building pixel to one person pixel): `BUILDINGS[type].scale` is 1.5 and
+its `w`, `h` and `widths` are at that size; draw it with `scale: 1.5`
+(`drawBuilding(g, { type: 'sushi', x, y, seed, scale: 1.5 })`) to get it pixel
+for pixel; at any other scale it is stretched. `setRedraw('approved' | 'all')`
+picks whether drawings still in review are used too (the address's
+`?redraw=all` does the same).
 
 | Export | What it does |
 | --- | --- |
 | `drawBuilding(g, b)` | One building `{ type, x, y, seed, shopType, wall, roof, scale, dpx }`: centred on `x`, ground line at `y`. `seed` picks its width, floors, windows, door, roof and colours (see above); `scale` draws it bigger with crisp pixels (the town uses 1.5); `dpx` lets its signs write their names (see below). |
 | `SIGN_FONT` | The signs' typeface: DotGothic16 (load it on the page from Google Fonts). |
 | `buildingSize(b)` | Its width and height for its seed, at its scale. |
-| `drawPart(g, { part, x, y, seed, scale })` | One door or window from the kit the buildings are made of, centred on `x`, its bottom at `y`. |
+| `drawPart(g, { part, x, y, seed, scale })` | One door or window from the kit the buildings are made of, centred on `x`, its bottom at `y` (at full size: scale 1.5, the default, is pixel for pixel). |
 | `PARTS` | `id -> { label, w, h }`: `door.wood`, `door.plank`, `door.glazed`, `door.glass`, `door.steel`, `door.arched`, `door.auto`, `door.sliding`, `door.shoji`, `door.garage`, `window.sash`, `window.pair`, `window.alu`, `window.aluPair`, `window.tall`, `window.shuttered`, `window.arched`, `window.pointed`, `window.stained`, `window.round`, `window.lattice`, `window.shoji`, `window.leaded`, `window.neon`, `window.shop`. |
-| `STOREY` | The sizes every building shares: ground floor 16, a shop's 19, upper floors 13, window sills 4 above the floor. |
-| `BUILDINGS` | `type -> { label, w, h, widths }`: name, the largest width and height any seed makes (roof included), and the widths a seed picks from. |
+| `BUILDINGS` | `type -> { label, w, h, widths, scale }`: name, the largest width and height any seed makes (roof included), and the widths a seed picks from, at `scale` (1.5). |
 | `SHOP_TYPES` | `konbini`, `ramen`, `cafe`, `bookshop`, `bakery`, `izakaya` (for `shop` and `mixedUse`). |
 | `WALL_COLORS`, `ROOF_COLORS` | The catalogue's wall and roof colours. |
 

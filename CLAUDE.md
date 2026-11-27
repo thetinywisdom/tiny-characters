@@ -15,8 +15,8 @@ each is drawn natively at the town's size (one pixel = one person pixel). New
 drawings go in the full-size files (`src/tinyBuildingsFull.js`,
 `tinyStreetFull.js`, `tinyNatureFull.js`, `tinyGroundFull.js`, parts in
 `src/full/`), reviewed by the owner on a review page before `approved: true`
-(see SKILLS, Full-size drawings). Not yet approved drawings show only with
-`?redraw=all`; `?redraw=none` shows the old drawings.
+(see SKILLS, How a building is drawn). Not yet approved drawings show only
+with `?redraw=all`. The old scale-1 drawings are deleted (in git history).
 
 **Read before working:** this file, then `PLAN.md` (what is done, the owner's
 decisions, what is next, open questions), `SKILLS.md` (how everything is

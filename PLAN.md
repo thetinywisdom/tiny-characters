@@ -456,12 +456,18 @@ bubble lab, so games can use them and they can grow.
     circle as a pixel ring (the last soft leftover). Every road, sidewalk, crossing and rail
     is where it was.
 
+59. **The old drawings deleted** (the owner: "delete them, if I want them I can revert"):
+    the scale-1 drawings of every building, street thing, tree, bush, terrain and
+    ground piece, and their old kit, are gone; only the full-size ones remain (about
+    1,300 lines fewer; tinyBuildings.js from 1,100 lines to 270). The type lists keep
+    their labels, widths, sizes, feet and glows. Every picture of the town, every
+    building at every seed (day, night, shut, laundry) and the catalogue are unchanged,
+    but the Doors & windows cards, which now show the full-size kit. `?redraw=none` is
+    gone; `STOREY` is no longer exported (`FULL_STOREY` in tinyBuildingsFull.js).
+
 ## In progress
 
-- Nothing. **Every building, street thing, tree, bush and the ground is drawn at full size**
-  and approved (batches 1-5). The old scale-1 drawings are still in the code as the
-  fallback (`?redraw=none` shows them); removing them would make the files much shorter
-  (ask the owner first).
+- Nothing. Everything is drawn at full size; new drawings go through the review page.
 
 ## Next (only when the owner asks)
 
@@ -516,6 +522,4 @@ The full-size redraw is done. Ideas offered before (on hold):
 
 ## Open questions for the owner
 
-- Remove the old (scale-1) drawings now that everything is redrawn, or keep them
-  as a fallback (`?redraw=none`)?
 - What next (see Next)?
