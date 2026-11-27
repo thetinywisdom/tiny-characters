@@ -162,7 +162,7 @@ not fit.
 and blocks, with the shrine grounds, a schoolyard and an old-town square;
 and in the south a pond park (koi, ducks, a path round it, cherry trees), a
 playground (swings, a slide, a sandbox, a drinking fountain, toilets), a
-fenced blue basketball court (kids passing a ball, floodlights at night), a
+open blue basketball court (kids passing a ball, floodlights at night), a
 railway with level crossings (a train runs along it and stops at each
 station; the gates come down, cars and people wait), four stations (a small
 one and three big ones: modern glass, classic brick, Japanese wooden) with
@@ -171,7 +171,7 @@ lanterns, cables, crates and cats.
 
 **The demo's map is a showcase.** Every piece is part of the layout
 (`DEFAULT_TOWN`), so a map of your own can put them anywhere: `railway: { y,
-h }`, areas with `ground: 'court'` and `fence: true` (and a `gate`),
+h }`, areas with `ground: 'court'` (with `fence: true` and `gates` if you want one),
 `shape: 'ellipse'` (a pond), `ring: true` (a path round), `koi: true` (fish
 and ducks), `buildings` like `{ type: 'stationBrick', x, y }`, `props`,
 `parked` vehicles and extra `wires`. Adding to a map never reshuffles the

@@ -120,7 +120,7 @@ export const DEFAULT_TOWN = {
     { name: 'Pond park', ground: 'grass', x: 0, y: 452, w: 180, h: 104, ring: true },
     { name: 'Pond', ground: 'water', shape: 'ellipse', x: 52, y: 486, w: 76, h: 36, solid: true, koi: true },
     { name: 'Playground', ground: 'sand', x: 212, y: 456, w: 156, h: 96 },
-    { name: 'Basketball court', ground: 'court', x: 402, y: 456, w: 156, h: 96, fence: true, gate: 20 },
+    { name: 'Basketball court', ground: 'court', x: 402, y: 456, w: 156, h: 96 },   // open: no fence (the owner)
     { name: 'Station plaza', ground: 'paving', x: 0, y: 576, w: 560, h: 64 },
     { name: 'Station alley', ground: 'gravel', x: 316, y: 578, w: 24, h: 62 },
   ],
@@ -321,8 +321,7 @@ export function makeTown(layout0 = DEFAULT_TOWN) {
     ...areas.filter((a) => a.solid).map((a) => ({ x: a.x, y: a.y, w: a.w, h: a.h })),
     ...parked.map((v) => ({ x: Math.round(v.x - 15), y: v.y - 7, w: 30, h: 9 })),
     // a fenced area (the court): its four sides, a gate in the middle of the top
-    ...areas.filter((a) => a.fence).flatMap((a) => { const g0 = a.x + Math.round((a.w - (a.gate ?? 0)) / 2), g1 = g0 + (a.gate ?? 0);
-      return [{ x: a.x, y: a.y, w: g0 - a.x, h: 3 }, { x: g1, y: a.y, w: a.x + a.w - g1, h: 3 }, { x: a.x, y: a.y + a.h - 3, w: a.w, h: 3 }, { x: a.x, y: a.y, w: 2, h: a.h }, { x: a.x + a.w - 2, y: a.y, w: 2, h: a.h }]; })];
+    ...areas.filter((a) => a.fence).flatMap((a) => fenceOf(a).map(({ x, y, w, h }) => ({ x, y, w, h })))];
   // the forest: behind the skyline, at the sides (gaps for the streets) and below the last street
   const lastBottom = streets[streets.length - 1] + STREET;
   const forest = [
@@ -464,25 +463,29 @@ const mix = (a, b, u) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(a.slice(
 let beamLayer = null, glowLayer = null;
 const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
 /**
- * Anyone (and any animal or monster) standing in a light takes on its colour (the owner's choice, C,
- * Nov 2026): drawn again in their day colours tinted by the light, over the dark, in the light's own
- * steps: full near a lamp's foot or right in front of a car, half at the edge of its light.
+ * Anyone (and any animal, monster or vehicle) inside a light takes on its colour (the owner's choice,
+ * C, Nov 2026): drawn again in day colours tinted by the light, over the dark, in the light's own
+ * steps, judged by where they are in the glow as it is drawn (its inner step full, its outer step
+ * half), so what stands in the glow is lit and what stands outside it is not; people right in front
+ * of a car's headlights too.
  */
 let litCanvas = null, litShape = null;
 const WARM = { '#ffe8a8': '#ffd890' };                                   // a lamp's light, a little warmer on people
-const LIT_W = 40, LIT_H = 48;
+const LIT_W = 80, LIT_H = 64;
 function litUp(g, items, vehicles, drawItem, dpx, on) {
   const lamps = [];
   for (const it of items) if (it.prop) for (const l of propLights(it.prop)) lamps.push({ ...l, gy: it.prop.y });
   items.forEach((it, index) => {
     const q = it.s;
-    if (!q || q.vehicle || q.ball || q.away) return;
+    if (!q || q.ball || q.away || q.type === 'train') return;
     let best = 0, colour = null;
-    for (const l of lamps) {
-      const u = Math.hypot(q.x - l.x, (q.y - l.gy) * 1.6) / l.r, st = u < 0.45 ? 1 : u < 0.8 ? 0.5 : 0;
+    // where they are: their feet, middle and head (a vehicle: its body), against each glow's steps
+    const points = q.vehicle ? [[q.x, q.y - 4], [q.x - 8, q.y - 4], [q.x + 8, q.y - 4]] : [[q.x, q.y - 1], [q.x, q.y - 7], [q.x, q.y - 13]];
+    for (const l of lamps) for (const [px, py] of points) {
+      const u = Math.hypot(px - l.x, py - l.y) / l.r, st = u < 0.33 ? 1 : u < 0.74 ? 0.5 : 0;
       if (st > best) { best = st; colour = l.c; }
     }
-    for (const v of vehicles) {                                            // in front of a car's headlights
+    if (!q.vehicle) for (const v of vehicles) {                            // in front of a car's headlights
       if (v.type === 'train' || !VEHICLES[v.type]) continue;
       const th = ((v.heading ?? 0) * Math.PI) / 180, dx = q.x - v.x, dy = (q.y - v.y) / KY;
       const ahead = dx * Math.cos(th) + dy * Math.sin(th) - VEHICLES[v.type].length / 2, side = Math.abs(-dx * Math.sin(th) + dy * Math.cos(th));
@@ -492,7 +495,7 @@ function litUp(g, items, vehicles, drawItem, dpx, on) {
     if (!best) return;
     // them alone, in day colours, on a small canvas of their own; tinted by the light; then over the dark
     if (!litCanvas || litCanvas.width !== LIT_W * dpx) { litCanvas = canvasOf(LIT_W * dpx, LIT_H * dpx); litShape = canvasOf(LIT_W * dpx, LIT_H * dpx); }
-    const c = litCanvas.getContext('2d'), m = litShape.getContext('2d'), ox = Math.round(q.x) - LIT_W / 2, oy = Math.round(q.y) - LIT_H + 6;
+    const c = litCanvas.getContext('2d'), m = litShape.getContext('2d'), ox = Math.round(q.x) - LIT_W / 2, oy = Math.round(q.y) - LIT_H + 12;
     m.setTransform(1, 0, 0, 1, 0, 0); m.clearRect(0, 0, litShape.width, litShape.height);
     m.setTransform(dpx, 0, 0, dpx, -ox * dpx, -oy * dpx); m.imageSmoothingEnabled = false;
     drawItem(m, { ...it, s: { ...q, ring: undefined, you: false } });
@@ -505,7 +508,7 @@ function litUp(g, items, vehicles, drawItem, dpx, on) {
     c.globalCompositeOperation = 'destination-out';
     for (let j = index + 1; j < items.length; j++) {
       const o = items[j], ob = o.b ? { x: o.b.x, y: o.b.y } : o.prop ?? o.p ?? o.s;
-      if (ob && Math.abs(ob.x - q.x) < 80 && ob.y - q.y < 120) drawItem(c, o);
+      if (ob && Math.abs(ob.x - q.x) < 100 && ob.y - q.y < 120) drawItem(c, o);
     }
     g.save(); g.globalAlpha = best * 0.8 * on; g.imageSmoothingEnabled = false;
     g.drawImage(litCanvas, ox, oy, LIT_W, LIT_H); g.restore();
@@ -586,11 +589,11 @@ function drawNight(g, view, items, night, dpx, drawItem, t = 0, lights = 'bands'
     // then the vehicles' own lamps, on them
     for (const v of vehicles) for (const l of vehicleLights(v)) glow(G, l.x, l.y, l.r, l.c);
     if (lights !== 'soft') pixelLight(G, glowLayer.width, glowLayer.height, lights);
+    g.globalCompositeOperation = 'source-over';
+    litUp(g, items, vehicles, drawItem, dpx, on);                              // what stands in the light, lit (under the cars' own lamps)
     g.globalCompositeOperation = 'lighter';
     g.imageSmoothingEnabled = false;
     g.drawImage(glowLayer, view.x, view.y, view.w, view.h);
-    g.globalCompositeOperation = 'source-over';
-    litUp(g, items, vehicles, drawItem, dpx, on);
   }
   g.restore();
 }
@@ -669,6 +672,22 @@ function drawGround(layout) {
   return c;
 }
 
+/**
+ * A fenced area's fence: its four sides as pieces { x, y, w, h, side }, with a gap (a gate)
+ * in the middle of a side: `gates: { top, bottom, left, right }` (their widths), or `gate`
+ * (one in the top).
+ */
+function fenceOf(a) {
+  const gates = a.gates ?? { top: a.gate ?? 0 }, out = [];
+  const run = (side, x, y, len, across) => {
+    const gw = gates[side] ?? 0, g0 = Math.round((len - gw) / 2), g1 = g0 + gw;
+    const piece = (from, to) => { if (to > from) out.push(across ? { side, x: x + from, y, w: to - from, h: side === 'top' ? 3 : 3 } : { side, x, y: y + from, w: 2, h: to - from }); };
+    if (gw) { piece(0, g0); piece(g1, len); } else piece(0, len);
+  };
+  run('top', a.x, a.y, a.w, true); run('bottom', a.x, a.y + a.h - 3, a.w, true);
+  run('left', a.x, a.y, a.h, false); run('right', a.x + a.w - 2, a.y, a.h, false);
+  return out;
+}
 /** A sports court on the ground: a blue run-off, an orange court, white lines, a chain-link fence round it with a gate in the top. */
 function drawCourt(g, a, k) {
   const R = (col, x, y, w, h) => { g.fillStyle = col; g.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }, m = (v) => Math.round(v * k);
@@ -678,11 +697,17 @@ function drawCourt(g, a, k) {
   R(line, cx, cy, cw, 1); R(line, cx, cy + ch - 1, cw, 1); R(line, cx, cy, 1, ch); R(line, cx + cw - 1, cy, 1, ch); R(line, cx + Math.round(cw / 2), cy, 1, ch);
   for (const kx of [cx, cx + cw - m(22)]) { R(line, kx, cy + Math.round(ch / 2) - m(10), m(22), 1); R(line, kx, cy + Math.round(ch / 2) + m(10), m(22), 1); R(line, kx === cx ? kx + m(22) : kx, cy + Math.round(ch / 2) - m(10), 1, m(20)); }   // the keys
   g.strokeStyle = line; g.lineWidth = 1; g.beginPath(); g.ellipse(cx + cw / 2, cy + ch / 2, m(10), m(7), 0, 0, Math.PI * 2); g.stroke();
-  // the fence: posts and wire mesh round the edge, a gap for the gate at the top
-  const g0 = a.x + Math.round((a.w - (a.gate ?? 0)) / 2), g1 = g0 + (a.gate ?? 0);
-  for (let x = a.x; x < a.x + a.w; x += m(4)) { if (x >= g0 && x < g1) continue; R('#9aa0a8', x, a.y, 1, 3); R('#9aa0a8', x, a.y + a.h - 3, 1, 3); }
-  R('#8a9096', a.x, a.y, g0 - a.x, 1); R('#8a9096', g1, a.y, a.x + a.w - g1, 1); R('#8a9096', a.x, a.y + a.h - 1, a.w, 1);
-  for (let y = a.y; y < a.y + a.h; y += m(3)) { R('#9aa0a8', a.x, y, 2, 2); R('#9aa0a8', a.x + a.w - 2, y, 2, 2); }
+  // the fence (only with `fence: true`): posts and wire mesh round the edge, with its gates (gaps)
+  if (a.fence) for (const f of fenceOf(a)) {
+    if (f.side === 'top' || f.side === 'bottom') {
+      for (let x = a.x + Math.ceil((f.x - a.x) / m(4)) * m(4); x < f.x + f.w; x += m(4)) R('#9aa0a8', x, f.y, 1, 3);
+      R('#8a9096', f.x, f.side === 'top' ? f.y : f.y + 2, f.w, 1);
+    } else for (let y = a.y + Math.ceil((f.y - a.y) / m(3)) * m(3); y < f.y + f.h; y += m(3)) R('#9aa0a8', f.x, y, 2, 2);
+  }
+  if (a.fence && a.gatePosts) for (const f of fenceOf(a)) {                           // the gates marked by a stouter post on each side
+    const ends = f.side === 'top' || f.side === 'bottom' ? [[f.x, f.y], [f.x + f.w - 2, f.y]] : [[f.x, f.y], [f.x, f.y + f.h - 3]];
+    for (const [x, y] of ends) if ((f.side === 'top' || f.side === 'bottom') ? (x > a.x + 1 && x < a.x + a.w - 3) : (y > a.y + 2 && y < a.y + a.h - 4)) { R('#5f6670', x, y - 3, 2, 6); R('#c8ccd0', x, y - 3, 2, 1); }
+  }
 }
 
 /**

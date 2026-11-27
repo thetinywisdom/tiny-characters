@@ -235,8 +235,10 @@ their own):** `railway: { y, h }` (a band of gravel, sleepers and rails;
 solid but where a cross street crosses it, `railAt`; crossing gates are
 placed at each level crossing, after the other props); areas: `ground:
 'court'` (`drawCourt`: run-off in deep blue, the court in blue (the owner's
-choice),  lines, keys, a chain-link fence with
-a `gate` gap at the top; `fence: true` makes the fence solid), `shape:
+choice), lines, keys; `fence: true` adds a solid chain-link fence round it,
+with gates: `gates: { top, bottom, left, right }` (widths) or `gate` (one at
+the top), `gatePosts: true` marks them; the demo's court has no fence: the
+owner found it too hard to get in), `shape:
 'ellipse'` (drawn and redrawn clipped), `ring: true` (a dirt path round
 inside it), `koi: true` (on water: `drawPondLife`, koi circling and two
 ducks); `parked: [{ type, x, y, heading }]` (vehicles drawn and solid);
@@ -650,8 +652,10 @@ the demo decides who does what.
   everyone on foot painted out of it, so it never washes over them; a
   vehicle's own lamps are added on it after; anyone standing in a light
   takes on its colour (`litUp`, the owner's choice C): drawn again in day
-  colours, multiplied by the light's colour, at 80 % near a lamp's foot or
-  right in front of a car, 40 % at the edge of its light; whatever stands in
+  colours, multiplied by the light's colour, judged by where their feet,
+  middle or head (a vehicle's body) are in the glow as drawn: 80 % in its
+  inner step (or right in front of a car), 40 % in its outer step, none
+  outside; lit copies go under the light layer, so a car's own lamps show; whatever stands in
   front of them is painted out of that copy;
   'bands', three flat steps, is the default: the owner's choice; the demo
   takes `?lights=soft|dither|mixed` and `?time=night` in its address).

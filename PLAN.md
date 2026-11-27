@@ -357,6 +357,13 @@ bubble lab, so games can use them and they can grow.
 47. **A blue basketball court** (the owner): the court is blue (#3f86c8),
     the run-off round it a deeper blue; the lines stay white.
 
+48. **An open court, and light that matches what you see** (the owner: hard to
+    get into the court; the light looked weird): the court has no fence now
+    (a fence with gates on any side stays possible for other maps); whoever
+    stands inside a lamp's glow is lit by its steps, and nobody outside it
+    is (it used to go by the distance to the lamp's foot, so people stood
+    dark inside the glow); cars inside a glow are lit too.
+
 ## Next (only when the owner asks)
 
 Nothing agreed yet: ask the owner, then mock up the options (pictures
