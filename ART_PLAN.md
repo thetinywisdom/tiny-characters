@@ -1,5 +1,9 @@
 # ART PLAN: redrawing everything by hand
 
+**Dropped (Nov 2026):** the owner chose to have everything redrawn in code
+at full size instead ("E"; see PLAN.md and SKILLS.md, Full-size drawings).
+Kept for the record.
+
 The owner's call (Nov 2026): the pictures the code draws look generic ("AI
 slop"). The goal is that **every picture in Tiny Characters is drawn by the
 owner**, as pixel-art images, and the code only places, animates, sorts and

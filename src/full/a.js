@@ -1,4 +1,4 @@
-// Full-size buildings, part A (merged into tinyBuildingsFull.js when reviewed):
+// Full-size buildings, part A:
 // the house, the apartment block, the wooden apartment, the shop with flats
 // above and the office building. Each makes the same choices with the rng, in
 // the same order, as its old drawing in tinyBuildings.js, so a seed gives the
@@ -68,7 +68,7 @@ function railing(r, c, dx, w, from, up, step = 3, bar = shade(c, 0.86)) {
 
 export const PART = {
   house: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall, roof, w) {
       const v = V(rng), floors = v.chance(0.35) ? 2 : 1, top = floorAt(floors);
       const roofKind = v.pick(['pitched', 'pitched', 'hipped', 'flat']), roofC = b.roof ?? v.pick(HOUSE_ROOFS);
@@ -109,7 +109,7 @@ export const PART = {
   },
 
   apartment: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall, roof, w) {
       const v = V(rng), floors = v.int(4, 6), top = floorAt(floors), balcony = v.chance(0.7);
       const ow = old(w), kind = v.pick(['alu', 'alu', 'aluPair', 'sash']), hm = oldMany(kind, 2, ow - 2), n = v.int(Math.max(2, hm - 1), hm);
@@ -178,7 +178,7 @@ export const PART = {
   },
 
   mixedUse: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall, roof, w) {
       const v = V(rng), floors = v.int(2, 4), top = floorAt(floors, SG);
       const kind = b.shopType ?? KINDS[Math.floor(rng() * KINDS.length)];
@@ -203,7 +203,7 @@ export const PART = {
   },
 
   office: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, roof, roofC, w) {
       const v = V(rng), floors = v.int(5, 7), top = floorAt(floors);
       const wall = b.wall ?? v.pick(['#cfd2d4', '#b8bcc0', '#d8d2c4', '#9aa0a8']);

@@ -18,7 +18,10 @@ python3 -m http.server 8000   # then open http://localhost:8000
 
 ## Working on it
 
-The art is being redrawn by hand: see `ART_PLAN.md`.
+Everything is being redrawn at full size: one building pixel is one person
+pixel (the old drawings were stretched by 1.5). The buildings the owner has
+approved are drawn that way already; add `?redraw=all` to the address to see
+the ones still in review too (`?redraw=none` shows the old drawings).
 
 Agents and contributors: start with `CLAUDE.md` (the owner's rules and how
 to check a change), then `PLAN.md` (what is done, decided and next) and
@@ -127,6 +130,14 @@ drawBuilding(g, { type: 'koban', x: 60, y: 104 });           // centred on x, gr
 drawBuilding(g, { type: 'shop', shopType: 'ramen', x: 120, y: 104, seed: 3 });
 // then the people in front of them (feet below the ground line)
 ```
+
+Most buildings are now **drawn at full size** (the town's size, scale 1.5,
+with one building pixel to one person pixel): `BUILDINGS[type].scale` is 1.5
+for those, and their `w`, `h` and `widths` are at that size; draw them with
+`scale: 1.5` (`drawBuilding(g, { type: 'sushi', x, y, seed, scale: 1.5 })`).
+At any other scale they are scaled from that. `setRedraw('approved' | 'all'
+| 'none')` picks which drawings are used (the address's `?redraw=` does the
+same).
 
 | Export | What it does |
 | --- | --- |

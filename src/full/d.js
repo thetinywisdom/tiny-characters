@@ -1,4 +1,4 @@
-// Full-size buildings, part D (merged into tinyBuildingsFull.js when reviewed):
+// Full-size buildings, part D:
 // the koban (police station), the post office, the bank, the clinic.
 // Each makes the same rng calls in the same order as its old drawing in
 // tinyBuildings.js (window counts come from the old sizes, so the rooftop's
@@ -58,14 +58,13 @@ const BIKE = [
   'k...k.k.k...k',
   '.kkk.....kkk.',
 ];
-const LAMP = ['..lll..', '.lhlll.', 'lhlllll', 'lllllll', '.lllll.', '..lll..'];
 
 // --- the post office: 〒 ---------------------------------------------------------
 const POST_MARK = ['wwwwwww', '.......', 'wwwwwww', '...w...', '...w...', '...w...', '...w...'];
 
 export const PART = {
   koban: {
-    approved: false,
+    approved: true,
     draw(r0, rng, b, wall0, roof, w) {
       icon(r0, 0, 0, BIKE, { k: INK, b: '#3f7fd6', g: '#d8d0c0' });      // a bicycle out front
       const r = shifted(r0, 16), v = V(rng), bw = 45;
@@ -75,8 +74,11 @@ export const PART = {
       DOORS.glass(r, 28);
       r(shade(wall, 0.7), 27, 18, 11, 1);                                // the door's lintel
       sign(r, '#2c3652', WHITE, 2, 18, 26, 6, 'POLICE STATION');
-      r(shade(wall, 0.6), 31, 18, 3, 1);                                 // the red lamp over the door, on a bracket
-      icon(r, 29, 18, LAMP, { l: LANTERN, h: WHITE });
+      // the red lamp over the door (the owner: the old square shape, done better): a square red
+      // lamp on a plate, a dark cap, lit from the upper left; it glows at night (LANTERN)
+      r(shade(wall, 0.72), 30, 18, 6, 2); r(shade(wall, 0.86), 30, 19, 6, 1);   // its base on the wall
+      r(LANTERN, 31, 20, 4, 4); r(shade(LANTERN, 0.72), 34, 20, 1, 4); r(shade(LANTERN, 0.85), 31, 20, 3, 1);
+      r(WHITE, 31, 22, 2, 2); r(shade(LANTERN, 1.35), 33, 23, 1, 1); r(shade(LANTERN, 1.35), 31, 21, 1, 1);   // the glint, top left
       r(shade(wall, 0.62), 38, 6, 6, 10); r(PAPER, 39, 7, 2, 8); r(PAPER, 42, 7, 1, 8);   // a notice board: wanted posters
       r(RED, 39, 13, 2, 1); r('#8a8a88', 39, 9, 2, 1); r('#8a8a88', 39, 11, 2, 1); r('#8a8a88', 42, 10, 1, 3);
       flatRoof(r, wall, -1, GF, bw + 2, 18);
@@ -85,7 +87,7 @@ export const PART = {
   },
 
   postOffice: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall0, roof, w) {
       const v = V(rng), wall = '#e8e0d0', bw = w - 9, ow = oldW(w), obw = ow - 6;
       walls(r, wall, 0, bw, SHOP_GF);
@@ -114,7 +116,7 @@ export const PART = {
   },
 
   bank: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall0, roof, w) {
       const v = V(rng), floors = v.int(2, 4), top = floorAt(floors), wall = v.pick(['#6a5848', '#8a8a88', '#c8b8a0', '#4a4e54']);
       const signC = v.pick(['#c8302a', '#2c4a8a', '#2f7a4a']), ow = oldW(w);
@@ -134,7 +136,7 @@ export const PART = {
   },
 
   clinic: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall0, roof, w) {
       const v = V(rng), floors = v.int(1, 3), top = floorAt(floors), wall = v.pick(['#b9b8b0', '#e8e4dc', '#d8e0e4']), ow = oldW(w);
       walls(r, wall, 0, w, top);

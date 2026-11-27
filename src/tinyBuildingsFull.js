@@ -5,7 +5,8 @@
 // times the size, with the detail the extra pixels allow.
 //
 //   FULL                  type -> { draw(r, rng, b, wall, roof, w), approved, open }
-//                         (tinyBuildings.js draws these instead of the old ones)
+//                         (tinyBuildings.js draws these instead of the old ones; the
+//                         buildings themselves are in src/full/a.js .. d.js, spread in below)
 //   FULL_STOREY           { ground: 24, shop: 28, upper: 20, sill: 6 }
 //
 // Everything is drawn with tinyBuildings' painter r(colour, dx, up, w, h) at
@@ -435,7 +436,7 @@ export function shopFront(r, rng, dx, w, kind, wall) {
 
 export const FULL = {
   sushi: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall, roof, w) {
       const v = V(rng), floors = v.chance(0.75) ? 2 : 1, top = floorAt(floors), norenC = v.pick([NAVY, '#7a2a22', '#2f4a3a']);
       const doorRight = v.chance(0.6), dx = doorRight ? w - 21 : 5;

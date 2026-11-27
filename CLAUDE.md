@@ -7,12 +7,17 @@ canvas, no build step, no dependencies. Live demo (GitHub Pages, from `main`):
 https://thetinywisdom.github.io/tiny-characters/ and the catalogue
 https://thetinywisdom.github.io/tiny-characters/catalogue.html
 
-**The big change under way: the owner will redraw every picture by hand**
-(`ART_PLAN.md`: the code moves to the owner's PNG images one kind at a time,
-with the current drawings as a fallback until each is replaced). Read it
-first; do not polish the code-drawn art any more unless asked.
+**The big change under way: everything is being redrawn at full size**
+(the owner chose "E", Nov 2026; `ART_PLAN.md`, the hand-drawn PNG plan, was
+dropped). The town used to draw buildings, props and plants at scale 1 and
+stretch them by 1.5, so lines came out uneven and their pixels were bigger
+than the people's. Now each kind is drawn again natively at the town's size
+(one building pixel = one person pixel), with the extra pixels spent on
+detail, in batches of 20 that the owner approves on a review page (see
+PLAN, In progress, and SKILLS, Full-size drawings). Not yet approved
+drawings show only with `?redraw=all`.
 
-**Read before working:** this file, `ART_PLAN.md`, then `PLAN.md` (what is done, the owner's
+**Read before working:** this file, then `PLAN.md` (what is done, the owner's
 decisions, what is next, open questions), `SKILLS.md` (how everything is
 drawn and works, file by file, and how to check it) and `README.md` (what
 people see and the public API).

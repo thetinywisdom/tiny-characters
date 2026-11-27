@@ -1,4 +1,4 @@
-// Full-size buildings, part C (merged into tinyBuildingsFull.js when reviewed).
+// Full-size buildings, part C.
 // fishmonger, udonSoba, familyRestaurant, takoyaki, karaoke: each makes the same
 // rng choices in the same order as its old drawing in tinyBuildings.js.
 import { shade, seeded } from '../tinyCharacters.js';
@@ -34,7 +34,7 @@ function bigSign(r, bg, fg, dx, up, w, h, text) {
 
 export const PART = {
   fishmonger: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall, roof, w) {
       const v = V(rng), aw = v.pick([[NAVY, WHITE], ['#3f7fd6', WHITE], [RED, WHITE]]);
       const DARK = '#3a3f44', ICE = '#dfe8ec', lr = seeded((b.seed ?? 1) * 53 + 11);   // lr: details only, never the building's choices
@@ -67,7 +67,7 @@ export const PART = {
   },
 
   udonSoba: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall, roof, w) {
       const v = V(rng), floors = v.chance(0.7) ? 2 : 1, top = floorAt(floors), front = v.pick([WOOD, DARKWOOD, '#7a5a3a']);
       const doorRight = v.chance(0.6), dx = doorRight ? w - 21 : 5, norenC = v.pick(['#3a5a7a', NAVY, '#7a2a22']);
@@ -95,7 +95,7 @@ export const PART = {
   },
 
   familyRestaurant: {
-    approved: false,
+    approved: true,
     draw(r0, rng, b, wall0, roof, w) {
       const v = V(rng), signC = v.pick(['#2fa36b', '#d8443c', '#3f7fd6']);
       // the pole sign
@@ -128,7 +128,7 @@ export const PART = {
   },
 
   takoyaki: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall, roof, w) {
       const v = V(rng), aw = v.pick([['#f08a2c', '#f4e6c8'], [RED, WHITE], ['#2fa36b', '#f4e6c8']]);
       const BODY = '#e8e0d0', DARK = '#3a3f44', BALL = '#c09060';
@@ -157,7 +157,7 @@ export const PART = {
   },
 
   karaoke: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall0, roof, w) {
       const v = V(rng), floors = v.int(3, 5), top = floorAt(floors), wall = v.pick(['#2a2a30', '#3a2a40', '#2a3040']);
       const signLeft = v.chance(0.4);

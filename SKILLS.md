@@ -20,7 +20,14 @@ src/tinyCharacters.js  the library (plain ES module, no dependencies):
                        and canvasOf (a canvas of its own); do not copy them
 src/tinyBuildings.js   the buildings (plain ES module, imports seeded from
                        tinyCharacters.js): drawBuilding, BUILDINGS,
-                       SHOP_TYPES, buildingSolids, WALL_COLORS, ROOF_COLORS
+                       SHOP_TYPES, buildingSolids, WALL_COLORS, ROOF_COLORS,
+                       setRedraw; the old (scale-1) drawings in DEFS
+src/tinyBuildingsFull.js  the full-size kit (storeys, doors, windows, roofs,
+                       signs, awnings ...) and FULL, the buildings drawn at
+                       full size (see Full-size drawings)
+src/full/a.js .. d.js  the full-size buildings, in four parts (written in
+                       parallel; FULL spreads them in). Each entry has
+                       approved: true once the owner approved it
 src/tinyAnimals.js     cats and dogs: drawCat, drawDog, CAT_COATS,
                        DOG_BREEDS, catFor, dogFor
 src/tinyNature.js      trees, bushes, terrains: drawTree, drawBush,
@@ -229,6 +236,54 @@ each side. Its pieces: `dome` (a half disc lit on the left) and
 People in front of a building are drawn after it (their feet are below its
 ground line); anyone behind it (smaller y) would be drawn before it and
 hidden, so in a town nobody can stand there (see the map rules below).
+
+## Full-size drawings (the redraw, "E")
+
+The town is drawn at scale 1.5 while people are not scaled. The old drawings
+are made at scale 1 and stretched, so a 1 px line came out 1 or 2 px wide and
+a building's pixels were bigger than a person's. The owner chose to redraw
+everything **natively at the town's size**: one building pixel is one person
+pixel, about 1.5 times as many pixels each way, spent on detail ("the same
+building, more detail", not a redesign).
+
+- **The kit** (`src/tinyBuildingsFull.js`): the old sizes times 1.5 on whole
+  pixels: ground floor 24, a shop's 28, upper floors 20, sills 6
+  (`FULL_STOREY`, `floorAt`); doors 9 x 18 (double, sliding, automatic 16 x
+  18; garage 27 x 21); windows 7 x 9 (pairs 13 x 9, tall 7 x 12); `pitched`
+  roofs with staggered tile joints, `flatRoof` with a rim, `gable`,
+  `rooftop`; `sign` (the name may run over the board's edge rows, so it is
+  as big as on the old signs), `upright`, `awning` with a hem, `noren` with
+  a round crest, `lantern`, `shelves`, `icon` (one pixel per character),
+  `laundry`. The colours are the same values as tinyBuildings.js, because
+  the night's lights go by colour value (`WIN`, `LIT`, `CURTAIN`, `GLASS`,
+  `GLASS2`, `LANTERN`, the neon colours); lattice paper is `CURTAIN` so it
+  glows at night. Things standing in front of a glow can be drawn through
+  `r.force` as dark silhouettes at night (part B's `dark`).
+- **A full-size building** is `FULL[type] = { approved, draw(r, rng, b,
+  wall, roof, w), open }`: `w` is the old width times 1.5 (rounded); `draw`
+  makes the **same rng calls in the same order** as the old one (so each
+  seed is the same building: floors, door side, colours, roof, windows' count
+  and which are lit), uses its own seeded stream for new detail, returns the
+  shop kind if the old one set `lastShop`, and stays within the old height
+  times 1.5 plus 2 (so the map does not change). `open` (torii, gas
+  station) is the walk-in ground at full size.
+- **drawBuilding** uses the full drawing when `fullOf(b)` gives one: painter
+  scale `b.scale / 1.5` (exactly 1 in the town), the shutter drawn at full
+  size. `buildingSize` and `buildingSolids` follow. `BUILDINGS[type]` gives
+  `scale: 1.5` and sizes at that scale for a full-size type; the catalogue
+  and the Buildings sheet draw those at 1.5.
+- **Which are used:** `setRedraw('approved')` (the default: those with
+  `approved: true`), `'all'` (also those in review), `'none'` (the old ones);
+  the pages read `?redraw=` from the address at load.
+- **Review workflow:** a batch of 20 is drawn (helpers in parallel, one part
+  file each), checked with a before/after renderer (old on the left, new on
+  the right, seeds in rows, a person for scale, day and night) and a script
+  that counts rng calls of old and new draws for many seeds (must be equal),
+  then published as a review page (an Artifact with a `db` store: each item
+  `reviews/<round>-<id>` = { verdict: accept | reject, note }). Accepted ones
+  get `approved: true` and go live on main; rejected ones are redone from the
+  note and come back in the next batch. With nothing newly approved, every
+  other picture must stay pixel-identical (hash check).
 
 ## How the town map works
 
@@ -757,6 +812,11 @@ and check with Playwright screenshots on a desktop size and a phone
 - **The map:** render the whole town (a view the size of `town.W` by
   `town.H`); the console warns about any layout prop on a road or a cross
   street's sidewalk.
+- **Full-size redraws:** before/after pictures per type (several seeds, day
+  and night), widths equal and heights at most old x 1.5 + 2 for seeds 1-40,
+  equal rng call counts (old `DEFS` draw against the `FULL` draw, seeds
+  1-200, with shop kinds, laundry, fixed wall and roof), and the hash check:
+  only the newly approved types (and town views) may change.
 
 ## GitHub Pages
 

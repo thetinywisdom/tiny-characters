@@ -77,6 +77,11 @@ bubble lab, so games can use them and they can grow.
   the glow's own steps.
 - The walking step (Nov 2026): the body still bobs a pixel, and the hips
   stretch up so no gap opens.
+- Full-size drawing (Nov 2026): everything is redrawn natively at the town's
+  size (E), one building pixel = one person pixel; the same buildings with
+  more detail; reviewed in batches of 20 on a review page (accept, reject,
+  notes); only approved ones go live. The hand-drawn PNG plan (ART_PLAN) is
+  dropped.
 - The front page (Nov 2026): no park (the owner never used it): the town,
   the looks, the buildings and the gallery.
 
@@ -384,22 +389,33 @@ bubble lab, so games can use them and they can grow.
     full list of what to draw with sizes, the order, and what the code does
     at each step (a sprite loader with the current drawings as fallback).
 
+52. **Full-size buildings, batch 1** (the owner chose E over B: draw everything
+    natively at the town's size instead of stretching by 1.5; forget the
+    hand-drawn ART_PLAN): the full-size kit (`src/tinyBuildingsFull.js`), a
+    gate so only approved drawings are used (`setRedraw`, `?redraw=all`), the
+    catalogue and Buildings sheet showing them at their size, a review page
+    with accept / reject / notes. Approved and live: house, apartment block,
+    shop with flats, office, shop (all six kinds), laundromat, kissaten,
+    pharmacy, florist, sushi, fishmonger, udon / soba, family restaurant,
+    takoyaki, karaoke, police station (its red lamp back to the old square
+    shape, done better: the owner), post office, bank, clinic. The wooden
+    apartment was sent back (its stairs: "maybe just a ladder"). Each seed is
+    still the same building (same rng calls, checked); nothing else changed
+    a pixel.
+
 ## In progress
 
-- **Redrawing everything at full size (E)** (the owner, Nov 2026: forget ART_PLAN; draw every
-  building, then props, nature and ground natively at the town's size, one building pixel =
-  one person pixel). The kit is in `src/tinyBuildingsFull.js`; buildings in review are in
-  `src/full/*.js` and drawn only with `?redraw=all` (or `setRedraw('all')`) until the owner
-  approves them on the review page (batches of 20; approved ones go live on main).
-  Batch 1 (20 buildings: house, apartment, woodApartment, mixedUse, office, shop, laundromat,
-  kissaten, pharmacy, florist, sushi, fishmonger, udonSoba, familyRestaurant, takoyaki,
-  karaoke, koban, postOffice, bank, clinic) is waiting for the owner's review.
+- **Redrawing everything at full size (E)**, in batches of 20 reviewed on a review page
+  (https://claude.ai/artifact/4QAkLRYE9m2mcs5caQUZzB). Batch 2 next: the wooden apartment
+  again (stairs as a ladder) and the remaining 21 buildings (fire station, parking garage,
+  gas station, shrine, torii, shrine hall, school, the four stations, kiosk, toilets,
+  alley stall, Tudor cottage, Mediterranean villa, Dutch canal house, French country house,
+  Scandinavian house, mosque, stone chapel); then street things, trees and bushes, the
+  ground and streets.
 
 ## Next (only when the owner asks)
 
-**The redraw (`ART_PLAN.md`) comes first.** Waiting for the owner's Step 0
-choices and the style-test images; the code side's first job then is the
-sprite loader. Other ideas offered before (on hold):
+**The full-size redraw comes first** (In progress). Other ideas offered before (on hold):
 - weather and time (the backlog): wind, rain, seasons
 - a map maker: place streets, buildings, props and areas, save and load
   (every place is already a layout piece)
@@ -449,7 +465,6 @@ sprite loader. Other ideas offered before (on hold):
 
 ## Open questions for the owner
 
-- The redraw's Step 0 choices (`ART_PLAN.md`, Decisions for the owner).
 - Redraw the basketball court's centre circle in pixels, like the ring under
   your feet?
 - What next (see Next)?

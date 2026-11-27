@@ -1,4 +1,4 @@
-// Full-size buildings, part B (merged into tinyBuildingsFull.js when reviewed):
+// Full-size buildings, part B:
 // the shop (its six kinds), the coin laundromat, the kissaten, the pharmacy and
 // the florist. Each makes the same choices with the rng, in the same order, as
 // its old drawing in tinyBuildings.js, so a seed gives the same building.
@@ -191,7 +191,7 @@ export function shopFront(r, rng, w, kind, wall, s0) {
 
 export const PART = {
   shop: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall, roof, w) {
       const v = V(rng), kind = shopFront(r, rng, w, b.shopType ?? KINDS[Math.floor(rng() * KINDS.length)], wall, b.seed ?? 1);
       flatRoof(r, wall, 0, SG, w, Math.round(v.int(12, 14) * 1.5)); rooftop(r, v, 0, SG, w);
@@ -199,7 +199,7 @@ export const PART = {
     },
   },
   laundromat: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall, roof, w) {
       const v = V(rng), f = lit(r);
       r(shade(wall, 0.9), 0, 18, w, SG - 18); r(shade(wall, 0.75), 0, 18, w, 1);
@@ -220,7 +220,7 @@ export const PART = {
     },
   },
   kissaten: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall, roof, w) {
       const v = V(rng), top = floorAt(2), front = v.pick([DARKWOOD, '#5a3a28', '#2f4a3a']), aw = v.pick(AWNINGS);
       const doorRight = v.chance(0.65);
@@ -240,7 +240,7 @@ export const PART = {
     },
   },
   pharmacy: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall, roof, w) {
       const v = V(rng), f = lit(r), g = seeded((b.seed ?? 1) * 53 + 17);
       r(shade(wall, 0.9), 0, 18, w, SG - 18); r(shade(wall, 0.75), 0, 18, w, 1);
@@ -257,7 +257,7 @@ export const PART = {
     },
   },
   florist: {
-    approved: false,
+    approved: true,
     draw(r, rng, b, wall, roof, w) {
       const v = V(rng), floors = v.int(1, 3), top = floorAt(floors, SG), aw = v.pick(AWNINGS), f = lit(r), g = seeded((b.seed ?? 1) * 53 + 23), wo = old(w);
       const FL = [RED, '#f2c230', '#d46a8e', WHITE, '#7b6aa8'], LEAF = '#5f8f5a';
