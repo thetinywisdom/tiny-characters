@@ -449,7 +449,8 @@ const mix = (a, b, u) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(a.slice(
  * machines, traffic lights and cars' lights. night: 0 (day) to 1.
  */
 let beamLayer = null;
-function drawNight(g, view, items, night, dpx) {
+let lightLayer = null;
+function drawNight(g, view, items, night, dpx, drawItem) {
   const dusk = Math.max(0, 1 - Math.abs(night - 0.35) / 0.35);              // the warm light of dusk, early in the evening
   g.save();
   g.globalCompositeOperation = 'multiply';
@@ -459,7 +460,21 @@ function drawNight(g, view, items, night, dpx) {
   const on = Math.max(0, Math.min(1, (night - 0.25) / 0.45));               // lights come on as it gets dark
   if (on > 0) {
     g.globalAlpha = on;
-    for (const it of items) if (it.b) drawBuilding(g, { ...it.b, lights: true, dpx });
+    // what shines on the buildings, drawn into a layer of its own in the scene's order, back to front:
+    // each building first wipes out the lights behind it, then adds its own; anyone or anything in
+    // front of a building wipes its shape out of them (so lit doors and windows never cover people)
+    if (!lightLayer || lightLayer.width !== view.w * dpx || lightLayer.height !== view.h * dpx) lightLayer = canvasOf(view.w * dpx, view.h * dpx);
+    {
+      const lg = lightLayer.getContext('2d');
+      lg.setTransform(1, 0, 0, 1, 0, 0); lg.globalCompositeOperation = 'source-over'; lg.clearRect(0, 0, lightLayer.width, lightLayer.height);
+      lg.setTransform(dpx, 0, 0, dpx, -view.x * dpx, -view.y * dpx); lg.imageSmoothingEnabled = false;
+      for (const it of items) {
+        lg.globalCompositeOperation = 'destination-out'; drawItem(lg, it);
+        if (it.b) { lg.globalCompositeOperation = 'source-over'; drawBuilding(lg, { ...it.b, lights: true, dpx }); }
+      }
+      g.imageSmoothingEnabled = false;
+      g.drawImage(lightLayer, view.x, view.y, view.w, view.h);
+    }
     // headlights on the road: drawn into a layer of their own, the vehicles painted out of it
     // (so the light falls on the road, not over the cars), then added to the picture
     const vehicles = items.filter((it) => it.s?.vehicle).map((it) => it.s);
@@ -610,17 +625,19 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0
   for (const p of town.plants) if (p.x > view.x - 30 && p.x < view.x + view.w + 30 && p.y > view.y && p.y < view.y + view.h + 60) items.push({ y: p.y, p });
   for (const s of sprites) if (s.x > view.x - 24 && s.x < view.x + view.w + 24 && s.y > view.y - 2 && s.y < view.y + view.h + 24) items.push({ y: s.y, s });
   items.sort((a, b) => a.y - b.y || (a.b ? -1 : 1));
-  for (const it of items) {
-    if (it.b) drawBuilding(g, dpx === 1 ? it.b : { ...it.b, dpx });
-    else if (it.prop) drawProp(g, it.prop);
-    else if (it.p) (it.p.kind === 'tree' ? drawTree : drawBush)(g, it.p);
-    else if (it.s.vehicle) drawVehicle(g, it.s);
-    else if (it.s.ball) drawBall(g, it.s);                                          // a ball { ball: true, x, y, h (its height off the ground) }                                   // cars, buses: { vehicle: true, type, facing, ... }
-    else if (it.s.monster) drawMonster(g, { ...it.s, type: it.s.monster }, t);   // monsters: { monster: 'zombie', variant, ... }
-    else (it.s.dog ? drawDog : it.s.cat ? drawCat : drawCharacter)(g, it.s, t);
-  }
+  /** Draw one thing of the view (a building, a prop, a plant, someone or something moving). */
+  const drawItem = (ctx, it) => {
+    if (it.b) drawBuilding(ctx, dpx === 1 ? it.b : { ...it.b, dpx });
+    else if (it.prop) drawProp(ctx, it.prop);
+    else if (it.p) (it.p.kind === 'tree' ? drawTree : drawBush)(ctx, it.p);
+    else if (it.s.vehicle) drawVehicle(ctx, it.s);                               // cars, buses, the train: { vehicle: true, type, ... }
+    else if (it.s.ball) drawBall(ctx, it.s);                                     // a ball { ball: true, x, y, h (its height off the ground) }
+    else if (it.s.monster) drawMonster(ctx, { ...it.s, type: it.s.monster }, t); // monsters: { monster: 'zombie', variant, ... }
+    else (it.s.dog ? drawDog : it.s.cat ? drawCat : drawCharacter)(ctx, it.s, t);
+  };
+  for (const it of items) drawItem(g, it);
   // the wires, over everything
   for (const [a, b, sag] of town.wires) if (Math.max(a.x, b.x) > view.x && Math.min(a.x, b.x) < view.x + view.w && a.y > view.y - 10 && a.y < view.y + view.h + 10) drawWire(g, a, b, sag);
-  if (night > 0.01) drawNight(g, view, items, night, dpx);
+  if (night > 0.01) drawNight(g, view, items, night, dpx, drawItem);
   g.restore();
 }

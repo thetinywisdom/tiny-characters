@@ -517,7 +517,12 @@ unless that crossing's cars have red (the walk signal is green then).
 1. a `multiply` tint over the view: white by day, warm orange at dusk
    (strongest at night 0.35), deep blue (`#4c5494`) at night
 2. the lights come on from night 0.25 (full at 0.7): each building in view
-   is drawn again with `lights: true`: its painter (`nightLights` in
+   is drawn again with `lights: true`, into a layer of its own in the
+   scene's back-to-front order (`lightLayer`): every thing first wipes its
+   shape out of the layer (`destination-out`), a building then adds its own
+   lights, so lit doors and windows never cover people in front of them, nor
+   shine through a building in front (the owner saw people pass behind a
+   station's lit doors); its painter (`nightLights` in
    tinyBuildings.js) draws only colours in `NIGHT` (lit rooms, curtains,
    shop glass, neon, lanterns `LANTERN`, the karaoke's glass), each as its
    lit colour, plus 45 % of the dark windows (`WIN`), picked by a hash of

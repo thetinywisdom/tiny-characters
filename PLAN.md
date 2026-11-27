@@ -260,6 +260,10 @@ bubble lab, so games can use them and they can grow.
     cross street; makeTown now warns about any layout prop on a road or a
     cross street's sidewalk.
 
+35. **Night lights over people** (the owner: people passed behind a station's
+    lit doors): building lights are now drawn into their own layer in the
+    scene's order, with everyone in front wiping their shape out of it.
+
 ## Next (only when the owner asks)
 
 1. Small life (the owner's list of ideas, not yet asked for): pigeons that scatter, laundry on balconies, shopkeepers,
