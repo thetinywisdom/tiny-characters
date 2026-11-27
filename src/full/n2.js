@@ -11,10 +11,11 @@ const pick = (rng, list) => list[Math.floor(rng() * list.length)];
 
 /**
  * A clump of leaves: an ellipse lit from the upper left, shaded to the lower right, a
- * darker rim underneath and a small highlight cluster; `bump` scallops its edge.
+ * darker rim underneath and a small highlight cluster; `bump` scallops its edge, `soft`
+ * makes the rim lighter (for bright colours, where it would read as an outline).
  */
-function clump(r, cx, cy, rx, ry, c, bump = 0) {
-  const L = shade(c, 1.16), D = shade(c, 0.8), DD = shade(c, 0.66), H = shade(c, 1.32);
+function clump(r, cx, cy, rx, ry, c, bump = 0, soft = false) {
+  const L = shade(c, 1.16), D = shade(c, 0.8), DD = shade(c, soft ? 0.76 : 0.66), H = shade(c, 1.32);
   for (let j = -ry; j <= ry; j++) {
     let hw = Math.round(rx * Math.sqrt(Math.max(0, 1 - (j * j) / (ry * ry + 0.5))));
     if (bump && hw > 2 && Math.abs(j) < ry - 1 && ((j + ry) % 4 === 1 || (j + ry) % 4 === 2)) hw += 1;   // scalloped edge
@@ -131,14 +132,12 @@ export const PART = {
   ginkgo: { approved: false, draw(r, rng, cx) {
     bole(r, cx, 13, BARK, 3);
     const Y = '#e8c040', YL = '#f2d860', YD = '#c8a030';
-    mass(r, cx, 21, 8, 11, shade(Y, 0.7));
+    mass(r, cx, 21, 8, 11, shade(Y, 0.78));
     line(r, BARK, cx, 12, cx - 3, 16); line(r, BARK, cx, 12, cx + 3, 17);  // branches in the gaps
     const k = rng() < 0.5 ? 0 : 1;                                           // the clumps sit a little differently
-    clump(r, cx - 4, 15, 4, 3, shade(Y, 0.88)); clump(r, cx + 4, 16 - k, 4, 3, shade(Y, 0.86));
-    clump(r, cx + 4, 22, 4, 4, shade(Y, 0.94)); clump(r, cx - 4, 21 + k, 4, 4, shade(Y, 0.98));
-    clump(r, cx, 18, 4, 3, shade(Y, 0.95));
-    clump(r, cx + 2, 27, 4, 3, shade(Y, 1.0)); clump(r, cx - 2, 26 - k, 4, 4, Y);
-    clump(r, cx, 30, 3, 2, shade(Y, 1.04));
+    clump(r, cx - 4, 16, 5, 4, shade(Y, 0.9), 0, true); clump(r, cx + 4, 17 - k, 4, 4, shade(Y, 0.86), 0, true);
+    clump(r, cx + 3, 23, 5, 4, shade(Y, 0.94), 0, true); clump(r, cx - 3, 22 + k, 5, 4, shade(Y, 0.98), 0, true);
+    clump(r, cx, 28, 5, 4, Y, 0, true);
     for (let i = 0; i < 4; i++) {                                            // fans of leaves catching the light
       const x = cx - 6 + Math.floor(rng() * 6) * 2, y = 16 + Math.floor(rng() * 6) * 2;
       if (((x - cx) / 7) ** 2 + ((y - 21) / 9) ** 2 > 0.8) continue;
@@ -217,46 +216,47 @@ export const PART = {
   cypress: { approved: false, draw(r, rng, cx) {
     bole(r, cx, 5, DARK_BARK, 2, false);
     const C = '#355a40', D = '#2a4a34', DD = '#22402c', L = '#44704e', H = '#548258';
-    const tip = rng() < 0.5 ? -1 : rng() < 0.5 ? 1 : 0, phase = Math.floor(rng() * 5);
-    for (let k = 0; k < 33; k++) {
-      const y = 4 + k, t = k / 32;
-      const hw = k < 7 ? Math.min(4, 2 + Math.floor(k / 2)) : Math.round(5 * Math.pow(Math.max(0, 1 - (k - 7) / 26), 0.75));
-      const off = Math.round(tip * t * t * 2);
-      for (let x = -hw; x <= hw; x++) {
-        const band = (k + phase + Math.floor((x + hw) / 2) * 2) % 6;
-        let c = band === 0 ? D : band === 1 && x > -hw ? DD : C;
-        if (x === hw) c = D;
-        else if (x <= -hw + 1 && band > 2) c = L;
-        if (k === 0) c = DD;
-        px(r, c, cx + off + x, y);
+    const phase = Math.floor(rng() * 4), turn = rng() < 0.5 ? 1 : 0;
+    for (let k = 0; k < 33; k++) {                                           // the flame, row by row
+      const y = 4 + k;
+      const hw = k < 7 ? Math.min(4, 2 + Math.floor(k / 2)) : Math.round(5 * Math.pow(Math.max(0, 1 - (k - 7) / 26), 0.8));
+      const m = (k + phase) % 4, e = m === 0 && hw > 2 ? 1 : 0;              // tufts: the edge tucks in under each
+      r(k === 0 ? DD : C, cx - hw + e, y, (hw - e) * 2 + 1, 1);
+      if (hw > 0) px(r, D, cx + hw - e, y);
+      if (m === 0 && hw > 1) {                                               // a shadow under each tuft, twisting across
+        const s0 = ((k >> 2) + turn) % 2 ? -hw + 1 + e : -1;
+        r(D, cx + s0, y, hw - e - s0, 1); px(r, DD, cx + hw - e - 1, y);
       }
+      if ((m === 1 || m === 2) && hw > 1) px(r, L, cx - hw, y);              // light on the left edge
+      if (m === 1 && hw > 2) px(r, L, cx - hw + 1, y);
     }
-    for (const [x, y] of [[-3, 16], [-2, 23], [-1, 30]]) { r(H, cx + x, y, 2, 1); px(r, L, cx + x, y - 1); }   // light on the left
+    for (const [x, y] of [[-3, 14], [-2, 22], [-1, 29]]) px(r, H, cx + x, y);   // glints of light
   } },
 
   // 26 x 30: a bare trunk opening into a fan of branches, twigs at their tips
   bare: { approved: false, draw(r, rng, cx) {
-    const B = '#5a4a3a', BD = shade(B, 0.78), BL = shade(B, 1.2), T = shade(B, 1.08);
-    bole(r, cx, 15, B, 3);
-    const fork = 15, limbs = [[-9, 13], [-4, 15], [0, 14], [4, 15], [9, 13]];
-    limbs.forEach(([ex, ey], i) => {
-      const x1 = cx + ex + (i !== 2 ? Math.floor(rng() * 2) * Math.sign(ex) : 0), y1 = fork + ey - Math.floor(rng() * 2);
-      const mid = [Math.round((cx + x1) / 2), Math.round(fork + (y1 - fork) * 0.5)];
-      line(r, i < 2 ? B : i > 2 ? BD : B, cx - (i < 2 ? 1 : i > 2 ? -1 : 0), fork - 1, mid[0], mid[1], 2);   // the thick part
-      line(r, B, mid[0], mid[1], x1, y1);                                    // the thin part
-      if (i < 2) px(r, BL, mid[0], mid[1]);
-      const dir = Math.sign(ex) || (rng() < 0.5 ? -1 : 1);                   // a twig or two off it
-      const ty = mid[1] + 2 + Math.floor(rng() * 3), tx = Math.round(cx + (x1 - cx) * (ty - fork) / (y1 - fork));
-      line(r, T, tx, ty, tx + dir * 2, ty + 3);
-      px(r, BD, x1 - dir, y1 + 1); px(r, BD, x1 + (dir || 1), y1 + 1);       // forked tip
+    const B = '#5a4a3a', BD = shade(B, 0.78), BL = shade(B, 1.2);
+    bole(r, cx, 14, B, 3); r(B, cx - 1, 14, 2, 2); px(r, BD, cx, 14);
+    const j = () => Math.floor(rng() * 2);
+    const limbs = [[cx - 1, 12, cx - 10 - j(), 23 - j()], [cx - 1, 15, cx - 5, 27 - j()], [cx, 15, cx, 29], [cx + 1, 15, cx + 5, 27 - j()], [cx + 1, 12, cx + 10 + j(), 23 - j()]];
+    limbs.forEach(([x0, y0, x1, y1], i) => {
+      line(r, i > 2 ? shade(B, 0.92) : B, x0, y0, x1, y1);
+      const dir = Math.sign(x1 - x0);
+      if (i === 0 || i === 4) { line(r, B, x0, y0 + 1, x0 + dir * 2, y0 + 3); px(r, i ? BD : BL, x0 + dir, y0 + 1); }   // thicker where it leaves the trunk
+      const t = 0.45 + rng() * 0.2, mx = Math.round(x0 + (x1 - x0) * t), my = Math.round(y0 + (y1 - y0) * t);
+      if (i === 2) { const d = rng() < 0.5 ? -1 : 1; line(r, B, mx, my, mx + d * 2, my + 3); }
+      else if (rng() < 0.8) line(r, shade(B, 1.08), mx, my + 1, mx - dir, my + 3 + j());   // a twig standing up off it
+      if (i === 0 || i === 4) { px(r, B, x1, y1 + 1); px(r, BD, x1 + dir, y1 + 1); }       // a forked tip
+      else px(r, BD, x1 + (i === 2 ? (rng() < 0.5 ? -1 : 1) : dir), y1 + 1);
     });
-    if (rng() < 0.4) {                                                       // a last dry leaf or two
-      const x = cx + pick(rng, [-7, -3, 3, 7]), y = 22 + Math.floor(rng() * 4);
+    if (rng() < 0.4) {                                                       // a last dry leaf
+      const x = cx + pick(rng, [-7, -4, 4, 7]), y = 20 + Math.floor(rng() * 4);
       r('#a8784a', x, y, 2, 1); px(r, '#8a5a34', x + 1, y - 1);
     }
-    if (rng() < 0.3) {                                                       // a crow's old nest in a fork
-      const x = cx + pick(rng, [-4, 2]), y = 21;
-      r('#4a3a2a', x, y, 4, 2); r('#6a5440', x, y + 1, 4, 1); px(r, '#7a644e', x + 1, y + 1);
+    if (rng() < 0.3) {                                                       // an old nest in the fork
+      const x = cx - 2, y = 19;
+      r('#4a3a2a', x + 1, y, 3, 1); r('#4a3a2a', x, y + 1, 5, 2); r('#6a5440', x, y + 2, 5, 1);
+      px(r, '#7a644e', x + 1, y + 2); px(r, '#7a644e', x + 3, y + 1); px(r, '#3a2e22', x + 4, y + 1);
     }
   } },
 };

@@ -79,22 +79,36 @@ function leaves(G, rng, c, n = 6) {
   }
 }
 /** Leaf tips over the top edge: a pixel above the outline here and there. */
-function tips(G, rng, c, n = 4, spiky = false) {
+function tips(G, rng, c, n = 4) {
   const top = new Map();
   G.each((x, y) => { if (!top.has(x) || top.get(x) < y) top.set(x, y); });
   const xs = [...top.keys()].sort((a, b) => a - b);
   for (let k = 0; k < n; k++) {
     const x = xs[1 + Math.floor(rng() * (xs.length - 2))], y = top.get(x);
     const left = x < (xs[0] + xs[xs.length - 1]) / 2;
-    G.set(x, y + 1, spiky ? shade(c, 0.85) : shade(c, left ? 1.18 : 1), 2);
+    G.set(x, y + 1, shade(c, left ? 1.18 : 1), 2);
   }
+}
+/** Prickles all round the edge (holly): a leaf point sticking out every third pixel. */
+function prickles(G, rng, c) {
+  const top = new Map(), lo = new Map(), hi = new Map(), o = Math.floor(rng() * 3);
+  G.each((x, y) => {
+    if (!top.has(x) || top.get(x) < y) top.set(x, y);
+    if (!lo.has(y) || lo.get(y) > x) lo.set(y, x);
+    if (!hi.has(y) || hi.get(y) < x) hi.set(y, x);
+  });
+  const pts = [];
+  for (const [x, y] of top) if ((x + o) % 3 === 0) pts.push([x, y + 1, shade(c, x < 8 ? 1.18 : 1)]);
+  for (const [y, x] of lo) if (y > 1 && (y + o) % 3 === 0) pts.push([x - 1, y, shade(c, 1.1)]);
+  for (const [y, x] of hi) if (y > 1 && (y + o) % 3 === 1) pts.push([x + 1, y, shade(c, 0.85)]);
+  for (const [x, y, col] of pts) G.set(x, y, col, 2);
 }
 /** Places for little things (flowers, berries) on the leaves: s x s of leaf, not on the rim, spaced apart. */
 function spots(G, rng, n, s, gap, draw) {
   const ok = [];
   G.each((x, y) => {
     for (let a = 0; a < s; a++) for (let b = 0; b < s; b++) { const v = G.get(x + a, y + b); if (!v || v.t === 0) return; }
-    if (!G.get(x, y - 1)) return;
+    if (!G.get(x, y - 1) || !G.get(x - 1, y + s - 1) || !G.get(x + s, y + s - 1)) return;
     ok.push([x, y]);
   });
   ok.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
@@ -124,19 +138,23 @@ export const PART = {
     G.flush(r);
   } },
 
-  // 23 x 11: a clipped box: the lit flat top, the front face with tufts in rows, a dark foot
+  // 23 x 11: a clipped box: the lit flat top with a few dips, the front face with clusters
+  // of leaves, darker low down, a dark foot
   hedge: { approved: false, draw(r, rng, cx) {
     const x0 = cx - 11, W = 23, B = '#4a7a3e', M = '#5f8f4a', T = '#6f9f58';
-    r(B, x0, 0, W, 9); r(shade(B, 0.8), x0 + 1, 0, W - 1, 1); r(shade(B, 0.85), x0 + W - 1, 0, 1, 9);   // the face, its foot, the shaded end
-    r(M, x0, 7, W, 3); r(M, x0 + 1, 10, W - 2, 1);                                    // the top
-    r(T, x0 + 1, 9, W - 3, 1); r(T, x0 + 2, 10, W - 5, 1); r(shade(T, 1.12), x0 + 3, 10, 5, 1);   // its lit top
-    r(shade(B, 0.88), x0, 6, W, 1);                                                   // the edge of the top
-    r(shade(B, 1.1), x0, 1, 1, 6);                                                     // the lit end
-    const off = Math.floor(rng() * 3);
-    for (const [up, sh] of [[4, 0], [1, 2]]) for (let i = 1 + ((off + sh) % 4); i < W - 2; i += 4) {   // tufts of leaves on the face
-      r(shade(B, 1.12), x0 + i, up + 1, 2, 1); r(shade(B, 0.8), x0 + i + 1, up, 2, 1);
+    r(B, x0, 0, W, 7); r(shade(B, 0.92), x0, 0, W, 3); r(shade(B, 0.78), x0 + 1, 0, W - 2, 1);   // the face, darker low down, its foot
+    r(shade(B, 1.1), x0, 1, 1, 6); r(shade(B, 0.82), x0 + W - 1, 1, 1, 6);            // the lit end, the shaded end
+    r(shade(B, 0.86), x0, 6, W, 1);                                                   // the edge of the top
+    r(M, x0, 7, W, 3); r(M, x0 + 1, 10, W - 2, 1); r(shade(M, 0.9), x0 + W - 1, 7, 1, 3);   // the clipped top
+    r(T, x0 + 1, 9, W - 3, 1); r(T, x0 + 2, 10, W - 5, 1); r(shade(T, 1.12), x0 + 3, 10, 6, 1);   // its lit top
+    for (let i = 0; i < 4; i++) { const x = x0 + 2 + i * 5 + Math.floor(rng() * 3); r(shade(M, 0.9), x, 8, 2, 1); }   // dips in the top
+    const got = [];
+    for (let tries = 0; got.length < 6 && tries < 60; tries++) {                       // clusters of leaves on the face
+      const x = 2 + Math.floor(rng() * (W - 6)), up = 1 + Math.floor(rng() * 4);
+      if (got.some(([a, b]) => Math.abs(a - x) < 4 && Math.abs(b - up) < 3)) continue;
+      got.push([x, up]); r(shade(B, 1.14), x0 + x, up + 1, 2, 1); r(shade(B, 0.8), x0 + x + 1, up, 2, 1);
     }
-    for (let k = 0; k < 2; k++) { const i = 3 + Math.floor(rng() * (W - 6)); r(T, x0 + i, 11, 1, 1); }   // a shoot or two
+    for (let k = 0; k < 2; k++) { const x = x0 + 3 + Math.floor(rng() * (W - 6)); r(T, x, 11, 1, 1); }   // a shoot or two
   } },
 
   // 17 x 12: a shrub covered in pink flowers
@@ -172,80 +190,78 @@ export const PART = {
     const G = grid(), c = '#3f6a3a';
     leafy(G, rng, cx, c);
     tips(G, rng, c, 4); leaves(G, rng, c, 6);
-    const R = '#d8303a', L = '#e85060';
-    spots(G, rng, 6 + Math.floor(rng() * 3), 2, 4, (x, y) => {
-      G.set(x, y + 1, L, 3); G.set(x + 1, y + 1, R, 3); G.set(x, y, R, 3); G.set(x + 1, y, shade(R, 0.7), 3);
+    const R = '#d8303a', L = '#e85060', K = shade(R, 0.68);
+    spots(G, rng, 5 + Math.floor(rng() * 3), 3, 4, (x, y) => {                       // a bloom: round, lit at the top left, its curled heart
+      G.set(x, y + 1, R, 3); G.set(x + 1, y + 1, K, 3); G.set(x + 2, y + 1, R, 3);
+      G.set(x, y + 2, L, 3); G.set(x + 1, y + 2, R, 3); G.set(x + 1, y, shade(R, 0.82), 3);
+      if (rng() < 0.5) G.set(x + 2, y + 2, R, 3);
     });
     G.flush(r);
   } },
 
-  // 17 x 12: a low grey-green mound, stems standing up out of it with purple spikes
+  // 17 x 12: stems standing up out of a low grey-green mound, purple spikes in whorls
   lavender: { approved: false, draw(r, rng, cx) {
-    const S = '#7a9a6a', F = '#9a7ac8';
-    r(shade(S, 0.8), cx - 6, 0, 13, 1); r(S, cx - 7, 1, 15, 2); r(S, cx - 5, 3, 11, 1);   // the mound
-    r(shade(S, 1.15), cx - 6, 2, 6, 1); r(shade(S, 1.15), cx - 4, 3, 4, 1); r(shade(S, 0.85), cx + 4, 1, 3, 2);
-    for (let i = -6; i <= 6; i += 2) {
-      const h = 6 + Math.floor(rng() * 4) + (Math.abs(i) < 4 ? 1 : 0), lean = i < -3 ? -1 : i > 3 ? 1 : 0;
-      const x = cx + i + (i % 4 === 0 ? 0 : 0);
-      r(S, x, 3, 1, h - 6); r(S, x + lean, h - 3, 1, 1);                                 // the stem
-      r(F, x + lean, h - 2, 1, 4); r(shade(F, 0.8), x + lean, h - 2, 1, 1); r(shade(F, 0.8), x + lean, h, 1, 1);   // the spike in whorls
+    const S = '#7a9a6a', F = '#9a7ac8', SL = shade(S, 1.15), SD = shade(S, 0.85);
+    for (let i = -6; i <= 6; i += 2) {                                               // stems, each with a purple spike in whorls
+      const h = 7 + Math.floor(rng() * 4) + (Math.abs(i) < 4 ? 1 : 0), lean = i < -3 ? -1 : i > 3 ? 1 : 0, x = cx + i;
+      r(S, x, 4, 1, h - 7); r(S, x + lean, h - 3, 1, 1);
+      r(F, x + lean, h - 2, 1, 4); r(shade(F, 0.78), x + lean, h - 2, 1, 1); r(shade(F, 0.78), x + lean, h, 1, 1);
       r(shade(F, 1.18), x + lean, h + 1, 1, 1);
     }
+    r(shade(S, 0.78), cx - 5, 0, 11, 1); r(S, cx - 7, 1, 15, 2); r(S, cx - 6, 3, 13, 1); r(S, cx - 4, 4, 9, 1);   // the grey-green mound
+    r(SL, cx - 6, 2, 5, 1); r(SL, cx - 5, 3, 4, 1); r(SL, cx - 3, 4, 3, 1);                   // lit at the left
+    r(SD, cx + 4, 1, 3, 2); r(SD, cx + 3, 3, 3, 1); r(SD, cx - 6, 1, 1, 1);                 // shaded at the right
+    for (const dx of [-5, -1, 3, 6]) r(dx < 0 ? SL : S, cx + dx, dx === 6 || dx === -5 ? 4 : 5, 1, 1);   // leaf tips
   } },
 
-  // 20 x 11: fronds arching out from the middle, leaflets along each
+  // 20 x 11: fronds arching out from the middle and drooping at the tips, leaflets along each
   fern: { approved: false, draw(r, rng, cx) {
-    const D = '#4a8a44', L = '#5f9f52', H = shade(L, 1.15);
-    // each frond: the steps of its stem from the middle (dx, up)
-    const fronds = [
-      [[0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [0, 6], [0, 7], [0, 8], [0, 9]],
-      [[-1, 1], [-2, 2], [-3, 3], [-4, 4], [-5, 5], [-6, 5], [-7, 6], [-8, 6], [-9, 5]],
-      [[1, 1], [2, 2], [3, 3], [4, 4], [5, 5], [6, 5], [7, 6], [8, 6], [9, 5]],
-      [[-1, 1], [-2, 2], [-3, 3], [-3, 4], [-4, 5], [-4, 6], [-5, 7], [-5, 8]],
-      [[1, 1], [2, 2], [3, 3], [3, 4], [4, 5], [4, 6], [5, 7], [5, 8]],
-      [[-1, 0], [-2, 1], [-3, 1], [-4, 2], [-5, 2], [-6, 2], [-7, 2], [-8, 1]],
-      [[1, 0], [2, 1], [3, 1], [4, 2], [5, 2], [6, 2], [7, 2], [8, 1]],
-    ];
-    const order = [5, 6, 1, 2, 3, 4, 0];
-    const cut = Math.floor(rng() * 2);
-    order.forEach((f, n) => {
-      const pts = fronds[f].slice(0, fronds[f].length - (n === 6 ? cut : 0));
-      const side = Math.sign(pts[pts.length - 1][0]);
-      pts.forEach(([dx, up], k) => {
-        r(D, cx + dx, up, 1, 1);                                                          // the stem
-        if (k < 1 || k >= pts.length - 1) return;
-        const c = k % 2 ? L : H;
-        if (side === 0) { r(c, cx - 1, up, 1, 1); r(c, cx + 1, up, 1, 1); }               // leaflets either side
-        else { r(c, cx + dx, up + 1, 1, 1); if (k % 2) r(shade(D, 0.9), cx + dx, up - 1, 1, 1); }
-      });
-      const [ex, eu] = pts[pts.length - 1]; r(L, cx + ex, eu, 1, 1);
+    const D = '#4a8a44', L = '#5f9f52', H = shade(L, 1.15), S = shade(D, 0.85);
+    const lift = Math.floor(rng() * 2);
+    const arch = [[1, 2], [2, 3], [3, 4], [4, 5], [5, 6 + lift], [6, 6 + lift], [7, 6], [8, 5], [9, 4]];
+    const low = [[1, 0], [2, 1], [3, 1], [4, 2], [5, 2], [6, 2], [7, 1], [8, 1 - lift]];
+    const frond = (pts, s) => pts.forEach(([dx, up], k) => {
+      const x = cx + s * dx;
+      r(D, x, up, 1, 1);                                                              // the stem
+      if (k >= 1 && k < pts.length - 1) r(s < 0 ? H : L, x, up + 1, 1, 1);           // leaflets above
+      if (k >= 1 && k < pts.length - 2 && k % 2 === 0) r(S, x, up - 1, 1, 1);         // and below
     });
+    for (const s of [-1, 1]) frond(low, s);
+    for (const s of [-1, 1]) frond(arch, s);
+    const top = 9 + lift;                                                             // the middle frond, leaflets either side
+    for (let up = 0; up <= top; up++) r(D, cx, up, 1, 1);
+    for (let up = 3; up < top; up++) { r(up % 2 ? H : L, cx - 1, up, 1, 1); if (up % 2 === 0 || up > top - 3) r(L, cx + 1, up, 1, 1); }
+    r(L, cx, top + 1, 1, 1);
   } },
 
-  // 17 x 21: a tuft of long grass, tall stems with cream plumes
+  // 17 x 21: a fountain of long grass blades, tall stems with cream plumes
   pampas: { approved: false, draw(r, rng, cx) {
-    const G = '#8a9a6a', S = '#9aa878', P = '#eee4c8', PD = '#e0d4b0';
+    const G = '#8a9a6a', GL = shade(G, 1.12), GD = shade(G, 0.82), S = '#9aa878', P = '#eee4c8', PD = '#e0d4b0';
     const plumes = [[-4, 15], [-2, 19], [1, 18], [4, 14]];
     if (rng() < 0.5) plumes.push([-1 + Math.floor(rng() * 2) * 3, 12 + Math.floor(rng() * 3)]);
     for (const [dx, h0] of plumes) {
-      const h = h0 + Math.floor(rng() * 2), lean = dx < -2 ? -1 : dx > 2 ? 1 : 0, x = cx + dx;
-      r(S, x, 3, 1, h - 9); r(S, x + lean, h - 6, 1, 1);                                 // the stem
-      const px = x + lean;
-      r(P, px, h - 5, 2, 4); r(P, px, h - 1, 1, 2); r(shade(P, 1.04), px, h - 4, 1, 3);   // the plume, tapered
-      r(PD, px + 1, h - 5, 1, 2); r(PD, px, h - 5, 1, 1);
+      const h = h0 + Math.floor(rng() * 2), lean = dx < -2 ? -1 : dx > 2 ? 1 : 0, x = cx + dx, px = x + lean;
+      r(S, x, 4, 1, h - 10); r(S, px, h - 6, 1, 1);                                   // the stem
+      r(P, px, h - 5, 2, 4); r(P, px + (lean > 0 ? 1 : 0), h - 1, 1, 2);              // the plume, tapered
+      r(shade(P, 1.04), px, h - 4, 1, 3); r(PD, px + 1, h - 5, 1, 3); r(PD, px, h - 5, 1, 1);
     }
-    // the tuft: blades fanning out
-    r(shade(G, 0.8), cx - 4, 0, 10, 1); r(G, cx - 5, 1, 11, 2); r(G, cx - 4, 3, 9, 2);
-    r(shade(G, 1.12), cx - 4, 2, 4, 1); r(shade(G, 1.12), cx - 3, 4, 3, 1); r(shade(G, 0.85), cx + 3, 1, 3, 2);
-    for (const [dx, up, s] of [[-6, 3, -1], [-7, 4, -1], [-5, 5, 0], [6, 3, 1], [7, 4, 1], [5, 5, 0], [-2, 5, 0], [2, 6, 0], [0, 5, 0]]) r(s < 0 ? shade(G, 1.12) : G, cx + dx, up, 1, 1);
-    r(G, cx - 6, 2, 1, 1); r(G, cx + 6, 2, 1, 1);
+    const blade = (pts, c) => pts.forEach(([dx, up]) => r(c, cx + dx, up, 1, 1));
+    for (const s of [-1, 1]) {                                                        // blades arching out
+      const c = s < 0 ? GL : G;
+      blade([[s * 3, 4], [s * 4, 5], [s * 5, 6], [s * 6, 6], [s * 7, 5]], c);
+      blade([[s * 5, 2], [s * 6, 3], [s * 7, 3], [s * 8, 2]], c);
+      blade([[s * 2, 5], [s * 2, 6], [s * 3, 7], [s * 3, 8]], c);
+    }
+    r(GD, cx - 4, 0, 9, 1); r(G, cx - 5, 1, 11, 2); r(G, cx - 4, 3, 9, 2); r(G, cx - 2, 5, 5, 1);   // the tuft
+    r(GL, cx - 4, 2, 3, 1); r(GL, cx - 3, 3, 3, 2); r(GL, cx - 2, 5, 2, 1);
+    r(GD, cx + 3, 1, 3, 2); r(GD, cx + 2, 3, 2, 2); r(GD, cx, 1, 1, 3);
   } },
 
   // 17 x 12: dark glossy leaves with spiky edges, bunches of red berries
   holly: { approved: false, draw(r, rng, cx) {
     const G = grid(), c = '#2f5a36';
     leafy(G, rng, cx, c);
-    tips(G, rng, c, 6, true); leaves(G, rng, c, 8);
+    prickles(G, rng, c); leaves(G, rng, c, 7);
     const R = '#d8303a', L = '#f05a60';
     spots(G, rng, 4 + Math.floor(rng() * 3), 2, 4, (x, y) => {
       G.set(x, y + 1, L, 3); G.set(x + 1, y + 1, R, 3); G.set(x, y, R, 3);
@@ -253,26 +269,22 @@ export const PART = {
     G.flush(r);
   } },
 
-  // 14 x 18: a ribbed column with two arms, rows of spines, a pink flower on top
+  // 14 x 18: a ribbed column with two arms bending up, a few spines, a pink flower on top
   cactus: { approved: false, draw(r, rng, cx) {
-    const C = '#5a9a54', L = shade(C, 1.15), D = '#4a8044', DD = shade(D, 0.85), sp = '#e8ecc8';
+    const C = '#5a9a54', L = shade(C, 1.15), D = '#4a8044', DD = shade(D, 0.85), SP = '#d4e4a4', F = '#e870a0';
     const H = 15 + Math.floor(rng() * 2);
-    const column = (x, y0, w, h) => {                                                // a ribbed upright, rounded on top
-      r(C, x, y0, w, h - 1); r(C, x + 1, y0 + h - 1, w - 2, 1);
-      r(L, x, y0, 1, h - 1); r(D, x + w - 2, y0, 1, h - 1); r(DD, x + w - 1, y0, 1, h - 1);
-      if (w >= 5) r(D, x + 2, y0, 1, h - 2);
+    const upright = (x, y0, h) => {                                                  // an arm's upright: lit, green, shaded; a round top
+      r(L, x, y0, 1, h - 1); r(C, x + 1, y0, 1, h); r(DD, x + 2, y0, 1, h - 1);
     };
-    // the arms: out to the side, then up
-    const la = 5 + Math.floor(rng() * 2), ra = 7 + Math.floor(rng() * 3);
-    r(C, cx - 5, la, 3, 2); r(D, cx - 5, la, 3, 1);                                  // left arm
-    column(cx - 6, la, 3, 6 + Math.floor(rng() * 2));
-    r(C, cx + 3, ra, 3, 2); r(D, cx + 3, ra, 3, 1);                                  // right arm
-    column(cx + 4, ra, 3, 4 + Math.floor(rng() * 2));
-    column(cx - 2, 0, 5, H);                                                         // the trunk
-    r(DD, cx - 2, 0, 5, 1);
-    for (let up = 2; up < H - 2; up += 3) { r(sp, cx - 1, up, 1, 1); r(sp, cx + 1, up + 1, 1, 1); }   // spines
-    const F = '#e870a0';
-    r(F, cx - 1, H, 3, 1); r(F, cx, H + 1, 1, 1); r(shade(F, 1.2), cx - 1, H + 1, 1, 1); r('#f2c230', cx, H, 1, 1);   // the flower
-    if (rng() < 0.4) { r(F, cx - 6, la + 6, 2, 1); r(shade(F, 1.2), cx - 6, la + 7, 1, 1); }   // a second on an arm
+    const a = 5 + Math.floor(rng() * 2), ah = 5 + Math.floor(rng() * 2);
+    const b = 7 + Math.floor(rng() * 3), bh = 4 + Math.floor(rng() * 2);
+    r(C, cx - 5, a, 3, 2); r(D, cx - 5, a, 3, 1); upright(cx - 6, a + 1, ah);        // the left arm
+    r(C, cx + 3, b, 3, 2); r(D, cx + 3, b, 3, 1); upright(cx + 4, b + 1, bh);        // the right arm
+    r(L, cx - 2, 0, 1, H - 1); r(C, cx - 1, 0, 1, H); r(shade(C, 1.06), cx, 0, 1, H); r(D, cx + 1, 0, 1, H); r(DD, cx + 2, 0, 1, H - 1);   // the trunk, ribbed
+    r(C, cx - 1, H, 2, 1); r(DD, cx - 2, 0, 5, 1);
+    for (let up = 3; up < H - 2; up += 4) { r(SP, cx - 1, up, 1, 1); r(SP, cx + 1, up + 2, 1, 1); }   // spines
+    r(SP, cx - 3, 3, 1, 1); r(SP, cx + 3, 12, 1, 1);
+    r(F, cx - 1, H + 1, 3, 1); r(F, cx, H + 2, 1, 1); r(shade(F, 1.2), cx - 1, H + 2, 1, 1); r('#f2c230', cx, H + 1, 1, 1);   // the flower
+    if (rng() < 0.4) { r(F, cx - 5, a + ah + 1, 2, 1); r(shade(F, 1.2), cx - 5, a + ah + 2, 1, 1); }   // a second on an arm
   } },
 };

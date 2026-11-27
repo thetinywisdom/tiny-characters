@@ -141,17 +141,17 @@ export const PART = {
   sakura: { approved: false, draw(r, rng, cx) {
     const P = sheet(), WOOD = '#4a3434', K = '#f2b8c8', K2 = '#f6c8d4';
     trunk(P, rng, cx, 13, WOOD, 3, { marks: 1, foot: false });
-    branch(P, cx - 1, 11, -7, 3, WOOD); branch(P, cx + 1, 12, 7, 3, shade(WOOD, 0.85));     // the branches
+    branch(P, cx - 1, 10, -8, 2, WOOD); branch(P, cx + 1, 11, 8, 2, shade(WOOD, 0.85));     // the branches
     clump(P, cx - 6, 18, 8, 6, K, { dark: shade(K, 0.84), light: shade(K, 1.06), lit: [1, 2], sh: [1.5, 3] });
     clump(P, cx + 6, 18, 8, 6, K, { dark: shade(K, 0.84), light: shade(K, 1.06), lit: [1, 2], sh: [1.5, 3] });
     clump(P, cx, 22, 9, 6, K2, { dark: shade(K2, 0.88), light: '#fbe0e8', lit: [3, 3], sh: [1, 3] });
     const a = jit(rng), b = jit(rng);
-    for (const [x, y, rx, ry] of [[cx - 7 + a, 16, 5, 3], [cx + 7 + b, 16, 5, 3], [cx - 3 + b, 21, 5, 3], [cx + 4 + a, 22, 4, 2], [cx + a, 25, 5, 2]]) cluster(P, x, y, rx, ry, { dark: 0.9, light: 1.04 });
+    for (const [x, y, rx, ry] of [[cx - 7 + a, 16, 5, 3], [cx + 7 + b, 16, 5, 3], [cx - 2 + b, 22, 6, 3]]) cluster(P, x, y, rx, ry, { dark: 0.9, light: 1.04 });
     // twigs showing in the gaps low in the crown
-    const tw = [[cx - 9, 14, -2, 2], [cx - 4, 14, 1, 3], [cx + 4, 15, -1, 3], [cx + 9, 15, 2, 2]];
-    for (const [x, y, dx, dy] of tw) if (rng() < 0.7) branch(P, x, y, dx, dy, WOOD, 1);
-    dots(P, rng, cx, 21, 11, 5, ['#ffffff'], 6, [[0, 0], [1, 0], [0, 1]], 4);               // blossom
-    dots(P, rng, cx, 18, 11, 5, ['#e898b0'], 5, [[0, 0], [1, 0]], 3);
+    const tw = rng() < 0.5 ? [cx - 5, 14, 1] : [cx + 4, 14, -1], TW = shade(WOOD, 1.3);
+    for (let k = 0; k < 3; k++) P.set(tw[0] + (k > 1 ? tw[2] : 0), tw[1] + k, TW);
+    dots(P, rng, cx - 1, 22, 10, 5, ['#ffffff'], 5, [[0, 0], [1, 0], [0, 1]], 5);            // blossom
+    dots(P, rng, cx, 16, 11, 3, ['#e898b0'], 4, [[0, 0], [1, 0]], 5);
     for (let i = 0; i < 7; i++) P.set(cx - 12 + Math.floor(rng() * 13) * 2, 0, rng() < 0.3 ? '#ffffff' : K);   // petals on the ground
     P.paint(r);
   } },
@@ -161,16 +161,20 @@ export const PART = {
     const P = sheet(), WOOD = DARK_BARK, N = '#3f6a44', N2 = '#4a7a4e';
     const seg = (x, y, h) => { P.rect(WOOD, x, y, 3, h); P.rect(shade(WOOD, 1.25), x, y, 1, h); P.rect(shade(WOOD, 0.75), x + 2, y, 1, h); };
     seg(cx - 2, 0, 9); seg(cx - 1, 9, 8); seg(cx, 17, 9);                                  // a crooked trunk
-    P.rect(shade(WOOD, 0.85), cx - 2, 0, 1, 1); P.rect(shade(WOOD, 0.7), cx + 1, 0, 1, 1);
     branch(P, cx - 2, 13, -6, 2, WOOD); branch(P, cx + 1, 19, 5, 2, shade(WOOD, 0.85));
-    /** A pad: tufts side by side on a flat underside, lit on top. */
+    /** A pad: a flat lens of needles 7 rows high, lit on top, dark underneath, tufts along its top. */
     const pad = (x, y, w, c) => {
-      const n = Math.max(2, Math.round(w / 4)), step = (w * 2) / n;
-      for (let k = 0; k < n; k++) {
-        const tx = Math.round(x - w + step * (k + 0.5)), lift = (k + n) % 2 ? 0 : 1;
-        clump(P, tx, y + lift, Math.ceil(step / 2) + 1, 2, c, { light: shade(c, 1.2), dark: shade(c, 0.78), lit: [1, 1.2], sh: [1, 1.6] });
-      }
-      for (let i = -w + 1; i < w; i++) if (P.has(x + i, y - 2)) P.set(x + i, y - 2, shade(c, 0.7));     // its shaded underside
+      const L = shade(c, 1.18), D = shade(c, 0.74), E = shade(c, 0.66);
+      const rows = [[w - 4, D], [w - 1, D], [w, c], [w, c], [w - 1, L], [w - 3, L]];
+      rows.forEach(([hw, col], k) => {
+        const yy = y - 3 + k;
+        P.rect(col, x - hw, yy, hw * 2 + 1, 1);
+        if (k >= 2) P.rect(k >= 4 ? c : D, x + hw - 1, yy, 2, 1);                        // its shaded right end
+        if (k === 2 || k === 3) P.rect(shade(c, 1.08), x - hw, yy, 2, 1);                // its lit left end
+      });
+      P.rect(E, x - w + 5, y - 3, (w - 5) * 2 + 1, 1);
+      const o = Math.floor(rng() * 3);
+      for (let i = -w + 4 + o; i <= w - 5; i += 4) P.rect(shade(L, 1.06), x + i, y + 3, 2, 1);   // tufts
     };
     const e1 = jit(rng), e2 = jit(rng), e3 = jit(rng);
     pad(cx - 8, 15, 7 + Math.min(0, e1), N);
@@ -183,14 +187,12 @@ export const PART = {
   cedar: { approved: false, draw(r, rng, cx) {
     const P = sheet(), C = '#3a6a48', BAND = '#2f5a3c', EDGE = '#2a4a34', LIT = '#467a52';
     trunk(P, rng, cx, 7, BARK, 3, { marks: 1, foot: false });
-    const ph = Math.floor(rng() * 2);
     for (let k = 0; k < 42; k++) {
       const t = k % 6, hw = Math.max(0, Math.round(7.5 - k * 7.5 / 42) + (t === 0 && k < 36 ? 1 : 0) - (t === 5 ? 1 : 0)), y = 6 + k;
       P.rect(t === 0 ? BAND : C, cx - hw, y, hw * 2 + 1, 1);
       if (t >= 2 && hw > 1) P.rect(LIT, cx - hw + (t === 2 ? 1 : 0), y, Math.max(1, Math.round(hw * 0.6)), 1);   // the lit left side
       if (hw > 0) P.rect(EDGE, cx + hw, y, 1, 1);
       if (t === 1 && hw > 2) P.rect(shade(C, 0.88), cx + Math.ceil(hw / 2), y, hw - Math.ceil(hw / 2), 1);        // the shade under the tier above
-      if (t === 0 && k < 36 && hw > 1) for (let i = -hw + ((k / 6 + ph) % 2); i <= hw; i += 3) P.set(cx + i, y - 1, i > 0 ? EDGE : BAND);   // its hem
     }
     P.set(cx, 48, C); P.set(cx, 49, LIT);                                                    // the tip
     P.paint(r);
@@ -200,7 +202,6 @@ export const PART = {
   fir: { approved: false, draw(r, rng, cx) {
     const P = sheet(), C = '#3f7048', LIT = '#4c8056', SH = '#355f40', EDGE = '#2a4a34', HEM = '#2f5a3c';
     trunk(P, rng, cx, 6, BARK, 3, { marks: 0, foot: false });
-    const ph = Math.floor(rng() * 3);
     const tiers = [[4, 11, 12], [13, 9, 11], [22, 6, 11]];
     tiers.forEach(([base, w, h], n) => {
       for (let k = 0; k < h; k++) {
@@ -209,9 +210,8 @@ export const PART = {
         if (hw > 1) P.rect(LIT, cx - hw + (k === 0 ? 0 : 1), y, Math.max(1, Math.ceil(hw * 0.55)), 1);
         if (hw > 2) P.rect(SH, cx + Math.ceil(hw * 0.45), y, hw - Math.ceil(hw * 0.45), 1);
         if (hw > 0) P.rect(EDGE, cx + hw, y, 1, 1);
-        if (k === 0) { P.rect(HEM, cx - hw, y, hw * 2 + 1, 1); for (let i = -hw + (ph + n) % 3; i <= hw; i += 3) P.set(cx + i, y - 1, i > 0 ? EDGE : HEM); }
+        if (k === 0) { P.rect(HEM, cx - hw, y, hw * 2 + 1, 1); P.set(cx - hw, y - 1, HEM); P.set(cx + hw, y - 1, EDGE); }
       }
-      if (n > 0) { const [, w0] = tiers[n - 1]; }
     });
     // the shade each tier casts on the one below
     for (const [base, w] of tiers.slice(1)) for (let i = -w; i <= w; i++) if (P.get(cx + i, base - 2) && P.get(cx + i, base - 2) !== HEM && P.get(cx + i, base - 2) !== EDGE) P.set(cx + i, base - 2, SH);
@@ -226,10 +226,10 @@ export const PART = {
     branch(P, cx, 17, -5, 4, W2, 1); branch(P, cx + 1, 18, 4, 4, W2, 1);
     for (const y of [3, 9, 15]) { const o = Math.floor(rng() * 2); P.rect(INK, cx - 1 + o, y + jit(rng), 2, 1); }   // dark bands
     for (let i = 0; i < 3; i++) P.set(cx - 1 + Math.floor(rng() * 3), 1 + Math.floor(rng() * 18), shade(W2, 0.7));
+    clump(P, cx, 23, 7, 9, G, { light: shade(G, 1.12), dark: shade(G, 0.78), lit: [3.5, 4.5], sh: [1.5, 3.5] });
     const a = jit(rng), b = jit(rng);
-    for (const [x, y, rx, ry] of [[cx - 4 + a, 19, 4, 4], [cx + 4, 20 + b, 4, 4], [cx - 2, 25, 5, 4], [cx + 3 + b, 26, 4, 3], [cx + a, 29, 4, 3]])
-      clump(P, x, y, rx, ry, G, { light: shade(G, 1.12), dark: shade(G, 0.78), lit: [1, 1.6], sh: [1.2, 2] });
-    // a branch showing in a gap
+    for (const [dx, y] of [[-3 + a, 17], [2, 16 + b], [4, 21 + a]]) if (P.has(cx + dx, y) && P.has(cx + dx + 1, y)) { P.set(cx + dx, y, shade(G, 0.66)); P.set(cx + dx + 1, y, shade(G, 0.66)); }   // gaps between the leaves
+    dots(P, rng, cx - 2, 26, 3, 3, [shade(G, 1.24)], 2, [[0, 0], [1, 0], [0, 1]], 3);    // leaves in the sun
     dots(P, rng, cx, 24, 6, 6, ['#a8c870'], 5, [[0, 0], [1, 0]], 3);
     P.paint(r);
   } },
