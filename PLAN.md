@@ -61,6 +61,19 @@ bubble lab, so games can use them and they can grow.
 - Building seeds (Nov 2026): a seed changes the building itself (width,
   floors, windows' kind, number and spacing, door, roof, details), not only
   its colours; all on the shared door and window sizes.
+- Pixels everywhere (Nov 2026): it is a pixel world, so effects are drawn on
+  the pixel grid too (the steam: see-through pixel puffs, not soft circles).
+  The light glows at night are the one soft exception so far.
+- Small life (Nov 2026): all of it, as agreed from mock-ups; the kids at play
+  and the picnic go home at six, shopkeepers when their shutters come down.
+- Fewer people (Nov 2026): half the walkers (44); the town should not feel
+  crowded.
+- The player's marker (Nov 2026): a thin gold pixel ring round your feet,
+  still (no pulse); a white ring under whoever you point at or tap.
+- The walking step (Nov 2026): the body still bobs a pixel, and the hips
+  stretch up so no gap opens.
+- The front page (Nov 2026): no park (the owner never used it): the town,
+  the looks, the buildings and the gallery.
 
 ## Done
 
@@ -331,8 +344,15 @@ bubble lab, so games can use them and they can grow.
 
 ## Next (only when the owner asks)
 
-Nothing agreed yet: ask the owner (pictures first). Ideas: weather and time
-(backlog), people going into buildings, real kana on a few signs.
+Nothing agreed yet: ask the owner, then mock up the options (pictures
+first, build after the owner picks). Ideas offered so far:
+- weather and time (the backlog): wind, rain, seasons
+- a map maker: place streets, buildings, props and areas, save and load
+  (every place is already a layout piece)
+- people going into buildings (and maybe a simple look inside)
+- Japanese and Indonesian lines (the code is ready; Japanese with the
+  reading, the English and grammar notes)
+- real kana on a few signs (ラーメン, コンビニ, えき)
 
 ## Backlog (agreed ideas for later)
 
