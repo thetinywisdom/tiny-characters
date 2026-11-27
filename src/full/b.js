@@ -6,8 +6,8 @@
 // read only inside functions, never at the top level.)
 import { shade, seeded } from '../tinyCharacters.js';
 import {
-  V, floorAt, DOORS, WINDOWS, SHOPS, AWNINGS, sign, noren, lantern, icon, CROSS, flatRoof, rooftop, flatTop, aRoof, windowRow,
-  INK, WHITE, RED, GOLD, GLASS, GLASS2, HI, WOOD, DARKWOOD, LIGHTWOOD, FRAME, METAL, PAPER, LANTERN,
+  V, floorAt, DOORS, SHOPS, AWNINGS, sign, noren, lantern, icon, CROSS, flatRoof, rooftop, flatTop, aRoof, windowRow,
+  INK, WHITE, RED, GOLD, CURTAIN, GLASS, GLASS2, HI, WOOD, DARKWOOD, LIGHTWOOD, FRAME, PAPER,
 } from '../tinyBuildingsFull.js';
 
 const SG = 28, GF = 24, SILL = 6;                                         // a shop's ground floor, a ground floor, a sill
@@ -19,6 +19,8 @@ const old = (w) => Math.round(w / 1.5);
 /** Use up n of the building's rng (the old drawing's goods), so later choices stay the same. */
 const burn = (rng, n) => { for (let i = 0; i < n; i++) rng(); };
 /** How many goods the old shelves() put on a shelf w wide (one rng each). */
+/** A painter that paints by day and, at night, a dark silhouette (bars, slats, things in front of a glow). */
+const dark = (r, c0 = '#2a2018') => (r.force ? (c, ...a) => r.force(c0, ...a) : r);
 const oldShelf = (w) => (w >= 3 ? Math.floor((w - 3) / 4) + 1 : 0);
 
 // --- pieces ----------------------------------------------------------------------
@@ -45,7 +47,7 @@ function window(r, dx, w, o = {}) {
   return {
     x: dx + 1, w: w - 2, y0, y1: 17, panes,
     shine() {
-      const bar = r.force ? (cc, ...a) => r.force('#26282c', ...a) : r;   // the bars stay dark against a lit shop at night
+      const bar = dark(r, '#26282c');                                     // the bars stay dark against a lit shop at night
       r(shade(frame, 0.8), dx + 1, 16, w - 2, 1);                         // the shadow under the top rail
       for (let i = 1; i < n; i++) bar(frame, xs[i], y0, 1, 17 - y0);
       const hi = o.hi ?? HI;
@@ -73,6 +75,16 @@ function hisashi(r, c, w, up) {
   r(c, -2, up, w + 4, 3); r(shade(c, 1.3), -2, up + 2, w + 4, 1); r(shade(c, 0.6), -2, up, w + 4, 1);
   for (let x = 0; x < w + 2; x += 3) r(shade(c, 0.8), x - 1, up + 1, 1, 1);
 }
+/**
+ * The kit's lattice over paper (WINDOWS.lattice in the kit), but the paper glows at night
+ * (CURTAIN, one of the lit colours) and the slats stay dark in front of it.
+ */
+function glowLattice(r, dx, up, w, h) {
+  const slat = dark(r);
+  r(shade(DARKWOOD, 0.72), dx - 1, up - 1, w + 2, h + 2); r(CURTAIN, dx, up, w, h);
+  for (let i = dx + 1; i < dx + w; i += 2) slat(WOOD, i, up, 1, h);
+  r(LIGHTWOOD, dx - 1, up - 1, w + 2, 1);
+}
 /** Goods in 2 x 2 blocks on shelves (a shelf line every 4 rows), from a stream of their own. */
 function goods(r, g, x, w, y0, rows, colours, shelf = '#c8ccd0', iw = 2) {
   for (let j = 0; j < rows; j++) {
@@ -89,7 +101,7 @@ function goods(r, g, x, w, y0, rows, colours, shelf = '#c8ccd0', iw = 2) {
  * (21-28). Uses the building's rng as the old shopFront did (only the bookshop's
  * shelves); the goods come from a stream of their own (seed s).
  */
-function shopFront(r, rng, w, kind, wall, s0) {
+export function shopFront(r, rng, w, kind, wall, s0) {
   const s = SHOPS[kind] ?? SHOPS.konbini, f = lit(r), g = seeded(s0 * 53 + 11);
   r(shade(wall, 0.9), 0, 18, w, SG - 18);
   if (s.noren) {                                                          // ramen, izakaya: a wooden front
@@ -97,19 +109,20 @@ function shopFront(r, rng, w, kind, wall, s0) {
     r(DARKWOOD, 0, 0, w, 18); r(POST, 0, 0, 2, 18); r(POST, w - 2, 0, 2, 18); r(shade(DARKWOOD, 0.6), 0, 0, w, 2);
     r(shade(DARKWOOD, 1.15), 2, 17, w - 4, 1);                            // the lintel
     const lw = w - 29;
-    WINDOWS.lattice(r, 4, SILL, lw, 9);
+    glowLattice(r, 4, SILL, lw, 9);
     r(shade(DARKWOOD, 0.85), 3, SILL - 2, lw + 2, 1);                     // the sill's shadow
     DOORS.sliding(r, dx);
     noren(r, s.noren, dx - 2, 10, 20, 8);
     if (s.lantern) lantern(r, dx - 6, 8);
+    const d = dark(r);                                                    // in front of the glowing paper: a silhouette at night
     if (kind === 'ramen') {                                               // a menu board on a stand
-      r(DARKWOOD, 5, 0, 1, 4); r(DARKWOOD, 11, 0, 1, 4); r(shade(DARKWOOD, 0.7), 4, 4, 9, 8); r(PAPER, 5, 5, 7, 6);
-      for (const y of [9, 7]) { r(RED, 6, y, 1, 1); r(INK, 8, y, 3, 1); }
+      d(DARKWOOD, 5, 0, 1, 4); d(DARKWOOD, 11, 0, 1, 4); d(shade(DARKWOOD, 0.7), 4, 4, 9, 8); d(PAPER, 5, 5, 7, 6);
+      for (const y of [9, 7]) { d(RED, 6, y, 1, 1); d(INK, 8, y, 3, 1); }
     } else {                                                              // two sake barrels, one on the other
       for (const [x, y] of [[4, 0], [10, 0], [7, 6]]) {
         const st = '#d8cba8';                                             // straw, round at the corners
-        r(st, x, y + 1, 6, 4); r(shade(st, 0.7), x + 1, y, 4, 1); r(shade(st, 1.1), x + 1, y + 5, 4, 1); r(shade(st, 0.8), x + 5, y + 1, 1, 4);
-        r('#2f4a8a', x, y + 2, 6, 2); r(RED, x + 2, y + 2, 2, 2);
+        d(st, x, y + 1, 6, 4); d(shade(st, 0.7), x + 1, y, 4, 1); d(shade(st, 1.1), x + 1, y + 5, 4, 1); d(shade(st, 0.8), x + 5, y + 1, 1, 4);
+        d('#2f4a8a', x, y + 2, 6, 2); d(RED, x + 2, y + 2, 2, 2);
       }
     }
     hisashi(r, kind === 'izakaya' ? '#3a3f44' : '#4a4442', w, 18);

@@ -6,6 +6,7 @@
 // (This file and tinyBuildingsFull.js import each other: the kit's bindings are
 // read only inside functions, never at the top level.)
 import { shade, seeded } from '../tinyCharacters.js';
+import { shopFront as shopFrontB } from './b.js';
 import {
   V, floorAt, DOORS, WINDOWS, WW, oneWindow, SHOPS, shopFront, upright, laundry, flatRoof, flatTop, aRoof, pitched,
   INK, WHITE, LIT, CONCRETE, METAL, LANTERN, HOUSE_ROOFS, DOOR_COLOURS,
@@ -184,8 +185,7 @@ export const PART = {
       const signLeft = v.chance(0.5), win = v.pick(['alu', 'aluPair', 'sash']);
       const ow = old(w), s = SHOPS[kind] ?? SHOPS.konbini;
       r(wall, 0, SG, w, top - SG); edges(r, wall, 0, w, SG, top - SG);
-      shopFront(r, seeded((b.seed ?? 1) * 53 + 11), 0, w, kind, wall);    // its goods from a stream of their own
-      if (s.books) burn(rng, 3 * (ow - 13 >= 3 ? Math.floor((ow - 16) / 4) + 1 : 0));   // what the old shelves used
+      shopFrontB(r, rng, w, kind, wall, b.seed ?? 1);                     // the shops' own front (part B): rng as the old one
       const ox0 = signLeft ? 7 : 2, ox1 = signLeft ? ow - 2 : ow - 7, x0 = signLeft ? 12 : 3, x1 = signLeft ? w - 3 : w - 12;
       for (let f = 1; f < floors; f++) {
         const up = floorAt(f, SG);

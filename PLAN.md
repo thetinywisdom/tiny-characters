@@ -391,6 +391,9 @@ bubble lab, so games can use them and they can grow.
   one person pixel). The kit is in `src/tinyBuildingsFull.js`; buildings in review are in
   `src/full/*.js` and drawn only with `?redraw=all` (or `setRedraw('all')`) until the owner
   approves them on the review page (batches of 20; approved ones go live on main).
+  Batch 1 (20 buildings: house, apartment, woodApartment, mixedUse, office, shop, laundromat,
+  kissaten, pharmacy, florist, sushi, fishmonger, udonSoba, familyRestaurant, takoyaki,
+  karaoke, koban, postOffice, bank, clinic) is waiting for the owner's review.
 
 ## Next (only when the owner asks)
 

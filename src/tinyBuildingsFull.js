@@ -51,7 +51,8 @@ export const pane = (rng) => { const v = rng(); return v < 0.18 ? LIT : v < 0.34
 export function sign(r, bg, fg, dx, up, w, h = 6, text = '', edge = true) {
   const f = r.force ?? r;                                                // signs are lit at night too
   if (edge) { f(shade(bg, 0.7), dx, up, w, h); f(bg, dx + 1, up + 1, w - 2, h - 2); } else f(bg, dx, up, w, h);
-  if (text && r.text && r.text(text, fg, dx + 1, up + 1, w - 2, h - 2)) return;
+  // the name may run over the edge rows (the letters' own space keeps them clear), so it is as big as on the old signs
+  if (text && r.text && r.text(text, fg, dx + 1, up, w - 2, h)) return;
   const n = Math.max(2, Math.floor((w * 0.55) / 4)), start = dx + Math.floor((w - (n * 4 - 2)) / 2);
   for (let i = 0; i < n; i++) f(fg, start + i * 4, up + 2, 2, h - 4);
 }
@@ -307,7 +308,7 @@ export const WINDOWS = {
   },
   /** Wooden lattice over paper (a Japanese shop), any width. */
   lattice(r, dx, up, w, h = 9) {
-    r(shade(DARKWOOD, 0.72), dx - 1, up - 1, w + 2, h + 2); r(PAPER, dx, up, w, h);
+    r(shade(DARKWOOD, 0.72), dx - 1, up - 1, w + 2, h + 2); r(CURTAIN, dx, up, w, h);   // paper lit from inside at night
     for (let i = dx + 1; i < dx + w; i += 2) r(WOOD, i, up, 1, h);
     r(LIGHTWOOD, dx - 1, up - 1, w + 2, 1);
   },
