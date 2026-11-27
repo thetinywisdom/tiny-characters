@@ -38,10 +38,10 @@ export const PART = {
     // the address plate: a white number in two lines
     r('#2c4a8a', 6, 16, 3, 5); r(WHITE, 6, 19, 2, 1); r(WHITE, 6, 17, 3, 1); r(shade('#2c4a8a', 0.75), 8, 16, 1, 5);
     // step bolts, one side then the other
-    for (const [dx, up] of [[5, 22], [9, 25], [5, 28], [9, 31], [5, 35], [9, 37]]) r(DARK, dx, up, 1, 1);
+    for (const [dx, up] of [[5, 23], [9, 26], [5, 29], [9, 37]]) r(DARK, dx, up, 1, 1);
     // the crossarm and its insulators (the wires hang from the ends, dx 0 and 14)
     r(ARM, 0, 39, 15, 2); r(shade(ARM, 0.78), 0, 39, 15, 1); r(shade(ARM, 1.15), 0, 40, 15, 1);
-    for (const dx of [0, 4, 10, 14]) { r('#c8c8c0', dx, 41, 1, 1); r(WHITE, dx, 42, 1, 1); }
+    for (const dx of [0, 4, 9, 13]) { r('#c8c8c0', dx, 41, 2, 1); r(WHITE, dx, 42, 2, 1); r(shade(WHITE, 0.85), dx + 1, 42, 1, 1); }
     if (rng() < 0.4) {                                                      // a transformer
       r(TR, 9, 27, 5, 8); r(shade(TR, 1.12), 9, 27, 1, 8); r(shade(TR, 0.8), 13, 27, 1, 8);
       r(shade(TR, 0.86), 10, 29, 3, 1); r(shade(TR, 0.86), 10, 32, 3, 1);   // its ribs
@@ -58,7 +58,8 @@ export const PART = {
     r(DARK, 0, 0, 4, 1); r(METAL, 0, 1, 4, 1); r(shade(METAL, 1.25), 0, 1, 1, 1);   // the foot
     r(METAL, 1, 2, 2, 25); r(shade(METAL, 1.25), 1, 2, 1, 25);              // the pole
     r(METAL, 1, 26, 7, 1); r(shade(METAL, 1.25), 2, 27, 5, 1); r(METAL, 1, 27, 1, 1);   // the arm, rounded at the top
-    r(DARK, 4, 22, 5, 4); r(shade(DARK, 1.3), 4, 25, 5, 1); r(LAMP, 4, 22, 5, 2);   // the head
+    r(DARK, 4, 23, 5, 2); r(shade(DARK, 1.3), 5, 25, 3, 1); r(DARK, 4, 25, 1, 1);    // the head, its top sloping
+    r(LAMP, 4, 23, 5, 1); r(LAMP, 5, 22, 3, 1); r(shade(LAMP, 0.92), 4, 23, 1, 1); r(shade(LAMP, 0.92), 8, 23, 1, 1);   // the glass, bulging
   } },
 
   // 8 x 26: the old black lamp: a foot, a post, the lantern box with two panes (the glow at
@@ -85,22 +86,22 @@ export const PART = {
     r(S, 3, 14, 2, 1); r(L, 3, 14, 1, 1);                                   // the knob
   } },
 
-  // 12 x 29, Japanese: the lamps side by side in a flat box with hoods (green, yellow, red,
-  // under their glows at 3, 6, 9 and 25.5), the walk signal on the pole (red above, green
-  // under, at 9 x 15 and 9 x 12). p.lit: 'green' | 'yellow' | 'red'
+  // 12 x 29, Japanese: three lamps side by side in a flat box under a hood (green, yellow,
+  // red: 3 x 3 at dx 2, 5, 8, where the old ones fell when stretched, so the glows at 3, 6, 9
+  // and 25.5 sit on them), the walk signal on the pole (red above, green under, centred on
+  // dx 9). p.lit: 'green' | 'yellow' | 'red'
   trafficLight: { approved: false, draw(r, rng, p) {
     const lit = p.lit ?? 'green', walk = lit === 'red';
     const lamp = (on, onC, offC, dx, up, w, h) => {
       r(on ? onC : offC, dx, up, w, h);
-      if (on) r(shade(onC, 1.25), dx, up + h - 1, 1, 1);
+      if (on) r(shade(onC, 1.25), dx, up + h - 1, 1, 1);                  // a glint, top left
     };
     r(DARK, 4, 0, 4, 1); r(METAL, 4, 1, 4, 1);                              // the foot
     r(METAL, 5, 2, 2, 21); r(shade(METAL, 1.25), 5, 2, 1, 21);              // the pole
-    r(DARK, 0, 23, 12, 5); r(shade(DARK, 0.8), 0, 23, 12, 1); r(INK, 0, 28, 12, 1);   // the box
-    for (const dx of [1, 4, 7]) r(INK, dx, 27, 4, 1);                       // the hoods
-    lamp(lit === 'green', '#3fd0a0', '#34463f', 2, 24, 2, 3);
-    lamp(lit === 'yellow', YELLOW, '#4a4636', 5, 24, 2, 3);
-    lamp(lit === 'red', '#e8403a', '#4a3434', 8, 24, 2, 3);
+    r(DARK, 1, 23, 11, 5); r(shade(DARK, 0.8), 1, 23, 11, 1); r(INK, 1, 27, 11, 2); r(shade(INK, 1.4), 1, 28, 11, 1);   // the box, its hood
+    lamp(lit === 'green', '#3fd0a0', '#34463f', 2, 24, 3, 3);               // three lamps (the glows at 3, 6, 9)
+    lamp(lit === 'yellow', YELLOW, '#4a4636', 5, 24, 3, 3);
+    lamp(lit === 'red', '#e8403a', '#4a3434', 8, 24, 3, 3);
     r(DARK, 6, 9, 6, 9); r(INK, 6, 17, 6, 1); r(shade(DARK, 0.8), 6, 9, 6, 1);   // the walk signal
     lamp(!walk, '#e8403a', '#4a3434', 7, 14, 4, 3);
     lamp(walk, '#3fd0a0', '#34463f', 7, 10, 4, 3);
@@ -161,13 +162,13 @@ export const PART = {
   // 19.5), the boom on its pivot: across the road when p.down, else up; p.flash: which lamp
   crossingGate: { approved: false, draw(r, rng, p) {
     const ON = '#ff4a3a', OFF = '#6a3434';
-    r(WHITE, 2, 0, 2, 18); r(shade(WHITE, 0.86), 3, 0, 1, 18);              // the post
-    for (const up of [2, 7, 12]) { r(INK, 2, up, 2, 2); }
-    r(INK, 1, 0, 4, 1);                                                     // its foot
+    r(WHITE, 2, 0, 3, 18); r(shade(WHITE, 0.9), 4, 0, 1, 18);               // the post, black bands
+    for (const up of [3, 8, 13]) { r(INK, 2, up, 3, 2); r(shade(INK, 1.3), 2, up + 1, 3, 1); }
+    r(INK, 1, 0, 5, 1);                                                     // its foot
     r(INK, 0, 18, 6, 3);                                                    // the lamps
     r(p.down && p.flash ? ON : OFF, 0, 18, 2, 3); r(p.down && !p.flash ? ON : OFF, 4, 18, 2, 3);
-    pix(r, 0, 21, ['YK..KY', '.YKKY.', 'YK..KY'], { Y: YELLOW, K: INK });  // the X sign
-    r(DARK, 3, 9, 3, 4); r(INK, 4, 10, 2, 2);                               // the pivot
+    pix(r, 0, 21, ['YY..YY', '..YY..', 'YY..YY'], { Y: YELLOW, K: INK });  // the X sign
+    r(DARK, 4, 9, 2, 4); r(INK, 5, 10, 1, 2);                               // the pivot
     if (p.down) for (let i = 6; i < 36; i += 3) { r((i / 3) % 2 ? INK : YELLOW, i, 10, 3, 2); }   // the boom, across
     else for (let up = 10; up < 24; up += 3) r(((up - 10) / 3) % 2 ? INK : YELLOW, 6, up, 2, Math.min(3, 24 - up));   // the boom, up
   } },
@@ -178,7 +179,7 @@ export const PART = {
     pix(r, 0, 13, [
       'WWWWWWWW',
       'WRRRRRRW',
-      'WRWRWWRW',
+      'WRWWWWRW',
       '.WRRRRW.',
       '.WRRRRW.',
       '..WRRW..',

@@ -148,7 +148,7 @@ export function drawNappingCat(g, c, t = 0) {
 export function drawSwings(g, prop, t = 0) {
   if (usesFull(FULL_PROPS.swings)) {
     // the full-size swings (src/full/p3.js): its frame, then the chains, kids and seats on its grid
-    drawProp(g, { ...prop, riders: undefined, frameOnly: true });
+    drawProp(g, { ...prop, type: 'swings', riders: undefined, frameOnly: true });
     const k = prop.scale ?? 1, f = k / 1.5, n = (v) => Math.round(v * f), s = Math.max(1, n(1)), S = SWING_SEATS;
     const L = Math.round(prop.x - Math.round(30 * k) / 2), y = Math.round(prop.y), top = y - n(S.top) - s;
     S.centres.forEach((c, i) => {

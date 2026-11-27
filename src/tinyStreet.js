@@ -6,6 +6,7 @@
 //   drawProp(g, p)      one thing { type, x, y, seed, scale }: centred on x, standing on y
 //                       (a traffic light also takes lit: 'green' | 'yellow' | 'red')
 //   PROPS               type -> { label, w, h, depth } (pixels at scale 1)
+//   propScale(type)     1.5 once it is drawn at full size (show it at that scale), else 1
 //   propSolid(p)        the ground it takes, { x, y, w, h }, so people walk round it
 //   propLights(p)       where it gives light at night: [{ x, y, r }]
 //   poleTops(p)         where a utility pole's wires hang from: [{ x, y }]
@@ -160,6 +161,8 @@ const DEFS = {
   }],
 };
 
+/** The scale a thing is best shown at: 1.5 (the town's) once it is drawn at full size, else 1. */
+export const propScale = (type) => (usesFull(FULL_PROPS[type]) ? 1.5 : 1);
 /** Every thing: type -> { label, w, h, depth } (pixels at scale 1). */
 export const PROPS = Object.fromEntries(Object.entries(DEFS).map(([k, [label, w, h, depth]]) => [k, { label, w, h, depth }]));
 
