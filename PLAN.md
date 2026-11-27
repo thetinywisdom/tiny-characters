@@ -433,14 +433,25 @@ bubble lab, so games can use them and they can grow.
     wind roll across the town from the left, the trunks stay still, each tree a
     little out of step; the catalogue's tree cards move too. About +0.5 ms a frame.
 
+56. **Full-size trees and bushes (batch 4), all 25 approved and live:** oak, Japanese
+    maple, cherry blossom, Japanese pine, cedar, fir, birch, palm, willow, ginkgo,
+    bamboo, apple, poplar, cypress, bare tree; round shrub, hedge, azalea, hydrangea,
+    rose (now told apart from the holly), lavender, fern, pampas, holly, cactus. They
+    keep their 8 looks per seed and fit where the old ones stood; the trees sway in the
+    breeze like before. The catalogue shows them at the town's size.
+57. **The forest at night is lighter** (the owner asked whether the breeze makes it
+    heavy: it adds about 1 ms in the thickest forest; the night was the heavy part):
+    at night every tree was drawn a second time into the buildings' light layer; now
+    only trees and bushes that overlap a building drawn before them are (nothing else
+    has light to wipe). Same picture; a forest view at night 26 ms to 10 ms (on a 4x
+    slower CPU 121 ms to 49 ms).
+
 ## In progress
 
 - **Redrawing everything at full size (E)**, in batches reviewed on a review page
   (https://claude.ai/artifact/4QAkLRYE9m2mcs5caQUZzB). Every building is done (batches 1-2).
-  Every building and every street thing is done (batches 1-3). Batch 4 (the 15 trees and
-  10 bushes, `FULL_TREES` / `FULL_BUSHES` in `src/tinyNatureFull.js`, parts
-  `src/full/n1.js` .. `n3.js`) is drawn and waiting for the owner's review. Then the
-  ground and streets.
+  Every building, street thing, tree and bush is done (batches 1-4). Next: the ground and
+  streets (terrain, roads, sidewalks, crossings, the railway, the court).
 
 ## Next (only when the owner asks)
 
@@ -468,6 +479,9 @@ bubble lab, so games can use them and they can grow.
 
 - The catalogue has no night view yet.
 - A car's tail-light glow can tint a tree standing right in front of it.
+- A view full of forest is the slowest by day (about 7 ms; 35 ms on a 4x slower CPU):
+  hundreds of trees drawn each frame. A pre-drawn forest (or skipping the breeze far off)
+  would help if phones struggle.
 - Sign text is drawn by the canvas, so its edges are a little soft (not
   snapped to the pixel grid like everything else).
 

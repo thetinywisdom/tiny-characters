@@ -830,7 +830,10 @@ and check with Playwright screenshots on a desktop size and a phone
   the flying monsters); about 20 is normal now. Count anyone inside a
   vehicle's footprint (`traffic.hits(x, y, 0)`): 0.
 - **Speed:** draw 120 views across the town by day and at night with 60
-  people and the traffic: about 2 ms and 7 ms a frame.
+  people and the traffic: about 2 ms and 7 ms a frame. A view full of forest:
+  about 7 ms by day and 10 ms at night (CDP `Emulation.setCPUThrottlingRate`
+  4 for a phone-like CPU: about 35 and 49 ms). At night, plants that overlap no
+  building drawn before them are not drawn into the light layer (nothing to wipe).
 - **The map:** render the whole town (a view the size of `town.W` by
   `town.H`); the console warns about any layout prop on a road or a cross
   street's sidewalk.

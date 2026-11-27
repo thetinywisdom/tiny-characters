@@ -554,9 +554,16 @@ function drawNight(g, view, items, night, dpx, drawItem, t = 0, lights = 'bands'
       const lg = lightLayer.getContext('2d');
       lg.setTransform(1, 0, 0, 1, 0, 0); lg.globalCompositeOperation = 'source-over'; lg.clearRect(0, 0, lightLayer.width, lightLayer.height);
       lg.setTransform(dpx, 0, 0, dpx, -view.x * dpx, -view.y * dpx); lg.imageSmoothingEnabled = false;
+      // (a tree or bush that overlaps no building drawn so far has no light to wipe: skipped, which
+      // saves drawing every tree of a forest a second time; the picture is the same)
+      const lit = [];
       for (const it of items) {
+        if (it.p && !lit.some((r) => it.p.x + 40 > r.x0 && it.p.x - 40 < r.x1 && it.p.y + 4 > r.y0 && it.p.y - 90 < r.y1)) continue;
         lg.globalCompositeOperation = 'destination-out'; drawItem(lg, it);
-        if (it.b) { lg.globalCompositeOperation = 'source-over'; drawBuilding(lg, { ...it.b, lights: true, dpx, time: t }); }
+        if (it.b) {
+          lg.globalCompositeOperation = 'source-over'; drawBuilding(lg, { ...it.b, lights: true, dpx, time: t });
+          const { w, h } = buildingSize(it.b); lit.push({ x0: it.b.x - w / 2 - 4, x1: it.b.x + w / 2 + 4, y0: it.b.y - h - 4, y1: it.b.y + 4 });
+        }
       }
       g.imageSmoothingEnabled = false;
       g.drawImage(lightLayer, view.x, view.y, view.w, view.h);
