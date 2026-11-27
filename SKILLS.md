@@ -641,7 +641,8 @@ the demo decides who does what.
 - **Sprites with their own drawing**: any sprite with `draw(g, s, t)` is
   drawn by it, sorted with the people (pigeons, the ball, rubbish, the
   picnic blanket); `drawTownView(..., { above })` draws a list over
-  everything, after the wires (the crows).
+  everything, after the wires (the crows). `steam: (g, x, y, t, seed) => ...` swaps the
+  steam's drawing (used to try styles out; the default is `drawSteam`).
 - **Swings in use**: a swings prop with `riders: [{ angle, kid } | null,
   ...]` is drawn by `drawSwings` (each seat at its own angle); without
   `riders` it is the plain prop.

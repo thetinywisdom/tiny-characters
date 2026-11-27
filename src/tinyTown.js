@@ -616,7 +616,7 @@ function drawCourt(g, a, k) {
  * dpx: device pixels per canvas pixel, when the canvas is drawn bigger
  * underneath (g scaled by dpx) so the signs' names can be written.
  */
-export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0, above = [], petals = true } = {}) {
+export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0, above = [], petals = true, steam = drawSteam } = {}) {
   g.imageSmoothingEnabled = false;
   g.drawImage(town.ground, view.x, view.y, view.w, view.h, 0, 0, view.w, view.h);
   g.save(); g.translate(-view.x, -view.y);
@@ -658,7 +658,7 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0
   for (const [a, b, sag] of town.wires) if (Math.max(a.x, b.x) > view.x && Math.min(a.x, b.x) < view.x + view.w && a.y > view.y - 10 && a.y < view.y + view.h + 10) drawWire(g, a, b, sag);
   // above everything: steam from the food stalls, cherry petals drifting, and what sits up high (crows on the wires: `above`)
   for (const it of items) {
-    if (it.b && cooks(it.b)) { const { w, h } = buildingSize(it.b); drawSteam(g, it.b.x + w * 0.22, it.b.y - h * 0.55, t, it.b.x); }
+    if (it.b && cooks(it.b)) { const { w, h } = buildingSize(it.b); steam(g, it.b.x + w * 0.22, it.b.y - h * 0.55, t, it.b.x); }
     else if (it.p && it.p.kind === 'tree' && it.p.type === 'sakura' && petals) drawPetals(g, { ...it.p, seed: it.p.x }, t, Math.round(30 * town.scale));
   }
   for (const s of above) if (s.x > view.x - 10 && s.x < view.x + view.w + 10 && s.y > view.y - 4 && s.y < view.y + view.h + 10) (s.draw ?? drawCharacter)(g, s, t);
