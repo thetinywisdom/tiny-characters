@@ -238,6 +238,17 @@ stands, so adding something to a map never changes anything elsewhere
 (checked: the town with and without the south area match above it, but for
 the grass texture's dots).
 
+**Cars and people never pass through each other** (the owner): every
+vehicle has a footprint on the ground (its length and width turned with its
+heading; the train its whole length on the rails). `local(v, x, y)` gives a
+point `ahead` / `side` of a vehicle in ground units; `hits(x, y, margin)` the
+vehicle standing there. Cars stop for anyone within their width from inside
+them to 12 px ahead; in the demo, people wait instead of stepping into a
+vehicle (flying and floating monsters pass over), give up and go elsewhere
+after 2 s of waiting (so a car and a person never wait for each other for
+good), and the keys will not walk you into one (`window.tinyTown.traffic.hits`
+in the console).
+
 **Trains** (tinyTraffic, when the town has a railway): one train of four
 carriages (`drawTrain`, side on, drawn at the people's size), slowing for
 and stopping 3 s at each station building's middle, leaving town and coming

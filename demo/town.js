@@ -154,12 +154,23 @@ function chatting(p) {
   return true;
 }
 
+// what flies or floats over cars rather than waiting for them
+const FLIERS = new Set(['ghostGirl', 'reaper', 'skull']);
 /** Walk p along its path at `speed` px/s (waiting at a crossing while its cars have green); true when it has arrived. */
 function follow(p, speed, dt) {
   const q = p.path?.[0];
   if (!q) { p.path = null; return true; }
   const ex = q.x - p.x, ey = q.y - p.y, d = Math.hypot(ex, ey), step = speed * dt;
   if (d > 0 && !p.flying && !traffic.mayCross(p.x, p.y, p.x + ex / d * (step + 2), p.y + ey / d * (step + 2), t)) { p.walking = false; p.facing = facingFor(ex, ey, p.facing); return false; }
+  // a car (or the train) in the way: wait for it to go by (flying and floating monsters pass over)
+  const ahead = traffic.hits(p.x + ex / Math.max(d, 1e-6) * (step + 3), p.y + ey / Math.max(d, 1e-6) * (step + 3));
+  if (d > 0 && ahead && !FLIERS.has(p.monster) && !traffic.hits(p.x, p.y)) {
+    p.walking = false; p.facing = facingFor(ex, ey, p.facing);
+    // kept waiting too long (a car that waits for them in turn): give up and go somewhere else
+    if ((p.blocked = (p.blocked ?? 0) + dt) > 2 && p !== you) { p.blocked = 0; p.path = null; p.wait = 0.5; }
+    return false;
+  }
+  p.blocked = 0;
   if (d <= step) { p.x = q.x; p.y = q.y; p.path.shift(); }
   else { p.x += ex / d * step; p.y += ey / d * step; }
   if (Math.hypot(ex, ey) > 0.3) p.facing = facingFor(ex, ey, p.facing);
@@ -180,8 +191,10 @@ function frame(now) {
     you.path = null; you.walking = true;
     you.facing = facingFor(dx, dy, you.facing);
     const nx = you.x + dx * 36 * dt, ny = you.y + dy * 24 * dt;
-    if (!town.blocked(nx, you.y)) you.x = nx;
-    if (!town.blocked(you.x, ny)) you.y = ny;
+    // walls, things, and cars: you cannot walk through any of them (but you can step out of one you are already in)
+    const free = (x, y) => !town.blocked(x, y) && (!traffic.hits(x, y) || traffic.hits(you.x, you.y));
+    if (free(nx, you.y)) you.x = nx;
+    if (free(you.x, ny)) you.y = ny;
   } else if (you.path) follow(you, 36, dt);
   else you.walking = false;
   // everyone else: a short trip, a rest, another trip

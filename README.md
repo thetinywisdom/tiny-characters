@@ -332,7 +332,7 @@ if (!traffic.mayCross(p.x, p.y, nextX, nextY, t)) { /* wait for the green man */
 | Export | What it does |
 | --- | --- |
 | `drawVehicle(g, { type, x, y, heading, color, seed })` | One vehicle (`VEHICLES`: `car`, `kei`, `taxi`, `van`, `keiTruck`, `bus`), its middle on the ground at (x, y); `heading` in degrees (0 right, 90 towards you, 180 left, 270 away; 16 steps), or `facing` `'right'` / `'down'` / `'left'` / `'up'`. The seed picks the colours. |
-| `makeTraffic(town, { cars, buses, seed })` | `{ vehicles, update(dt, t, walkers), mayCross(x, y, nx, ny, t), lightAt(junction, axis, t) }`. |
+| `makeTraffic(town, { cars, buses, seed })` | `{ vehicles, update(dt, t, walkers), mayCross(x, y, nx, ny, t), hits(x, y), lightAt(junction, axis, t), train, crossingClosed(j) }`; `hits` is the vehicle whose body stands on a spot (so nobody walks into one). |
 
 How it behaves: cars drive on the left, as in Japan (east-bound on the
 north half of a street); they swing round as they turn; every junction has

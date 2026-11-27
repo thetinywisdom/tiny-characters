@@ -282,6 +282,23 @@ export function makeTraffic(town, { cars = 16, buses = 2, seed = 5 } = {}) {
   }
 
   const lightAt = (jn, axis, t) => signal(jn, axis, t);
+  /** Where a point on the ground is from a vehicle's middle: `ahead` along its heading, `side` across it (ground units). */
+  function local(v, x, y) {
+    const th = ((v.heading ?? 0) * Math.PI) / 180, dx = x - v.x, dy = (y - v.y) / KY;
+    return { ahead: dx * Math.cos(th) + dy * Math.sin(th), side: -dx * Math.sin(th) + dy * Math.cos(th) };
+  }
+  /**
+   * The vehicle (or the train) whose body stands on (x, y), with `margin`
+   * pixels round it, or null: so nobody walks into one.
+   */
+  function hits(x, y, margin = 2) {
+    for (const v of vehicles) {
+      if (v.type === 'train') { if (Math.abs(x - v.x) < trainLen / 2 + margin && y > v.y - 6 - margin && y < v.y + 3 + margin) return v; continue; }
+      const { ahead, side } = local(v, x, y), V = VEHICLES[v.type];
+      if (Math.abs(ahead) < V.length / 2 + margin && Math.abs(side) < V.width / 2 + margin) return v;
+    }
+    return null;
+  }
   /** How far v may go before it must stop: the vehicle ahead, a red light, someone in the way. */
   function room(v, t, walkers) {
     const d = v.lane.dir, f = front(v);
@@ -306,11 +323,13 @@ export function makeTraffic(town, { cars = 16, buses = 2, seed = 5 } = {}) {
       const stop = d > 0 ? rail.y - 6 : rail.y + rail.h + 6, dd = (stop - f) * d;
       if (dd >= -1 && dd < 60) free = Math.min(free, dd);
     }
-    // anyone in front (people, animals, monsters, you)
+    // anyone in its way (people, animals, monsters, you): within its width, from inside it to a little ahead
     for (const p of walkers) {
-      if (p.vehicle) continue;
-      if (v.lane.kind === 'h') { const a = (p.x - f) * d; if (a > -2 && a < 12 && Math.abs(p.y - v.y) < 7) free = Math.min(free, a - 3); }
-      else { const a = (p.y - f) * d; if (a > -2 && a < 10 && Math.abs(p.x - v.x) < 7) free = Math.min(free, a - 3); }
+      if (p.vehicle || p.ball) continue;
+      const { ahead, side } = local(v, p.x, p.y);
+      if (Math.abs(side) < VEHICLES[v.type].width / 2 + 3 && ahead > -VEHICLES[v.type].length / 2 - 2 && ahead < VEHICLES[v.type].length / 2 + 12) {
+        free = Math.min(free, (ahead - VEHICLES[v.type].length / 2 - 3) * (v.lane.kind === 'h' ? 1 : KY));
+      }
     }
     return free;
   }
@@ -408,5 +427,5 @@ export function makeTraffic(town, { cars = 16, buses = 2, seed = 5 } = {}) {
     return !c || signal(c.junction, c.axis, t) === 'red';
   }
 
-  return { vehicles, update, mayCross, lightAt, train, crossingClosed: closed };
+  return { vehicles, update, mayCross, lightAt, train, crossingClosed: closed, hits };
 }

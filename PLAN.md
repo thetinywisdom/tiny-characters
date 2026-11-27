@@ -264,6 +264,13 @@ bubble lab, so games can use them and they can grow.
     lit doors): building lights are now drawn into their own layer in the
     scene's order, with everyone in front wiping their shape out of it.
 
+36. **Cars and people collide** (the owner: they went through each other):
+    vehicles have real footprints; cars stop for anyone across their whole
+    width; people wait instead of walking into a car or the train (and give
+    up after 2 s, so nobody waits for good); the keys will not walk you into
+    one. A minute of the live town: 13,320 checks, nobody inside a vehicle,
+    traffic still flowing.
+
 ## Next (only when the owner asks)
 
 1. Small life (the owner's list of ideas, not yet asked for): pigeons that scatter, laundry on balconies, shopkeepers,
@@ -282,8 +289,7 @@ bubble lab, so games can use them and they can grow.
   snapped to the pixel grid like everything else).
 
 - Nobody goes inside buildings yet (tapping one walks you to its door).
-- Townspeople walk through each other; cars can overlap for a moment when
-  one turns into a lane just ahead of another; nobody rides a bicycle yet.
+- Townspeople walk through each other (not through vehicles any more); nobody rides a bicycle yet.
 - Sign text is a row of pixels, not letters. Real kana would need at least
   5 px tall signs; could try for a few (ラーメン, コンビニ) if the owner wants.
 
