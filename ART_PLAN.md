@@ -7,6 +7,43 @@ lights them. This file is the plan for that: what there is to draw, what to
 decide first, how to draw and export it, in what order, and what the code
 side (an agent) does at each step.
 
+## The plan in short
+
+1. **Choose your style first:**
+   - how big a person is (now 5 × 15 pixels, or bigger)
+   - one fixed colour palette
+   - outlines or not
+   - which direction the light comes from
+
+   Draw everything at one size (right now the town is drawn 1.5 times
+   bigger than the people, which makes it look off).
+2. **Get a pixel-art editor.** Aseprite is the best; Piskel is free and works
+   in the browser.
+3. **Do a small test set:** one person walking in 4 directions, road,
+   sidewalk and grass tiles, one house, one tree, one bench. They go in the
+   town next to the old art; look, adjust and redraw until you love it.
+4. **Then draw in this order:**
+   1. people
+   2. ground tiles
+   3. the 10 most common buildings
+   4. the remaining buildings
+   5. street things and trees
+   6. cars
+   7. animals and monsters
+   8. effects and icons
+5. **Save each drawing as a PNG** named after the thing (`house.png`,
+   `bench.png`). It is swapped into the town; whatever is not drawn yet keeps
+   the old art, so nothing breaks while you go.
+
+After the people, the ground and the main buildings, the town already looks
+like yours. The rest can come piece by piece.
+
+**First decision: how big a person should be** (everything else is sized
+from that).
+
+The details (every choice, the full list of what to draw with sizes, how to
+name and hand over images, what the code does) follow below.
+
 ## How it works (the idea)
 
 - You draw **PNG images** (sprite sheets) in a pixel-art editor and drop them
