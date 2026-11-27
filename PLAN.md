@@ -450,8 +450,10 @@ bubble lab, so games can use them and they can grow.
 
 - **Redrawing everything at full size (E)**, in batches reviewed on a review page
   (https://claude.ai/artifact/4QAkLRYE9m2mcs5caQUZzB). Every building is done (batches 1-2).
-  Every building, street thing, tree and bush is done (batches 1-4). Next: the ground and
-  streets (terrain, roads, sidewalks, crossings, the railway, the court).
+  Every building, street thing, tree and bush is done (batches 1-4). Batch 5, the ground
+  (the 10 terrains, `FULL_TERRAINS`, part `src/full/t1.js`; the streets, railway, court,
+  pond, ring path and stepping stones, `FULL_GROUND` in `src/tinyGroundFull.js`, parts
+  `src/full/g1.js`, `g2.js`), is drawn and waiting for the owner's review.
 
 ## Next (only when the owner asks)
 
