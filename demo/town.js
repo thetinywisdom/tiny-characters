@@ -4,6 +4,7 @@ import { CAT_COATS, DOG_BREEDS, dogFor } from '../src/tinyAnimals.js';
 import { drawTownView, makeTown } from '../src/tinyTown.js';
 import { makeTraffic } from '../src/tinyTraffic.js';
 import { drawSpeech, emote, moodFor, sayDuration, speak } from '../src/tinySpeech.js';
+import { makeLife } from './life.js';
 
 // The town: a 2D map of streets and blocks. The view follows you (the gold
 // line): arrow keys / WASD, or tap where to go (tap a building to walk to its
@@ -20,7 +21,7 @@ const town = makeTown();
 const traffic = makeTraffic(town, { cars: 18, buses: 2 });
 const area = (name) => town.areas.find((a) => a.name === name);
 
-let people, you, seed = 11, players = [], ball = null;
+let people, you, seed = 11, players = [], ball = null, smallLife = null;
 const keys = new Set();
 function walker(look, rng, within, cat = false) {
   let at = town.randomSpot(rng, within);
@@ -66,10 +67,12 @@ function newPeople() {
   for (let v = 0; v < 2; v++) people.push(M('spider', Math.floor(rng() * 4)));
   for (let v = 0; v < 3; v++) people.push(M('skull', Math.floor(rng() * 4)));
   people.push(you);
+  // small life: benches, bikes, shopkeepers, the playground, pigeons, crows, the station's commuters... (demo/life.js)
+  smallLife = makeLife({ town, traffic, people, rng });
 }
 newPeople();
 // for trying things out in the browser's console (and for tests): the town, its traffic, you
-window.tinyTown = { town, traffic, get you() { return you; }, get people() { return people; } };
+window.tinyTown = { town, traffic, get you() { return you; }, get people() { return people; }, get life() { return smallLife; }, get hour() { return hour; }, set hour(h) { hour = h; } };
 
 const active = () => (document.body.dataset.active ?? 'town') === 'town';
 addEventListener('keydown', (e) => { if (e.key.startsWith('Arrow') && active()) e.preventDefault(); keys.add(e.key.toLowerCase()); });
@@ -83,7 +86,7 @@ canvas.addEventListener('pointerdown', (e) => {
   const x = view.x + (e.clientX - r.left) / r.width * VW, y = view.y + (e.clientY - r.top) / r.height * VH;
   // tap someone (a person, an animal, a monster): they stop and say a line that suits them
   const tall = (p) => (p.cat || p.dog ? 10 : p.monster ? 20 : 17);
-  const hit = people.filter((p) => p !== you && (showMonsters || !p.monster) && Math.abs(p.x - x) < 5 && y > p.y - tall(p) && y < p.y + 3).sort((a, b) => Math.abs(a.x - x) - Math.abs(b.x - x))[0];
+  const hit = people.filter((p) => p !== you && !p.away && (showMonsters || !p.monster) && Math.abs(p.x - x) < 5 && y > p.y - tall(p) && y < p.y + 3).sort((a, b) => Math.abs(a.x - x) - Math.abs(b.x - x))[0];
   if (hit) { const said = speak(hit, t); hit.talk = Math.min(4, sayDuration(said.text) - 0.8); return; }
   // a building: walk to its door; anywhere else you can stand: walk there
   const b = town.buildings.find((b) => buildingSolids(b).some((s) => x >= s.x && x < s.x + s.w && y >= s.y && y < s.y + s.h))
@@ -165,7 +168,7 @@ const FLIERS = new Set(['ghostGirl', 'reaper', 'skull']);
 function crowded(p, x, y) {
   if (FLIERS.has(p.monster)) return null;
   for (const q of people) {
-    if (q === p || q.owner === p || p.owner === q || FLIERS.has(q.monster) || (q.monster && !showMonsters)) continue;
+    if (q === p || q.away || q.owner === p || p.owner === q || FLIERS.has(q.monster) || (q.monster && !showMonsters)) continue;
     if (Math.abs(q.x - x) < 4.5 && Math.abs(q.y - y) < 2.5) return q;
   }
   return null;
@@ -183,15 +186,18 @@ function follow(p, speed, dt) {
   const here = crowded(p, p.x, p.y), there = crowded(p, p.x + ux * (step + 1), p.y + uy * (step + 1));
   // someone in the way: unless already overlapping them and this step takes them apart
   let inWay = d > 0 && !ahead && !!there && (there !== here || Math.hypot(there.x - p.x - ux * step, there.y - p.y - uy * step) < Math.hypot(there.x - p.x, there.y - p.y));
-  if (inWay && p.path.length === 1 && d < 8 && p !== you) { p.path = null; p.walking = false; return true; }   // where they were going is taken: stop short
+  const onRoad = town.roadAt(p.x, p.y);
+  if (inWay && p.path.length === 1 && d < 8 && p !== you && !onRoad) { p.path = null; p.walking = false; return true; }   // where they were going is taken: stop short
   if (inWay) for (const s of here ? [] : [1, -1]) {                                   // a side step (across the way it walks), a pixel at a time
     const sx = p.x - uy * s * 1.2, sy = p.y + ux * s * 0.8;
     if (!town.blocked(sx, sy) && !crowded(p, sx, sy) && !traffic.hits(sx, sy)) { p.x = sx; p.y = sy; inWay = false; break; }
   }
+  // held up out on a crossing: squeeze past (not stand in the cars' way) until clear of them
+  if (inWay && onRoad && ((p.blocked ?? 0) > 0.6 || p.squeeze)) { inWay = false; p.squeeze = true; } else if (!inWay) p.squeeze = false;
   if (d > 0 && (inWay || (ahead && !FLIERS.has(p.monster) && !traffic.hits(p.x, p.y)))) {
     p.walking = false; p.facing = facingFor(ex, ey, p.facing);
     // kept waiting too long (a car, or someone, that waits for them in turn): give up and go somewhere else
-    if ((p.blocked = (p.blocked ?? 0) + dt) > 2 && p !== you) { p.blocked = 0; p.path = null; p.wait = 0.5; }
+    if ((p.blocked = (p.blocked ?? 0) + dt) > 2 && p !== you && !onRoad) { p.blocked = 0; p.path = null; p.wait = 0.5; }
     return false;
   }
   p.blocked = 0;
@@ -225,21 +231,24 @@ function frame(now) {
   for (const p of people) {
     p.talk = Math.max(0, p.talk - dt); p.talking = p.talk > 0;
     if (p === you) continue;
-    if (p.dog) { heel(p, dt); continue; }
+    if (p.dog) { if (!p.greet) heel(p, dt); continue; }
     if (p.talking) { p.walking = false; continue; }
+    if (p.busy) continue;                                                  // sitting, sweeping, playing... (demo/life.js moves them)
     if (chatting(p)) continue;
-    if (p.path) { if (follow(p, p.monster ? MONSTER_SPEED[p.monster] : p.cat ? 18 : 14, dt)) { p.walking = false; p.wait = 1 + Math.random() * 4; } continue; }
+    if (p.path) { if (follow(p, p.monster ? MONSTER_SPEED[p.monster] : p.cat ? 18 : p.rider ? 32 : 14, dt)) { p.walking = false; p.wait = 1 + Math.random() * 4; } continue; }
     p.walking = false;
     if ((p.wait -= dt) > 0) continue;
     const range = (p.cat ? 70 : p.monster ? 220 : 170) * town.scale;
     // somewhere near enough, where nobody stands or is heading
     const taken = (s) => people.some((q) => q !== p && ((Math.abs(q.x - s.x) < 6 && Math.abs(q.y - s.y) < 4) || (q.path && q.path.length && Math.hypot(q.path[q.path.length - 1].x - s.x, q.path[q.path.length - 1].y - s.y) < 6)));
     let to = town.randomSpot(Math.random, p.within);
-    for (let k = 0; k < 10 && (Math.hypot(to.x - p.x, to.y - p.y) > range || taken(to)); k++) to = town.randomSpot(Math.random, p.within);
+    for (let k = 0; k < 10 && (Math.hypot(to.x - p.x, to.y - p.y) > range || taken(to) || town.roadAt(to.x, to.y)); k++) to = town.randomSpot(Math.random, p.within);
+    if (town.roadAt(to.x, to.y)) { p.wait = 0.5; continue; }               // (never a trip that ends out on a crossing)
     p.path = town.findPath(p, to);
     if (!p.path) p.wait = 1;
   }
   life(dt);
+  smallLife.update(dt, t, hour);
   // the ball: thrown from one player to another in an arc, then the next pass (it bounces once on the way)
   if (ball) {
     const k = Math.min(1, (t - ball.start) / 0.9), a = ball.from, b = ball.to;
@@ -247,7 +256,7 @@ function frame(now) {
     ball.h = 7 * Math.abs(Math.cos(Math.PI * k));                          // from hand height, one bounce half way, up to the other's hands
     if (k >= 1) { ball.from = b; ball.to = players.filter((p) => p !== b)[Math.floor(Math.random() * 3)]; ball.start = t; b.facing = ball.to.x < b.x ? 'left' : 'right'; }
   }
-  const shownPeople = showMonsters ? people : people.filter((p) => !p.monster);
+  const shownPeople = people.filter((p) => !p.away && (showMonsters || !p.monster));
   traffic.update(dt, t, shownPeople);
   if (timeMode === 'passing') hour = (hour + dt / 8) % 24;
   const hh = Math.floor(hour), mm = Math.floor((hour - hh) * 6) * 10;
@@ -260,7 +269,7 @@ function frame(now) {
     w: VW, h: VH,
   };
   g.setTransform(D, 0, 0, D, 0, 0);
-  drawTownView(g, town, view, [...shownPeople, ...traffic.vehicles, ...(ball ? [ball] : [])], t, { dpx: D, night: nightAt(hour) });
+  drawTownView(g, town, view, [...shownPeople, ...smallLife.sprites, ...traffic.vehicles, ...(ball ? [ball] : [])], t, { dpx: D, night: nightAt(hour), above: smallLife.above });
   // lines and icon bubbles over everything (and bright at night)
   g.save(); g.translate(-view.x, -view.y); drawSpeech(g, shownPeople, t, { bounds: view }); g.restore();
   const name = town.placeAt(you.x, you.y);

@@ -18,6 +18,10 @@
 
 import { seeded, shade } from './tinyCharacters.js';
 
+// the shop kind each building drew (its own, or the one its seed picked), for shutters and steam
+let lastShop = null;
+const SHOP_OF = new Map();
+
 const INK = '#2f3236', WHITE = '#f2f2ee', RED = '#d8443c', NAVY = '#2c3652', GOLD = '#f2b64a';
 const WIN = '#5f7487', LIT = '#f0dca0', CURTAIN = '#e4d6bc', GLASS = '#9fb6cc', GLASS2 = '#7f9ab4';
 const WOOD = '#6b4a2a', DARKWOOD = '#4a3424', LIGHTWOOD = '#c9a46a', TOP = '#d9d2c0', CONCRETE = '#b3b0a8';
@@ -293,6 +297,7 @@ const SHOPS = {
  * (0-12), stripes or an awning (12-15), the sign (15-19).
  */
 function shopFront(r, rng, dx, w, kind, wall) {
+  lastShop = kind;
   const s = SHOPS[kind] ?? SHOPS.konbini;
   r(shade(wall, 0.9), dx, 12, w, SHOP_GF - 12);
   sign(r, s.bg, s.fg, dx + 1, 15, w - 2, 4, s.name);
@@ -358,6 +363,22 @@ const DOOR_COLOURS = [WOOD, '#7a3a32', '#2f4a5a', '#3f6a4a', '#5a4a6a', DARKWOOD
 const AWNINGS = [[RED, WHITE], ['#2fa36b', WHITE], [NAVY, WHITE], ['#f08a2c', '#f4e6c8'], ['#7a3a6a', WHITE]];
 /** A flat roof (12 deep) across the whole width, and things on it. */
 const flatTop = (r, v, wall, up, w) => { flatRoof(r, wall, 0, up, w, 12); rooftop(r, v, 0, up, w); };
+/**
+ * Washing hung on a balcony rail (the rail's top at `up`), from x0 to x1: shirts and towels, and
+ * on the top floor sometimes a futon airing over the rail. Its own rng (the building's seed and
+ * the floor), so it never changes how the building itself is chosen.
+ */
+function laundry(r, b, floor, x0, x1, up, top) {
+  const rng = seeded((b.seed ?? 1) * 31 + floor * 7 + 3);
+  if (rng() < 0.3) return;                                                // nobody's washing out on this floor
+  if (top && rng() < 0.45) { const w = Math.min(12, x1 - x0 - 4), x = x0 + 2 + Math.floor(rng() * (x1 - x0 - w - 3)); r('#e8e0f0', x, up - 3, w, 5); for (let i = 1; i < w; i += 3) r('#a8a0c8', x + i, up - 1, 1, 2); r(shade('#e8e0f0', 0.85), x, up - 3, w, 1); return; }   // a futon over the rail
+  const cols = ['#f2f2ee', '#3f7fd6', '#e8402f', '#f2c8d8', '#f2c230', '#5f8f5a', '#262b3a'];
+  for (let x = x0 + 1 + Math.floor(rng() * 3); x + 2 < x1; x += 2 + Math.floor(rng() * 3)) {
+    if (rng() < 0.35) continue;
+    const c = cols[Math.floor(rng() * cols.length)], w = rng() < 0.4 ? 3 : 2;
+    r(c, x, up - 3, w, 3); r(shade(c, 0.82), x, up - 3, w, 1); r('#c8ccd0', x, up, 1, 1); x += w;   // hanging under the rail, a peg
+  }
+}
 /** Things on a flat roof: AC units, a water tank, a plant room. */
 function rooftop(r, v, dx, up, w) {
   const n = v.int(0, Math.max(1, Math.floor(w / 14)));
@@ -394,7 +415,7 @@ const DEFS = {
     for (let f = 1; f < floors; f++) {
       const up = floorAt(f);
       windowRow(r, rng, kind, 2, w - 2, up + SILL, n);
-      if (balcony) { r('#d8d4ca', 1, up + 1, w - 2, 1); r('#d8d4ca', 1, up + 3, w - 2, 1); for (let i = 1; i < w - 1; i += 4) r('#d8d4ca', i, up + 1, 1, 3); }
+      if (balcony) { r('#d8d4ca', 1, up + 1, w - 2, 1); r('#d8d4ca', 1, up + 3, w - 2, 1); for (let i = 1; i < w - 1; i += 4) r('#d8d4ca', i, up + 1, 1, 3); if (b.laundry) laundry(r, b, f, 2, w - 2, up + 3, f === floors - 1); }
       else r(shade(wall, 0.85), 0, up, w, 1);
     }
     const dx = v.pick([Math.round(w / 2) - 5, 3, w - 13]);
@@ -637,6 +658,7 @@ const DEFS = {
     const units = Math.floor((bw - 2) / 14);
     for (let n = 0; n < 2; n++) for (let i = 0; i < units; i++) { const ux = 2 + i * 14; DOORS.steel(r, ux, floorAt(n), doorC); WINDOWS.alu(r, rng, ux + 7, floorAt(n) + SILL); }
     r('#7a6a5a', 0, GF, bw, 1); r('#7a6a5a', 0, GF + 3, bw, 1); for (let i = 0; i < bw; i += 4) r('#7a6a5a', i, GF, 1, 3);   // corridor rail
+    if (b.laundry) laundry(r, b, 1, 2, bw - 2, GF + 3, true);
     for (let k = 0; k < 8; k++) r('#7a6a5a', bw + k * 0.75 | 0, GF - k * 2, 2, 1);   // outside stairs
     r('#7a6a5a', bw + 4, 0, 1, GF + 1);
     if (v.chance(0.5)) flatRoof(r, wall, 0, top, bw, 12); else pitched(r, v.pick(['#4a5560', '#6a4a3a']), -2, top, bw + 4, 12);
@@ -913,7 +935,14 @@ export function drawBuilding(g, b) {
   const k = b.scale ?? 1, { rng, wall, roof, w } = choices(b);
   const L = Math.round(b.x - Math.round(w * k) / 2), y = Math.round(b.y);
   const r = painter(g, L, y, k, b.dpx ?? 1);
-  DEFS[b.type][2](b.lights ? nightLights(r, b.seed ?? 1) : r, rng, b, wall, roof, w);
+  lastShop = null;
+  DEFS[b.type][2](b.lights ? nightLights(r, b.seed ?? 1, b.time ?? 0) : r, rng, b, wall, roof, w);
+  SHOP_OF.set(`${b.type}|${b.seed ?? 1}|${b.shopType ?? ''}`, lastShop);
+  if (b.shut && SHUTTERED(b.type, lastShop)) {                                            // closed: a roller shutter down over the shop front
+    g.save(); if (b.lights) g.globalCompositeOperation = 'destination-out';   // (at night: nothing shines through it)
+    r('#8a9096', 1, 0, w - 2, 12); for (let up = 1; up < 12; up += 2) r('#a8aeb4', 1, up, w - 2, 1); r('#5a5f66', Math.round(w / 2) - 2, 1, 4, 1);
+    g.restore();
+  }
 }
 
 // --- at night ----------------------------------------------------------------------
@@ -923,10 +952,23 @@ export function drawBuilding(g, b) {
 const NIGHT = new Map([[LIT, LIT], [CURTAIN, '#f2dcae'], [GLASS, '#e4cf98'], [GLASS2, '#c8b07c'], ['#dfe8ec', '#e8e0c4'],
   ['#e8603a', '#ff7a4a'], ['#f2a040', '#ffb860'], ['#e870a0', '#ff88b8'], ['#6ac8f2', '#88dcff'], [LANTERN, '#ff6a40'],
   ['#7a6aa8', '#a890e0'], ['#a85a8a', '#e080b8'], ['#5a7aa8', '#80a8e0']]);
-function nightLights(r0, seed) {
+/** The buildings whose shops close for the night (b.shut): not the konbini, the ramen shop, the izakaya. */
+const SHUTTERED = (type, shop) => ['pharmacy', 'florist', 'fishmonger', 'kissaten', 'bank', 'postOffice', 'clinic'].includes(type)
+  || (shop != null && !['konbini', 'ramen', 'izakaya'].includes(shop));
+const FOOD = ['alleyStall', 'takoyaki', 'udonSoba', 'kiosk'];
+/** Whether a building's shop pulls a shutter down at night (b.shut); known once it has been drawn. */
+export const closes = (b) => SHUTTERED(b.type, SHOP_OF.get(`${b.type}|${b.seed ?? 1}|${b.shopType ?? ''}`));
+/** Whether a building cooks something you can see steaming (a ramen shop, a yakitori stall...); known once it has been drawn. */
+export const cooks = (b) => FOOD.includes(b.type) || SHOP_OF.get(`${b.type}|${b.seed ?? 1}|${b.shopType ?? ''}`) === 'ramen';
+function nightLights(r0, seed, time = 0) {
   const r = (c, dx, up, w, h) => {
     let lc = NIGHT.get(c);
-    if (!lc && c === WIN) { const hsh = Math.imul(Math.round(dx) * 73856093 ^ Math.round(up) * 19349663 ^ seed * 83492791, 2654435761) >>> 0; if (hsh % 100 < 45) lc = LIT; }
+    if (!lc && c === WIN) {
+      // each window has its own rhythm: now and then it goes dark, or lights up
+      const hsh = Math.imul(Math.round(dx) * 73856093 ^ Math.round(up) * 19349663 ^ seed * 83492791, 2654435761) >>> 0;
+      const phase = Math.floor((time + (hsh % 37)) / (25 + (hsh % 20)));
+      if ((((hsh + phase * 7919) >>> 0) % 100) < 45) lc = LIT;
+    }
     if (lc) r0(lc, dx, up, w, h);
   };
   r.force = r0; r.k = r0.k; r.text = r0.text; r.px = () => {};

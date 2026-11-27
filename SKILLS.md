@@ -39,6 +39,11 @@ src/tinyTraffic.js     vehicles and traffic: drawVehicle, VEHICLES,
 src/tinySpeech.js      speech: speak, emote, drawSpeech, kindOf, lineFor,
                        moodFor, ICONS, SPEAKERS, linesOf, LANGUAGES,
                        setLanguage
+src/tinyLife.js        small life (drawing only): POSES, drawPose (sitBench,
+                       sitGround, ride, bow, sweep, kick, throw, drink,
+                       slide), drawPigeon, drawCrow, drawNappingCat,
+                       drawSwings (riders), drawSteam, drawPetals,
+                       drawRubbish, drawScooter
 src/tinyTown.js        the 2D town map: makeTown, drawTownView,
                        DEFAULT_TOWN (layout, ground, walkable ground,
                        path finding, place names)
@@ -55,6 +60,10 @@ demo/demo.js           the demo: strolling crowd and cats, you (keys / tap
 demo/town.js           the town (walk around the map; townspeople, kids in
                        the schoolyard, shrine visitors, cats) and the
                        Buildings sheet
+demo/life.js           small life in the demo town: who sits, rides, sweeps,
+                       bows, plays, feeds the ducks; pigeons, crows, the
+                       napping cat, rubbish day, dogs greeting, commuters
+                       and the taxi rank; laundry and shutters by the hour
 demo/demo.css          the demo page's look (light and dark)
 .nojekyll              tells GitHub Pages to serve the files as they are
 ```
@@ -242,11 +251,12 @@ the grass texture's dots).
 vehicle has a footprint on the ground (its length and width turned with its
 heading; the train its whole length on the rails). `local(v, x, y)` gives a
 point `ahead` / `side` of a vehicle in ground units; `hits(x, y, margin)` the
-vehicle standing there. Cars stop for anyone within their width from inside
-them to 12 px ahead; in the demo, people wait instead of stepping into a
-vehicle (flying and floating monsters pass over), give up and go elsewhere
-after 2 s of waiting (so a car and a person never wait for each other for
-good), and the keys will not walk you into one (`window.tinyTown.traffic.hits`
+vehicle standing there. Cars stop for anyone on the road (not the sidewalk)
+within their width from inside them to 12 px ahead; in the demo, people wait
+instead of stepping into a vehicle (flying and floating monsters pass over),
+give up and go elsewhere after 2 s of waiting (but never out on a crossing:
+there they squeeze past whoever holds them up after 0.6 s, and no trip ends
+on the road), so a car and a person never wait for each other for good, and the keys will not walk you into one (`window.tinyTown.traffic.hits`
 in the console).
 
 **Cars never pass through cars:** besides keeping their distance in a lane,
@@ -603,6 +613,54 @@ the speaker (1G); English now, ready for Japanese and Indonesian.
   road) within 16 px of each other may start a chat for 4-7 s: they stop,
   face each other and take turns with icons every 1.25 s. Tapping someone
   makes them say a line and stop while they say it.
+
+## How small life works (src/tinyLife.js, demo/life.js)
+
+The owner chose all of it from mock-ups (Nov 2026). The library only draws;
+the demo decides who does what.
+- **Poses**: a person with `pose: { kind, u }` is drawn by `drawPose`
+  (drawTownView does it for any sprite with `pose`). Each pose draws the body
+  and head with `upper()` (drawCharacter clipped above the legs) and its own
+  legs: `sitBench` (front: thighs towards you over the seat, shins down;
+  side: thighs along the seat; stand them at the bench's y + 0.5 so they
+  sort in front of it), `sitGround`, `ride` (a bike under them, pedalling
+  while `walking`; `p.bike` its colour), `bow` (head and body 2 px down),
+  `sweep` (the broom from tinyCombat), `kick`, `throw` (crumbs fly),
+  `drink` (`p.can`), `slide`. `u` (0-1) is how far through a move.
+- **Sprites with their own drawing**: any sprite with `draw(g, s, t)` is
+  drawn by it, sorted with the people (pigeons, the ball, rubbish, the
+  picnic blanket); `drawTownView(..., { above })` draws a list over
+  everything, after the wires (the crows).
+- **Swings in use**: a swings prop with `riders: [{ angle, kid } | null,
+  ...]` is drawn by `drawSwings` (each seat at its own angle); without
+  `riders` it is the plain prop.
+- **Buildings**: `b.laundry` hangs washing (and on the top floor sometimes
+  a futon) on apartment balconies and the wood apartment's rail, with an rng
+  of its own so the building itself never changes; `b.shut` pulls a shutter
+  over shops that close (`closes(b)`: not the konbini, ramen or izakaya; at
+  night it also wipes their light); at night each window has its own
+  rhythm (`b.time`, passed by drawNight), going dark and lighting up.
+  `cooks(b)` says which steam (ramen shops, the yakitori stall, takoyaki,
+  udon, the kiosk; drawTownView draws the steam).
+- **The town draws by itself**: lanterns sway (`p.sway`), petals fall round
+  every sakura, ducklings follow the first duck, and when a pond has
+  `feedAt: { x, y }` the ducks paddle over (`pull` eases in and out).
+- **Traffic**: `makeTraffic(town, { scooters: 1 })` adds the delivery
+  scooter (drawn flat by `drawScooter`, one lamp; `VEHICLES.scooter`);
+  `traffic.pickUp(parkedTaxi)` takes a taxi from `town.parked`: it pulls out
+  into the nearest west-bound lane (turned a little while it drifts across),
+  drives off and is gone; 20-35 s later another comes along that lane and
+  pulls into the same spot.
+- **The demo** (`makeLife({ town, traffic, people, rng })`, returning
+  `{ update(dt, t, hour), sprites, above }`): people with `busy` are left
+  alone by the demo's walking; `away` hides someone (shopkeepers at night,
+  the picnic and playing kids after six, commuters still inside the station).
+  Jobs (`give(p, { to, dur, start, each, end, drop })`) walk someone
+  somewhere, then do something for a while: a bench (two seats each, 10-22
+  s), a vending machine (5 s), feeding the ducks (12 s, by day), getting
+  into a taxi. Laundry 8-16, shutters 21-7, rubbish 6-11, sweeping 6-10.
+  Commuters come out one by one when the train stops and go home when they
+  get where they were going.
 
 ## Common tasks
 

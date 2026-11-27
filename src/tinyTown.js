@@ -17,11 +17,12 @@
 //    front of them that you can walk into
 // Units are canvas pixels. Plain ES module, no dependencies.
 
-import { BUILDINGS, buildingSize, buildingSolids, drawBuilding } from './tinyBuildings.js';
+import { BUILDINGS, buildingSize, buildingSolids, drawBuilding, cooks } from './tinyBuildings.js';
 import { drawCat, drawDog } from './tinyAnimals.js';
 import { drawMonster } from './tinyMonsters.js';
 import { BUSHES, drawBush, drawTerrain, drawTree } from './tinyNature.js';
 import { PROPS, drawProp, drawWire, poleTops, propLights, propSolid } from './tinyStreet.js';
+import { drawPose, drawSwings, drawSteam, drawPetals } from './tinyLife.js';
 import { drawVehicle, drawVehicleBeams, vehicleLights } from './tinyTraffic.js';
 import { canvasOf, drawCharacter, seeded as seededRng } from './tinyCharacters.js';
 
@@ -130,7 +131,7 @@ export const DEFAULT_TOWN = {
     { type: 'stoneLantern', x: 72, y: 378 }, { type: 'stoneLantern', x: 108, y: 378 }, { type: 'stoneLantern', x: 72, y: 398 }, { type: 'stoneLantern', x: 108, y: 398 },
     { type: 'bench', x: 30, y: 380 }, { type: 'oldLamp', x: 408, y: 410 }, { type: 'oldLamp', x: 552, y: 410 },
     { type: 'bench', x: 452, y: 410 }, { type: 'bench', x: 508, y: 410 },
-    { type: 'plantPot', x: 200, y: 106 },
+    { type: 'plantPot', x: 200, y: 106 }, { type: 'blockWall', x: 106, y: 152 },
     // the park, the playground, the court
     { type: 'bench', x: 70, y: 470 }, { type: 'bench', x: 120, y: 552 }, { type: 'oldLamp', x: 30, y: 504 }, { type: 'oldLamp', x: 150, y: 504 },
     { type: 'swings', x: 240, y: 498 }, { type: 'slide', x: 290, y: 494 }, { type: 'sandbox', x: 246, y: 538 }, { type: 'drinkingFountain', x: 300, y: 540 },
@@ -429,10 +430,21 @@ function drawPondLife(g, a, t) {
     const ang = t * speed + off, x = cx + Math.cos(ang) * a.w * r / 2, y = cy + Math.sin(ang) * a.h * r / 2, d = Math.sign(-Math.sin(ang)) || 1;
     px(c, x - 1, y, 3, 1); px(c, x - d, y - 1);                              // a koi, its tail behind
   });
+  // a.feedAt { x, y }: someone is throwing bread, and the ducks paddle over (a.pull eases from 0 to 1 and back)
+  const dt = Math.min(0.2, Math.max(0, t - (a.lastT ?? t))); a.lastT = t;
+  a.pull = Math.max(0, Math.min(1, (a.pull ?? 0) + (a.feedAt ? dt * 0.25 : -dt * 0.25)));
+  if (a.feedAt) a.food = { x: Math.max(a.x + 6, Math.min(a.x + a.w - 6, a.feedAt.x)), y: Math.max(a.y + 5, Math.min(a.y + a.h - 5, a.feedAt.y)) };
+  const ease = a.pull * a.pull * (3 - 2 * a.pull);
   for (const [k, off] of [[0, 0], [1, 1.5]]) {
-    const x = cx + Math.sin(t * 0.12 + off) * a.w * 0.3, y = cy + (k ? -2 : 3), d = Math.cos(t * 0.12 + off) > 0 ? 1 : -1;
+    let x = cx + Math.sin(t * 0.12 + off) * a.w * 0.3, y = cy + (k ? -2 : 3), d = Math.cos(t * 0.12 + off) > 0 ? 1 : -1;
+    if (ease > 0 && a.food) { const fx = a.food.x + (k ? 5 : -5), fy = a.food.y + (k ? -1 : 1); d = ease > 0.5 ? (k ? -1 : 1) : (fx > x ? 1 : -1); x += (fx - x) * ease; y += (fy - y) * ease; }
     px('#f2efe8', x - 1, y, 4, 2); px('#3f7a4a', x + (d > 0 ? 2 : -1), y - 1, 2, 1); px('#f2c230', x + (d > 0 ? 4 : -2), y - 1);   // a duck: body, green head, bill
+    if (k === 0) for (let i = 1; i <= 3; i++) {                                // her ducklings in a line behind her, bobbing
+      const lx = x - d * (2 + i * 3), ly = y + 1 + ((Math.floor(t * 2) + i) % 2 ? 0 : -0.4);
+      px('#e8c84a', lx, ly, 2, 1); px('#f2d860', lx + (d > 0 ? 1 : 0), ly - 1);
+    }
   }
+  if (a.feedAt) for (let i = 0; i < 3; i++) px('#f2e8c8', a.food.x - 3 + ((i * 5 + Math.floor(t)) % 7), a.food.y + (i % 2) * 2 - 1);   // bread on the water
 }
 /** A basketball, bouncing: h is how high it is off the ground. */
 function drawBall(g, b) {
@@ -450,7 +462,7 @@ const mix = (a, b, u) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(a.slice(
  */
 let beamLayer = null;
 let lightLayer = null;
-function drawNight(g, view, items, night, dpx, drawItem) {
+function drawNight(g, view, items, night, dpx, drawItem, t = 0) {
   const dusk = Math.max(0, 1 - Math.abs(night - 0.35) / 0.35);              // the warm light of dusk, early in the evening
   g.save();
   g.globalCompositeOperation = 'multiply';
@@ -470,7 +482,7 @@ function drawNight(g, view, items, night, dpx, drawItem) {
       lg.setTransform(dpx, 0, 0, dpx, -view.x * dpx, -view.y * dpx); lg.imageSmoothingEnabled = false;
       for (const it of items) {
         lg.globalCompositeOperation = 'destination-out'; drawItem(lg, it);
-        if (it.b) { lg.globalCompositeOperation = 'source-over'; drawBuilding(lg, { ...it.b, lights: true, dpx }); }
+        if (it.b) { lg.globalCompositeOperation = 'source-over'; drawBuilding(lg, { ...it.b, lights: true, dpx, time: t }); }
       }
       g.imageSmoothingEnabled = false;
       g.drawImage(lightLayer, view.x, view.y, view.w, view.h);
@@ -604,7 +616,7 @@ function drawCourt(g, a, k) {
  * dpx: device pixels per canvas pixel, when the canvas is drawn bigger
  * underneath (g scaled by dpx) so the signs' names can be written.
  */
-export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0 } = {}) {
+export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0, above = [], petals = true } = {}) {
   g.imageSmoothingEnabled = false;
   g.drawImage(town.ground, view.x, view.y, view.w, view.h, 0, 0, view.w, view.h);
   g.save(); g.translate(-view.x, -view.y);
@@ -628,16 +640,27 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0
   /** Draw one thing of the view (a building, a prop, a plant, someone or something moving). */
   const drawItem = (ctx, it) => {
     if (it.b) drawBuilding(ctx, dpx === 1 ? it.b : { ...it.b, dpx });
-    else if (it.prop) drawProp(ctx, it.prop);
+    else if (it.prop) {
+      if (it.prop.riders) drawSwings(ctx, it.prop, t);                           // swings with people on them: { riders: [{ angle, kid }, null] }
+      else { if (it.prop.type === 'redLantern') it.prop.sway = Math.round(Math.sin(t * 1.3 + it.prop.x * 0.7) * 0.7); drawProp(ctx, it.prop); }
+    }
     else if (it.p) (it.p.kind === 'tree' ? drawTree : drawBush)(ctx, it.p);
     else if (it.s.vehicle) drawVehicle(ctx, it.s);                               // cars, buses, the train: { vehicle: true, type, ... }
     else if (it.s.ball) drawBall(ctx, it.s);                                     // a ball { ball: true, x, y, h (its height off the ground) }
+    else if (it.s.draw) it.s.draw(ctx, it.s, t);                                // anything with its own drawing: { draw(g, s, t), x, y } (pigeons, rubbish...)
+    else if (it.s.pose) drawPose(ctx, it.s, t);                                  // someone sitting, riding, sweeping... (tinyLife POSES)
     else if (it.s.monster) drawMonster(ctx, { ...it.s, type: it.s.monster }, t); // monsters: { monster: 'zombie', variant, ... }
     else (it.s.dog ? drawDog : it.s.cat ? drawCat : drawCharacter)(ctx, it.s, t);
   };
   for (const it of items) drawItem(g, it);
   // the wires, over everything
   for (const [a, b, sag] of town.wires) if (Math.max(a.x, b.x) > view.x && Math.min(a.x, b.x) < view.x + view.w && a.y > view.y - 10 && a.y < view.y + view.h + 10) drawWire(g, a, b, sag);
-  if (night > 0.01) drawNight(g, view, items, night, dpx, drawItem);
+  // above everything: steam from the food stalls, cherry petals drifting, and what sits up high (crows on the wires: `above`)
+  for (const it of items) {
+    if (it.b && cooks(it.b)) { const { w, h } = buildingSize(it.b); drawSteam(g, it.b.x + w * 0.22, it.b.y - h * 0.55, t, it.b.x); }
+    else if (it.p && it.p.kind === 'tree' && it.p.type === 'sakura' && petals) drawPetals(g, { ...it.p, seed: it.p.x }, t, Math.round(30 * town.scale));
+  }
+  for (const s of above) if (s.x > view.x - 10 && s.x < view.x + view.w + 10 && s.y > view.y - 4 && s.y < view.y + view.h + 10) (s.draw ?? drawCharacter)(g, s, t);
+  if (night > 0.01) drawNight(g, view, items, night, dpx, drawItem, t);
   g.restore();
 }

@@ -390,3 +390,30 @@ drawSpeech(g, people, t, { bounds: view });
 | `LANGUAGES`, `setLanguage(code)` | English now; Japanese (`ja`) and Indonesian (`id`) are ready to be written (they fall back to English until then; the font has Japanese). |
 
 The catalogue has every icon and each speaker saying its lines (Speech).
+
+## Small life
+
+The town lives through the day (`src/tinyLife.js` draws it; the demo's
+`demo/life.js` decides who does what). People **sit on benches**, **ride
+bikes** along the sidewalks, stop at a **vending machine** for a can, **feed
+the ducks** (who paddle over, ducklings behind), have a **picnic** under the
+cherry trees. **Shopkeepers** stand at their doors, sweep in the morning and
+bow to passers-by; at night their **shutters** come down and the windows
+above light up and go dark one by one. **Laundry** and futons hang on the
+balconies by day, **rubbish** goes out in the morning, **steam** rises from
+the ramen shop and the food stalls, the alley's **lanterns sway** and
+**petals** fall. Kids play on the **swings**, the **slide** and **kick a
+ball** in the schoolyard. **Pigeons** peck about and fly off when you come
+close, **crows** sit on the wires, a **cat naps** on a block wall, two
+**dogs** stop to greet each other. When a train stops, **commuters** come out
+of the station; now and then someone takes a **taxi** from the rank, and a
+**delivery scooter** weaves through the traffic.
+
+```js
+import { drawPose } from './src/tinyLife.js';
+
+drawPose(g, { ...person, pose: { kind: 'sitBench' } }, t);   // sitGround, ride, bow, sweep, kick, throw, drink, slide
+drawBuilding(g, { ...building, laundry: true });              // or shut: true
+```
+
+The catalogue's **Life** group has every pose and each piece of small life.

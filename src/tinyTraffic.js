@@ -22,6 +22,7 @@
 
 import { seeded, shade } from './tinyCharacters.js';
 import { KY, voxelSprite } from './tinyVoxel.js';
+import { drawScooter } from './tinyLife.js';
 
 const INK = '#2f3236', WHITE = '#f2f2ee', METAL = '#a8aeb4', DARK = '#3a3f44';
 const LAMP = '#fff2c0', TAIL = '#e8403a', GLASS = '#5d7590', TYRE = '#26282c', ORANGE = '#f2a040';
@@ -136,6 +137,10 @@ export const VEHICLES = Object.fromEntries(Object.entries(SHAPES).map(([k, S]) =
   const hl = S.L / 2, hw = S.W / 2, rad = Math.hypot(hl, hw);
   return [k, { label: S.label, length: S.L, width: S.W, height: S.H, box: { w: Math.ceil(rad * 2) + 2, h: Math.ceil(rad * KY * 2 + S.H + 2) + 2, below: Math.ceil(rad * KY) + 1 } }];
 }));
+// the delivery scooter: drawn flat like the people (tinyLife), not in blocks
+const SCOOTER = { L: 16, W: 5, H: 15 };
+VEHICLES.scooter = { label: 'Delivery scooter', length: SCOOTER.L, width: SCOOTER.W, height: SCOOTER.H, box: { w: 26, h: 22, below: 4 } };
+const shapeOf = (v) => (v.type === 'scooter' ? SCOOTER : SHAPES[v.type] ?? SHAPES.car);
 
 /** A vehicle's colours from its seed (or its own color / color2). */
 function coloursOf(v) {
@@ -154,6 +159,7 @@ function coloursOf(v) {
  */
 export function drawVehicle(g, v) {
   if (v.type === 'train') { drawTrain(g, v); return; }
+  if (v.type === 'scooter') { drawScooter(g, v); return; }
   const type = SHAPES[v.type] ? v.type : 'car', [c, c2] = coloursOf(v);
   const heading = v.heading ?? HEADING[v.facing ?? 'right'];
   const dir = ((Math.round(heading / (360 / DIRS)) % DIRS) + DIRS) % DIRS;
@@ -197,8 +203,8 @@ export function drawTrain(g, v) {
 
 export function vehicleLights(v) {
   if (v.type === 'train') { const L = (v.cars ?? 4) * CARRIAGE - 2; return [{ x: v.x + v.dir * (L / 2 + 4), y: v.y - 4, r: 12, c: '#fff2c0' }]; }
-  const S = SHAPES[v.type] ?? SHAPES.car, sn = sinOf(v), hl = S.L / 2, side = S.W / 2 - 1.6, out = [];
-  for (const w of [-side, side]) {
+  const S = shapeOf(v), sn = sinOf(v), hl = S.L / 2, side = v.type === 'scooter' ? 0 : S.W / 2 - 1.6, out = [];
+  for (const w of v.type === 'scooter' ? [0] : [-side, side]) {   // (the scooter: one lamp)
     if (sn > -0.35) out.push({ ...onScreen(v, S, hl + 0.5, w, 4.8), r: 2.5, c: '#fff8d8' });
     if (sn < 0.35) out.push({ ...onScreen(v, S, -hl - 0.5, w, 4.8), r: 2.5, c: '#ff5040' });
   }
@@ -213,7 +219,7 @@ export function vehicleLights(v) {
  * road, not on them.
  */
 export function drawVehicleBeams(g, v) {
-  const S = SHAPES[v.type] ?? SHAPES.car, hl = S.L / 2, side = S.W / 2 - 1.6;
+  const S = shapeOf(v), hl = S.L / 2, side = S.W / 2 - 1.6;
   const P = (u, w, z = 0) => onScreen(v, S, u, w, z);
   // further out when the car drives away, so it shows beyond it
   const th = ((v.heading ?? HEADING[v.facing ?? 'right']) * Math.PI) / 180, cs = Math.cos(th), sn = Math.sin(th);
@@ -245,7 +251,7 @@ function signal(jn, axis, t) {
  * front of them; buses keep to the streets with bus stops and wait at each.
  * Hand `vehicles` to drawTownView with the people (they sort with them).
  */
-export function makeTraffic(town, { cars = 16, buses = 2, seed = 5 } = {}) {
+export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, seed = 5 } = {}) {
   const rng = seeded(seed);
   const { streets, crossStreets, junctions, W } = town, { SIDE, ROAD, VSIDE } = town.dims;
   const last = streets.length - 1, CRUISE = 30;
@@ -280,6 +286,10 @@ export function makeTraffic(town, { cars = 16, buses = 2, seed = 5 } = {}) {
   for (let tries = 0; vehicles.length < cars + buses && tries < 400; tries++) {
     const lane = hLanes[Math.floor(rng() * hLanes.length)], s = 20 + rng() * (W - 40);
     if (clear(lane, s, 34)) vehicles.push(make(TYPES[Math.floor(rng() * TYPES.length)], lane, s));
+  }
+  for (let n = 0, tries = 0; n < scooters && tries < 100; tries++) {          // the delivery scooter(s)
+    const lane = hLanes[Math.floor(rng() * hLanes.length)], s = 20 + rng() * (W - 40);
+    if (clear(lane, s, 30)) { vehicles.push(make('scooter', lane, s)); n++; }
   }
 
   const lightAt = (jn, axis, t) => signal(jn, axis, t);
@@ -345,7 +355,7 @@ export function makeTraffic(town, { cars = 16, buses = 2, seed = 5 } = {}) {
     }
     // anyone in its way (people, animals, monsters, you): within its width, from inside it to a little ahead
     for (const p of walkers) {
-      if (p.vehicle || p.ball) continue;
+      if (p.vehicle || p.ball || !town.roadAt(p.x, p.y)) continue;           // (on the sidewalk, waiting to cross, is not in the way)
       const { ahead, side } = local(v, p.x, p.y);
       if (Math.abs(side) < VEHICLES[v.type].width / 2 + 3 && ahead > -VEHICLES[v.type].length / 2 - 2 && ahead < VEHICLES[v.type].length / 2 + 12) {
         free = Math.min(free, (ahead - VEHICLES[v.type].length / 2 - 3) * (v.lane.kind === 'h' ? 1 : KY));
@@ -388,14 +398,45 @@ export function makeTraffic(town, { cars = 16, buses = 2, seed = 5 } = {}) {
     train.x += train.dir * train.speed * dt;
   }
 
+  // the taxi rank: someone gets in (pickUp), the taxi pulls out into the street; a while later another comes and pulls in
+  const ranks = [];
+  let now = 0;
+  /** Someone has got into a parked taxi (one of town.parked): it pulls out and drives off. */
+  function pickUp(p) {
+    const i = (town.parked ?? []).indexOf(p);
+    if (i < 0) return null;
+    const lane = hLanes.filter((l) => l.dir === -1).sort((a, b) => Math.abs(a.y - p.y) - Math.abs(b.y - p.y))[0];
+    town.parked.splice(i, 1);
+    const v = make('taxi', lane, p.x);
+    Object.assign(v, { y: p.y, seed: p.seed, speed: 4, extra: true, driftY: lane.y, heading: 180, target: 155 });
+    vehicles.push(v);
+    ranks.push({ spot: { ...p }, lane, at: now + 20 + rng() * 15 });
+    return v;
+  }
+  /** Ease v sideways to v.driftY (pulling out of the rank or into it), turned a little while it does. */
+  function drift(v, dt) {
+    const dy = v.driftY - v.y;
+    if (Math.abs(dy) <= 10 * dt) { v.y = v.driftY; delete v.driftY; v.target = headingOf(v.lane); return; }
+    v.y += Math.sign(dy) * 10 * dt;
+  }
+
   function update(dt, t, walkers = []) {
+    now = t;
     if (train) moveTrain(dt);
+    for (const r of ranks) if (!r.coming && t >= r.at && clear(r.lane, W + 30, 40)) {   // a taxi comes back to the rank
+      const v = make('taxi', r.lane, W + 30); v.toRank = r.spot; v.extra = true; vehicles.push(v); r.coming = true;
+    }
     for (const p of town.props) if (p.type === 'crossingGate') { p.down = closed(p.crossing); p.flash = Math.floor(t * 3) % 2; }
     for (const v of vehicles) {
       if (v.type === 'train') continue;
       // swing round towards its heading (a quarter turn in about a third of a second)
       if (v.heading !== v.target) { const diff = ((v.target - v.heading + 540) % 360) - 180, turnBy = 280 * dt; v.heading = Math.abs(diff) <= turnBy ? v.target : (v.heading + Math.sign(diff) * turnBy + 360) % 360; }
       if (v.wait > 0) { v.wait -= dt; v.walking = false; continue; }
+      if (v.driftY !== undefined) drift(v, dt);
+      if (v.toRank && v.driftY === undefined && v.x - v.toRank.x < 28 && v.y !== v.toRank.y) { v.driftY = v.toRank.y; v.target = 205; }   // pulling in
+      if (v.toRank && v.x <= v.toRank.x) {                                     // in its place: parked again
+        town.parked.push({ ...v.toRank, seed: v.seed }); ranks.splice(ranks.findIndex((r) => r.spot === v.toRank), 1); v.gone = true; continue;
+      }
       const free = room(v, t, walkers);
       const target = free <= 0 ? 0 : Math.min(v.type === 'bus' ? CRUISE * 0.8 : CRUISE, free * 3);
       v.speed += Math.max(-90 * dt, Math.min(40 * dt, target - v.speed));
@@ -406,7 +447,7 @@ export function makeTraffic(town, { cars = 16, buses = 2, seed = 5 } = {}) {
       // a bus waits at its stops
       if (v.type === 'bus') for (const s of stops) if (s.lane === v.lane && !v.served.has(s) && (before - s.x) * (now - s.x) <= 0) { v.served.add(s); v.wait = 2.5; }
       // turns
-      if (v.type !== 'bus') {
+      if (v.type !== 'bus' && !v.toRank && v.driftY === undefined) {
         if (v.lane.kind === 'h') {
           for (const l of vLanes) if ((before - l.x) * (now - l.x) < 0 || before === l.x) {
             const can = l.dir > 0 ? v.lane.i < last : v.lane.i > 0;
@@ -421,13 +462,15 @@ export function makeTraffic(town, { cars = 16, buses = 2, seed = 5 } = {}) {
         }
       }
       // out of town: come back in somewhere else
-      if (v.lane.kind === 'h' && (v.x < -40 || v.x > W + 40)) {
+      if (v.lane.kind === 'h' && (v.x < -40 || v.x > W + 40) && v.extra && !v.toRank) { v.gone = true; continue; }   // a taxi from the rank: gone (another comes)
+      if (v.lane.kind === 'h' && (v.x < -40 || v.x > W + 40) && !v.toRank) {
         const lanes = v.type === 'bus' ? busLanes : hLanes, lane = lanes[Math.floor(rng() * lanes.length)], s = lane.dir > 0 ? -30 : W + 30;
         if (clear(lane, s, 40)) {
-          Object.assign(v, make(v.type === 'bus' ? 'bus' : TYPES[Math.floor(rng() * TYPES.length)], lane, s));
+          Object.assign(v, make(v.type === 'bus' || v.type === 'scooter' ? v.type : TYPES[Math.floor(rng() * TYPES.length)], lane, s));
         }
       }
     }
+    for (let i = vehicles.length - 1; i >= 0; i--) if (vehicles[i].gone) vehicles.splice(i, 1);
     // the traffic lights' colours
     for (const p of town.props) if (p.type === 'trafficLight') { const jn = junctions.find((j) => `${j.i},${j.j}` === p.junction); p.lit = signal(jn, p.axis, t); }
   }
@@ -447,5 +490,5 @@ export function makeTraffic(town, { cars = 16, buses = 2, seed = 5 } = {}) {
     return !c || signal(c.junction, c.axis, t) === 'red';
   }
 
-  return { vehicles, update, mayCross, lightAt, train, crossingClosed: closed, hits };
+  return { vehicles, update, mayCross, lightAt, train, crossingClosed: closed, hits, pickUp };
 }

@@ -7,6 +7,7 @@ import { ACTIONS, REACTIONS, SKILLS, WEAPONS, actionsFor, drawAction, drawActor,
 import { PROPS, drawProp } from '../src/tinyStreet.js';
 import { VEHICLES, drawTrain, drawVehicle } from '../src/tinyTraffic.js';
 import { ICONS, SPEAKERS, drawSpeech, linesOf, sayDuration } from '../src/tinySpeech.js';
+import { POSES, drawPose, drawPigeon, drawCrow, drawNappingCat, drawSwings, drawSteam, drawPetals, drawRubbish } from '../src/tinyLife.js';
 
 // The catalogue: every person, animal and building, with filters (group,
 // kind, search) and a seed per card (type it, or roll it with 🎲). The copy
@@ -130,7 +131,7 @@ for (const [id, { label, w, h }] of Object.entries(PARTS)) {
 const PROP_TAGS = { utilityPole: ['Lights', 'Japanese'], streetLamp: ['Lights'], oldLamp: ['Lights', 'European'], stoneLantern: ['Lights', 'Japanese'], vendingMachine: ['Lights', 'Japanese'],
   bench: ['Seats'], busStop: ['Seats'], postBox: ['Japanese'], stopSign: ['Japanese'], trafficLight: ['Lights', 'Japanese'],
   swings: ['Park'], slide: ['Park'], sandbox: ['Park'], drinkingFountain: ['Park'], hoop: ['Park'], floodlight: ['Lights', 'Park'],
-  plazaClock: ['Things'], redLantern: ['Lights', 'Japanese'], crates: ['Things'], acUnit: ['Things'], crossingGate: ['Lights', 'Railway'] };
+  plazaClock: ['Things'], redLantern: ['Lights', 'Japanese'], blockWall: ['Things', 'Japanese'], crates: ['Things'], acUnit: ['Things'], crossingGate: ['Lights', 'Railway'] };
 const LIGHT_CYCLE = ['green', 'green', 'yellow', 'red', 'red'];
 // the crossing gate goes down and up, its lamps flashing
 for (const [type, { label, w, h }] of Object.entries(PROPS)) items.push({ id: `street.${type}`, label, group: 'Street', tags: PROP_TAGS[type] ?? ['Things'], seed: 1,
@@ -143,7 +144,7 @@ items.push({ id: 'street.vehicle.train', label: 'Train', group: 'Street', tags: 
 // vehicles, turning slowly all the way round (16 headings)
 for (const [type, { label, box }] of Object.entries(VEHICLES)) {
   const w = box.w + 4, h = box.h + 4;
-  items.push({ id: `street.vehicle.${type}`, label, group: 'Street', tags: ['Vehicles', ...(type === 'kei' || type === 'keiTruck' || type === 'taxi' ? ['Japanese'] : [])], seed: 1,
+  items.push({ id: `street.vehicle.${type}`, label, group: 'Street', tags: ['Vehicles', ...(type === 'kei' || type === 'keiTruck' || type === 'taxi' || type === 'scooter' ? ['Japanese'] : [])], seed: 1,
     w, h, px: 0, animated: true,
     draw: (g, seed, t, moving) => drawVehicle(g, { type, x: w / 2, y: h - 2 - box.below, seed, heading: moving ? (t * 45) % 360 : 30 }),
     code: (seed) => `drawVehicle(g, { type: '${type}', x, y, heading: 30, seed: ${seed} })` });
@@ -164,8 +165,53 @@ for (const kind of SPEAKERS) items.push({ id: `speech.lines.${kind}`, label: `Li
   },
   code: () => `speak(actor, t)   // ${kind}: ${linesOf(kind).join(' / ')}` });
 
+// small life: the poses, the birds, and what the town does through the day
+const POSE_OF = {
+  sitBench: [{ ...LOOKS.grandma, carry: undefined }, 'down'], sitGround: [{ ...LOOKS.boy, carry: undefined }, 'down'], ride: [{ ...LOOKS.woman, carry: undefined, bike: '#3f7fd6' }, 'right'],
+  bow: [{ ...LOOKS.man, top: 'apron', trim: '#f2f2ee', body: '#5a3a28' }, 'down'], sweep: [{ ...LOOKS.man, top: 'apron', trim: '#f2f2ee', body: '#3f7fd6' }, 'right'],
+  kick: [{ ...LOOKS.boy, carry: undefined }, 'right'], throw: [{ ...LOOKS.grandpa, carry: undefined }, 'right'], drink: [{ ...LOOKS.man, can: '#e8402f' }, 'down'], slide: [{ ...LOOKS.girl, carry: undefined }, 'right'],
+};
+for (const kind of Object.keys(POSES)) items.push({ id: `life.pose.${kind}`, label: `Pose: ${kind}`, group: 'Life', tags: ['Poses'], seed: 0, noSeed: true, w: 30, h: 24, px: 4, animated: true,
+  draw: (g, seed, t, moving) => {
+    const [look, facing] = POSE_OF[kind], u = moving ? (t % 1.6) / 1.6 : 0.5;
+    if (kind === 'sitBench') drawProp(g, { type: 'bench', x: 15, y: 21, scale: 1.5 });
+    if (kind === 'sitGround') { g.fillStyle = '#c8402c'; g.fillRect(5, 17, 20, 6); }
+    drawPose(g, { ...look, skin: '#e2b08e', x: 15, y: kind === 'sitBench' ? 21.5 : kind === 'slide' ? 16 : 21, facing, walking: moving, pose: { kind, u } }, t);
+  },
+  code: () => `drawPose(g, { ...person, pose: { kind: '${kind}'${['bow', 'kick', 'throw'].includes(kind) ? ', u: 0.5' : ''} } }, t)` });
+items.push({ id: 'life.pigeons', label: 'Pigeons', group: 'Life', tags: ['Birds'], seed: 0, noSeed: true, w: 40, h: 26, px: 4, animated: true,
+  draw: (g, seed, t, moving) => { [[8, 22, 0], [18, 23, 1], [28, 22, 2]].forEach(([x, y, i]) => drawPigeon(g, { x, y, peck: i !== 1, facing: i ? 'left' : 'right' }, t)); const f = moving ? (t * 0.5) % 1 : 0.4; drawPigeon(g, { x: 6 + f * 28, y: 22, h: 6 + Math.sin(f * Math.PI) * 8, flying: true, facing: 'right' }, t); },
+  code: () => 'drawPigeon(g, { x, y, peck: true, facing })   // flying: { flying: true, h }' });
+items.push({ id: 'life.crows', label: 'Crows on a wire', group: 'Life', tags: ['Birds'], seed: 0, noSeed: true, w: 40, h: 20, px: 4, animated: true,
+  draw: (g, seed, t) => { g.fillStyle = '#3a3d42'; for (let x = 0; x < 40; x++) g.fillRect(x, Math.round(10 + 12 * (x / 40) * (1 - x / 40)), 1, 1); drawCrow(g, { x: 12, y: 12, facing: 'right' }, t); drawCrow(g, { x: 27, y: 13, facing: 'left' }, t + 2); },
+  code: () => 'drawCrow(g, { x, y, facing })' });
+items.push({ id: 'life.nappingCat', label: 'Cat napping on a wall', group: 'Life', tags: ['Animals'], seed: 0, noSeed: true, w: 40, h: 22, px: 4, animated: true,
+  draw: (g, seed, t) => { drawProp(g, { type: 'blockWall', x: 20, y: 20, scale: 1.5 }); drawNappingCat(g, { x: 20, y: 11 }, t); },
+  code: () => "drawNappingCat(g, { x, y, color: '#e8a060' }, t)" });
+items.push({ id: 'life.swings', label: 'Swings in use', group: 'Life', tags: ['Park'], seed: 0, noSeed: true, w: 52, h: 40, px: 0, animated: true,
+  draw: (g, seed, t, moving) => { const a = moving ? t : 0.6; drawSwings(g, { x: 26, y: 37, scale: 1.5, riders: [{ angle: Math.sin(a * 2.3) * 0.6, kid: { ...LOOKS.girl, carry: undefined, skin: '#f1cdb0' } }, null] }, t); },
+  code: () => 'drawSwings(g, { ...swingsProp, riders: [{ angle, kid }, null] }, t)' });
+items.push({ id: 'life.steam', label: 'Steam', group: 'Life', tags: ['Town life'], seed: 0, noSeed: true, w: 24, h: 30, px: 4, animated: true,
+  draw: (g, seed, t) => { g.fillStyle = '#8a3a2a'; g.fillRect(6, 24, 12, 5); drawSteam(g, 12, 24, t, 1); },
+  code: () => 'drawSteam(g, x, y, t, seed)' });
+items.push({ id: 'life.petals', label: 'Cherry petals', group: 'Life', tags: ['Town life'], seed: 0, noSeed: true, w: 40, h: 44, px: 0, animated: true,
+  draw: (g, seed, t) => { drawTree(g, { type: 'sakura', x: 20, y: 42, seed: 2 }); drawPetals(g, { x: 20, y: 42, seed: 2 }, t, 30); },
+  code: () => 'drawPetals(g, { x, y, seed }, t, height)' });
+items.push({ id: 'life.rubbish', label: 'Rubbish day', group: 'Life', tags: ['Town life'], seed: 0, noSeed: true, w: 26, h: 12, px: 4,
+  draw: (g) => drawRubbish(g, { x: 13, y: 10 }), code: () => 'drawRubbish(g, { x, y })' });
+for (const [type, label] of [['apartment', 'Laundry on the balconies'], ['woodApartment', 'Laundry on the corridor rail']]) {
+  const { w, h } = BUILDINGS[type];
+  items.push({ id: `life.laundry.${type}`, label, group: 'Life', tags: ['Town life'], seed: 2, w: w + 8, h: h + 4, px: 0, dpx: 6,
+    draw: (g, seed) => drawBuilding(g, { type, x: 4 + w / 2, y: h + 2, seed, dpx: 6, laundry: true }),
+    code: (seed) => `drawBuilding(g, { type: '${type}', x, y, seed: ${seed}, laundry: true })` });
+}
+{ const { w, h } = BUILDINGS.shop;
+  items.push({ id: 'life.shutter', label: 'Shutter down (closed)', group: 'Life', tags: ['Town life'], seed: 3, w: w + 8, h: h + 4, px: 0, dpx: 6,
+    draw: (g, seed) => drawBuilding(g, { type: 'shop', shopType: 'bookshop', x: 4 + w / 2, y: h + 2, seed, dpx: 6, shut: true }),
+    code: (seed) => `drawBuilding(g, { type: 'shop', shopType: 'bookshop', x, y, seed: ${seed}, shut: true })` }); }
+
 // --- filters ---------------------------------------------------------------------
-const GROUPS = ['All', 'People', 'Animals', 'Monsters', 'Combat', 'Speech', 'Buildings', 'Doors & windows', 'Street', 'Nature'];
+const GROUPS = ['All', 'People', 'Animals', 'Monsters', 'Combat', 'Speech', 'Life', 'Buildings', 'Doors & windows', 'Street', 'Nature'];
 const state = { g: 'All', t: new Set(), q: '' };
 const fromHash = () => {
   const h = new URLSearchParams(location.hash.slice(1));
@@ -196,7 +242,7 @@ const chip = (text, pressed, onClick, n) => {
 };
 function renderFilters() {
   $('#groups').replaceChildren(...GROUPS.map((g) => chip(g, state.g === g, () => { state.g = g; state.t.clear(); update(); }, items.filter((it) => g === 'All' || it.group === g).length)));
-  const ORDER = ['Adults', 'Kids', 'Elderly', 'Uniforms', 'Random', 'Cats', 'Dogs', 'Weapons', 'Attacks', 'Household', 'Monster skills', 'Reactions', 'Undead', 'Ghosts', 'Beasts', 'Zombie', 'Werewolf', 'Ghost girl', 'Reaper', 'Giant spider', 'Skeleton', 'Flaming skull', 'Trees', 'Bushes', 'Terrain', 'Doors', 'Windows', 'Wood', 'Glass', 'Japanese', 'European', 'Mosque', 'Homes', 'Shops & food', 'Civic', 'Worship', 'Low', 'Tall', 'Lights', 'Seats', 'Things', 'Vehicles', 'Park', 'Railway', 'Stations', 'Icons', 'Lines'];
+  const ORDER = ['Adults', 'Kids', 'Elderly', 'Uniforms', 'Random', 'Cats', 'Dogs', 'Weapons', 'Attacks', 'Household', 'Monster skills', 'Reactions', 'Undead', 'Ghosts', 'Beasts', 'Zombie', 'Werewolf', 'Ghost girl', 'Reaper', 'Giant spider', 'Skeleton', 'Flaming skull', 'Trees', 'Bushes', 'Terrain', 'Doors', 'Windows', 'Wood', 'Glass', 'Japanese', 'European', 'Mosque', 'Homes', 'Shops & food', 'Civic', 'Worship', 'Low', 'Tall', 'Lights', 'Seats', 'Things', 'Vehicles', 'Park', 'Railway', 'Stations', 'Icons', 'Lines', 'Poses', 'Birds', 'Town life'];
   const tags = [...new Set(items.filter(inGroup).flatMap((it) => it.tags))].sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
   // each kind's count: how many you would see with it on
   $('#tags').replaceChildren(...tags.map((t) => chip(t, state.t.has(t), () => { state.t.has(t) ? state.t.delete(t) : state.t.add(t); update(); },

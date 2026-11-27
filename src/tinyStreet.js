@@ -127,9 +127,15 @@ const DEFS = {
     r(METAL, 3, 0, 2, 20); r(DARK, 2, 0, 4, 1);
     r('#e8e0d0', 0, 20, 8, 8); r(INK, 1, 21, 6, 6); r(WHITE, 2, 22, 4, 4); r(INK, 4, 24, 1, 2); r(INK, 4, 24, 2, 1);
   }],
-  redLantern: ['Red lantern', 4, 15, 1, (r) => {
-    r(DARK, 1, 0, 1, 9); r(DARK, 0, 9, 4, 1); r('#d8402f', 0, 10, 4, 4); r('#f06a50', 1, 11, 1, 2); r(INK, 0, 14, 4, 1); r(INK, 0, 10, 4, 1);
+  redLantern: ['Red lantern', 4, 15, 1, (r, rng, p) => {
+    const s = p?.sway ?? 0;                                                  // p.sway: -1, 0 or 1, how it swings in the breeze
+    r(DARK, 1, 0, 1, 9); r(DARK, 0 + s, 9, 4, 1); r('#d8402f', 0 + s, 10, 4, 4); r('#f06a50', 1 + s, 11, 1, 2); r(INK, 0 + s, 14, 4, 1); r(INK, 0 + s, 10, 4, 1);
   }, [[2, 12, 9]]],
+  blockWall: ['Block wall', 24, 7, 2, (r) => {                            // a garden's concrete block wall (a cat naps on it)
+    r('#b8b4aa', 0, 0, 24, 6); r('#d0ccc2', 0, 6, 24, 1);
+    for (let up = 2; up < 6; up += 2) r('#a29e94', 0, up, 24, 1);
+    for (let i = 0; i < 24; i += 6) { r('#a29e94', i + (i % 12 ? 3 : 0), 0, 1, 2); r('#a29e94', i + (i % 12 ? 0 : 3), 2, 1, 2); r('#a29e94', i + (i % 12 ? 3 : 0), 4, 1, 2); }
+  }],
   crates: ['Crates', 10, 9, 4, (r) => {
     for (const [dx, up] of [[0, 0], [5, 0], [2, 4]]) { r('#a87a4a', dx, up, 5, 4); r('#8a6440', dx, up + 2, 5, 1); r(shade('#a87a4a', 1.15), dx, up + 3, 5, 1); }
   }],

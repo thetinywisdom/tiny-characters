@@ -278,23 +278,35 @@ bubble lab, so games can use them and they can grow.
     walk through anyone. Measured: car overlaps 10 to 0 in three simulated
     minutes; people overlaps 311 to 1 in a minute and a half.
 
+38. **Small life** (the owner chose all of it from mock-ups; `src/tinyLife.js`,
+    `demo/life.js`): new poses (sitting on a bench or the ground, riding a
+    bike, bowing, sweeping, kicking, throwing, drinking a can, going down a
+    slide); pigeon flocks that peck and fly off when someone comes close;
+    crows on the wires; a cat napping on a new block wall; ducklings behind
+    their mother, and ducks that paddle over when someone throws bread;
+    two dogs greeting (their owners stop); laundry and futons on balconies
+    by day; shopkeepers at their doors (sweeping 6-10, bowing to passers-by,
+    gone home when the shutter comes down 21-7); windows that light up and
+    go dark one by one at night; steam from the food stalls (ramen,
+    yakitori, takoyaki, udon, the kiosk); the alley's lanterns swaying;
+    rubbish bags out 6-11; kids on the swings (each seat at its own angle),
+    the slide and kicking a ball, a picnic family (by day only); bike
+    riders on the sidewalks; a delivery scooter in the traffic; commuters
+    coming out when a train stops; someone taking a taxi from the rank (it
+    pulls out, drives off, and a new one comes back and pulls in);
+    cherry petals falling. Catalogue: a Life group (19 cards). Every old
+    catalogue card is unchanged pixel for pixel.
+
+39. **Traffic jams fixed** (found while checking small life; they were there
+    before): cars no longer wait for people standing on the sidewalk by the
+    kerb (only for people on the road), nobody ends a trip, stops short or
+    gives up out on a crossing, and someone held up on a crossing squeezes
+    past. A 100 s run: no car held up for 15 s or more (before: about ten).
+
 ## Next (only when the owner asks)
 
-1. **Small life** (agreed, all of it; pictures first, new poses previewed):
-   - on the streets: people riding bikes, a delivery scooter, kids kicking a
-     ball, a shopkeeper sweeping, someone stopping at a vending machine for a
-     can, rubbish day (bins out in the morning, gone by noon)
-   - animals: pigeons that peck and scatter, crows on the wires, a cat napping
-     on a wall, ducklings following a duck, two dogs greeting
-   - homes and shops: laundry and futons on balconies, shopkeepers in their
-     doorways (bowing), steam from the food stalls, windows lighting up and
-     going dark at night, shop shutters down at closing time
-   - station and alley: a crowd at rush hour when a train stops, someone
-     taking a taxi from the rank, the alley's lanterns swaying
-   - park: people on benches, feeding the ducks, kids on the swings and the
-     slide, a picnic under the cherry trees, petals falling
-   - new poses (previewed first): sitting, riding, sweeping, kicking,
-     throwing, drinking
+Nothing agreed yet: ask the owner (pictures first). Ideas: weather and time
+(backlog), people going into buildings, real kana on a few signs.
 
 ## Backlog (agreed ideas for later)
 
@@ -315,7 +327,14 @@ bubble lab, so games can use them and they can grow.
   snapped to the pixel grid like everything else).
 
 - Nobody goes inside buildings yet (tapping one walks you to its door).
-- A dog can brush past someone who is not its owner; nobody rides a bicycle yet.
+- A dog can brush past someone who is not its owner.
+- People overlap a little more than before small life (about 30 times in a
+  1.5-minute sample, against 6): mostly walkers brushing past the kids
+  playing in the schoolyard and on the slide, who do not move out of the way.
+- A taxi pulling out of the rank does not look behind it, so it can brush
+  someone standing right next to its back.
+- Pigeons, crows, the picnic blanket and the rubbish bags are drawn only;
+  people walk over the blanket and the bags.
 - Sign text is a row of pixels, not letters. Real kana would need at least
   5 px tall signs; could try for a few (ラーメン, コンビニ) if the owner wants.
 
