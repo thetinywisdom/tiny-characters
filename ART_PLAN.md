@@ -1,7 +1,7 @@
 # ART PLAN: redrawing everything by hand
 
 **Dropped (Nov 2026):** the owner chose to have everything redrawn in code
-at full size instead ("E"; see PLAN.md and SKILLS.md, Full-size drawings).
+at full size instead ("E"; see PLAN.md and SKILLS.md, How a building is drawn).
 Kept for the record.
 
 The owner's call (Nov 2026): the pictures the code draws look generic ("AI
