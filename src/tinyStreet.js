@@ -11,9 +11,13 @@
 //   poleTops(p)         where a utility pole's wires hang from: [{ x, y }]
 //   drawWire(g, a, b)   a sagging wire between two points
 //
+// Full-size drawings (tinyStreetFull.js, the parts in src/full/p*.js) replace the old ones
+// once approved (setRedraw in tinyBuildings.js); sizes, feet, lights and wire ends stay in
+// scale-1 pixels, and a full drawing puts them at the same spots times 1.5.
 // Plain ES module, no dependencies (it borrows the buildings' painter).
 
-import { makePainter } from './tinyBuildings.js';
+import { makePainter, usesFull } from './tinyBuildings.js';
+import { FULL_PROPS } from './tinyStreetFull.js';
 import { seeded, shade } from './tinyCharacters.js';
 
 const INK = '#2f3236', WHITE = '#f2f2ee', RED = '#d8443c', METAL = '#6a6f76', DARK = '#4a4e54';
@@ -165,8 +169,10 @@ const left = (p, k) => Math.round(p.x - Math.round(PROPS[p.type].w * k) / 2);
 export function drawProp(g, p) {
   const def = DEFS[p.type];
   if (!def) return;
-  const k = p.scale ?? 1;
-  def[4](makePainter(g, left(p, k), Math.round(p.y), k), seeded((p.seed ?? 1) * 131 + 17), p);
+  const k = p.scale ?? 1, f = FULL_PROPS[p.type];
+  // drawn at full size (made for the town's scale 1.5: one pixel = one person pixel) once approved
+  if (usesFull(f)) f.draw(makePainter(g, left(p, k), Math.round(p.y), k / 1.5), seeded((p.seed ?? 1) * 131 + 17), p);
+  else def[4](makePainter(g, left(p, k), Math.round(p.y), k), seeded((p.seed ?? 1) * 131 + 17), p);
 }
 
 // poles and lamps take only the ground under their pole: [dx, w]

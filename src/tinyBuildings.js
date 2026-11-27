@@ -7,8 +7,9 @@
 //   BUILDINGS             type -> { label, w, h, widths } (the largest size any seed makes)
 //   buildingSize(b)       one building's size for its seed
 //   SHOP_TYPES            the shop's kinds (konbini, ramen, cafe ...)
-//   setRedraw(mode)       which buildings use their full-size drawing (tinyBuildingsFull.js):
-//                         'approved' (default), 'all' (also those in review), 'none'
+//   setRedraw(mode)       which buildings (and street things) use their full-size drawing
+//                         (tinyBuildingsFull.js, tinyStreetFull.js): 'approved' (default),
+//                         'all' (also those in review), 'none'; usesFull(def) asks
 //
 // A building: { type, x, y, seed, shopType, wall, roof }. Colours are CSS
 // strings; the seed picks the width, floors, windows (kind, number), door
@@ -28,8 +29,10 @@ const SHOP_OF = new Map();
 // approved ones), 'all' (also those waiting for review; ?redraw=all) or 'none' (the old ones).
 let REDRAW = (typeof location !== 'undefined' && ['all', 'none'].includes(new URLSearchParams(location.search).get('redraw')))
   ? new URLSearchParams(location.search).get('redraw') : 'approved';
+/** Whether a full-size drawing { approved } is used now (the redraw setting); shared by props and plants. */
+export const usesFull = (f) => !!f && (REDRAW === 'all' || (REDRAW === 'approved' && f.approved));
 /** The full-size drawing for a building, if it is drawn at full size. */
-const fullOf = (b) => { const f = FULL[b.type]; return f && (REDRAW === 'all' || (REDRAW === 'approved' && f.approved)) ? f : null; };
+const fullOf = (b) => { const f = FULL[b.type]; return usesFull(f) ? f : null; };
 /** Full-size drawings are made for the town's scale: one of their pixels is 1 / FULL_K of a scale-1 pixel. */
 const FULL_K = 1.5;
 
