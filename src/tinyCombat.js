@@ -6,6 +6,7 @@
 //   drawAction(g, actor, action, time, t)           an attack, a skill or a reaction, `time` seconds after it began;
 //                                                   returns false once it has finished (a 'dead' actor stays down)
 //   WEAPONS, ACTIONS, SKILLS, REACTIONS             names, durations, which weapon or monster each belongs to
+//   actionsFor(weapon)                              the attacks a weapon can do (a household item: those of its kind)
 //
 // An actor is anything the other modules draw: a person, { cat: true },
 // { dog: true }, { monster: 'zombie', variant }. Actions face actor.facing
@@ -17,12 +18,29 @@ import { drawMonster } from './tinyMonsters.js';
 
 const INK = '#2f3236', STEEL = '#d8dce0', STEEL2 = '#9aa0a8', WOOD = '#8a5a2e', GOLD = '#f2b64a', WHITE = '#ffffff';
 
-/** The weapons. */
-export const WEAPONS = {
-  sword: { label: 'Sword' }, axe: { label: 'Axe' }, spear: { label: 'Spear' }, bow: { label: 'Bow' }, shield: { label: 'Shield' },
-};
 /**
- * Attacks with a weapon: name -> { label, weapon, duration (s), reach, range }.
+ * The weapons: name -> { label, kind, len, household }. kind: which attacks
+ * it does (a household item fights like its kind: a baseball bat like a
+ * sword); len: how far its tip is from the hand (for the motion trail).
+ */
+export const WEAPONS = {
+  sword: { label: 'Sword', kind: 'sword', len: 8 }, axe: { label: 'Axe', kind: 'axe', len: 7 }, spear: { label: 'Spear', kind: 'spear', len: 12 },
+  bow: { label: 'Bow', kind: 'bow', len: 0 }, shield: { label: 'Shield', kind: 'shield', len: 0 },
+  // household things, each fighting like its kind
+  bat: { label: 'Baseball bat', kind: 'sword', len: 8, household: true },
+  umbrella: { label: 'Umbrella (folded)', kind: 'sword', len: 9, household: true },
+  golfClub: { label: 'Golf club', kind: 'sword', len: 10, household: true },
+  pan: { label: 'Frying pan', kind: 'axe', len: 8, household: true },
+  pickaxe: { label: 'Pickaxe', kind: 'axe', len: 7, household: true },
+  hammer: { label: 'Hammer', kind: 'axe', len: 7, household: true },
+  broom: { label: 'Broom', kind: 'spear', len: 13, household: true },
+  wok: { label: 'Wok', kind: 'shield', len: 0, household: true },
+};
+/** The attacks a weapon can do (those of its kind): ['slash', 'stab'] for a baseball bat. */
+export const actionsFor = (weapon) => Object.keys(ACTIONS).filter((a) => ACTIONS[a].weapon === (WEAPONS[weapon]?.kind ?? weapon));
+/**
+ * Attacks with a weapon: name -> { label, weapon (the kind of weapon), duration (s), reach, range }.
+ * Any weapon of that kind can do it: drawAction with actor.weapon 'bat' and 'slash'.
  * reach: 'front' (what is ahead of the attacker, within range px), 'around'
  * (everything within range px: the axe's 360 swing) or 'self' (a block).
  */
@@ -121,6 +139,48 @@ export function drawWeapon(g, { weapon, x, y, angle = -45, side = 1, pull = 0, a
       if (arrow) { for (let i = -pull; i <= 6; i++) px(g, i > 4 ? STEEL : '#c8a060', x + s * i, y); px(g, '#e8402f', x - s * (pull + 1), y - 1); px(g, '#e8402f', x - s * (pull + 1), y + 1); }
       break;
     }
+    // household things
+    case 'bat':                                                             // a wooden bat: a taped grip, thickening to the barrel
+      along(g, x, y, angle, [[-3, -3, '#a8804a'], [-2, 0, '#3a2a22'], [1, 4, '#c8a060'], [5, 8, '#d8b070']]);
+      for (let i = 5; i <= 8; i++) across(g, x, y, angle, i, 1, 1, '#b8904e');
+      break;
+    case 'umbrella':                                                        // folded: a hooked handle, the rolled cloth, a metal tip
+      along(g, x, y, angle, [[-2, 1, '#3a2a22'], [2, 7, '#3f7fd6'], [8, 9, STEEL]]);
+      for (let i = 3; i <= 6; i++) across(g, x, y, angle, i, -1, -1, '#2f5fa8');
+      across(g, x, y, angle, -2, 1, 2, '#3a2a22'); across(g, x, y, angle, -1, 2, 2, '#3a2a22');   // the hook
+      break;
+    case 'golfClub':                                                        // a long thin shaft and a small iron head turned out
+      along(g, x, y, angle, [[-2, 0, INK], [1, 9, STEEL2]]);
+      for (const i of [9, 10]) across(g, x, y, angle, i, -3, -1, i === 10 ? STEEL : '#5a5f66');
+      break;
+    case 'pan': {                                                           // a black handle and a round pan, solid whatever the angle
+      const at = along(g, x, y, angle, [[-2, 4, INK]]), [cx, cy] = at(7);
+      for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) if (dx * dx + dy * dy <= 7) px(g, dx * dx + dy * dy <= 2 ? '#5a5f66' : '#3a3d42', cx + dx, cy + dy);
+      px(g, '#8a9096', cx - 1, cy - 2);                                       // a glint on its rim
+      break;
+    }
+    case 'pickaxe':                                                         // a handle and a curved double point
+      along(g, x, y, angle, [[-2, 7, WOOD]]);
+      across(g, x, y, angle, 7, -3, 3, STEEL2); across(g, x, y, angle, 6, -4, -4, STEEL); across(g, x, y, angle, 6, 4, 4, STEEL);
+      break;
+    case 'hammer':                                                          // a handle and a heavy head, its face out
+      along(g, x, y, angle, [[-2, 5, WOOD]]);
+      for (let i = 5; i <= 7; i++) across(g, x, y, angle, i, -3, 2, i === 7 ? STEEL : '#6a6f76');
+      across(g, x, y, angle, 6, side > 0 ? -3 : 2, side > 0 ? -3 : 2, '#4a4e54');
+      break;
+    case 'broom':                                                           // a long handle, a band, the straw spreading out
+      along(g, x, y, angle, [[-6, 9, '#c8a060']]);
+      across(g, x, y, angle, 10, -1, 1, '#e8402f');
+      [[11, 2], [12, 2], [13, 3]].forEach(([i, r]) => across(g, x, y, angle, i, -r, r, i === 13 ? '#c8a040' : '#d8b860'));
+      break;
+    case 'wok': {
+      // a dark iron wok seen face on (side: the way it faces), its long wooden handle out to the side
+      const rows = [[-2, 5], [-3, 7], [-3, 7], [-3, 7], [-2, 5]];
+      rows.forEach(([dx, w], j) => px(g, '#3a3d42', x + dx, y - 2 + j, w, 1));
+      px(g, '#5a5f66', x - 2, y - 1, 5, 3); px(g, '#6a6f76', x - 1, y, 3, 1); px(g, '#9aa0a8', x - 1, y - 1);
+      px(g, WOOD, side > 0 ? x - 7 : x + 4, y - 1, 4, 1);                   // the handle, back towards the hand holding it
+      break;
+    }
     case 'shield': {
       // a round wooden shield with an iron rim and boss, seen face on
       const rows = [[-2, 5], [-3, 7], [-3, 7], [-3, 7], [-3, 7], [-2, 5]];
@@ -200,7 +260,7 @@ function drawPersonPose(g, p0, pose, weapon, t, u, poseFn) {
     const n = Math.max(Math.abs(hand[0] - shoulder[0]), Math.abs(hand[1] - shoulder[1]));
     for (let i = 0; i <= n; i++) px(g, i === n ? skin : sleeve, lerp(shoulder[0], hand[0], i / Math.max(1, n)), lerp(shoulder[1], hand[1], i / Math.max(1, n)));
     if (pose.shield) {
-      drawWeapon(g, { weapon: 'shield', x: hand[0] + (side ? sx : 0), y: hand[1] - 1 });
+      drawWeapon(g, { weapon: WEAPONS[weapon]?.kind === 'shield' ? weapon : 'shield', x: hand[0] + (side ? sx : 0), y: hand[1] - 1, side: wside });
       if (pose.flash) { px(g, WHITE, hand[0] + (side ? sx * 4 : 0), hand[1] - 4); px(g, WHITE, hand[0] + (side ? sx * 5 : 2), hand[1] - 2, 1, 2); px(g, '#fff2b0', hand[0] + (side ? sx * 4 : 1), hand[1] + 1); }
     } else if (pose.bow) drawWeapon(g, { weapon: 'bow', x: hand[0], y: hand[1], side: wside, pull: pose.pull, arrow: pose.arrow });
     else {
@@ -215,7 +275,7 @@ function drawPersonPose(g, p0, pose, weapon, t, u, poseFn) {
       // a trail where the tip has just been
       if (pose.trail && poseFn && !pose.spin) for (const back of [0.05, 0.1, 0.15]) {
         const q = poseFn(Math.max(0, u - back)), qa = side ? (sx > 0 ? q.angle : 180 - q.angle) : q.angle;
-        const qh = [shoulder[0] + hx(q.hand[0]), shoulder[1] + q.hand[1]], len = weapon === 'spear' ? 12 : weapon === 'axe' ? 7 : 8;
+        const qh = [shoulder[0] + hx(q.hand[0]), shoulder[1] + q.hand[1]], len = WEAPONS[weapon]?.len || 8;
         const r = qa * Math.PI / 180;
         px(g, back < 0.1 ? '#f4f8ff' : '#c8d8e8', qh[0] + Math.cos(r) * len, qh[1] + Math.sin(r) * len, 2, 1);
         px(g, '#e0ecf8', qh[0] + Math.cos(r) * (len - 2), qh[1] + Math.sin(r) * (len - 2));

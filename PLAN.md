@@ -219,6 +219,12 @@ bubble lab, so games can use them and they can grow.
     reactions' sprite canvas are kept and cleared instead of made again
     every frame. Every picture checked the same before and after (210).
 
+31. **Household weapons** (the owner's list): baseball bat, folded umbrella,
+    golf club (sword moves), frying pan, pickaxe, hammer (axe moves), broom
+    (spear moves), wok (shield); each weapon has a kind and does that
+    kind's attacks (`actionsFor`); 23 new catalogue cards (Combat,
+    Household); every earlier picture unchanged.
+
 ## Next (only when the owner asks)
 
 1. Speech with them (floating pixel text from tiny-ui-kit) in the demo.

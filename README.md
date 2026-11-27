@@ -237,8 +237,8 @@ drawAction(g, zombie, 'dead', now - diedAt, t);                            // fa
 
 | Kind | Names |
 | --- | --- |
-| Weapons (`WEAPONS`, `drawWeapon`) | `sword`, `axe`, `spear`, `bow`, `shield` |
-| Attacks (`ACTIONS`) | `slash`, `stab` (sword), `axeSwing` (a 360 spin that hits all round), `chop` (axe), `spearSwing`, `spearStab` (spear), `shoot` (bow: the arrow flies), `defend` (shield) |
+| Weapons (`WEAPONS`, `drawWeapon`) | `sword`, `axe`, `spear`, `bow`, `shield`; household things that fight like them: `bat`, `umbrella` (folded), `golfClub` (like a sword), `pan`, `pickaxe`, `hammer` (like an axe), `broom` (like a spear), `wok` (like a shield) |
+| Attacks (`ACTIONS`, `actionsFor(weapon)`) | Any weapon of the right kind does them (`{ ...person, weapon: 'pan' }` with `'chop'`): `slash`, `stab` (sword), `axeSwing` (a 360 spin that hits all round), `chop` (axe), `spearSwing`, `spearStab` (spear), `shoot` (bow: the arrow flies), `defend` (shield) |
 | Monster skills (`SKILLS`) | `bite` (zombie), `claw` (werewolf), `curse` (ghost girl), `scythe` (reaper), `webShot` and `webTrap` (spider), `boneThrow` (skeleton), `fireball` (flaming skull) |
 | Reactions (`REACTIONS`) | `hit` (flashes white, recoils), `shoved` (slides back), `dead` (falls over; a ghost fades away, a skeleton falls into bones, a skull bursts, a spider flips over) |
 

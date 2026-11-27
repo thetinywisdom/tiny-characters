@@ -340,6 +340,17 @@ it can be paused, scrubbed or replayed.
 - Reactions (`drawReaction`) draw the actor into a small canvas (`sprite`)
   so it can flash white (source-atop), be turned a quarter to lie down, be
   flipped (a spider) or faded (a ghost).
+- Household weapons (`WEAPONS[name].household`): each has a `kind` (sword,
+  axe, spear, shield) and does that kind's attacks (`actionsFor`; an
+  action's `weapon` is a kind), with the same poses; `len` is how far its
+  tip is from the hand (the trail). Drawn like the others along the line
+  from the hand: a bat (taped grip, wider barrel), a folded umbrella (hooked
+  handle, rolled cloth, metal tip), a golf club (long shaft, head turned
+  out), a frying pan (a solid disc whatever the angle), a pickaxe, a hammer,
+  a broom (band, spreading straw); the wok is drawn like the shield, face
+  on, its handle back towards the hand.
+A new weapon: an entry in `WEAPONS` (with its kind and len) and a case in
+`drawWeapon`; the catalogue adds its card and its attacks.
 A new attack: a pose function in `POSES` and an entry in `ACTIONS`; a new
 skill: a case in `drawSkill` and an entry in `SKILLS`. Check every frame
 (a strip of six) next to a person.
