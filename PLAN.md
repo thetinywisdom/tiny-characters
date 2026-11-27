@@ -405,13 +405,13 @@ bubble lab, so games can use them and they can grow.
 
 ## In progress
 
-- **Redrawing everything at full size (E)**, in batches of 20 reviewed on a review page
-  (https://claude.ai/artifact/4QAkLRYE9m2mcs5caQUZzB). Batch 2 next: the wooden apartment
-  again (stairs as a ladder) and the remaining 21 buildings (fire station, parking garage,
-  gas station, shrine, torii, shrine hall, school, the four stations, kiosk, toilets,
-  alley stall, Tudor cottage, Mediterranean villa, Dutch canal house, French country house,
-  Scandinavian house, mosque, stone chapel); then street things, trees and bushes, the
-  ground and streets.
+- **Redrawing everything at full size (E)**, in batches reviewed on a review page
+  (https://claude.ai/artifact/4QAkLRYE9m2mcs5caQUZzB). Batch 2 (the last 22 buildings: the
+  wooden apartment with a ladder, fire station, parking garage, gas station, school, toilets,
+  shrine, torii, shrine hall, mosque, stone chapel, kiosk, the four stations, alley stall,
+  Tudor cottage, Mediterranean villa, Dutch canal house, French country house, Scandinavian
+  house) is drawn (parts `src/full/e.js` .. `h.js`) and waiting for the owner's review.
+  Then street things, trees and bushes, the ground and streets.
 
 ## Next (only when the owner asks)
 
