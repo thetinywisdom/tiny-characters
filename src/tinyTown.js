@@ -747,7 +747,7 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0
       if (it.prop.riders) drawSwings(ctx, it.prop, t);                           // swings with people on them: { riders: [{ angle, kid }, null] }
       else { if (it.prop.type === 'redLantern') it.prop.sway = Math.round(Math.sin(t * 1.3 + it.prop.x * 0.7) * 0.7); drawProp(ctx, it.prop); }
     }
-    else if (it.p) (it.p.kind === 'tree' ? drawTree : drawBush)(ctx, it.p);
+    else if (it.p) { if (it.p.kind === 'tree') drawTree(ctx, { ...it.p, t }); else drawBush(ctx, it.p); }   // trees sway in the breeze
     else if (it.s.vehicle) drawVehicle(ctx, it.s);                               // cars, buses, the train: { vehicle: true, type, ... }
     else if (it.s.ball) drawBall(ctx, it.s);                                     // a ball { ball: true, x, y, h (its height off the ground) }
     else if (it.s.draw) it.s.draw(ctx, it.s, t);                                // anything with its own drawing: { draw(g, s, t), x, y } (pigeons, rubbish...)

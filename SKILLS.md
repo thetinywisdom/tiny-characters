@@ -521,6 +521,14 @@ skill: a case in `drawSkill` and an entry in `SKILLS`. Check every frame
 
 ## How nature is drawn (src/tinyNature.js)
 
+**The breeze** (trees only; the owner chose gusts, B): `drawTree` with `t` draws the
+cached image in horizontal slices, each row shifted by a whole number of pixels
+(`breeze`): nothing below 30% of the height moves, the top up to 2 pixels; the lean
+follows `sin(t * 1.6 - phase)` scaled by a gust wave `0.5 + 0.5 sin(t * 0.55 - x * 0.012)`
+that rolls across the town from the left; the phase comes from the tree's place and seed.
+Rows that move together are one `drawImage` (about +0.5 ms a frame by day). The town
+passes `t` to every tree; bushes stay still.
+
 Trees and bushes: `[label, w, h, draw(r, rng, cx)]` from the bottom left,
 `cx` the middle. Pieces: `blob` (a clump of leaves lit from the top left),
 `sprinkle` (fruit, flowers, blossom on even steps), `trunk`, `shadowUnder`.

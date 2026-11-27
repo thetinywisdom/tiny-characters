@@ -82,6 +82,8 @@ bubble lab, so games can use them and they can grow.
   more detail; reviewed in batches of 20 on a review page (accept, reject,
   notes); only approved ones go live. The hand-drawn PNG plan (ART_PLAN) is
   dropped.
+- The breeze (Nov 2026): trees sway in gusts that roll across the town (B, from
+  animated mock-ups: up to 2 px at the top, trunks still); bushes stay still.
 - The front page (Nov 2026): no park (the owner never used it): the town,
   the looks, the buildings and the gallery.
 
@@ -425,6 +427,11 @@ bubble lab, so games can use them and they can grow.
     wall, crates, AC unit. Lamp heads sit under their night glows, the bench seat, the
     swings, the slide and the wall top where they were, so sitting, swinging, sliding
     and the napping cat work as before. The catalogue shows them at the town's size.
+
+55. **Trees sway in the breeze** (the owner asked; chose B, gusts, from three animated
+    mock-ups; trees only): the crowns lean up to 2 px in whole-pixel steps as waves of
+    wind roll across the town from the left, the trunks stay still, each tree a
+    little out of step; the catalogue's tree cards move too. About +0.5 ms a frame.
 
 ## In progress
 

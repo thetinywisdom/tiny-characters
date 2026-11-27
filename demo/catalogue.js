@@ -96,9 +96,9 @@ const JAPANESE_NATURE = ['maple', 'sakura', 'pine', 'cedar', 'bamboo', 'ginkgo',
 for (const [type, { label, w: w1, h: h1 }] of Object.entries(TREES)) {
   const scale = plantScale(type), w = w1 * scale, h = h1 * scale, sc = scale === 1 ? '' : `, scale: ${scale}`;
   items.push({ id: `nature.tree.${type}`, label, group: 'Nature', tags: ['Trees', ...(JAPANESE_NATURE.includes(type) ? ['Japanese'] : [])], seed: 1,
-    w: Math.round(w * 1.2) + 4, h: Math.round(h * 1.2) + 4, px: 0,
-    draw: (g, seed) => drawTree(g, { type, x: (Math.round(w * 1.2) + 4) / 2, y: Math.round(h * 1.2) + 2, seed, scale }),
-    code: (seed) => `drawTree(g, { type: '${type}', x, y, seed: ${seed}${sc} })` });
+    w: Math.round(w * 1.2) + 4, h: Math.round(h * 1.2) + 4, px: 0, animated: true,                 // swaying in the breeze
+    draw: (g, seed, t) => drawTree(g, { type, x: (Math.round(w * 1.2) + 4) / 2, y: Math.round(h * 1.2) + 2, seed, scale, t }),
+    code: (seed) => `drawTree(g, { type: '${type}', x, y, seed: ${seed}${sc}, t })` });
 }
 for (const [type, { label, w: w1, h: h1 }] of Object.entries(BUSHES)) {
   const scale = plantScale(type), w = w1 * scale, h = h1 * scale, sc = scale === 1 ? '' : `, scale: ${scale}`;
