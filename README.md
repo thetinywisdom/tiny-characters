@@ -8,11 +8,9 @@ canvas and scaled up with hard pixels. Plain JavaScript, no dependencies.
 **Try it:** https://thetinywisdom.github.io/tiny-characters/ (GitHub Pages,
 served from `main`). Or open `index.html` through any static server for the demo:
 a town to walk around (a 2D map of streets, blocks and grounds; the view
-follows you; tap a building to walk to its door), a
-park where they stroll about with a couple of cats (move the one with the
-gold line with the arrow keys / WASD or by tapping; tap anyone to make them
-talk; the keys move you in the town, or in the park once you tap it), every
-look they can have, every building, and a gallery of random looks.
+follows you; tap a building to walk to its door; move the one with the gold
+line with the arrow keys / WASD or by tapping; tap anyone to make them talk),
+every look they can have, every building, and a gallery of random looks.
 
 ```bash
 python3 -m http.server 8000   # then open http://localhost:8000

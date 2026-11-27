@@ -47,16 +47,15 @@ src/tinyLife.js        small life (drawing only): POSES, drawPose (sitBench,
 src/tinyTown.js        the 2D town map: makeTown, drawTownView,
                        DEFAULT_TOWN (layout, ground, walkable ground,
                        path finding, place names)
-index.html             the demo page (town, park, looks, buildings, gallery)
+index.html             the demo page (town, looks, buildings, gallery)
 catalogue.html         the catalogue page: every item on a card, filters,
                        seeds, copy code
 demo/catalogue.js      the catalogue: the item list (people, cat, buildings,
                        one card per shop kind), kinds (tags), filters kept in
                        the address, seed per card, copy code
 demo/catalogue.css     the catalogue's look
-demo/demo.js           the demo: strolling crowd and cats, you (keys / tap
-                       to walk), tap someone to make them talk; every look;
-                       the gallery
+demo/demo.js           the demo page's Looks (every look) and Gallery (the
+                       front-page park was removed: the owner did not use it)
 demo/town.js           the town (walk around the map; 44 walkers since the
                        owner halved them: 20 anywhere, 5 schoolyard kids, 4
                        plaza, 3 each shrine, square, park, playground, 3 dog
@@ -135,6 +134,10 @@ moustache, hat, things in the hand, the gold line.
 Keep them this small and this simple: that is what the owner liked. Looks
 the owner turned down (too small, or not wanted) are listed in `PLAN.md`
 under Decisions; do not add them back.
+
+- Walking: the legs take turns lifting a pixel and the body bobs up a pixel
+  on the second step; on the bob the hips (a 5 px row in the legs' colour)
+  stretch up so no gap opens between body and legs (the owner's choice, B).
 
 ## How a building is drawn
 

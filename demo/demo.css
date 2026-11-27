@@ -7,7 +7,6 @@ h1 { font: 400 32px/1.1 'DotGothic16', monospace; margin: 0 0 6px; letter-spacin
 h2 { font: 400 16px 'DotGothic16', monospace; margin: 0 0 8px; }
 header p { margin: 0; color: var(--muted); max-width: 62ch; }
 canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; border: 2px solid var(--line); touch-action: manipulation; }
-#park { aspect-ratio: 200 / 124; cursor: pointer; }
 #gallery { aspect-ratio: 200 / 72; }
 #looks { aspect-ratio: 200 / 124; }
 .note { margin: 8px 0 0; color: var(--muted); font-size: 13px; }

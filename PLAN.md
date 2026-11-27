@@ -316,6 +316,10 @@ bubble lab, so games can use them and they can grow.
     than in the road; a taxi pulls out or in only when nobody stands
     against it. Overlaps in 90 s: 103 to 20; no car held up for 15 s.
 
+42. **Front-page park removed** (the owner: barely used, useless) and **the
+    walking step's gap closed** (option B from a mock-up: the hips stretch up
+    on the bob, the bounce stays). `drawStage` stays in the library.
+
 ## Next (only when the owner asks)
 
 Nothing agreed yet: ask the owner (pictures first). Ideas: weather and time
@@ -357,10 +361,6 @@ Nothing agreed yet: ask the owner (pictures first). Ideas: weather and time
   apron cover the body the same from the front and the side.
 - People walk only left / right / up / down on a flat stage; there is no
   depth sorting beyond drawing the ones further back first.
-- People keep to the strip around the path, so the top two thirds of the park
-  is empty grass (let them wander higher, or make the park shorter?).
-- On a walking step the body bobs up a pixel and a one-pixel gap opens
-  between body and legs (close it, or keep it as in the bubble lab?).
 
 ## Open questions for the owner
 

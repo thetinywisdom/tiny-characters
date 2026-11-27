@@ -94,6 +94,7 @@ export function drawCharacter(g, p, t = 0) {
   // skin; shoes are the bottom row; the right leg's outer column in shade
   const shoes = p.shoes ?? (p.kid ? RED : '#3a2a22');
   if (p.top !== 'yukata') {
+    if (bob < 0) R(wear === 'trousers' || wear === 'skirt' ? legs : skin, -2, -legH + bob, 5, -bob);   // the hips, so the bob opens no gap
     for (const [dx, lifted] of [[-2, step === 0], [1, step === 1]]) {
       const h = lifted ? legH - 1 : legH, c = wear === 'trousers' ? legs : skin;
       R(c, dx, -legH, 2, h);
