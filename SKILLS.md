@@ -642,7 +642,10 @@ the demo decides who does what.
   drawn by it, sorted with the people (pigeons, the ball, rubbish, the
   picnic blanket); `drawTownView(..., { above })` draws a list over
   everything, after the wires (the crows). `steam: (g, x, y, t, seed) => ...` swaps the
-  steam's drawing (used to try styles out; the default is `drawSteam`).
+  steam's drawing (used to try styles out; the default is `drawSteam`). `lights: 'soft' | 'bands' | 'dither' |
+  'mixed'` sets how the night's glows and headlight pools are drawn (all added
+  up in one layer, then turned into pixel steps or dots by `pixelLight`;
+  'soft' until the owner picks one).
 - **Swings in use**: a swings prop with `riders: [{ angle, kid } | null,
   ...]` is drawn by `drawSwings` (each seat at its own angle); without
   `riders` it is the plain prop.

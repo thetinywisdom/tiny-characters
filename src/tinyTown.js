@@ -460,9 +460,29 @@ const mix = (a, b, u) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(a.slice(
  * glass, signs, neon, lanterns), then soft light round lamps, vending
  * machines, traffic lights and cars' lights. night: 0 (day) to 1.
  */
-let beamLayer = null;
+let beamLayer = null, glowLayer = null;
+const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+/**
+ * Turn the soft light in a layer (added up on black) into pixel light: 'bands', a few flat steps;
+ * 'dither', one strength in a 4 x 4 dot pattern that thins out where the light is weaker;
+ * 'mixed', two flat steps with a dotted edge.
+ */
+function pixelLight(G, w, h, style) {
+  const im = G.getImageData(0, 0, w, h), d = im.data;
+  for (let i = 0, p = 0; i < d.length; i += 4, p++) {
+    const v = Math.max(d[i], d[i + 1], d[i + 2]);
+    if (v < 6) { d[i] = d[i + 1] = d[i + 2] = 0; continue; }
+    let q;
+    const x = p % w, y = (p / w) | 0, b = (BAYER[(y & 3) * 4 + (x & 3)] + 0.5) / 16;
+    if (style === 'bands') q = v > 150 ? 150 : v > 70 ? 80 : v > 22 ? 34 : 0;
+    else if (style === 'mixed') q = v > 120 ? 140 : v > 50 ? 70 : v > 12 && (v - 12) / 38 > b ? 40 : 0;   // two flat steps, a dotted edge
+    else q = v / 160 > b ? Math.min(150, Math.max(60, v)) : 0;
+    const f = q / v; d[i] = Math.min(255, d[i] * f); d[i + 1] = Math.min(255, d[i + 1] * f); d[i + 2] = Math.min(255, d[i + 2] * f);
+  }
+  G.setTransform(1, 0, 0, 1, 0, 0); G.putImageData(im, 0, 0);
+}
 let lightLayer = null;
-function drawNight(g, view, items, night, dpx, drawItem, t = 0) {
+function drawNight(g, view, items, night, dpx, drawItem, t = 0, lights = 'soft') {
   const dusk = Math.max(0, 1 - Math.abs(night - 0.35) / 0.35);              // the warm light of dusk, early in the evening
   g.save();
   g.globalCompositeOperation = 'multiply';
@@ -487,33 +507,40 @@ function drawNight(g, view, items, night, dpx, drawItem, t = 0) {
       g.imageSmoothingEnabled = false;
       g.drawImage(lightLayer, view.x, view.y, view.w, view.h);
     }
-    // headlights on the road: drawn into a layer of their own, the vehicles painted out of it
-    // (so the light falls on the road, not over the cars), then added to the picture
+    // what glows (headlights' pools on the road, the glow round lamps, signals, vending machines,
+    // cars' lamps): added up in a layer of the view's own pixels; `lights` says how it is drawn:
+    // 'soft' smooth gradients, 'bands' a few flat steps, 'dither' a dot pattern thinning outwards
     const vehicles = items.filter((it) => it.s?.vehicle).map((it) => it.s);
+    const k = lights === 'soft' ? dpx : 1;                                  // soft: at the device's pixels; else the town's
+    if (!glowLayer || glowLayer.width !== view.w * k || glowLayer.height !== view.h * k) { glowLayer = canvasOf(view.w * k, view.h * k); beamLayer = canvasOf(view.w * k, view.h * k); }
+    const G = glowLayer.getContext('2d', { willReadFrequently: true });
+    G.setTransform(1, 0, 0, 1, 0, 0); G.globalCompositeOperation = 'source-over'; G.fillStyle = '#000'; G.fillRect(0, 0, glowLayer.width, glowLayer.height);
+    G.setTransform(k, 0, 0, k, -view.x * k, -view.y * k);
     if (vehicles.length) {
-      // one layer, kept and cleared each frame (made again only when the view's size changes)
-      if (!beamLayer || beamLayer.width !== view.w * dpx || beamLayer.height !== view.h * dpx) beamLayer = canvasOf(view.w * dpx, view.h * dpx);
-      const L = beamLayer, lg = L.getContext('2d');
-      lg.setTransform(1, 0, 0, 1, 0, 0); lg.globalCompositeOperation = 'source-over'; lg.clearRect(0, 0, L.width, L.height);
-      lg.setTransform(dpx, 0, 0, dpx, -view.x * dpx, -view.y * dpx);
+      // the headlights' pools, the vehicles painted out of them (the light falls on the road, not over the cars)
+      const lg = beamLayer.getContext('2d');
+      lg.setTransform(1, 0, 0, 1, 0, 0); lg.globalCompositeOperation = 'source-over'; lg.clearRect(0, 0, beamLayer.width, beamLayer.height);
+      lg.setTransform(k, 0, 0, k, -view.x * k, -view.y * k);
       lg.globalCompositeOperation = 'lighter';
       for (const v of vehicles) drawVehicleBeams(lg, v);
       lg.globalCompositeOperation = 'destination-out';
       for (const v of vehicles) drawVehicle(lg, v);
-      g.globalCompositeOperation = 'lighter';
-      g.imageSmoothingEnabled = false;
-      g.drawImage(L, view.x, view.y, view.w, view.h);
+      G.globalCompositeOperation = 'lighter'; G.drawImage(beamLayer, view.x, view.y, view.w, view.h);
     }
-    g.globalCompositeOperation = 'lighter';
+    G.globalCompositeOperation = 'lighter';
     const glow = (x, y, r, c) => {
-      const grad = g.createRadialGradient(x, y, 0, x, y, r);
+      const grad = G.createRadialGradient(x, y, 0, x, y, r);
       grad.addColorStop(0, c + '99'); grad.addColorStop(0.4, c + '33'); grad.addColorStop(1, c + '00');
-      g.fillStyle = grad; g.fillRect(x - r, y - r, r * 2, r * 2);
+      G.fillStyle = grad; G.fillRect(x - r, y - r, r * 2, r * 2);
     };
     for (const it of items) {
-      const lights = it.prop ? propLights(it.prop) : it.s?.vehicle ? vehicleLights(it.s) : [];
-      for (const l of lights) glow(l.x, l.y, l.r, l.c);
+      const ls = it.prop ? propLights(it.prop) : it.s?.vehicle ? vehicleLights(it.s) : [];
+      for (const l of ls) glow(l.x, l.y, l.r, l.c);
     }
+    if (lights !== 'soft') pixelLight(G, glowLayer.width, glowLayer.height, lights);
+    g.globalCompositeOperation = 'lighter';
+    g.imageSmoothingEnabled = false;
+    g.drawImage(glowLayer, view.x, view.y, view.w, view.h);
   }
   g.restore();
 }
@@ -616,7 +643,7 @@ function drawCourt(g, a, k) {
  * dpx: device pixels per canvas pixel, when the canvas is drawn bigger
  * underneath (g scaled by dpx) so the signs' names can be written.
  */
-export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0, above = [], petals = true, steam = drawSteam } = {}) {
+export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0, above = [], petals = true, steam = drawSteam, lights = 'soft' } = {}) {
   g.imageSmoothingEnabled = false;
   g.drawImage(town.ground, view.x, view.y, view.w, view.h, 0, 0, view.w, view.h);
   g.save(); g.translate(-view.x, -view.y);
@@ -662,6 +689,6 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0
     else if (it.p && it.p.kind === 'tree' && it.p.type === 'sakura' && petals) drawPetals(g, { ...it.p, seed: it.p.x }, t, Math.round(30 * town.scale));
   }
   for (const s of above) if (s.x > view.x - 10 && s.x < view.x + view.w + 10 && s.y > view.y - 4 && s.y < view.y + view.h + 10) (s.draw ?? drawCharacter)(g, s, t);
-  if (night > 0.01) drawNight(g, view, items, night, dpx, drawItem, t);
+  if (night > 0.01) drawNight(g, view, items, night, dpx, drawItem, t, lights);
   g.restore();
 }
