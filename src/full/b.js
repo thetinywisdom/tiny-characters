@@ -247,7 +247,7 @@ export const PART = {
     approved: false,
     draw(r, rng, b, wall, roof, w) {
       const v = V(rng), floors = v.int(1, 3), top = floorAt(floors, SG), aw = v.pick(AWNINGS), f = lit(r), g = seeded((b.seed ?? 1) * 53 + 23), wo = old(w);
-      const FL = [RED, '#f2c230', '#d46a8e', WHITE, '#7a6aa8'], LEAF = '#5f8f5a';
+      const FL = [RED, '#f2c230', '#d46a8e', WHITE, '#7b6aa8'], LEAF = '#5f8f5a';
       r(wall, 0, 0, w, top);
       pier(r, wall, 0, 2, 18); pier(r, wall, w - 2, 2, 18); pier(r, wall, w - 12, 1, 18);
       const win = window(r, 2, w - 14, {});
