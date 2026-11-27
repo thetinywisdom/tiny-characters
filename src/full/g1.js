@@ -41,7 +41,7 @@ function manhole(R, x, y, w, h) {
 
 export const PART = {
   streets: {
-    approved: false,
+    approved: true,
     draw(g, { W, streets, crossStreets, SIDE, ROAD, STREET, VSIDE, VSTREET, pad, m }) {
       const R = painter(g);
       W = Math.round(W);
@@ -91,7 +91,7 @@ export const PART = {
   },
 
   railway: {
-    approved: false,
+    approved: true,
     draw(g, rail, { W, crossStreets, VSIDE, VSTREET, ROAD, m }) {
       const R = painter(g);
       W = Math.round(W);

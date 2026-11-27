@@ -45,14 +45,14 @@ const TUFT = '#7a9466', TUFT_L = '#a8bc90';
 
 export const PART = {
   grass: {
-    approved: false,
+    approved: true,
     draw(g, a) {
       const { P, cells, H, fill } = painter(g, a);
       fill(GRASS); lawn(P, cells, H);
     },
   },
   meadow: {
-    approved: false,
+    approved: true,
     draw(g, a) {
       const { P, cells, H, fill } = painter(g, a);
       fill('#a4b48e'); lawn(P, cells, H, GRASS_D, '#b0c09c', 0.5);
@@ -67,7 +67,7 @@ export const PART = {
     },
   },
   tallGrass: {
-    approved: false,
+    approved: true,
     draw(g, a) {
       const { P, cells, H, fill } = painter(g, a);
       fill('#8fa47a');
@@ -79,7 +79,7 @@ export const PART = {
     },
   },
   dirt: {
-    approved: false,
+    approved: true,
     draw(g, a) {
       const { P, cells, H, fill } = painter(g, a);
       fill('#a88a68');
@@ -96,7 +96,7 @@ export const PART = {
     },
   },
   sand: {
-    approved: false,
+    approved: true,
     draw(g, a) {
       const { P, cells, H, fill } = painter(g, a);
       fill('#e6d2a0');
@@ -111,7 +111,7 @@ export const PART = {
     },
   },
   gravel: {
-    approved: false,
+    approved: true,
     draw(g, a) {
       const { P, cells, H, fill } = painter(g, a);
       fill('#c8c2b4');
@@ -125,7 +125,7 @@ export const PART = {
     },
   },
   cobble: {
-    approved: false,
+    approved: true,
     draw(g, a) {
       const { P, cells, H, fill } = painter(g, a);
       fill('#8f8a80');                                                       // the joints
@@ -139,7 +139,7 @@ export const PART = {
     },
   },
   water: {
-    approved: false,
+    approved: true,
     // ripples on a 18 x 9 grid; each one breathes and drifts by whole pixels with t, at its own pace
     draw(g, a) {
       const { P, cells, H, fill } = painter(g, a), t = a.t ?? 0;
@@ -155,7 +155,7 @@ export const PART = {
     },
   },
   snow: {
-    approved: false,
+    approved: true,
     draw(g, a) {
       const { P, cells, H, fill } = painter(g, a);
       fill('#eef2f4');
@@ -171,7 +171,7 @@ export const PART = {
     },
   },
   paddy: {
-    approved: false,
+    approved: true,
     draw(g, a) {
       const { P, cells, fill } = painter(g, a);
       fill('#7a8a6a');                                                       // muddy water

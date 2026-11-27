@@ -286,6 +286,16 @@ building, more detail", not a redesign).
   crossarm's ends, the bench seat, the swing bar, the slide's ladder and chute, the
   hoop, the wall's top). `drawSwings` (tinyLife.js) draws the full frame through
   `drawProp` and the chains and seats on the full grid when the swings are redrawn.
+- **The ground** (`FULL_TERRAINS` in `src/tinyNatureFull.js`, part `src/full/t1.js`;
+  `FULL_GROUND` in `src/tinyGroundFull.js`, parts `g1.js` streets and railway, `g2.js`
+  court, pond, ring path, stepping stones): `drawGround` is split into pieces
+  (`oldStreets`, `oldRailway`, `drawCourt`, the ellipse pond, the ring path,
+  `oldStones`), each replaced by its full piece once used; a full terrain fills its
+  rectangle with one pattern pixel per canvas pixel, its marks on a grid fixed to the
+  canvas (picked by a hash of the cell and the seed), so patches meet without seams; the
+  pond's `water()` draws the moving water every frame inside the same pixel edge as
+  `draw()`. Curves (the pond, the ring path, the court's circle) are filled as whole-pixel
+  row spans, never canvas ellipses.
 - **Which are used:** `setRedraw('approved')` (the default: those with
   `approved: true`), `'all'` (also those in review), `'none'` (the old ones);
   the pages read `?redraw=` from the address at load.

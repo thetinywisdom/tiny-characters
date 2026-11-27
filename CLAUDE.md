@@ -7,15 +7,16 @@ canvas, no build step, no dependencies. Live demo (GitHub Pages, from `main`):
 https://thetinywisdom.github.io/tiny-characters/ and the catalogue
 https://thetinywisdom.github.io/tiny-characters/catalogue.html
 
-**The big change under way: everything is being redrawn at full size**
-(the owner chose "E", Nov 2026; `ART_PLAN.md`, the hand-drawn PNG plan, was
-dropped). The town used to draw buildings, props and plants at scale 1 and
-stretch them by 1.5, so lines came out uneven and their pixels were bigger
-than the people's. Now each kind is drawn again natively at the town's size
-(one building pixel = one person pixel), with the extra pixels spent on
-detail, in batches of 20 that the owner approves on a review page (see
-PLAN, In progress, and SKILLS, Full-size drawings). Not yet approved
-drawings show only with `?redraw=all`.
+**Everything is drawn at full size** (the owner chose "E", Nov 2026, done in
+five reviewed batches; `ART_PLAN.md`, the hand-drawn PNG plan, was dropped).
+The town used to draw buildings, props, plants and ground textures at scale 1
+and stretch them by 1.5 (uneven lines, pixels bigger than the people's); now
+each is drawn natively at the town's size (one pixel = one person pixel). New
+drawings go in the full-size files (`src/tinyBuildingsFull.js`,
+`tinyStreetFull.js`, `tinyNatureFull.js`, `tinyGroundFull.js`, parts in
+`src/full/`), reviewed by the owner on a review page before `approved: true`
+(see SKILLS, Full-size drawings). Not yet approved drawings show only with
+`?redraw=all`; `?redraw=none` shows the old drawings.
 
 **Read before working:** this file, then `PLAN.md` (what is done, the owner's
 decisions, what is next, open questions), `SKILLS.md` (how everything is
@@ -42,7 +43,8 @@ people see and the public API).
   `git push origin <branch>:main`; never force-push).
 - **Pixels everywhere.** It is a pixel world: people, buildings, effects
   (steam, the night's light, rings) are drawn on the pixel grid; nothing
-  soft or anti-aliased (one known leftover: the court's centre circle).
+  soft or anti-aliased (the court's centre circle, the last soft leftover,
+  is a pixel ring now).
 - Keep the characters as small and simple as they are (about 5 × 15 px); no
   3D people (tried and dropped), no shadows except under floating and
   flying monsters, no eyes.

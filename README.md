@@ -18,10 +18,10 @@ python3 -m http.server 8000   # then open http://localhost:8000
 
 ## Working on it
 
-Everything is being redrawn at full size: one building pixel is one person
-pixel (the old drawings were stretched by 1.5). Every building, street thing,
-tree and bush is done; the ground and streets come next. Add `?redraw=all` to the address to
-see drawings still in review too (`?redraw=none` shows the old drawings).
+Everything is drawn at full size: one pixel of a building, a street thing, a
+plant or the ground is one person pixel (the old drawings were stretched by
+1.5). `?redraw=none` in the address shows the old drawings; `?redraw=all` also
+shows drawings still in review.
 
 Agents and contributors: start with `CLAUDE.md` (the owner's rules and how
 to check a change), then `PLAN.md` (what is done, decided and next) and

@@ -446,18 +446,26 @@ bubble lab, so games can use them and they can grow.
     has light to wipe). Same picture; a forest view at night 26 ms to 10 ms (on a 4x
     slower CPU 121 ms to 49 ms).
 
+58. **Full-size ground (batch 5), all approved and live: the redraw is complete.** The ten
+    terrains (one pattern pixel = one person pixel; marks on a fixed grid, so patches meet
+    without seams and adding one reshuffles nothing; cobbles rounded and lit; water that
+    ripples a pixel at a time), the streets (kerb stones, grained asphalt, zebra crossings
+    with 5 wider stripes, pixel manholes), the railway (ballast, sleepers with rail plates,
+    level crossings), the pond with a pixel bank of stones (its water stays inside the same
+    edge), the ring path as pixel spans, visible stepping stones, and the court's centre
+    circle as a pixel ring (the last soft leftover). Every road, sidewalk, crossing and rail
+    is where it was.
+
 ## In progress
 
-- **Redrawing everything at full size (E)**, in batches reviewed on a review page
-  (https://claude.ai/artifact/4QAkLRYE9m2mcs5caQUZzB). Every building is done (batches 1-2).
-  Every building, street thing, tree and bush is done (batches 1-4). Batch 5, the ground
-  (the 10 terrains, `FULL_TERRAINS`, part `src/full/t1.js`; the streets, railway, court,
-  pond, ring path and stepping stones, `FULL_GROUND` in `src/tinyGroundFull.js`, parts
-  `src/full/g1.js`, `g2.js`), is drawn and waiting for the owner's review.
+- Nothing. **Every building, street thing, tree, bush and the ground is drawn at full size**
+  and approved (batches 1-5). The old scale-1 drawings are still in the code as the
+  fallback (`?redraw=none` shows them); removing them would make the files much shorter
+  (ask the owner first).
 
 ## Next (only when the owner asks)
 
-**The full-size redraw comes first** (In progress). Other ideas offered before (on hold):
+The full-size redraw is done. Ideas offered before (on hold):
 - weather and time (the backlog): wind, rain, seasons
 - a map maker: place streets, buildings, props and areas, save and load
   (every place is already a layout piece)
@@ -495,8 +503,6 @@ bubble lab, so games can use them and they can grow.
   people walk over the blanket and the bags.
 - Real kana on signs (ラーメン, コンビニ) could be tried on a few if the owner
   wants (the signs are in English now, by the owner's choice).
-- The basketball court's centre circle is a smooth line, not pixels (offered
-  to redraw it as a pixel ring; waiting for the owner).
 
 - Turned down when comparing with the catalogue (do not add): twin tails,
   beard, helmet, tank top, flu mask, wings, bulky build, shoes or boots,
@@ -510,6 +516,6 @@ bubble lab, so games can use them and they can grow.
 
 ## Open questions for the owner
 
-- Redraw the basketball court's centre circle in pixels, like the ring under
-  your feet?
+- Remove the old (scale-1) drawings now that everything is redrawn, or keep them
+  as a fallback (`?redraw=none`)?
 - What next (see Next)?

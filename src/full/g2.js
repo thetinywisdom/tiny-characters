@@ -92,7 +92,7 @@ function fenceOf(a) {
 
 export const PART = {
   court: {
-    approved: false,
+    approved: true,
     draw(g, a, k) {
       const Q = (col, x, y, w, h) => R(g, col, Math.round(x), Math.round(y), Math.round(w), Math.round(h)), m = (v) => Math.round(v * k);
       Q('#2f5a80', a.x, a.y, a.w, a.h);                                    // the run-off: a deeper blue
@@ -116,7 +116,7 @@ export const PART = {
   },
 
   pond: {
-    approved: false,
+    approved: true,
     draw(g, a, k, terrain) {
       const p = pondOf(a);
       g.save(); clipSpans(g, p.water); terrain(g); pondShade(g, p); g.restore();
@@ -129,7 +129,7 @@ export const PART = {
   },
 
   ringPath: {
-    approved: false,
+    approved: true,
     draw(g, a, k, terrain) {
       const m = (v) => Math.round(v * k);
       const cx = a.x + a.w / 2, cy = a.y + a.h / 2, rx = a.w / 2 - m(8), ry = a.h / 2 - m(8), wd = m(6);
@@ -152,7 +152,7 @@ export const PART = {
   },
 
   steppingStones: {
-    approved: false,
+    approved: true,
     draw(g, a, k) {
       const m = (v) => Math.round(v * k), { x, w, y0 } = a.path, h = m(4);
       const rng = seeded(x * 13 + y0 * 3 + 5);
