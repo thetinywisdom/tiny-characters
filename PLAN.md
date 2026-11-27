@@ -280,8 +280,27 @@ bubble lab, so games can use them and they can grow.
 
 ## Next (only when the owner asks)
 
-1. Small life (the owner's list of ideas, not yet asked for): pigeons that scatter, laundry on balconies, shopkeepers,
-   steam from the ramen shop, people chatting or sitting on benches.
+1. **Small life** (agreed, all of it; pictures first, new poses previewed):
+   - on the streets: people riding bikes, a delivery scooter, kids kicking a
+     ball, a shopkeeper sweeping, someone stopping at a vending machine for a
+     can, rubbish day (bins out in the morning, gone by noon)
+   - animals: pigeons that peck and scatter, crows on the wires, a cat napping
+     on a wall, ducklings following a duck, two dogs greeting
+   - homes and shops: laundry and futons on balconies, shopkeepers in their
+     doorways (bowing), steam from the food stalls, windows lighting up and
+     going dark at night, shop shutters down at closing time
+   - station and alley: a crowd at rush hour when a train stops, someone
+     taking a taxi from the rank, the alley's lanterns swaying
+   - park: people on benches, feeding the ducks, kids on the swings and the
+     slide, a picnic under the cherry trees, petals falling
+   - new poses (previewed first): sitting, riding, sweeping, kicking,
+     throwing, drinking
+
+## Backlog (agreed ideas for later)
+
+- **Weather and time** (the owner: later): wind (leaves, petals, laundry
+  flapping), rain (umbrellas up, puddles), seasons (spring blossom, autumn
+  colours, a snowy winter). They change existing looks, so preview first.
 
 ## Known issues and small ideas
 
