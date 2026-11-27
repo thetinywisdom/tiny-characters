@@ -122,7 +122,9 @@ function nightAt(h) {
 /** A dog keeps a little behind its owner: it trots after them when they get away. */
 function heel(d, dt) {
   const o = d.owner, back = o.facing === 'left' ? 7 : o.facing === 'right' ? -7 : 0, down = o.facing === 'up' ? 5 : o.facing === 'down' ? -4 : 0;
-  const tx = o.x + back, ty = o.y + down + 1, ex = tx - d.x, ey = ty - d.y, dist = Math.hypot(ex, ey);
+  let tx = o.x + back, ty = o.y + down + 1;
+  if (town.roadAt(tx, ty) && !town.roadAt(o.x, o.y)) { tx = o.x - back; ty = o.y - down + 1; }   // not out in the road behind them: the other side
+  const ex = tx - d.x, ey = ty - d.y, dist = Math.hypot(ex, ey);
   if (dist > 1.5) { const v = Math.min(dist, (dist > 12 ? 30 : 16) * dt); d.x += ex / dist * v; d.y += ey / dist * v; d.walking = true; d.facing = facingFor(ex, ey, d.facing); }
   else { d.walking = false; d.facing = o.facing ?? 'down'; }
 }
@@ -192,8 +194,12 @@ function follow(p, speed, dt) {
     const sx = p.x - uy * s * 1.2, sy = p.y + ux * s * 0.8;
     if (!town.blocked(sx, sy) && !crowded(p, sx, sy) && !traffic.hits(sx, sy)) { p.x = sx; p.y = sy; inWay = false; break; }
   }
-  // held up out on a crossing: squeeze past (not stand in the cars' way) until clear of them
-  if (inWay && onRoad && ((p.blocked ?? 0) > 0.6 || p.squeeze)) { inWay = false; p.squeeze = true; } else if (!inWay) p.squeeze = false;
+  // someone just standing about in the way (resting between trips): after a moment they step aside
+  const resting = (q) => !q.path && !q.busy && !q.you && !q.dog && !q.chat && !q.talking && !q.player;
+  if (inWay && resting(there) && (p.blocked ?? 0) > 0.5) there.wait = 0;
+  // held up out on a crossing by someone who will not step aside (coming the other way, busy, you):
+  // squeeze past (not stand in the cars' way) until clear of them
+  if (inWay && onRoad && !resting(there) && ((p.blocked ?? 0) > 0.6 || p.squeeze)) { inWay = false; p.squeeze = true; } else if (!inWay) p.squeeze = false;
   if (d > 0 && (inWay || (ahead && !FLIERS.has(p.monster) && !traffic.hits(p.x, p.y)))) {
     p.walking = false; p.facing = facingFor(ex, ey, p.facing);
     // kept waiting too long (a car, or someone, that waits for them in turn): give up and go somewhere else

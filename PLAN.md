@@ -309,6 +309,13 @@ bubble lab, so games can use them and they can grow.
     monsters, cats and the basketball game are as they were: 99 on foot in
     all (was 142).
 
+41. **Small fixes** (the owner): someone resting in the way steps aside
+    after half a second ("excuse me") instead of being squeezed into; only
+    someone who cannot move (coming the other way, busy, you) is squeezed
+    past on a crossing; a dog waits on the other side of its owner rather
+    than in the road; a taxi pulls out or in only when nobody stands
+    against it. Overlaps in 90 s: 103 to 20; no car held up for 15 s.
+
 ## Next (only when the owner asks)
 
 Nothing agreed yet: ask the owner (pictures first). Ideas: weather and time
@@ -334,11 +341,8 @@ Nothing agreed yet: ask the owner (pictures first). Ideas: weather and time
 
 - Nobody goes inside buildings yet (tapping one walks you to its door).
 - A dog can brush past someone who is not its owner.
-- People overlap a little more than before small life (about 30 times in a
-  1.5-minute sample, against 6): mostly walkers brushing past the kids
-  playing in the schoolyard and on the slide, who do not move out of the way.
-- A taxi pulling out of the rank does not look behind it, so it can brush
-  someone standing right next to its back.
+- People still brush past each other now and then (about 20 overlaps in 90 s,
+  mostly cats and walkers).
 - Pigeons, crows, the picnic blanket and the rubbish bags are drawn only;
   people walk over the blanket and the bags.
 - Sign text is a row of pixels, not letters. Real kana would need at least

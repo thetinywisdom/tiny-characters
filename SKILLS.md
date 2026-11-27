@@ -258,8 +258,9 @@ vehicle standing there. Cars stop for anyone on the road (not the sidewalk)
 within their width from inside them to 12 px ahead; in the demo, people wait
 instead of stepping into a vehicle (flying and floating monsters pass over),
 give up and go elsewhere after 2 s of waiting (but never out on a crossing:
-there they squeeze past whoever holds them up after 0.6 s, and no trip ends
-on the road), so a car and a person never wait for each other for good, and the keys will not walk you into one (`window.tinyTown.traffic.hits`
+someone resting in their way steps aside after 0.5 s; on a crossing they
+squeeze past anyone who cannot, after 0.6 s; no trip ends on the road; a dog
+keeps to the other side of its owner rather than stand in the road), so a car and a person never wait for each other for good, and the keys will not walk you into one (`window.tinyTown.traffic.hits`
 in the console).
 
 **Cars never pass through cars:** besides keeping their distance in a lane,

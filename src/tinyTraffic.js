@@ -432,7 +432,11 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, seed = 5
       // swing round towards its heading (a quarter turn in about a third of a second)
       if (v.heading !== v.target) { const diff = ((v.target - v.heading + 540) % 360) - 180, turnBy = 280 * dt; v.heading = Math.abs(diff) <= turnBy ? v.target : (v.heading + Math.sign(diff) * turnBy + 360) % 360; }
       if (v.wait > 0) { v.wait -= dt; v.walking = false; continue; }
-      if (v.driftY !== undefined) drift(v, dt);
+      if (v.driftY !== undefined) {                                           // pulling out or in: not while someone stands against it
+        const V = VEHICLES[v.type], near = walkers.some((p) => { if (p.vehicle || p.ball || p.monster) return false; const { ahead, side } = local(v, p.x, p.y); return Math.abs(ahead) < V.length / 2 + 5 && Math.abs(side) < V.width / 2 + 5; });
+        if (near) { v.speed = 0; v.walking = false; continue; }
+        drift(v, dt);
+      }
       if (v.toRank && v.driftY === undefined && v.x - v.toRank.x < 28 && v.y !== v.toRank.y) { v.driftY = v.toRank.y; v.target = 205; }   // pulling in
       if (v.toRank && v.x <= v.toRank.x) {                                     // in its place: parked again
         town.parked.push({ ...v.toRank, seed: v.seed }); ranks.splice(ranks.findIndex((r) => r.spot === v.toRank), 1); v.gone = true; continue;
