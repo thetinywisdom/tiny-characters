@@ -652,8 +652,8 @@ the demo decides who does what.
   over shops that close (`closes(b)`: not the konbini, ramen or izakaya; at
   night it also wipes their light); at night each window has its own
   rhythm (`b.time`, passed by drawNight), going dark and lighting up.
-  Steam (`drawSteam`) is two pixel wisps that sway as they rise and thin
-  out by a 4 x 4 dither towards the top (the owner's choice; no soft shapes).
+  Steam (`drawSteam`) is four round puffs on the pixel grid, growing as they
+  rise and fading from 70 % to nothing (the owner's choice, B; no soft shapes).
   `cooks(b)` says which steam (ramen shops, the yakitori stall, takoyaki,
   udon, the kiosk; drawTownView draws the steam).
 - **The town draws by itself**: lanterns sway (`p.sway`), petals fall round

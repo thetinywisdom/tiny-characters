@@ -9,7 +9,7 @@
 //   drawPigeon(g, b, t)      { x, y, flying, peck }        drawCrow(g, c, t)   { x, y }
 //   drawNappingCat(g, c, t)  a cat lying on a wall, its tail flicking
 //   drawSwings(g, prop, t)   a swing frame whose seats swing with prop.riders on them
-//   drawSteam(g, x, y, t, seed)   pixel wisps rising from (x, y)
+//   drawSteam(g, x, y, t, seed)   see-through pixel puffs rising from (x, y)
 //   drawPetals(g, tree, t)   petals drifting down round a cherry tree
 //   drawRubbish(g, r)        rubbish bags under a green net (rubbish day)
 //   drawScooter(g, v)        the delivery scooter, side on or head on
@@ -159,19 +159,20 @@ export function drawSwings(g, prop, t = 0) {
 
 // --- steam, petals, rubbish ---------------------------------------------------------------------
 /**
- * Steam rising from (x, y), in pixels (the owner chose wisps, Nov 2026): two thin
- * curling lines that sway as they rise and thin out towards the top (dithered
- * away, not faded). No state: from the time; `seed` sets them apart.
+ * Steam rising from (x, y), in pixels (the owner chose see-through pixel puffs,
+ * Nov 2026): four round puffs on the pixel grid that grow as they rise, sway a
+ * little and fade out (half see-through at the bottom, gone at the top). No
+ * state: from the time; `seed` sets one stall's steam apart from the next.
  */
-const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
 export function drawSteam(g, x, y, t = 0, seed = 0) {
-  x = Math.round(x); y = Math.round(y);
-  const drift = Math.floor(t * 8);
-  for (const [dx, ph] of [[-1, 0], [2, 1.7]]) for (let i = 0; i < 20; i++) {
-    const u = i / 20, yy = y - i, xx = x + dx + Math.round(Math.sin(i * 0.4 - t * 3 + ph + seed) * (1 + u * 2));
-    if (BAYER[(((yy + drift) % 4) + 4) % 4 * 4 + ((xx % 4) + 4) % 4] / 16 >= 1 - u * u) continue;   // thinner as it rises
-    px(g, u < 0.5 ? '#f4f4f0' : '#d8dad6', xx, yy);
+  g.save();
+  for (let k = 0; k < 4; k++) {
+    const u = (t * 0.45 + k / 4 + seed * 0.13) % 1, r = 1 + Math.round(u * 2.6);
+    const cx = Math.round(x + Math.sin(u * 5 + k + seed) * 2), cy = Math.round(y - u * 20);
+    g.globalAlpha = 0.7 * (1 - u);
+    for (let dy = -r; dy <= r; dy++) for (let dx = -r - 1; dx <= r + 1; dx++) if (dx * dx * 0.8 + dy * dy * 1.4 <= r * r + 0.8) px(g, '#ffffff', cx + dx, cy + dy);
   }
+  g.restore();
 }
 /** Petals drifting down round a cherry tree (its crown about h px above its foot). */
 export function drawPetals(g, tree, t = 0, h = 34) {
