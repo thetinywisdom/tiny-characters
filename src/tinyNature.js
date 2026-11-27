@@ -5,13 +5,15 @@
 //   drawBush(g, { type, x, y, seed, scale })
 //   drawTerrain(g, { type, x, y, w, h, seed, scale, t })   fills a rectangle
 //   TREES, BUSHES: type -> { label, w, h }   TERRAINS: type -> { label }
+//   plantScale(type)  1.5 once the tree or bush is drawn at full size (tinyNatureFull.js)
 //
 // The seed picks one of 8 looks of a tree or bush (where its flowers, fruit
 // and blossom fall) and mirrors it; a terrain's seed moves its pattern.
 // Like the buildings, everything scales with crisp pixels (scale 1.5 in the
 // town): patterns repeat on even steps.
 
-import { makePainter } from './tinyBuildings.js';
+import { makePainter, usesFull } from './tinyBuildings.js';
+import { FULL_TREES, FULL_BUSHES } from './tinyNatureFull.js';
 import { canvasOf, seeded, shade } from './tinyCharacters.js';
 
 const BARK = '#6b4a2a', DARK_BARK = '#4a3424';
@@ -178,23 +180,27 @@ export const BUSHES = Object.fromEntries(Object.entries(BUSH_DEFS).map(([k, [lab
 const VARIANTS = 8;                 // looks per plant type (the seed picks one, and mirrors it)
 const cache = new Map();
 const MX = 10, MY = 8;              // room round a plant for what sticks out (fronds, strands, shadow)
-function plantImage(defs, type, variant, salt) {
-  const key = `${salt}:${type}:${variant}`;
+// A plant redrawn at full size (tinyNatureFull.js, once approved) is made for the town's
+// scale 1.5: its image is 1.5 times bigger (margins too) and placed at scale / 1.5.
+function plantImage(defs, fulls, type, variant, salt) {
+  const f = usesFull(fulls[type]) ? fulls[type] : null;
+  const key = `${salt}:${type}:${variant}${f ? ':f' : ''}`;
   if (cache.has(key)) return cache.get(key);
-  const [, w, h, draw] = defs[type];
-  const cw = w + MX * 2, ch = h + MY * 2;
+  const [, w1, h1, draw1] = defs[type];
+  const K = f ? 1.5 : 1, w = Math.round(w1 * K), h = Math.round(h1 * K), mx = Math.round(MX * K), my = Math.round(MY * K);
+  const cw = w + mx * 2, ch = h + my * 2;
   const c = canvasOf(cw, ch);
-  draw(makePainter(c.getContext('2d'), MX, h + MY, 1), seeded(variant * 131 + salt), Math.floor(w / 2));
-  const img = { c, cw, ch, w, h };
+  (f ? f.draw : draw1)(makePainter(c.getContext('2d'), mx, h + my, 1), seeded(variant * 131 + salt), Math.floor(w / 2));
+  const img = { c, cw, ch, w, h, mx, my, K };
   cache.set(key, img);
   return img;
 }
-function drawPlant(defs, g, p, salt) {
+function drawPlant(defs, fulls, g, p, salt) {
   if (!defs[p.type]) return;
-  const seed = p.seed ?? 0, k = p.scale ?? 1;
-  const { c, cw, ch, w, h } = plantImage(defs, p.type, seed % VARIANTS, salt);
+  const seed = p.seed ?? 0;
+  const { c, cw, ch, w, h, mx, my, K } = plantImage(defs, fulls, p.type, seed % VARIANTS, salt), k = (p.scale ?? 1) / K;
   const flip = seed % 2 === 1;                                           // the seed mirrors it too
-  const x0 = p.x - (MX + w / 2) * k, y0 = p.y - (h + MY) * k;
+  const x0 = p.x - (mx + w / 2) * k, y0 = p.y - (h + my) * k;
   const smooth = g.imageSmoothingEnabled;
   g.imageSmoothingEnabled = false;
   if (flip) { g.save(); g.translate(x0 + cw * k, y0); g.scale(-1, 1); g.drawImage(c, 0, 0, cw * k, ch * k); g.restore(); }
@@ -202,9 +208,11 @@ function drawPlant(defs, g, p, salt) {
   g.imageSmoothingEnabled = smooth;
 }
 /** Draw a tree { type, x, y, seed, scale }: centred on x, its foot at y. */
-export function drawTree(g, p) { drawPlant(TREE_DEFS, g, p, 17); }
+export function drawTree(g, p) { drawPlant(TREE_DEFS, FULL_TREES, g, p, 17); }
 /** Draw a bush { type, x, y, seed, scale }: centred on x, its foot at y. */
-export function drawBush(g, p) { drawPlant(BUSH_DEFS, g, p, 23); }
+export function drawBush(g, p) { drawPlant(BUSH_DEFS, FULL_BUSHES, g, p, 23); }
+/** The scale a tree or bush is best shown at: 1.5 (the town's) once it is drawn at full size, else 1. */
+export const plantScale = (type) => (usesFull(FULL_TREES[type] ?? FULL_BUSHES[type]) ? 1.5 : 1);
 
 // --- terrains -------------------------------------------------------------------
 /** Terrains: type -> { label }. */

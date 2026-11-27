@@ -1,7 +1,7 @@
 import { BUILDINGS, PARTS, SHOP_TYPES, SIGN_FONT, drawBuilding, drawPart } from '../src/tinyBuildings.js';
 import { LOOKS, drawCharacter, lookFor } from '../src/tinyCharacters.js';
 import { CAT_COATS, DOG_BREEDS, dogFor, drawCat, drawDog } from '../src/tinyAnimals.js';
-import { BUSHES, TERRAINS, TREES, drawBush, drawTerrain, drawTree } from '../src/tinyNature.js';
+import { BUSHES, TERRAINS, TREES, drawBush, drawTerrain, drawTree, plantScale } from '../src/tinyNature.js';
 import { MONSTERS, drawMonster } from '../src/tinyMonsters.js';
 import { ACTIONS, REACTIONS, SKILLS, WEAPONS, actionsFor, drawAction, drawActor, drawWeapon } from '../src/tinyCombat.js';
 import { PROPS, drawProp, propScale } from '../src/tinyStreet.js';
@@ -92,14 +92,21 @@ for (const [reaction, { label, duration }] of Object.entries(REACTIONS)) for (co
 
 // trees, bushes and terrains
 const JAPANESE_NATURE = ['maple', 'sakura', 'pine', 'cedar', 'bamboo', 'ginkgo', 'azalea', 'paddy'];
-for (const [type, { label, w, h }] of Object.entries(TREES)) items.push({ id: `nature.tree.${type}`, label, group: 'Nature', tags: ['Trees', ...(JAPANESE_NATURE.includes(type) ? ['Japanese'] : [])], seed: 1,
-  w: Math.round(w * 1.2) + 4, h: Math.round(h * 1.2) + 4, px: 0,
-  draw: (g, seed) => drawTree(g, { type, x: (Math.round(w * 1.2) + 4) / 2, y: Math.round(h * 1.2) + 2, seed }),
-  code: (seed) => `drawTree(g, { type: '${type}', x, y, seed: ${seed} })` });
-for (const [type, { label, w, h }] of Object.entries(BUSHES)) items.push({ id: `nature.bush.${type}`, label, group: 'Nature', tags: ['Bushes', ...(JAPANESE_NATURE.includes(type) ? ['Japanese'] : [])], seed: 1,
-  w: Math.round(w * 1.2) + 4, h: Math.round(h * 1.2) + 4, px: 6,
-  draw: (g, seed) => drawBush(g, { type, x: (Math.round(w * 1.2) + 4) / 2, y: Math.round(h * 1.2) + 2, seed }),
-  code: (seed) => `drawBush(g, { type: '${type}', x, y, seed: ${seed} })` });
+// (a plant redrawn at full size is shown at the town's size, scale 1.5)
+for (const [type, { label, w: w1, h: h1 }] of Object.entries(TREES)) {
+  const scale = plantScale(type), w = w1 * scale, h = h1 * scale, sc = scale === 1 ? '' : `, scale: ${scale}`;
+  items.push({ id: `nature.tree.${type}`, label, group: 'Nature', tags: ['Trees', ...(JAPANESE_NATURE.includes(type) ? ['Japanese'] : [])], seed: 1,
+    w: Math.round(w * 1.2) + 4, h: Math.round(h * 1.2) + 4, px: 0,
+    draw: (g, seed) => drawTree(g, { type, x: (Math.round(w * 1.2) + 4) / 2, y: Math.round(h * 1.2) + 2, seed, scale }),
+    code: (seed) => `drawTree(g, { type: '${type}', x, y, seed: ${seed}${sc} })` });
+}
+for (const [type, { label, w: w1, h: h1 }] of Object.entries(BUSHES)) {
+  const scale = plantScale(type), w = w1 * scale, h = h1 * scale, sc = scale === 1 ? '' : `, scale: ${scale}`;
+  items.push({ id: `nature.bush.${type}`, label, group: 'Nature', tags: ['Bushes', ...(JAPANESE_NATURE.includes(type) ? ['Japanese'] : [])], seed: 1,
+    w: Math.round(w * 1.2) + 4, h: Math.round(h * 1.2) + 4, px: scale === 1 ? 6 : 4,
+    draw: (g, seed) => drawBush(g, { type, x: (Math.round(w * 1.2) + 4) / 2, y: Math.round(h * 1.2) + 2, seed, scale }),
+    code: (seed) => `drawBush(g, { type: '${type}', x, y, seed: ${seed}${sc} })` });
+}
 for (const [type, { label }] of Object.entries(TERRAINS)) items.push({ id: `nature.terrain.${type}`, label, group: 'Nature', tags: ['Terrain', ...(JAPANESE_NATURE.includes(type) ? ['Japanese'] : [])], seed: 1,
   w: 40, h: 26, px: 4, animated: type === 'water',
   draw: (g, seed, t) => drawTerrain(g, { type, x: 0, y: 0, w: 40, h: 26, seed, t }),
