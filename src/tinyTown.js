@@ -23,7 +23,8 @@ import { drawMonster } from './tinyMonsters.js';
 import { BUSHES, drawBush, drawTerrain, drawTree } from './tinyNature.js';
 import { PROPS, drawProp, drawWire, poleTops, propLights, propSolid } from './tinyStreet.js';
 import { drawPose, drawSwings, drawSteam, drawPetals } from './tinyLife.js';
-import { drawVehicle, drawVehicleBeams, vehicleLights } from './tinyTraffic.js';
+import { VEHICLES, drawVehicle, drawVehicleBeams, vehicleLights } from './tinyTraffic.js';
+import { KY } from './tinyVoxel.js';
 import { canvasOf, drawCharacter, drawRing, seeded as seededRng } from './tinyCharacters.js';
 
 const CELL = 4;                                          // path-finding grid
@@ -463,6 +464,55 @@ const mix = (a, b, u) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(a.slice(
 let beamLayer = null, glowLayer = null;
 const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
 /**
+ * Anyone (and any animal or monster) standing in a light takes on its colour (the owner's choice, C,
+ * Nov 2026): drawn again in their day colours tinted by the light, over the dark, in the light's own
+ * steps: full near a lamp's foot or right in front of a car, half at the edge of its light.
+ */
+let litCanvas = null, litShape = null;
+const WARM = { '#ffe8a8': '#ffd890' };                                   // a lamp's light, a little warmer on people
+const LIT_W = 40, LIT_H = 48;
+function litUp(g, items, vehicles, drawItem, dpx, on) {
+  const lamps = [];
+  for (const it of items) if (it.prop) for (const l of propLights(it.prop)) lamps.push({ ...l, gy: it.prop.y });
+  items.forEach((it, index) => {
+    const q = it.s;
+    if (!q || q.vehicle || q.ball || q.away) return;
+    let best = 0, colour = null;
+    for (const l of lamps) {
+      const u = Math.hypot(q.x - l.x, (q.y - l.gy) * 1.6) / l.r, st = u < 0.45 ? 1 : u < 0.8 ? 0.5 : 0;
+      if (st > best) { best = st; colour = l.c; }
+    }
+    for (const v of vehicles) {                                            // in front of a car's headlights
+      if (v.type === 'train' || !VEHICLES[v.type]) continue;
+      const th = ((v.heading ?? 0) * Math.PI) / 180, dx = q.x - v.x, dy = (q.y - v.y) / KY;
+      const ahead = dx * Math.cos(th) + dy * Math.sin(th) - VEHICLES[v.type].length / 2, side = Math.abs(-dx * Math.sin(th) + dy * Math.cos(th));
+      const st = ahead > 0 && side < VEHICLES[v.type].width / 2 + 4 ? (ahead < 12 ? 1 : ahead < 24 ? 0.5 : 0) : 0;
+      if (st > best) { best = st; colour = '#fff4c8'; }
+    }
+    if (!best) return;
+    // them alone, in day colours, on a small canvas of their own; tinted by the light; then over the dark
+    if (!litCanvas || litCanvas.width !== LIT_W * dpx) { litCanvas = canvasOf(LIT_W * dpx, LIT_H * dpx); litShape = canvasOf(LIT_W * dpx, LIT_H * dpx); }
+    const c = litCanvas.getContext('2d'), m = litShape.getContext('2d'), ox = Math.round(q.x) - LIT_W / 2, oy = Math.round(q.y) - LIT_H + 6;
+    m.setTransform(1, 0, 0, 1, 0, 0); m.clearRect(0, 0, litShape.width, litShape.height);
+    m.setTransform(dpx, 0, 0, dpx, -ox * dpx, -oy * dpx); m.imageSmoothingEnabled = false;
+    drawItem(m, { ...it, s: { ...q, ring: undefined, you: false } });
+    c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = 'source-over'; c.clearRect(0, 0, litCanvas.width, litCanvas.height);
+    c.drawImage(litShape, 0, 0);
+    c.globalCompositeOperation = 'multiply'; c.fillStyle = WARM[colour] ?? (colour.length === 7 ? colour : '#ffd890'); c.fillRect(0, 0, litCanvas.width, litCanvas.height);
+    c.globalCompositeOperation = 'destination-in'; c.drawImage(litShape, 0, 0);   // (one shape: a mask drawn rectangle by rectangle would keep only the last)
+    c.setTransform(dpx, 0, 0, dpx, -ox * dpx, -oy * dpx); c.imageSmoothingEnabled = false;
+    // whatever stands in front of them (drawn after them) hides that part of them
+    c.globalCompositeOperation = 'destination-out';
+    for (let j = index + 1; j < items.length; j++) {
+      const o = items[j], ob = o.b ? { x: o.b.x, y: o.b.y } : o.prop ?? o.p ?? o.s;
+      if (ob && Math.abs(ob.x - q.x) < 80 && ob.y - q.y < 120) drawItem(c, o);
+    }
+    g.save(); g.globalAlpha = best * 0.8 * on; g.imageSmoothingEnabled = false;
+    g.drawImage(litCanvas, ox, oy, LIT_W, LIT_H); g.restore();
+  });
+}
+
+/**
  * Turn the soft light in a layer (added up on black) into pixel light: 'bands', a few flat steps;
  * 'dither', one strength in a 4 x 4 dot pattern that thins out where the light is weaker;
  * 'mixed', two flat steps with a dotted edge.
@@ -539,6 +589,8 @@ function drawNight(g, view, items, night, dpx, drawItem, t = 0, lights = 'bands'
     g.globalCompositeOperation = 'lighter';
     g.imageSmoothingEnabled = false;
     g.drawImage(glowLayer, view.x, view.y, view.w, view.h);
+    g.globalCompositeOperation = 'source-over';
+    litUp(g, items, vehicles, drawItem, dpx, on);
   }
   g.restore();
 }

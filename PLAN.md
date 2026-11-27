@@ -348,6 +348,12 @@ bubble lab, so games can use them and they can grow.
     light styles can be tried live with `?lights=bands|dither|mixed` (and
     `?time=night`); the owner chose A, flat steps: now the default.
 
+46. **People in the light** (the owner: something should happen when they
+    stand under a light; chose C from mock-ups): at night, anyone (and cats,
+    dogs, monsters) under a lamp, a lantern, by a vending machine or in front
+    of a car's headlights shows in their day colours tinted by that light, in
+    the light's own steps (full, half, none).
+
 ## Next (only when the owner asks)
 
 Nothing agreed yet: ask the owner, then mock up the options (pictures

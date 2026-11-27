@@ -647,7 +647,11 @@ the demo decides who does what.
   up in one layer, then turned into pixel steps or dots by `pixelLight`;
   the light on the ground, lamps' and headlights', has every vehicle and
   everyone on foot painted out of it, so it never washes over them; a
-  vehicle's own lamps are added on it after;
+  vehicle's own lamps are added on it after; anyone standing in a light
+  takes on its colour (`litUp`, the owner's choice C): drawn again in day
+  colours, multiplied by the light's colour, at 80 % near a lamp's foot or
+  right in front of a car, 40 % at the edge of its light; whatever stands in
+  front of them is painted out of that copy;
   'bands', three flat steps, is the default: the owner's choice; the demo
   takes `?lights=soft|dither|mixed` and `?time=night` in its address).
 - **Swings in use**: a swings prop with `riders: [{ angle, kid } | null,
