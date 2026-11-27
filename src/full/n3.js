@@ -176,7 +176,7 @@ export const PART = {
     tips(G, rng, c, 3); leaves(G, rng, c, 5);
     G.flush(r);
     const heads = [[-5, 6], [1, 8], [4, 4], [-2, 3]];
-    if (rng() < 0.5) heads.push([-6 + Math.floor(rng() * 3) * 5, 1 + Math.floor(rng() * 2) * 7]);
+    if (rng() < 0.5) heads.push([-7, 1]);                                          // sometimes a fifth, low at the left
     for (const [dx, up] of heads) {
       const p = rng() < 0.5 ? '#7a8ad8' : '#a080c8', x = cx + dx + Math.floor(rng() * 2) - 1;
       r(p, x + 1, up + 3, 2, 1); r(p, x, up + 1, 4, 2); r(shade(p, 0.82), x + 1, up, 2, 1);   // a round head

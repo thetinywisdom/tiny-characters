@@ -187,14 +187,14 @@ export const PART = {
   cedar: { approved: false, draw(r, rng, cx) {
     const P = sheet(), C = '#3a6a48', BAND = '#2f5a3c', EDGE = '#2a4a34', LIT = '#467a52';
     trunk(P, rng, cx, 7, BARK, 3, { marks: 1, foot: false });
-    for (let k = 0; k < 42; k++) {
-      const t = k % 6, hw = Math.max(0, Math.round(7.5 - k * 7.5 / 42) + (t === 0 && k < 36 ? 1 : 0) - (t === 5 ? 1 : 0)), y = 6 + k;
+    for (let k = 0; k < 40; k++) {
+      const t = k % 6, hw = Math.max(0, Math.round(7 - k * 7 / 40) + (t === 0 && k < 36 ? 1 : 0) - (t === 5 ? 1 : 0)), y = 6 + k;
       P.rect(t === 0 ? BAND : C, cx - hw, y, hw * 2 + 1, 1);
       if (t >= 2 && hw > 1) P.rect(LIT, cx - hw + (t === 2 ? 1 : 0), y, Math.max(1, Math.round(hw * 0.6)), 1);   // the lit left side
       if (hw > 0) P.rect(EDGE, cx + hw, y, 1, 1);
       if (t === 1 && hw > 2) P.rect(shade(C, 0.88), cx + Math.ceil(hw / 2), y, hw - Math.ceil(hw / 2), 1);        // the shade under the tier above
     }
-    P.set(cx, 48, C); P.set(cx, 49, LIT);                                                    // the tip
+    P.set(cx, 46, C); P.set(cx, 47, LIT);                                                    // the tip
     P.paint(r);
   } },
 
@@ -226,7 +226,7 @@ export const PART = {
     branch(P, cx, 17, -5, 4, W2, 1); branch(P, cx + 1, 18, 4, 4, W2, 1);
     for (const y of [3, 9, 15]) { const o = Math.floor(rng() * 2); P.rect(INK, cx - 1 + o, y + jit(rng), 2, 1); }   // dark bands
     for (let i = 0; i < 3; i++) P.set(cx - 1 + Math.floor(rng() * 3), 1 + Math.floor(rng() * 18), shade(W2, 0.7));
-    clump(P, cx, 23, 7, 9, G, { light: shade(G, 1.12), dark: shade(G, 0.78), lit: [3.5, 4.5], sh: [1.5, 3.5] });
+    clump(P, cx, 23, 7, 9, G, { light: shade(G, 1.14), dark: shade(G, 0.78), lit: [3.5, 4.5], sh: [1.2, 5] });
     const a = jit(rng), b = jit(rng);
     for (const [dx, y] of [[-3 + a, 17], [2, 16 + b], [4, 21 + a]]) if (P.has(cx + dx, y) && P.has(cx + dx + 1, y)) { P.set(cx + dx, y, shade(G, 0.66)); P.set(cx + dx + 1, y, shade(G, 0.66)); }   // gaps between the leaves
     dots(P, rng, cx - 2, 26, 3, 3, [shade(G, 1.24)], 2, [[0, 0], [1, 0], [0, 1]], 3);    // leaves in the sun
