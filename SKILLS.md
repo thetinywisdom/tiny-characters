@@ -18,23 +18,20 @@ src/tinyCharacters.js  the library (plain ES module, no dependencies):
                        TOPS, LEGWEAR, CARRY); and the helpers every other
                        module shares: shade (a colour darker or lighter)
                        and canvasOf (a canvas of its own); do not copy them
-src/tinyBuildings.js   the buildings (plain ES module, imports seeded from
-                       tinyCharacters.js): drawBuilding, BUILDINGS,
-                       SHOP_TYPES, buildingSolids, WALL_COLORS, ROOF_COLORS,
-                       setRedraw; the old (scale-1) drawings in DEFS
-src/tinyStreetFull.js  FULL_PROPS: the street things at full size (parts
-                       src/full/p1.js .. p3.js); drawProp uses them once
-                       approved; propScale(type) gives 1.5 for those
-src/tinyBuildingsFull.js  the full-size kit (storeys, doors, windows, roofs,
-                       signs, awnings ...) and FULL, the buildings drawn at
-                       full size (see Full-size drawings)
-src/full/a.js .. h.js  the full-size buildings, in eight parts (written in
-                       parallel; FULL spreads them in; a-d batch 1, e-h batch
-                       2). Each entry has approved: true once the owner
-                       approved it; the parts export their shared helpers
-                       (a: row, edges, band, plinth, chimney, railing ...;
-                       b: pier, window, awn, dark, goods ...; c: shifted,
-                       bigSign; d: evenRow, windows, walls)
+src/tinyBuildings.js   the buildings: drawBuilding, BUILDINGS (TYPES: each
+                       type's label and widths), buildingSize,
+                       buildingSolids, SHOP_TYPES, WALL_COLORS, ROOF_COLORS,
+                       PARTS / drawPart, closes, cooks, the night's lights,
+                       the painter, setRedraw / usesFull
+src/tinyBuildingsFull.js  the buildings' kit (storeys, doors, windows,
+                       roofs, signs, awnings ...) and FULL, the drawings
+src/tinyStreetFull.js  FULL_PROPS: the street things' drawings
+src/tinyNatureFull.js  FULL_TREES, FULL_BUSHES, FULL_TERRAINS
+src/tinyGroundFull.js  FULL_GROUND: the streets, railway, court, pond, paths
+src/full/*.js          the drawings themselves, in parts (a-h buildings,
+                       p1-p3 street things, n1-n3 plants, t1 terrains, g1-g2
+                       ground), each entry { approved, draw ... }; the parts
+                       export shared helpers (see How a building is drawn)
 src/tinyAnimals.js     cats and dogs: drawCat, drawDog, CAT_COATS,
                        DOG_BREEDS, catFor, dogFor
 src/tinyNature.js      trees, bushes, terrains: drawTree, drawBush,
@@ -162,152 +159,100 @@ under Decisions; do not add them back.
 ## How a building is drawn
 
 Every building faces you: a front wall, then its roof **seen from above**
-(8–18 rows, as in a top-down town map: this is what gives a building its
-depth), windows, a door, and one or two details that make it that building.
-Each is an entry in `DEFS` in `src/tinyBuildings.js`:
-`[label, widths, draw(r, rng, b, wall, roof, w)]`.
+(what gives a building its depth on a map), windows, a door, and the details
+that make it that building. Everything is drawn **at full size**: made for
+the town's scale 1.5, one building pixel is one person pixel (the owner
+chose this, "E", over drawing at scale 1 and stretching, which made uneven
+lines and pixels bigger than the people's).
 
-**The seed changes the building, not only its colours** (the owner: a seed
-must not just recolour the same building). `drawBuilding` mixes the seed
-into `rng` (neighbouring seeds would otherwise choose alike), takes the
-wall, the roof colour, then one of the type's `widths`; `draw` gets that
-width `w` and makes every other choice from `rng`, through `V(rng)`
-(`pick`, `chance`, `int`):
-- floors (house 1-2, apartment 4-6, office 5-7, karaoke 3-5, Dutch house
-  3-5, parking garage 2-4 levels, school 2-3 ...)
-- windows: their kind (`oneWindow`: sash, pair, alu, aluPair, tall,
-  shuttered, arched, leaded, shoji, neon; widths in `WW`) and how many,
-  spread evenly with `windowRow(r, rng, kind, x0, x1, up, n)` (`howMany`
-  gives how many fit; nothing is drawn where there is no room)
-- the door: kind, side (left, middle, right), colour (`DOOR_COLOURS`)
-- the roof: flat, pitched or hipped (`aRoof`), its depth and colour
-  (`HOUSE_ROOFS`), chimneys, dormers, a clock tower, a bell tower, an
-  antenna, things on a flat roof (`rooftop`: AC units, a plant room)
-- details: balconies, awnings (`AWNINGS`), which side an upright sign is on,
-  noren colours, the Dutch gable (stepped, bell, triangle), flower boxes,
-  a roof garden, the number of garages ...
-Every size still comes from `STOREY` and the door / window kit, so every
-seed is on the same grid. `buildingSize(b)` is the size for that seed
-(drawn once with a measuring painter, cached); `BUILDINGS[type]` has the
-largest any of 40 seeds makes (`w`, `h`, so a card sized from it fits every
-seed) and the `widths`. Seeds are stable: the same seed always draws the
-same building. The torii, koban, gas station and mosque keep one width (the
-gas station and torii have open ground in `OPEN` measured on that width).
-
-The mosque picks its wall, dome colour (green, gold, blue, white,
-teal) and size (radius 7–10), trim colour, one or two minarets (50–63 px,
-a single one left or right), small side domes, one or two arched windows
-each side. Its pieces: `dome` (a half disc lit on the left) and
-`pointedArch`.
-
+- **Where:** `TYPES` in `src/tinyBuildings.js` has each type's label and
+  widths (at scale 1; drawn at `round(w * 1.5)`; the order mixes into the
+  seed's random stream, so add new types at the end). The drawings are
+  `FULL[type] = { approved, draw(r, rng, b, wall, roof, w), open }` in
+  `src/tinyBuildingsFull.js`, which spreads in the parts `src/full/a.js` ..
+  `h.js` (parts export shared helpers: a: `row`, `edges`, `band`, `plinth`,
+  `chimney`, `railing`; b: `pier`, `window`, `awn`, `dark`, `goods`,
+  `shopFront`; c: `shifted`, `bigSign`; d: `evenRow`, `windows`, `walls`).
+  `draw` returns the shop kind it drew (for shutters and steam), if any.
+  `open` (torii, gas station) is the ground you can walk into, as `[dx, w,
+  top, bottom]` rectangles.
+- **The seed changes the building, not only its colours.** `choices` mixes
+  the seed into `rng` (neighbouring seeds would otherwise choose alike),
+  takes the wall, the roof colour and one of the widths; `draw` makes every
+  other choice from `rng` through `V(rng)` (`pick`, `chance`, `int`):
+  floors, windows (kind, how many), the door (kind, side, colour), the roof
+  (flat, pitched, hipped; depth, colour, chimneys, dormers, towers, things on
+  a flat roof), awnings, signs' side, balconies ... New detail that must not
+  change those choices comes from its own `seeded(...)` stream.
+- **The kit** (`src/tinyBuildingsFull.js`), one set of sizes for every
+  building (the owner's rule): ground floor 24, a shop's 28 (glass and door
+  0-18, awning 17-22, sign 21-28), upper floors 20 (`FULL_STOREY`,
+  `floorAt`), sills 6 above the floor; doors 18 tall (`DOORS.wood`, `plank`,
+  `glazed`, `glass`, `steel`, `arched` 9 wide; `auto`, `sliding`, `shoji` 16
+  wide; `garage` 27 x 21); windows (`WINDOWS.sash` 7 x 9, a pair 13; `alu`;
+  `tall` 7 x 12; `shuttered`, `arched`, `pointed`, `stained`, `round`,
+  `lattice`, `shoji`, `leaded`, `neon`, `shop`); `pane(rng)` decides dark
+  glass, a lit room or curtains. **Never draw a door or window as a bare
+  rectangle**: use the kit. Roofs: `flatRoof` (a rim, seams), `pitched`
+  (tile rows with staggered joints, a lit ridge; `hip` for the sloping
+  ends), `gable`, `aRoof`, `rooftop`; **every roof fills its whole
+  rectangle**. Pieces: `sign` (the name in DotGothic16, as big as fits),
+  `upright`, `awning` (a hem), `noren` (a round crest), `lantern`, `dots`,
+  `shelves`, `icon` (rows of characters, one pixel each), `dome`,
+  `pointedArch`, `laundry`, `shopFront`. `PART_DEFS` / `drawPart` show
+  each door and window on its own (the catalogue's Doors & windows group).
 - `r(colour, dx, up, w, h)`: a rectangle `dx` from the left edge whose
   bottom is `up` pixels above the ground line. Keep everything inside
-  `0 .. width` (signs, bikes, post boxes too) so buildings in a row do not
-  overlap; shift the building with a wrapping `r` if something stands beside
-  it (see the koban and the family restaurant).
-- Roofs: `flatRoof(r, wall, dx, up, w, d)` (a rim, the light roof top with
-  seams; put AC units, water tanks, a roof garden, parked cars on it),
-  `pitched(r, colour, dx, up, w, d, hip)` (ridge along the street: front
-  slope with a darker tile row every third row, a light ridge, a little of
-  the back slope; `hip`: the sloping ends of a hipped roof, drawn as darker
-  triangles at the sides), `gable(r, colour, face, dx, up,
-  w, gh, d)` (a gable facing the street: a wall triangle edged with roof and
-  the roof running back behind it, left slope in shade, right in light;
-  Tudor cottage, stone chapel). Chimneys, towers, domes and dormers sit on the
-  roof, inside its rows. **Every roof fills its whole rectangle** (the
-  owner's rule, so all buildings look alike): never cut corners away.
-- **Doors and windows: one set of sizes (the owner's rule).** `STOREY`:
-  ground floor `GF` 16 (a shop's `SHOP_GF` 19: glass and door 0–12,
-  stripes or awning 12–15, sign 15–19), upper floors `FL` 13 (`floorAt(n,
-  gf)` is the bottom of floor n), window sills `SILL` 4 above the floor (3
-  for a tall window). Doors are 12 tall: `DOORS.wood`, `plank`, `glazed`,
-  `glass`, `steel`, `arched` (6 wide), `auto`, `sliding`, `shoji` (10 wide),
-  `garage` (18 × 14). Windows: `WINDOWS.sash` (5 × 6, a pair at 9, white
-  frame and a sill), `alu` (aluminium, 5 or 9), `tall` (5 × 8, transom),
-  `shuttered`, `arched`, `pointed`, `stained`, `round` (4 × 4), `lattice`
-  (any width, 6 tall), `shoji`, `leaded`, `neon`, `shop` (as tall as a
-  door, a bar every 6 px). `pane(rng)` decides dark glass, a lit room or
-  curtains. **Never draw a door or window as a bare rectangle**: use the
-  kit, at its size, on the floor lines, so all buildings stay alike.
-  `PART_DEFS` / `drawPart` show each on its own (the catalogue's Doors &
-  windows group).
-- Other pieces: `awning` (2 px stripes), `sign` (a band with a row of
-  "letters"), `noren`, `lantern`, `dots` (books, flowers, goods), `dome`,
-  `pointedArch`, `shopFront(r, rng, dx, w, kind, wall)` (the six shop kinds
-  on a 19 px shop ground floor).
-- A person (15 px) reaches three quarters of a door at scale 1; in the
-  town (scale 1.5) doors are taller than people.
-- Colours: the catalogue's walls and roofs (`WALL_COLORS`, `ROOF_COLORS`),
-  glass `#9fb6cc`, windows `#5f7487` (lit `#f0dca0`), wood, ink, red, navy.
+  `0 .. width` so buildings in a row do not overlap (move a building
+  sideways with `shifted` if something stands beside it).
+- **Night:** the lights go by colour value (`NIGHT` in tinyBuildings.js):
+  `WIN` (some windows light up, each on its own rhythm), `LIT`, `CURTAIN`
+  (also the paper of lattices), `GLASS`, `GLASS2`, `'#dfe8ec'` (shop glass),
+  `LANTERN` and the neon colours glow; everything else goes dark. So use
+  those exact colours for glass and lamps, and not for anything that must
+  not glow. `sign()` lights by itself (`r.force`); things in front of a
+  glow can be drawn as dark silhouettes at night (`dark`).
+- `buildingSize(b)` is the size for that seed (measured once with a painter
+  that only records, cached); `BUILDINGS[type]` has the largest of 40 seeds
+  at scale 1.5 (`scale: 1.5`), so a card sized from it fits every seed.
+  Seeds are stable: the same seed always draws the same building.
+- **New drawings are reviewed before they are used:** `approved: false`
+  drawings show only with `setRedraw('all')` / `?redraw=all`. The workflow:
+  draw a batch (helpers in parallel, one part file each), make before / after
+  pictures (seeds in rows, a person for scale, day and night) and town
+  views, publish them on a review page (an Artifact with a `db` store; each
+  item `reviews/<round>-<id>` = { verdict, note }), then set `approved: true`
+  on the accepted ones and redo the rest from the notes.
 
 People in front of a building are drawn after it (their feet are below its
 ground line); anyone behind it (smaller y) would be drawn before it and
 hidden, so in a town nobody can stand there (see the map rules below).
 
-## Full-size drawings (the redraw, "E")
+## Street things, plants and the ground at full size
 
-The town is drawn at scale 1.5 while people are not scaled. The old drawings
-are made at scale 1 and stretched, so a 1 px line came out 1 or 2 px wide and
-a building's pixels were bigger than a person's. The owner chose to redraw
-everything **natively at the town's size**: one building pixel is one person
-pixel, about 1.5 times as many pixels each way, spent on detail ("the same
-building, more detail", not a redesign).
-
-- **The kit** (`src/tinyBuildingsFull.js`): the old sizes times 1.5 on whole
-  pixels: ground floor 24, a shop's 28, upper floors 20, sills 6
-  (`FULL_STOREY`, `floorAt`); doors 9 x 18 (double, sliding, automatic 16 x
-  18; garage 27 x 21); windows 7 x 9 (pairs 13 x 9, tall 7 x 12); `pitched`
-  roofs with staggered tile joints, `flatRoof` with a rim, `gable`,
-  `rooftop`; `sign` (the name may run over the board's edge rows, so it is
-  as big as on the old signs), `upright`, `awning` with a hem, `noren` with
-  a round crest, `lantern`, `shelves`, `icon` (one pixel per character),
-  `laundry`. The colours are the same values as tinyBuildings.js, because
-  the night's lights go by colour value (`WIN`, `LIT`, `CURTAIN`, `GLASS`,
-  `GLASS2`, `LANTERN`, the neon colours); lattice paper is `CURTAIN` so it
-  glows at night. Things standing in front of a glow can be drawn through
-  `r.force` as dark silhouettes at night (part B's `dark`).
-- **A full-size building** is `FULL[type] = { approved, draw(r, rng, b,
-  wall, roof, w), open }`: `w` is the old width times 1.5 (rounded); `draw`
-  makes the **same rng calls in the same order** as the old one (so each
-  seed is the same building: floors, door side, colours, roof, windows' count
-  and which are lit), uses its own seeded stream for new detail, returns the
-  shop kind if the old one set `lastShop`, and stays within the old height
-  times 1.5 plus 2 (so the map does not change). `open` (torii, gas
-  station) is the walk-in ground at full size.
-- **drawBuilding** uses the full drawing when `fullOf(b)` gives one: painter
-  scale `b.scale / 1.5` (exactly 1 in the town), the shutter drawn at full
-  size. `buildingSize` and `buildingSolids` follow. `BUILDINGS[type]` gives
-  `scale: 1.5` and sizes at that scale for a full-size type; the catalogue
-  and the Buildings sheet draw those at 1.5.
-- **Street things** (`FULL_PROPS`, `src/tinyStreetFull.js`): `{ approved, draw(r, rng,
-  p) }`, drawn by `drawProp` with the painter at `p.scale / 1.5`; sizes, feet, glows
-  (`propLights`) and wire ends (`poleTops`) stay in scale-1 pixels, and a full drawing
-  puts those spots at the old place times 1.5 (lamp heads under their glows, the
-  crossarm's ends, the bench seat, the swing bar, the slide's ladder and chute, the
-  hoop, the wall's top). `drawSwings` (tinyLife.js) draws the full frame through
-  `drawProp` and the chains and seats on the full grid when the swings are redrawn.
-- **The ground** (`FULL_TERRAINS` in `src/tinyNatureFull.js`, part `src/full/t1.js`;
-  `FULL_GROUND` in `src/tinyGroundFull.js`, parts `g1.js` streets and railway, `g2.js`
-  court, pond, ring path, stepping stones): `drawGround` is split into pieces
-  (`oldStreets`, `oldRailway`, `drawCourt`, the ellipse pond, the ring path,
-  `oldStones`), each replaced by its full piece once used; a full terrain fills its
-  rectangle with one pattern pixel per canvas pixel, its marks on a grid fixed to the
-  canvas (picked by a hash of the cell and the seed), so patches meet without seams; the
-  pond's `water()` draws the moving water every frame inside the same pixel edge as
-  `draw()`. Curves (the pond, the ring path, the court's circle) are filled as whole-pixel
-  row spans, never canvas ellipses.
-- **Which are used:** `setRedraw('approved')` (the default: those with
-  `approved: true`), `'all'` (also those in review), `'none'` (the old ones);
-  the pages read `?redraw=` from the address at load.
-- **Review workflow:** a batch of 20 is drawn (helpers in parallel, one part
-  file each), checked with a before/after renderer (old on the left, new on
-  the right, seeds in rows, a person for scale, day and night) and a script
-  that counts rng calls of old and new draws for many seeds (must be equal),
-  then published as a review page (an Artifact with a `db` store: each item
-  `reviews/<round>-<id>` = { verdict: accept | reject, note }). Accepted ones
-  get `approved: true` and go live on main; rejected ones are redone from the
-  note and come back in the next batch. With nothing newly approved, every
-  other picture must stay pixel-identical (hash check).
+- **Street things** (`FULL_PROPS`, `src/tinyStreetFull.js`, parts
+  `src/full/p1.js` .. `p3.js`): `{ approved, draw(r, rng, p) }`, drawn by
+  `drawProp` with the painter at `p.scale / 1.5`. Sizes, feet (`FOOT`),
+  glows (`propLights`) and wire ends (`poleTops`) stay in scale-1 pixels in
+  `DEFS`, and each drawing puts those spots at the same place times 1.5
+  (lamp heads under their glows, the crossarm's ends, the bench seat, the
+  swing bar, the slide's ladder and chute, the hoop, the wall's top).
+  `drawSwings` (tinyLife.js) draws the frame through `drawProp` and the
+  chains, seats and kids on its grid (`SWING_SEATS` from p3.js).
+- **Trees and bushes** (`FULL_TREES`, `FULL_BUSHES` in
+  `src/tinyNatureFull.js`, parts `n1.js`, `n2.js` trees, `n3.js` bushes):
+  `{ approved, draw(r, rng, cx) }`, about `w x h` (scale-1 sizes in
+  tinyNature.js) times 1.5, centred on `cx`, the foot at 0.
+- **The ground** (`FULL_TERRAINS`, part `t1.js`: `draw(g, { x, y, w, h,
+  seed, t })`; `FULL_GROUND` in `src/tinyGroundFull.js`, parts `g1.js`
+  streets and railway, `g2.js` court, pond, ring path, stepping stones; its
+  header lists each piece's signature): a terrain fills its rectangle with
+  one pattern pixel per canvas pixel, its marks on a grid fixed to the
+  canvas (a hash of the cell and the seed), so patches meet without seams
+  and adding one reshuffles nothing; the pond's `water()` draws the moving
+  water each frame inside the same pixel edge as `draw()`. Curves (the pond,
+  the ring path, the court's circle) are whole-pixel row spans, never canvas
+  ellipses.
 
 ## How the town map works
 
@@ -379,44 +324,32 @@ reach of cross street j's crossing; the gates go down and flash, cars on
 that cross street stop before the rails, `mayCross` keeps people off the
 rails until it opens.
 
-**Drawing for 1.5 (the owner found broken icons and "random stripes"):**
-`painter` scales every rectangle to the same size wherever it sits (a 1 px
-line is always 2 px, a 2 px stripe always 3), so keep these rules:
-- anything that repeats (stripes, slats, tiles, letters, shelves, windows)
-  repeats on **even steps** (2, 4, 6, 8, 10 px); steps of 3, 5, 9 come out
-  uneven (4 and 5 px) and look random
-- small pictures (crosses, letters, the clock, a cross on a roof) are
-  `icon(r, dx, up, rows, colours)`: rows of characters drawn on whole
-  pixels, centred, so they stay sharp and symmetric (`CROSS` is the medical
-  cross)
-- signs show the place's name (`sign(r, bg, fg, dx, up, w, h, text)`,
-  `upright(...)` for a narrow sign read top to bottom) in DotGothic16
-  (`SIGN_FONT`) through `r.text`: it picks the biggest size of 32, 24, 16,
-  12, 10 device pixels that fits the box, or returns false and the sign
-  draws the old dashes. It needs `dpx` (device pixels per canvas pixel):
-  the canvas is made dpx times bigger and the context scaled, so the
-  pixel art stays crisp and the letters get real pixels (town 4, the
-  Buildings sheet and catalogue cards 6). Painters moved sideways use
-  `shifted(r, ox)` so they keep `text` and `px`. Shop
-  names live in `SHOPS[kind].name`. The pages load DotGothic16 from Google
-  Fonts and draw static canvases again once it has loaded; headings,
-  buttons and chips use it too. Signs not lettered edge to edge; shop
-  glass spreads its bars evenly; shelves are shelf lines with 3 px goods
-- check a new building at scale 1.5 next to a person before committing
+**Signs and icons:** signs show the place's name (`sign(r, bg, fg, dx, up,
+w, h, text)`, `upright(...)` for a narrow sign read top to bottom) in
+DotGothic16 (`SIGN_FONT`) through `r.text`: it picks the biggest size of 32,
+24, 16, 12, 10 device pixels that fits the box, or returns false and the sign
+draws dashes instead. It needs `dpx` (device pixels per canvas pixel): the
+canvas is made dpx times bigger and the context scaled, so the pixel art
+stays crisp and the letters get real pixels (town 4, the Buildings sheet and
+catalogue cards 6). Painters moved sideways use `shifted(r, ox)` so they keep
+`text`, `px` and `force`. Small pictures (crosses, letters, the clock) are
+`icon(r, dx, up, rows, colours)`: rows of characters, one pixel each, so they
+stay sharp and symmetric. The pages load DotGothic16 from Google Fonts and
+draw static canvases again once it has loaded. Check a new building in the
+town next to a person before committing.
 
 **Scale:** `DEFAULT_TOWN.scale` is 1.5 (the owner wanted the town bigger
 than the people). The layout is written at scale 1; `makeTown` multiplies
 every position and size (`scaled`), street sizes come from `streetDims(k)`,
-and each building gets `scale` (drawBuilding scales and rounds every
-rectangle's edges, so 1 px lines become 1 or 2 px and stay crisp; sizes via
-`buildingSize`). People are never scaled. The Buildings sheet and the
-catalogue show buildings at scale 1.
+and each building, thing and plant gets `scale`; the drawings are made for
+1.5, so in the town they are drawn pixel for pixel. People are never scaled.
+The Buildings sheet and the catalogue show everything at 1.5 too.
 
 The owner's rules: every building faces you and **its whole picture is solid
 ground** (`buildingSolids`), so nobody is ever hidden behind one: to get past
 you walk round it. Only the torii (between its posts) and the gas station
-(8 px under its canopy) can be stepped into; `OPEN` in tinyBuildings.js lists
-their solid parts. **Tall buildings stand only in the back row** (above the
+(under its canopy) can be stepped into; their drawings' `open` lists their
+solid parts. **Tall buildings stand only in the back row** (above the
 first street, nothing behind them); the blocks between streets hold low
 buildings (up to about 50 px); the shrine, the school and the old town have
 their own grounds in front of them.
@@ -539,23 +472,17 @@ that rolls across the town from the left; the phase comes from the tree's place 
 Rows that move together are one `drawImage` (about +0.5 ms a frame by day). The town
 passes `t` to every tree; bushes stay still.
 
-Trees and bushes: `[label, w, h, draw(r, rng, cx)]` from the bottom left,
-`cx` the middle. Pieces: `blob` (a clump of leaves lit from the top left),
-`sprinkle` (fruit, flowers, blossom on even steps), `trunk`, `shadowUnder`.
-**Each plant is drawn once at its real size into a small cached image**
-(`plantImage`, 8 looks per type) and placed at the scale asked for with
-nearest-pixel scaling; the seed picks a look and mirrors it. Never draw a
-plant straight at a scale like 1.5 or a random one (the owner saw "broken"
-striped trees: rows of leaves overlapped or missed). In the town the canvas
-is 4 times bigger underneath, so 1.5 is exactly 6 screen pixels per plant
-pixel. Forest trees keep their trunks 20 px (scale 1) below a street so
-their crowns stay off it. Terrains fill a rectangle
-(clipped) with a base colour and a pattern on a grid of whole pixels
-(`c = round(scale)`); water's ripples move with `t`. In the town, `plants`
+Trees and bushes: `TREE_DEFS` / `BUSH_DEFS` in tinyNature.js are `[label,
+w, h]` at scale 1; the drawings (see above) are 1.5 times that. **Each plant
+is drawn once into a small cached image** (`plantImage`, 8 looks per type,
+margins 15 and 12 px for what sticks out) and placed at the scale asked for
+with nearest-pixel scaling; the seed picks a look and mirrors it. Forest
+trees keep their trunks 20 px (scale 1) below a street so their crowns stay
+off it. In the town, `plants`
 in the layout (`{ tree: 'sakura', x, y }` or `{ bush: ... }`) block at the
 trunk / the bush's base; areas with `solid: true` (the pond) block whole;
 the grounds are drawn with `drawTerrain` (`TERRAIN_OF`), water again every
-frame.
+frame (inside the pond's pixel edge, `FULL_GROUND.pond.water`).
 
 **Greenery and forest (the owner: unreachable areas are blocked by
 forest).** `DEFAULT_TOWN.forest` (48) is a border round the town: `scaled`
@@ -575,13 +502,12 @@ only those in view.
 
 ## How street things are drawn (src/tinyStreet.js)
 
-Each thing is an entry in `DEFS`: `[label, w, h, depth, draw(r, rng),
-lights]`, drawn with the buildings' painter (`makePainter`), so it scales
-as crisply (the town draws them at 1.5). `depth` is the rows of ground it
-stands on (`propSolid`; `FOOT` narrows poles and lamps to their pole so
-they never block a sidewalk); `lights` are `[dx, up, radius]` for the night.
-Keep them on whole pixels and small: a vending machine is 7 x 11, a lamp 19
-tall, a utility pole 30 (the tallest thing on a street).
+Each thing is an entry in `DEFS`: `[label, w, h, depth, lights]` at scale 1
+(its drawing, in tinyStreetFull.js, is 1.5 times that; see above). `depth`
+is the rows of ground it stands on (`propSolid`; `FOOT` narrows poles and
+lamps to their pole so they never block a sidewalk); `lights` are `[dx, up,
+radius]` for the night. Keep them small: a vending machine is 7 x 11 (scale
+1), a lamp 19 tall, a utility pole 30 (the tallest thing on a street).
 
 In the town (`placeProps` in tinyTown.js): the layout's `props` first, then
 vending machines and bins where a row ends short of its cross street,
@@ -790,11 +716,11 @@ the demo decides who does what.
   not show at 5 × 15, it does not go in.
 - **A new starter look:** add it to `LOOKS` (it shows in the Looks canvas's
   top row; add its name to the caption).
-- **A new building:** add an entry to `DEFS` (look at the catalogue's
-  builder for what makes it that building, then keep only what shows at this
-  size) with two or three widths, and let the seed choose its floors,
-  windows, door and roof (see above); the Buildings sheet shows three seeds
-  of different sizes. Put it in the town by adding it to
+- **A new building:** add its label and two or three widths at the end of
+  `TYPES`, and its drawing to a part file in `src/full/` (`approved: false`)
+  with the kit's sizes; let the seed choose its floors, windows, door and
+  roof (see above). Show it to the owner (before / after or options, on the
+  real town), then set `approved: true`. Put it in the town by adding it to
   a row of `DEFAULT_TOWN` (tall ones in the back row only). Check it next to
   a person.
 - **Change the town:** edit `DEFAULT_TOWN`; render the whole map once
@@ -847,11 +773,11 @@ and check with Playwright screenshots on a desktop size and a phone
 - **The map:** render the whole town (a view the size of `town.W` by
   `town.H`); the console warns about any layout prop on a road or a cross
   street's sidewalk.
-- **Full-size redraws:** before/after pictures per type (several seeds, day
-  and night), widths equal and heights at most old x 1.5 + 2 for seeds 1-40,
-  equal rng call counts (old `DEFS` draw against the `FULL` draw, seeds
-  1-200, with shop kinds, laundry, fixed wall and roof), and the hash check:
-  only the newly approved types (and town views) may change.
+- **A redrawn or new drawing:** pictures per type (several seeds, day and
+  night) and in the town; a changed drawing keeps the same rng calls in the
+  same order (so seeds stay the same buildings; count them for many seeds
+  with a painter that only records) and its size within the space it had;
+  and the hash check: only the changed types (and town views) may change.
 
 ## GitHub Pages
 

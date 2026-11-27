@@ -615,7 +615,6 @@ function drawGround(layout) {
   const { SIDE, ROAD, STREET, VSIDE, VSTREET } = streetDims(k), m = (v) => Math.round(v * k);
   const c = canvasOf(W, H);
   const g = c.getContext('2d');
-  const R = (col, x, y, w, h) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
   drawTerrain(g, { type: 'grass', x: 0, y: 0, w: W, h: H, scale: k, seed: 3 });
   // the forest floor: under the trees round the town
   const pad = Math.round((layout.forest ?? 0) * k), last = streets[streets.length - 1] + STREET;
@@ -625,75 +624,19 @@ function drawGround(layout) {
     const y0 = streets[i] + STREET, y1 = streets[i + 1];
     for (let x = pad, j = 0; x < W - pad; x += m(48), j++) drawTerrain(g, { type: j % 2 ? 'meadow' : 'tallGrass', x: x + m(6), y: y0 + m(3), w: m(30), h: Math.min(m(14), y1 - y0 - m(6)), scale: k, seed: x + i });
   }
-  const full = (name) => (usesFull(FULL_GROUND[name]) ? FULL_GROUND[name] : null);   // pieces redrawn at full size (tinyGroundFull.js)
+  const use = (name) => (usesFull(FULL_GROUND[name]) ? FULL_GROUND[name] : null);   // the ground's pieces (tinyGroundFull.js)
   const terrain = (a) => (ctx, x = a.x, y = a.y, w = a.w, h = a.h, type = TERRAIN_OF[a.ground] ?? a.ground, seed = a.x + a.y) => drawTerrain(ctx, { type, x, y, w, h, scale: k, seed });
   for (const a of areas) {
-    if (a.ground === 'court') { (full('court')?.draw ?? drawCourt)(g, a, k); continue; }
-    if (a.shape === 'ellipse' && full('pond')) { full('pond').draw(g, a, k, terrain(a)); continue; }
-    if (a.ring && full('ringPath')) { terrain(a)(g); full('ringPath').draw(g, a, k, terrain(a)); if (a.path) (full('steppingStones')?.draw ?? ((g2) => oldStones(g2, a, m)))(g, a, k); continue; }
-    if (a.shape === 'ellipse') { g.save(); g.beginPath(); g.ellipse(a.x + a.w / 2, a.y + a.h / 2, a.w / 2, a.h / 2, 0, 0, Math.PI * 2); g.clip(); }
-    drawTerrain(g, { type: TERRAIN_OF[a.ground] ?? a.ground, x: a.x, y: a.y, w: a.w, h: a.h, scale: k, seed: a.x + a.y });
-    if (a.shape === 'ellipse') { g.restore(); g.strokeStyle = '#8a8a80'; g.lineWidth = 1; g.beginPath(); g.ellipse(a.x + a.w / 2, a.y + a.h / 2, a.w / 2, a.h / 2, 0, 0, Math.PI * 2); g.stroke(); }
-    if (a.ring) {                                                           // a dirt path looping round inside it
-      const cx = a.x + a.w / 2, cy = a.y + a.h / 2, rx = a.w / 2 - m(8), ry = a.h / 2 - m(8), wd = m(6);
-      g.save(); g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); g.ellipse(cx, cy, rx - wd, ry - wd, 0, 0, Math.PI * 2); g.clip('evenodd');
-      drawTerrain(g, { type: 'dirt', x: a.x, y: a.y, w: a.w, h: a.h, scale: k, seed: a.x + 7 }); g.restore();
-    }
-    if (a.path) (full('steppingStones')?.draw ?? ((g2) => oldStones(g2, a, m)))(g, a, k);
+    if (a.ground === 'court') { use('court')?.draw(g, a, k); continue; }            // the court, its lines and a pixel centre circle
+    if (a.shape === 'ellipse') { use('pond')?.draw(g, a, k, terrain(a)); continue; } // a pond with a pixel bank of stones
+    terrain(a)(g);
+    if (a.ring) use('ringPath')?.draw(g, a, k, terrain(a));                          // a dirt path looping round inside it
+    if (a.path) use('steppingStones')?.draw(g, a, k);                                // stepping stones along its path
   }
   const dims = { W, H, streets, crossStreets, k, SIDE, ROAD, STREET, VSIDE, VSTREET, pad, m };
-  if (full('streets')) full('streets').draw(g, dims); else oldStreets(g, dims);
-  if (layout.railway) { if (full('railway')) full('railway').draw(g, layout.railway, dims); else oldRailway(g, layout.railway, dims); }
+  use('streets')?.draw(g, dims);                                                     // sidewalks, kerbs, roads, crossings, manholes
+  if (layout.railway) use('railway')?.draw(g, layout.railway, dims);                  // ballast, sleepers, rails, level crossings
   return c;
-}
-/** Stepping stones along an area's path (the old drawing). */
-function oldStones(g, a, m) { g.fillStyle = '#c9c2b0'; for (let y = a.path.y0; y < a.y + a.h; y += m(5)) g.fillRect(a.path.x, y, a.path.w, m(4)); }
-/** The streets, cross streets, kerbs, markings, crossings and manholes (the old drawing). */
-function oldStreets(g, { W, streets, crossStreets, SIDE, ROAD, STREET, VSIDE, VSTREET, pad, m }) {
-  const R = (col, x, y, w, h) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
-  const y0 = streets[0], y1 = streets[streets.length - 1] + STREET;
-  // cross streets' sidewalks, then the streets across them, then the cross streets' roads
-  for (const x of crossStreets) R('#d8d2c4', x, y0, VSTREET, y1 - y0);
-  for (const y of streets) {
-    R('#d8d2c4', 0, y, W, SIDE); R('#d8d2c4', 0, y + SIDE + ROAD, W, SIDE);
-    for (let x = 0; x < W; x += m(8)) { R('#c4bdae', x, y, 1, SIDE); R('#c4bdae', x, y + SIDE + ROAD, 1, SIDE); }
-    R('#9a9890', 0, y + SIDE - 1, W, 1); R('#9a9890', 0, y + SIDE + ROAD, W, 1);
-    R('#6f7378', 0, y + SIDE, W, ROAD);
-    for (let x = 0; x < W; x += m(16)) R('#e8e4d8', x, y + SIDE + Math.floor(ROAD / 2), m(8), 1);
-    // manholes, here and there in the lanes
-    for (let x = pad + m(40) + (y % m(50)); x < W - pad - m(10); x += m(130)) {
-      const mx = Math.round(x), my = y + SIDE + (Math.round(x / m(130)) % 2 ? m(4) : ROAD - m(7)), w = m(6), h = m(3);
-      R('#55595e', mx + 1, my, w - 2, h); R('#55595e', mx, my + 1, w, h - 2); R('#7a7e84', mx + 2, my + 1, w - 4, Math.max(1, h - 2));
-    }
-  }
-  for (const x of crossStreets) {
-    R('#6f7378', x + VSIDE, y0 + SIDE, ROAD, y1 - y0 - SIDE * 2);
-    for (let j = 0; j < streets.length - 1; j++) {                                     // kerbs between the streets
-      const a = streets[j] + STREET, b = streets[j + 1];
-      R('#9a9890', x + VSIDE - 1, a, 1, b - a); R('#9a9890', x + VSIDE + ROAD, a, 1, b - a);
-    }
-    for (let y = y0 + SIDE + 4; y < y1 - SIDE; y += m(14)) if (!streets.some((sy) => y + m(7) > sy && y < sy + STREET)) R('#e8e4d8', x + VSIDE + Math.floor(ROAD / 2), y, 1, m(7));
-    // crossings: over each street next to the cross street, and over the cross street next to each street
-    for (const y of streets) {
-      for (let j = 0; j < ROAD; j += 3) R('#e8e4d8', x - m(9), y + SIDE + j, m(7), 2);
-      for (let j = 0; j < ROAD; j += 3) {
-        if (y !== streets[0]) R('#e8e4d8', x + VSIDE + j, y - m(6), 2, m(5));
-        if (y !== streets[streets.length - 1]) R('#e8e4d8', x + VSIDE + j, y + STREET + 1, 2, m(5));
-      }
-    }
-  }
-}
-/** The railway (the old drawing): gravel, sleepers and two rails right across; at a level crossing the road goes over it. */
-function oldRailway(g, rail, { W, crossStreets, VSIDE, VSTREET, ROAD, m }) {
-  const R = (col, x, y, w, h) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
-  {
-    R('#9a958a', 0, rail.y, W, rail.h); R('#8a857a', 0, rail.y, W, 1);
-    const top = rail.y + Math.round(rail.h * 0.2), bot = rail.y + Math.round(rail.h * 0.72);
-    for (let x = 0; x < W; x += m(4)) R('#6a5040', x, rail.y + m(2), m(2), rail.h - m(4));
-    for (const sx of crossStreets) { R('#d8d2c4', sx, rail.y, VSTREET, rail.h); R('#5a5e62', sx + VSIDE, rail.y, ROAD, rail.h); }   // the crossing's boards
-    for (const y of [top, bot]) { R('#c8ccd0', 0, y, W, 1); R('#7a7e84', 0, y + 1, W, 1); }
-    for (const sx of crossStreets) for (const y of [rail.y - 1, rail.y + rail.h]) for (let x = sx; x < sx + VSTREET; x += m(4)) R(x % m(8) < m(4) ? '#f2c230' : '#2f3236', x, y, m(4), 1);   // striped edges
-  }
 }
 
 /**
@@ -712,28 +655,6 @@ function fenceOf(a) {
   run('left', a.x, a.y, a.h, false); run('right', a.x + a.w - 2, a.y, a.h, false);
   return out;
 }
-/** A sports court on the ground: a blue run-off, an orange court, white lines, a chain-link fence round it with a gate in the top. */
-function drawCourt(g, a, k) {
-  const R = (col, x, y, w, h) => { g.fillStyle = col; g.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }, m = (v) => Math.round(v * k);
-  R('#2f5a80', a.x, a.y, a.w, a.h);                                       // the edge round it: a deeper blue
-  const cx = a.x + m(10), cy = a.y + m(8), cw = a.w - m(20), ch = a.h - m(16), line = '#f2f2ee';
-  R('#3f86c8', cx, cy, cw, ch);                                           // the court: blue (the owner, Nov 2026)
-  R(line, cx, cy, cw, 1); R(line, cx, cy + ch - 1, cw, 1); R(line, cx, cy, 1, ch); R(line, cx + cw - 1, cy, 1, ch); R(line, cx + Math.round(cw / 2), cy, 1, ch);
-  for (const kx of [cx, cx + cw - m(22)]) { R(line, kx, cy + Math.round(ch / 2) - m(10), m(22), 1); R(line, kx, cy + Math.round(ch / 2) + m(10), m(22), 1); R(line, kx === cx ? kx + m(22) : kx, cy + Math.round(ch / 2) - m(10), 1, m(20)); }   // the keys
-  g.strokeStyle = line; g.lineWidth = 1; g.beginPath(); g.ellipse(cx + cw / 2, cy + ch / 2, m(10), m(7), 0, 0, Math.PI * 2); g.stroke();
-  // the fence (only with `fence: true`): posts and wire mesh round the edge, with its gates (gaps)
-  if (a.fence) for (const f of fenceOf(a)) {
-    if (f.side === 'top' || f.side === 'bottom') {
-      for (let x = a.x + Math.ceil((f.x - a.x) / m(4)) * m(4); x < f.x + f.w; x += m(4)) R('#9aa0a8', x, f.y, 1, 3);
-      R('#8a9096', f.x, f.side === 'top' ? f.y : f.y + 2, f.w, 1);
-    } else for (let y = a.y + Math.ceil((f.y - a.y) / m(3)) * m(3); y < f.y + f.h; y += m(3)) R('#9aa0a8', f.x, y, 2, 2);
-  }
-  if (a.fence && a.gatePosts) for (const f of fenceOf(a)) {                           // the gates marked by a stouter post on each side
-    const ends = f.side === 'top' || f.side === 'bottom' ? [[f.x, f.y], [f.x + f.w - 2, f.y]] : [[f.x, f.y], [f.x, f.y + f.h - 3]];
-    for (const [x, y] of ends) if ((f.side === 'top' || f.side === 'bottom') ? (x > a.x + 1 && x < a.x + a.w - 3) : (y > a.y + 2 && y < a.y + a.h - 4)) { R('#5f6670', x, y - 3, 2, 6); R('#c8ccd0', x, y - 3, 2, 1); }
-  }
-}
-
 /**
  * Draw the part of `town` in `view` ({ x, y, w, h }) into `g`: the ground,
  * then the buildings, street things and `sprites` (people; cats `cat: true`;
@@ -754,11 +675,9 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0
   // water ripples, drawn again each frame
   for (const a of town.areas) if (a.ground === 'water' && a.x < view.x + view.w && a.x + a.w > view.x && a.y < view.y + view.h && a.y + a.h > view.y) {
     const water = (ctx) => drawTerrain(ctx, { type: 'water', x: a.x, y: a.y, w: a.w, h: a.h, scale: town.scale, seed: a.x + a.y, t });
-    if (a.shape === 'ellipse' && usesFull(FULL_GROUND.pond)) { FULL_GROUND.pond.water(g, a, town.scale, water); if (a.koi) drawPondLife(g, a, t); continue; }   // a pixel-edged pond (full size)
-    if (a.shape === 'ellipse') { g.save(); g.beginPath(); g.ellipse(a.x + a.w / 2, a.y + a.h / 2, a.w / 2 - 0.5, a.h / 2 - 0.5, 0, 0, Math.PI * 2); g.clip(); }
-    water(g);
+    if (a.shape === 'ellipse') { if (usesFull(FULL_GROUND.pond)) FULL_GROUND.pond.water(g, a, town.scale, water); }   // inside the pond's pixel edge
+    else water(g);
     if (a.koi) drawPondLife(g, a, t);
-    if (a.shape === 'ellipse') g.restore();
   }
   for (const v of town.parked ?? []) if (v.x > view.x - 30 && v.x < view.x + view.w + 30 && v.y > view.y && v.y < view.y + view.h + 30) items.push({ y: v.y, s: v });
   for (const p of town.props) if (p.x > view.x - 20 && p.x < view.x + view.w + 20 && p.y > view.y && p.y < view.y + view.h + 50) items.push({ y: p.y, prop: p });
