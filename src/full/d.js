@@ -58,7 +58,7 @@ const BIKE = [
   'k...k.k.k...k',
   '.kkk.....kkk.',
 ];
-const LAMP = ['.lll.', 'lhlll', 'lllll', 'lllll', '.lll.'];
+const LAMP = ['..lll..', '.lhlll.', 'lhlllll', 'lllllll', '.lllll.', '..lll..'];
 
 // --- the post office: 〒 ---------------------------------------------------------
 const POST_MARK = ['wwwwwww', '.......', 'wwwwwww', '...w...', '...w...', '...w...', '...w...'];
@@ -75,8 +75,8 @@ export const PART = {
       DOORS.glass(r, 28);
       r(shade(wall, 0.7), 27, 18, 11, 1);                                // the door's lintel
       sign(r, '#2c3652', WHITE, 2, 18, 26, 6, 'POLICE STATION');
-      r(shade(wall, 0.72), 31, 18, 3, 1);                                // the red lamp over the door, on a bracket
-      icon(r, 30, 19, LAMP, { l: LANTERN, h: WHITE });
+      r(shade(wall, 0.6), 31, 18, 3, 1);                                 // the red lamp over the door, on a bracket
+      icon(r, 29, 18, LAMP, { l: LANTERN, h: WHITE });
       r(shade(wall, 0.62), 38, 6, 6, 10); r(PAPER, 39, 7, 2, 8); r(PAPER, 42, 7, 1, 8);   // a notice board: wanted posters
       r(RED, 39, 13, 2, 1); r('#8a8a88', 39, 9, 2, 1); r('#8a8a88', 39, 11, 2, 1); r('#8a8a88', 42, 10, 1, 3);
       flatRoof(r, wall, -1, GF, bw + 2, 18);
@@ -89,16 +89,17 @@ export const PART = {
     draw(r, rng, b, wall0, roof, w) {
       const v = V(rng), wall = '#e8e0d0', bw = w - 9, ow = oldW(w), obw = ow - 6;
       walls(r, wall, 0, bw, SHOP_GF);
-      r(RED, 0, 19, bw, 9); r(shade(RED, 0.75), 0, 18, bw, 1); r(shade(RED, 1.12), 0, 27, bw, 1);   // the red band
-      icon(r, 4, 20, POST_MARK, { w: WHITE });
-      sign(r, RED, WHITE, 14, 20, Math.min(52, bw - 18), 7, 'POST OFFICE', false);
+      const f = r.force ?? r;                                             // the red band is the sign: lit at night
+      f(RED, 0, 19, bw, 9); f(shade(RED, 0.75), 0, 18, bw, 1); f(shade(RED, 1.12), 0, 27, bw, 1);
+      icon(f, 4, 20, POST_MARK, { w: WHITE });
+      sign(r, RED, WHITE, 14, 19, Math.min(52, bw - 18), 9, 'POST OFFICE', false);
       const n = Math.floor((obw - 14) / 10), doorLeft = v.chance(0.35);
       const xs = evenRow(doorLeft ? 20 : 3, doorLeft ? bw - 3 : bw - 20, n, 13);
       for (const x of xs) {
         WINDOWS.alu(r, rng, x, SILL, 13);
         const c = rng() < 0.5 ? '#f2c230' : '#3f7fd6';                  // a poster in the window
         r(c, x + 3, SILL + 2, 3, 5); r(WHITE, x + 3, SILL + 5, 3, 1);
-        r(shade(wall, 0.72), x - 1, SILL - 1, 15, 1);
+        r(shade(wall, 0.72), x, SILL - 1, 13, 1);
       }
       const dx = doorLeft ? 2 : bw - 18;
       DOORS.auto(r, dx); r(shade(wall, 0.7), dx - 1, 18, 18, 1);
@@ -140,9 +141,10 @@ export const PART = {
       sign(r, WHITE, GREEN, 2, 18, w - 4, 6, 'CLINIC');
       WINDOWS.shop(r, 3, 0, w - 18, 18, FRAME, '#dfe8ec'); DOORS.glass(r, w - 12);
       const cross = { g: GREEN, w: WHITE };
-      if (floors === 1) {                                                 // a cross on a board on the roof
-        const x = w - 13;
-        r(shade(FRAME, 1.2), x + 2, GF, 1, 3); r(shade(FRAME, 1.2), x + 8, GF, 1, 3);
+      if (floors === 1) {                                                 // one floor: the cross on the glass, in its last pane
+        const gw = w - 18, panes = Math.max(1, Math.round((gw - 2) / 9));
+        const a = 3 + Math.round((panes - 1) * (gw - 1) / panes), z = 3 + gw - 1;
+        icon(r, a + Math.floor((z - a - 6) / 2), 7, CROSS, cross);
       }
       for (let f = 1; f < floors; f++) {
         r(shade(wall, 0.84), 0, floorAt(f), w, 1);
@@ -151,7 +153,6 @@ export const PART = {
         windows(r, rng, 'aluPair', wall, x0, w - 3, floorAt(f) + SILL, n);
       }
       flatTop(r, v, wall, top, w);
-      if (floors === 1) { const x = w - 13; r(shade(WHITE, 0.7), x, GF + 3, 11, 9); r(WHITE, x + 1, GF + 4, 9, 7); icon(r, x + 2, GF + 4, CROSS, cross); }
     },
   },
 };
