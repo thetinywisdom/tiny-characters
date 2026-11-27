@@ -384,6 +384,14 @@ bubble lab, so games can use them and they can grow.
     full list of what to draw with sizes, the order, and what the code does
     at each step (a sprite loader with the current drawings as fallback).
 
+## In progress
+
+- **Redrawing everything at full size (E)** (the owner, Nov 2026: forget ART_PLAN; draw every
+  building, then props, nature and ground natively at the town's size, one building pixel =
+  one person pixel). The kit is in `src/tinyBuildingsFull.js`; buildings in review are in
+  `src/full/*.js` and drawn only with `?redraw=all` (or `setRedraw('all')`) until the owner
+  approves them on the review page (batches of 20; approved ones go live on main).
+
 ## Next (only when the owner asks)
 
 **The redraw (`ART_PLAN.md`) comes first.** Waiting for the owner's Step 0

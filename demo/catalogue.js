@@ -104,15 +104,16 @@ for (const [type, { label }] of Object.entries(TERRAINS)) items.push({ id: `natu
   w: 40, h: 26, px: 4, animated: type === 'water',
   draw: (g, seed, t) => drawTerrain(g, { type, x: 0, y: 0, w: 40, h: 26, seed, t }),
   code: (seed) => `drawTerrain(g, { type: '${type}', x, y, w, h, seed: ${seed}${type === 'water' ? ', t' : ''} })` });
-for (const [type, { label, w, h }] of Object.entries(BUILDINGS)) {
+for (const [type, { label, w, h, scale = 1 }] of Object.entries(BUILDINGS)) {
   const kinds = Object.keys(KIND).filter((k) => KIND[k].includes(type));
-  const tags = [EUROPEAN.includes(type) ? 'European' : type === 'mosque' ? 'Mosque' : 'Japanese', ...kinds, h > 60 ? 'Tall' : 'Low'];
+  const tags = [EUROPEAN.includes(type) ? 'European' : type === 'mosque' ? 'Mosque' : 'Japanese', ...kinds, h / scale > 60 ? 'Tall' : 'Low'];
   const shopTypes = type === 'shop' ? SHOP_TYPES : [undefined];
+  const sc = scale === 1 ? '' : `, scale: ${scale}`;                // redrawn at full size: shown at the town's size
   for (const shopType of shopTypes) {
     items.push({ id: `building.${type}${shopType ? ':' + shopType : ''}`, label: shopType ? `Shop: ${shopType}` : label, group: 'Buildings', tags, seed: 1,
-      w: w + 8, h: h + 4, px: 0, wide: w > 60, dpx: 6,               // drawn 6 times bigger underneath, for the signs
-      draw: (g, seed) => drawBuilding(g, { type, shopType, x: 4 + w / 2, y: h + 2, seed, dpx: 6 }),
-      code: (seed) => `drawBuilding(g, { type: '${type}', ${shopType ? `shopType: '${shopType}', ` : ''}x, y, seed: ${seed} })` });
+      w: w + 8, h: h + 4, px: 0, wide: w / scale > 60, dpx: 6,       // drawn 6 times bigger underneath, for the signs
+      draw: (g, seed) => drawBuilding(g, { type, shopType, x: 4 + w / 2, y: h + 2, seed, dpx: 6, scale }),
+      code: (seed) => `drawBuilding(g, { type: '${type}', ${shopType ? `shopType: '${shopType}', ` : ''}x, y, seed: ${seed}${sc} })` });
   }
 }
 
@@ -200,15 +201,15 @@ items.push({ id: 'life.petals', label: 'Cherry petals', group: 'Life', tags: ['T
 items.push({ id: 'life.rubbish', label: 'Rubbish day', group: 'Life', tags: ['Town life'], seed: 0, noSeed: true, w: 26, h: 12, px: 4,
   draw: (g) => drawRubbish(g, { x: 13, y: 10 }), code: () => 'drawRubbish(g, { x, y })' });
 for (const [type, label] of [['apartment', 'Laundry on the balconies'], ['woodApartment', 'Laundry on the corridor rail']]) {
-  const { w, h } = BUILDINGS[type];
+  const { w, h, scale = 1 } = BUILDINGS[type], sc = scale === 1 ? '' : `, scale: ${scale}`;
   items.push({ id: `life.laundry.${type}`, label, group: 'Life', tags: ['Town life'], seed: 2, w: w + 8, h: h + 4, px: 0, dpx: 6,
-    draw: (g, seed) => drawBuilding(g, { type, x: 4 + w / 2, y: h + 2, seed, dpx: 6, laundry: true }),
-    code: (seed) => `drawBuilding(g, { type: '${type}', x, y, seed: ${seed}, laundry: true })` });
+    draw: (g, seed) => drawBuilding(g, { type, x: 4 + w / 2, y: h + 2, seed, dpx: 6, laundry: true, scale }),
+    code: (seed) => `drawBuilding(g, { type: '${type}', x, y, seed: ${seed}, laundry: true${sc} })` });
 }
-{ const { w, h } = BUILDINGS.shop;
+{ const { w, h, scale = 1 } = BUILDINGS.shop, sc = scale === 1 ? '' : `, scale: ${scale}`;
   items.push({ id: 'life.shutter', label: 'Shutter down (closed)', group: 'Life', tags: ['Town life'], seed: 3, w: w + 8, h: h + 4, px: 0, dpx: 6,
-    draw: (g, seed) => drawBuilding(g, { type: 'shop', shopType: 'bookshop', x: 4 + w / 2, y: h + 2, seed, dpx: 6, shut: true }),
-    code: (seed) => `drawBuilding(g, { type: 'shop', shopType: 'bookshop', x, y, seed: ${seed}, shut: true })` }); }
+    draw: (g, seed) => drawBuilding(g, { type: 'shop', shopType: 'bookshop', x: 4 + w / 2, y: h + 2, seed, dpx: 6, shut: true, scale }),
+    code: (seed) => `drawBuilding(g, { type: 'shop', shopType: 'bookshop', x, y, seed: ${seed}, shut: true${sc} })` }); }
 
 // --- filters ---------------------------------------------------------------------
 const GROUPS = ['All', 'People', 'Animals', 'Monsters', 'Combat', 'Speech', 'Life', 'Buildings', 'Doors & windows', 'Street', 'Nature'];

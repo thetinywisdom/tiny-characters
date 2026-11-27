@@ -307,22 +307,22 @@ const sheet = document.querySelector('#buildings');
 const SHOWN = 3;
 const SD = 6;                                                 // drawn 6 times bigger underneath, for the signs
 await document.fonts.load(`16px ${SIGN_FONT}`).catch(() => {});
-for (const [type, { label, widths }] of Object.entries(BUILDINGS)) {
+for (const [type, { label, widths, scale = 1 }] of Object.entries(BUILDINGS)) {   // (redrawn ones at their own size, 1.5)
   if (type === 'torii' || type === 'shrineHall') continue;    // shown together as the shrine
   const seeds = [], seen = new Set();
   for (let seed = 1; seed <= 40 && seeds.length < SHOWN; seed++) {
-    const { w, h } = buildingSize({ type, seed }), key = widths.length > 1 ? `${w}x${h}` : `${seed}`;
+    const { w, h } = buildingSize({ type, seed, scale }), key = widths.length > 1 ? `${w}x${h}` : `${seed}`;
     if (!seen.has(key)) { seen.add(key); seeds.push(seed); }
   }
   for (const seed of seeds) {
-    const { w, h } = buildingSize({ type, seed });
+    const { w, h } = buildingSize({ type, seed, scale });
     const c = document.createElement('canvas');
     c.width = (w + 4) * SD; c.height = (h + 4) * SD; c.className = 'bld';
     c.style.setProperty('--w', w + 4);
     const g = c.getContext('2d');
     g.setTransform(SD, 0, 0, SD, 0, 0); g.imageSmoothingEnabled = false;
     g.fillStyle = '#d8d2c4'; g.fillRect(0, h + 2, w + 4, 2);
-    drawBuilding(g, { type, x: 2 + w / 2, y: h + 2, seed, dpx: SD });
+    drawBuilding(g, { type, x: 2 + w / 2, y: h + 2, seed, dpx: SD, scale });
     const f = document.createElement('figure');
     const cap = document.createElement('figcaption'); cap.textContent = `${label} (seed ${seed})`;
     f.append(c, cap); sheet.append(f);

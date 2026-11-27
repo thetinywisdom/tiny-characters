@@ -7,6 +7,8 @@
 //   BUILDINGS             type -> { label, w, h, widths } (the largest size any seed makes)
 //   buildingSize(b)       one building's size for its seed
 //   SHOP_TYPES            the shop's kinds (konbini, ramen, cafe ...)
+//   setRedraw(mode)       which buildings use their full-size drawing (tinyBuildingsFull.js):
+//                         'approved' (default), 'all' (also those in review), 'none'
 //
 // A building: { type, x, y, seed, shopType, wall, roof }. Colours are CSS
 // strings; the seed picks the width, floors, windows (kind, number), door
@@ -17,10 +19,19 @@
 // from above (8-18 rows), which gives each building its depth on a map.
 
 import { seeded, shade } from './tinyCharacters.js';
+import { FULL } from './tinyBuildingsFull.js';
 
 // the shop kind each building drew (its own, or the one its seed picked), for shutters and steam
 let lastShop = null;
 const SHOP_OF = new Map();
+// Which buildings are drawn at full size (tinyBuildingsFull.js): 'approved' (the owner's
+// approved ones), 'all' (also those waiting for review; ?redraw=all) or 'none' (the old ones).
+let REDRAW = (typeof location !== 'undefined' && ['all', 'none'].includes(new URLSearchParams(location.search).get('redraw')))
+  ? new URLSearchParams(location.search).get('redraw') : 'approved';
+/** The full-size drawing for a building, if it is drawn at full size. */
+const fullOf = (b) => { const f = FULL[b.type]; return f && (REDRAW === 'all' || (REDRAW === 'approved' && f.approved)) ? f : null; };
+/** Full-size drawings are made for the town's scale: one of their pixels is 1 / FULL_K of a scale-1 pixel. */
+const FULL_K = 1.5;
 
 const INK = '#2f3236', WHITE = '#f2f2ee', RED = '#d8443c', NAVY = '#2c3652', GOLD = '#f2b64a';
 const WIN = '#5f7487', LIT = '#f0dca0', CURTAIN = '#e4d6bc', GLASS = '#9fb6cc', GLASS2 = '#7f9ab4';
@@ -901,27 +912,37 @@ function choices(b) {
   return { rng, wall, roof, w };
 }
 const SIZES = new Map();
-/** A building's size at scale 1 for its seed (and shop type): { w, h }, h measured from its drawing. */
+/**
+ * A building's size for its seed (and shop type): { w, h, full }, h measured from its
+ * drawing; at scale 1, or for a full-size drawing (full true) at its own size (scale 1.5).
+ */
 function sizeAt1(b) {
-  const key = `${b.type}|${b.seed ?? 1}|${b.shopType ?? ''}|${b.wall ?? ''}|${b.roof ?? ''}`;
+  const f = fullOf(b);
+  const key = `${b.type}|${b.seed ?? 1}|${b.shopType ?? ''}|${b.wall ?? ''}|${b.roof ?? ''}|${f ? 'f' : ''}`;
   if (SIZES.has(key)) return SIZES.get(key);
   const { rng, wall, roof, w } = choices(b);
   let h = 0;
-  DEFS[b.type][2]((c, dx, up, rw, rh) => { if (rw > 0 && rh > 0) h = Math.max(h, up + rh); }, rng, b, wall, roof, w);
-  const size = { w, h };
+  const measure = (c, dx, up, rw, rh) => { if (rw > 0 && rh > 0) h = Math.max(h, up + rh); };
+  const W = f ? Math.round(w * FULL_K) : w;
+  (f ? f.draw : DEFS[b.type][2])(measure, rng, b, wall, roof, W);
+  const size = { w: W, h, full: !!f };
   SIZES.set(key, size);
   return size;
 }
+/** Use the full-size drawings: 'approved' (the default), 'all' (also those in review) or 'none'. */
+export function setRedraw(mode = 'approved') { REDRAW = mode; SIZES.clear(); }
 
 /**
- * Every building: type -> { label, w, h, widths } (pixels): w and h are the
- * largest any seed makes it (roof and all), so a card sized from them fits
- * every seed; widths are the widths a seed picks from.
+ * Every building: type -> { label, w, h, widths, scale } (pixels): w and h are
+ * the largest any seed makes it (roof and all), so a card sized from them fits
+ * every seed; widths are the widths a seed picks from. A building drawn at
+ * full size has scale 1.5: its sizes are at that scale (draw it with it).
  */
 export const BUILDINGS = Object.fromEntries(Object.entries(DEFS).map(([type, [label, widths]]) => {
-  let w = 0, h = 0;
-  for (let seed = 1; seed <= 40; seed++) { const s = sizeAt1({ type, seed }); w = Math.max(w, s.w); h = Math.max(h, s.h); }
-  return [type, { label, w, h, widths }];
+  let w = 0, h = 0, full = false;
+  for (let seed = 1; seed <= 40; seed++) { const s = sizeAt1({ type, seed }); w = Math.max(w, s.w); h = Math.max(h, s.h); full = s.full; }
+  // a full-size building is shown at its own size (scale 1.5): its card uses that scale
+  return [type, full ? { label, w, h, widths: widths.map((x) => Math.round(x * FULL_K)), scale: FULL_K } : { label, w, h, widths }];
 }));
 
 /**
@@ -932,15 +953,18 @@ export const BUILDINGS = Object.fromEntries(Object.entries(DEFS).map(([type, [la
  */
 export function drawBuilding(g, b) {
   if (!DEFS[b.type]) return;
-  const k = b.scale ?? 1, { rng, wall, roof, w } = choices(b);
+  const f = fullOf(b), { rng, wall, roof, w: w1 } = choices(b);
+  const k = (b.scale ?? 1) / (f ? FULL_K : 1), w = f ? Math.round(w1 * FULL_K) : w1;   // a full-size drawing is at scale 1 in the town
   const L = Math.round(b.x - Math.round(w * k) / 2), y = Math.round(b.y);
   const r = painter(g, L, y, k, b.dpx ?? 1);
   lastShop = null;
-  DEFS[b.type][2](b.lights ? nightLights(r, b.seed ?? 1, b.time ?? 0) : r, rng, b, wall, roof, w);
+  const shop = (f ? f.draw : DEFS[b.type][2])(b.lights ? nightLights(r, b.seed ?? 1, b.time ?? 0) : r, rng, b, wall, roof, w);
+  if (f) lastShop = shop ?? null;
   SHOP_OF.set(`${b.type}|${b.seed ?? 1}|${b.shopType ?? ''}`, lastShop);
   if (b.shut && SHUTTERED(b.type, lastShop)) {                                            // closed: a roller shutter down over the shop front
     g.save(); if (b.lights) g.globalCompositeOperation = 'destination-out';   // (at night: nothing shines through it)
-    r('#8a9096', 1, 0, w - 2, 12); for (let up = 1; up < 12; up += 2) r('#a8aeb4', 1, up, w - 2, 1); r('#5a5f66', Math.round(w / 2) - 2, 1, 4, 1);
+    if (f) { r('#8a9096', 2, 0, w - 4, 18); for (let up = 1; up < 17; up += 3) r('#a8aeb4', 2, up, w - 4, 1); r('#6a7076', 2, 17, w - 4, 1); r('#5a5f66', Math.round(w / 2) - 3, 2, 6, 1); }
+    else { r('#8a9096', 1, 0, w - 2, 12); for (let up = 1; up < 12; up += 2) r('#a8aeb4', 1, up, w - 2, 1); r('#5a5f66', Math.round(w / 2) - 2, 1, 4, 1); }
     g.restore();
   }
 }
@@ -1060,7 +1084,7 @@ export function drawPart(g, p) {
 
 /** A building's size in pixels for its seed, at its scale (b.scale, 1 by default): { w, h }. */
 export function buildingSize(b) {
-  const { w, h } = sizeAt1(b), k = b.scale ?? 1;
+  const { w, h, full } = sizeAt1(b), k = (b.scale ?? 1) / (full ? FULL_K : 1);
   return { w: Math.round(w * k), h: Math.round(h * k) };
 }
 
@@ -1070,9 +1094,9 @@ export function buildingSize(b) {
  * gas station only the posts, pumps and kiosk (you walk through and under).
  */
 export function buildingSolids(b) {
-  const { w, h } = buildingSize(b), k = b.scale ?? 1;
-  const L = Math.round(b.x - w / 2), y = Math.round(b.y);
-  if (OPEN[b.type]) return OPEN[b.type].map(([dx, sw, top, bottom]) => {
+  const { w, h } = buildingSize(b), f = fullOf(b), k = (b.scale ?? 1) / (f ? FULL_K : 1);
+  const L = Math.round(b.x - w / 2), y = Math.round(b.y), open = f ? f.open : OPEN[b.type];
+  if (open) return open.map(([dx, sw, top, bottom]) => {
     const x0 = Math.round(dx * k), x1 = Math.max(x0 + 1, Math.round((dx + sw) * k));
     return { x: L + x0, y: y - Math.round(top * k), w: x1 - x0, h: Math.round(top * k) - Math.round(bottom * k) + 1 };
   });
