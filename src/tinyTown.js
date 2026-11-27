@@ -516,27 +516,25 @@ function drawNight(g, view, items, night, dpx, drawItem, t = 0, lights = 'soft')
     const G = glowLayer.getContext('2d', { willReadFrequently: true });
     G.setTransform(1, 0, 0, 1, 0, 0); G.globalCompositeOperation = 'source-over'; G.fillStyle = '#000'; G.fillRect(0, 0, glowLayer.width, glowLayer.height);
     G.setTransform(k, 0, 0, k, -view.x * k, -view.y * k);
-    if (vehicles.length) {
-      // the headlights' pools, the vehicles painted out of them (the light falls on the road, not over the cars)
-      const lg = beamLayer.getContext('2d');
-      lg.setTransform(1, 0, 0, 1, 0, 0); lg.globalCompositeOperation = 'source-over'; lg.clearRect(0, 0, beamLayer.width, beamLayer.height);
-      lg.setTransform(k, 0, 0, k, -view.x * k, -view.y * k);
-      lg.globalCompositeOperation = 'lighter';
-      for (const v of vehicles) drawVehicleBeams(lg, v);
-      lg.globalCompositeOperation = 'destination-out';
-      for (const v of vehicles) drawVehicle(lg, v);
-      G.globalCompositeOperation = 'lighter'; G.drawImage(beamLayer, view.x, view.y, view.w, view.h);
-    }
-    G.globalCompositeOperation = 'lighter';
-    const glow = (x, y, r, c) => {
-      const grad = G.createRadialGradient(x, y, 0, x, y, r);
+    // the light that falls on the ground (the headlights' pools, the glow round lamps, lanterns,
+    // signals and vending machines), with every vehicle and everyone on foot painted out of it, so it
+    // lights the street round them, never washes over them
+    const lg = beamLayer.getContext('2d');
+    lg.setTransform(1, 0, 0, 1, 0, 0); lg.globalCompositeOperation = 'source-over'; lg.clearRect(0, 0, beamLayer.width, beamLayer.height);
+    lg.setTransform(k, 0, 0, k, -view.x * k, -view.y * k);
+    lg.globalCompositeOperation = 'lighter';
+    const glow = (ctx, x, y, r, c) => {
+      const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
       grad.addColorStop(0, c + '99'); grad.addColorStop(0.4, c + '33'); grad.addColorStop(1, c + '00');
-      G.fillStyle = grad; G.fillRect(x - r, y - r, r * 2, r * 2);
+      ctx.fillStyle = grad; ctx.fillRect(x - r, y - r, r * 2, r * 2);
     };
-    for (const it of items) {
-      const ls = it.prop ? propLights(it.prop) : it.s?.vehicle ? vehicleLights(it.s) : [];
-      for (const l of ls) glow(l.x, l.y, l.r, l.c);
-    }
+    for (const v of vehicles) drawVehicleBeams(lg, v);
+    for (const it of items) if (it.prop) for (const l of propLights(it.prop)) glow(lg, l.x, l.y, l.r, l.c);
+    lg.globalCompositeOperation = 'destination-out';
+    for (const it of items) if (it.s) drawItem(lg, it);
+    G.globalCompositeOperation = 'lighter'; G.drawImage(beamLayer, view.x, view.y, view.w, view.h);
+    // then the vehicles' own lamps, on them
+    for (const v of vehicles) for (const l of vehicleLights(v)) glow(G, l.x, l.y, l.r, l.c);
     if (lights !== 'soft') pixelLight(G, glowLayer.width, glowLayer.height, lights);
     g.globalCompositeOperation = 'lighter';
     g.imageSmoothingEnabled = false;

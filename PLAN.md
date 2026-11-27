@@ -342,6 +342,12 @@ bubble lab, so games can use them and they can grow.
     animated mock-ups): see-through pixel puffs that grow as they rise and
     fade out, over every food stall and the ramen shops.
 
+45. **Lights no longer wash over cars and people** (the owner: a street
+    lamp's glow destroyed the car behind it): the light on the ground has
+    every vehicle and everyone on foot painted out of it; the night's pixel
+    light styles can be tried live with `?lights=bands|dither|mixed` (and
+    `?time=night`); the owner is choosing one.
+
 ## Next (only when the owner asks)
 
 Nothing agreed yet: ask the owner, then mock up the options (pictures

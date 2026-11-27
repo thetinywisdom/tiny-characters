@@ -645,6 +645,9 @@ the demo decides who does what.
   steam's drawing (used to try styles out; the default is `drawSteam`). `lights: 'soft' | 'bands' | 'dither' |
   'mixed'` sets how the night's glows and headlight pools are drawn (all added
   up in one layer, then turned into pixel steps or dots by `pixelLight`;
+  the light on the ground, lamps' and headlights', has every vehicle and
+  everyone on foot painted out of it, so it never washes over them; a
+  vehicle's own lamps are added on it after;
   'soft' until the owner picks one; the demo takes `?lights=mixed` and
   `?time=night` in its address to try them live).
 - **Swings in use**: a swings prop with `riders: [{ angle, kid } | null,
