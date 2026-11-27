@@ -69,7 +69,8 @@ bubble lab, so games can use them and they can grow.
 - Fewer people (Nov 2026): half the walkers (44); the town should not feel
   crowded.
 - The player's marker (Nov 2026): a thin gold pixel ring round your feet,
-  still (no pulse); a white ring under whoever you point at or tap.
+  still (no pulse), as bright at night as by day; a white ring under whoever
+  you point at or tap.
 - The walking step (Nov 2026): the body still bobs a pixel, and the hips
   stretch up so no gap opens.
 - The front page (Nov 2026): no park (the owner never used it): the town,
@@ -363,6 +364,10 @@ bubble lab, so games can use them and they can grow.
     stands inside a lamp's glow is lit by its steps, and nobody outside it
     is (it used to go by the distance to the lamp's foot, so people stood
     dark inside the glow); cars inside a glow are lit too.
+
+49. **Your ring stays gold at night** (the owner): the rings (yours, and the
+    white one under whoever you point at) are drawn again over the night, so
+    the dark does not dim them; still behind the legs.
 
 ## Next (only when the owner asks)
 

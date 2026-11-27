@@ -469,7 +469,8 @@ const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
  * half), so what stands in the glow is lit and what stands outside it is not; people right in front
  * of a car's headlights too.
  */
-let litCanvas = null, litShape = null;
+let litCanvas = null, litShape = null, ringCanvas = null;
+const RING_W = 24, RING_H = 24;
 const WARM = { '#ffe8a8': '#ffd890' };                                   // a lamp's light, a little warmer on people
 const LIT_W = 80, LIT_H = 64;
 function litUp(g, items, vehicles, drawItem, dpx, on) {
@@ -764,6 +765,23 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0
     else if (it.p && it.p.kind === 'tree' && it.p.type === 'sakura' && petals) drawPetals(g, { ...it.p, seed: it.p.x }, t, Math.round(30 * town.scale));
   }
   for (const s of above) if (s.x > view.x - 10 && s.x < view.x + view.w + 10 && s.y > view.y - 4 && s.y < view.y + view.h + 10) (s.draw ?? drawCharacter)(g, s, t);
-  if (night > 0.01) drawNight(g, view, items, night, dpx, drawItem, t, lights);
+  if (night > 0.01) {
+    drawNight(g, view, items, night, dpx, drawItem, t, lights);
+    // the rings (yours gold, whoever is pointed at white) keep their colour at night: drawn again over
+    // the dark, the one wearing it (and whatever stands in front) painted out of it
+    items.forEach((it, index) => {
+      const q = it.s;
+      if (!q || q.vehicle || !(q.you || q.ring)) return;
+      if (!ringCanvas || ringCanvas.width !== RING_W * dpx) ringCanvas = canvasOf(RING_W * dpx, RING_H * dpx);
+      const c = ringCanvas.getContext('2d'), ox = Math.round(q.x) - RING_W / 2, oy = Math.round(q.y) - RING_H + 6;
+      c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = 'source-over'; c.clearRect(0, 0, ringCanvas.width, ringCanvas.height);
+      c.setTransform(dpx, 0, 0, dpx, -ox * dpx, -oy * dpx); c.imageSmoothingEnabled = false;
+      drawRing(c, q.x, q.y, q.ring ?? undefined);                          // (yours: the gold of drawRing)
+      c.globalCompositeOperation = 'destination-out';
+      drawItem(c, { ...it, s: { ...q, ring: undefined, you: false } });
+      for (let j = index + 1; j < items.length; j++) { const o = items[j], ob = o.b ? o.b : o.prop ?? o.p ?? o.s; if (ob && Math.abs(ob.x - q.x) < 60 && ob.y - q.y < 120) drawItem(c, o); }
+      g.drawImage(ringCanvas, ox, oy, RING_W, RING_H);
+    });
+  }
   g.restore();
 }

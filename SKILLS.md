@@ -86,7 +86,9 @@ demo/demo.css          the demo page's look (light and dark)
   back row hides behind the legs); `ring: colour` gives anyone one (the demo:
   white under whoever the mouse points at, or who was tapped, while they talk;
   tinyTown draws it under cats, dogs and monsters too; posed people get it
-  from drawPose). The owner chose the thin ring, still (no pulse)
+  from drawPose; at night drawTownView draws the rings again over the dark,
+  the wearer and whatever stands in front painted out, so they keep their
+  colour). The owner chose the thin ring, still (no pulse)
 
 Every look is drawn with `R(colour, dx, dy, w, h)`: a rectangle at
 (x + dx, y + dy), mirrored when facing left, so "back" is negative dx and
