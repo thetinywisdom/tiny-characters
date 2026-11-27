@@ -153,6 +153,7 @@ function coloursOf(v) {
  * Without a colour the seed picks one.
  */
 export function drawVehicle(g, v) {
+  if (v.type === 'train') { drawTrain(g, v); return; }
   const type = SHAPES[v.type] ? v.type : 'car', [c, c2] = coloursOf(v);
   const heading = v.heading ?? HEADING[v.facing ?? 'right'];
   const dir = ((Math.round(heading / (360 / DIRS)) % DIRS) + DIRS) % DIRS;
@@ -172,7 +173,30 @@ const sinOf = (v) => Math.sin(((v.heading ?? HEADING[v.facing ?? 'right']) * Mat
  * lights, each only when its end faces you: [{ x, y, r, c }]. The light they
  * throw on the road is drawVehicleBeams.
  */
+// --- trains ---------------------------------------------------------------------------------
+const CARRIAGE = 62;                                    // a carriage's length (pixels, with the gap)
+/**
+ * A train { x, y, dir, cars, line }: x its middle, y the ground under it, dir 1 (going right) or -1.
+ * Seen side on, its roof from above like the buildings'; drawn at the people's size.
+ */
+export function drawTrain(g, v) {
+  const cars = v.cars ?? 4, line = v.line ?? ['#2f8a5a', '#f08a2c'], len = cars * CARRIAGE - 2, x0 = Math.round(v.x - len / 2), y = Math.round(v.y);
+  const R = (c, dx, up, w, h) => { g.fillStyle = c; g.fillRect(v.dir < 0 ? x0 + len - dx - w : x0 + dx, y - up - h, w, h); };   // mirrored going left
+  for (let i = 0; i < cars; i++) {
+    const cx = i * CARRIAGE, front = i === cars - 1;
+    R('#3a3d42', cx + 6, 0, 10, 2); R('#3a3d42', cx + 44, 0, 10, 2);                         // the bogies
+    R('#e8ecef', cx, 2, 60, 15); R(shade('#e8ecef', 0.86), cx, 2, 60, 1);                     // the body
+    R(line[0], cx, 4, 60, 2); R(line[1], cx, 6, 60, 1);                                      // the line's colours
+    for (let k = 0; k < 5; k++) R('#5f7487', cx + 4 + k * 11, 10, 7, 4);                     // windows
+    for (const d of [14, 44]) { R('#8a9096', cx + d, 2, 4, 12); R('#5f7487', cx + d + 1, 9, 2, 4); }   // doors
+    R('#c8ccd0', cx, 17, 60, 9); R('#b0b4b8', cx + 2, 19, 56, 1); R('#9aa0a6', cx + 20, 21, 18, 3);   // the roof from above, an air-con unit
+    if (i < cars - 1) R('#3a3d42', cx + 60, 6, 2, 8);                                        // the coupling
+    if (front) { R('#3a3f44', cx + 54, 9, 6, 6); R('#5f7487', cx + 55, 10, 4, 4); R('#fff2c0', cx + 58, 4, 2, 1); }   // the cab
+  }
+}
+
 export function vehicleLights(v) {
+  if (v.type === 'train') { const L = (v.cars ?? 4) * CARRIAGE - 2; return [{ x: v.x + v.dir * (L / 2 + 4), y: v.y - 4, r: 12, c: '#fff2c0' }]; }
   const S = SHAPES[v.type] ?? SHAPES.car, sn = sinOf(v), hl = S.L / 2, side = S.W / 2 - 1.6, out = [];
   for (const w of [-side, side]) {
     if (sn > -0.35) out.push({ ...onScreen(v, S, hl + 0.5, w, 4.8), r: 2.5, c: '#fff8d8' });
@@ -277,6 +301,11 @@ export function makeTraffic(town, { cars = 16, buses = 2, seed = 5 } = {}) {
       const light = signal(jn, v.lane.kind, t);
       if (light === 'red' || (light === 'yellow' && dd > 4)) free = Math.min(free, dd);
     }
+    // a closed level crossing ahead (on a cross street)
+    if (rail && v.lane.kind === 'v' && closed(v.lane.j)) {
+      const stop = d > 0 ? rail.y - 6 : rail.y + rail.h + 6, dd = (stop - f) * d;
+      if (dd >= -1 && dd < 60) free = Math.min(free, dd);
+    }
     // anyone in front (people, animals, monsters, you)
     for (const p of walkers) {
       if (p.vehicle) continue;
@@ -297,8 +326,34 @@ export function makeTraffic(town, { cars = 16, buses = 2, seed = 5 } = {}) {
     v.lane = lane; v.target = headingOf(lane); v.speed = Math.min(v.speed, 14);   // it swings round to its new heading
   }
 
+  // the railway: one train running along it, stopping at each station; the level crossings close as it comes
+  const rail = town.railway, train = rail && { vehicle: true, type: 'train', cars: 4, dir: 1, x: -400, y: rail.y + rail.h - 3, speed: 0, wait: 0, served: new Set() };
+  if (train) vehicles.push(train);
+  const trainLen = train ? train.cars * CARRIAGE - 2 : 0;
+  const stations = town.buildings.filter((b) => b.type.startsWith('station')).map((b) => b.x);
+  /** Is the level crossing of cross street j closed (the train within reach of it)? */
+  const closed = (j) => !!train && train.wait <= 0 && Math.abs(train.x - (crossStreets[j] + town.dims.VSTREET / 2)) < trainLen / 2 + 70;
+  function moveTrain(dt) {
+    if (train.wait > 0) { train.wait -= dt; return; }
+    const far = W + trainLen;
+    if ((train.dir > 0 && train.x > far) || (train.dir < 0 && train.x < -trainLen)) {   // gone: back the other way in a while
+      train.dir *= -1; train.wait = 5 + rng() * 5; train.served.clear(); train.speed = 0; return;
+    }
+    // slow for the next station, stop there, then go on
+    const next = stations.filter((s) => !train.served.has(s) && (s - train.x) * train.dir > -2).sort((a, b) => (a - b) * train.dir)[0];
+    const toStop = next === undefined ? Infinity : (next - train.x) * train.dir;
+    const target = toStop < 2 ? 0 : Math.min(55, Math.sqrt(2 * 40 * Math.max(0, toStop)) + 3);
+    train.speed += Math.max(-60 * dt, Math.min(25 * dt, target - train.speed));
+    if (toStop < 2 && train.speed < 1) { train.served.add(next); train.speed = 0; train.dwell = 3; }
+    if (train.dwell > 0) { train.dwell -= dt; return; }
+    train.x += train.dir * train.speed * dt;
+  }
+
   function update(dt, t, walkers = []) {
+    if (train) moveTrain(dt);
+    for (const p of town.props) if (p.type === 'crossingGate') { p.down = closed(p.crossing); p.flash = Math.floor(t * 3) % 2; }
     for (const v of vehicles) {
+      if (v.type === 'train') continue;
       // swing round towards its heading (a quarter turn in about a third of a second)
       if (v.heading !== v.target) { const diff = ((v.target - v.heading + 540) % 360) - 180, turnBy = 280 * dt; v.heading = Math.abs(diff) <= turnBy ? v.target : (v.heading + Math.sign(diff) * turnBy + 360) % 360; }
       if (v.wait > 0) { v.wait -= dt; v.walking = false; continue; }
@@ -343,10 +398,15 @@ export function makeTraffic(town, { cars = 16, buses = 2, seed = 5 } = {}) {
    * cars have green or yellow (anywhere else on foot is up to them).
    */
   function mayCross(x, y, nx, ny, t) {
+    // the railway: wait at the level crossing while it is closed
+    if (rail) {
+      const onRail = (yy) => yy >= rail.y - 2 && yy < rail.y + rail.h + 2;
+      if (onRail(ny) && !onRail(y)) { const j = crossStreets.findIndex((sx) => nx >= sx && nx < sx + town.dims.VSTREET); if (j >= 0 && closed(j)) return false; }
+    }
     if (!town.roadAt(nx, ny) || town.roadAt(x, y)) return true;
     const c = town.crossingAt(nx, ny);
     return !c || signal(c.junction, c.axis, t) === 'red';
   }
 
-  return { vehicles, update, mayCross, lightAt };
+  return { vehicles, update, mayCross, lightAt, train, crossingClosed: closed };
 }

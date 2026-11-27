@@ -161,7 +161,24 @@ not fit.
 ## A town map
 
 `src/tinyTown.js` puts the buildings on a 2D map of streets, cross streets
-and blocks, with the shrine grounds, a schoolyard and an old-town square.
+and blocks, with the shrine grounds, a schoolyard and an old-town square;
+and in the south a pond park (koi, ducks, a path round it, cherry trees), a
+playground (swings, a slide, a sandbox, a drinking fountain, toilets), a
+fenced basketball court (kids passing a ball, floodlights at night), a
+railway with level crossings (a train runs along it and stops at each
+station; the gates come down, cars and people wait), four stations (a small
+one and three big ones: modern glass, classic brick, Japanese wooden) with
+their plaza, a kiosk, a taxi rank, and a narrow station alley of red
+lanterns, cables, crates and cats.
+
+**The demo's map is a showcase.** Every piece is part of the layout
+(`DEFAULT_TOWN`), so a map of your own can put them anywhere: `railway: { y,
+h }`, areas with `ground: 'court'` and `fence: true` (and a `gate`),
+`shape: 'ellipse'` (a pond), `ring: true` (a path round), `koi: true` (fish
+and ducks), `buildings` like `{ type: 'stationBrick', x, y }`, `props`,
+`parked` vehicles and extra `wires`. Adding to a map never reshuffles the
+rest: each region's random greenery and each placed thing's look come from
+where it is.
 Every building's whole picture is solid ground, so nobody is ever hidden
 behind one; tall buildings stand only along the back.
 
@@ -179,7 +196,7 @@ drawTownView(g, town, { x: viewX, y: viewY, w: 200, h: 150 }, [you, ...others], 
 | --- | --- |
 | `makeTown(layout)` | A town: `{ W, H, streets, crossStreets, junctions, roadAt(x, y), crossingAt(x, y), buildings, props, wires, areas, blocked(x, y), findPath(from, to), randomSpot(rng, within), placeAt(x, y), doorOf(building), ground }`. |
 | `drawTownView(g, town, view, sprites, t, { dpx, night })` | The part of the town in `view`: ground, then buildings, trees, bushes, people, cats (`cat: true`) and dogs (`dog: true`) further back first. |
-| `DEFAULT_TOWN` | The demo's layout: `scale` (1.5: the town is drawn that much bigger, the people stay 15 px), `streets`, `crossStreets`, `rows` of buildings, single `buildings`, `props` (street things), `areas` with their own ground (all at scale 1; `makeTown` multiplies them). |
+| `DEFAULT_TOWN` | The demo's layout: `scale` (1.5: the town is drawn that much bigger, the people stay 15 px), `streets`, `crossStreets`, `rows` of buildings, single `buildings`, `props` (street things), `areas` with their own ground, `railway`, `parked`, `wires` (all at scale 1; `makeTown` multiplies them). |
 | `buildingSolids(b)` (tinyBuildings.js) | The ground a building takes; you can step between a torii's posts and under a gas station's canopy. |
 
 ## Animals

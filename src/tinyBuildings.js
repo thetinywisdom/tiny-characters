@@ -781,6 +781,81 @@ const DEFS = {
       for (let k = 0; k < 4; k++) r(roofC, half - 4 + k, top + 26 + k, 8 - k * 2, 1);
       icon(r, half - 2, top + 30, ['.g.', 'ggg', '.g.', '.g.', '.g.'], { g: GOLD });
     } else icon(r, half - 2, top + 16, ['.g.', 'ggg', '.g.', '.g.', '.g.'], { g: GOLD });
+  }],  // --- the station area (the owner's picks from mock-ups: a small station and three big
+  // ones, their doors from the same kit as every building, a kiosk, toilets, an alley stall)
+  station: ['Small station', [52, 60], (r, rng, b, wall0, roof, w) => {
+    const v = V(rng), wall = v.pick(['#e8e0d0', '#f2efe8', '#d8d0c4']), line = v.pick(['#2f8a5a', '#2c6fd0', '#c8402c']), top = 20;
+    r(wall, 0, 0, w, top); r(shade(wall, 0.86), 0, 0, w, 1);
+    sign(r, line, WHITE, 3, 14, w - 6, 5, 'STATION');
+    const dx = Math.round(w / 2) - 5;
+    r(shade(wall, 0.8), dx - 3, 12, 16, 2); DOORS.auto(r, dx);                          // a little canopy over the doors
+    windowRow(r, rng, 'aluPair', 2, dx - 4, SILL, howMany('aluPair', 2, dx - 4, 3)); windowRow(r, rng, 'aluPair', dx + 14, w - 2, SILL, howMany('aluPair', dx + 14, w - 2, 3));
+    flatTop(r, v, wall, top, w);
+  }],
+  stationModern: ['Station: modern glass', [104], (r, rng, b, wall0, roof, w) => {
+    const frame = '#9aa0a8', top = 32, mid = Math.round(w / 2);
+    r('#b8bcc0', 0, 0, w, top);
+    for (let i = 2; i + 4 <= w - 2; i += 6) for (const [up, h] of [[1, 13], [17, 12]]) { r('#6f8aa6', i, up, 5, h); r('#8fb0cc', i, up + h - 3, 5, 3); }   // a wall of glass
+    r(frame, 0, 15, w, 2); r(frame, 0, 0, w, 1);
+    for (let k = 0; k < 5; k++) r('#c8d4dc', 10 + k * 4, 18 + k * 2, 4, 1);                // an escalator going up, seen through the glass
+    r('#4a4e54', 8, 18, 1, 10);
+    for (const dx of [mid - 16, mid - 5, mid + 6]) DOORS.auto(r, dx);                        // three pairs of sliding doors
+    r('#4a4e54', mid - 20, 13, 40, 2); r('#c8ccd0', mid - 20, 14, 40, 1);                     // the steel canopy over them
+    sign(r, '#2f8a5a', WHITE, 6, top - 9, w - 12, 6, 'TINY TOWN STATION');
+    flatRoof(r, '#b8bcc0', 0, top, w, 14);
+    for (let i = 6; i + 8 <= w - 6; i += 14) { r('#9fc8e8', i, top + 4, 8, 6); r('#c8e0f0', i, top + 8, 8, 1); }   // skylights
+    r('#e8e0d0', mid - 5, top + 14, 10, 9); r(INK, mid - 4, top + 15, 8, 7); r(WHITE, mid - 3, top + 16, 6, 5); r(INK, mid, top + 18, 1, 2); r(INK, mid, top + 18, 2, 1);   // the clock on top
+  }],
+  stationBrick: ['Station: classic brick', [112], (r, rng, b, wall0, roof, w) => {
+    const brick = '#b8503a', stone = '#ece4d4', top = 28, mid = Math.round(w / 2), pw = 30, p0 = mid - pw / 2;
+    r(brick, 0, 0, w, top);
+    for (let up = 3; up < top; up += 3) r(shade(brick, 0.88), 0, up, w, 1);                   // courses of brick
+    r(stone, 0, 0, w, 2); r(stone, 0, GF - 1, w, 2); r(stone, 0, top - 2, w, 2);              // stone bands
+    for (let i = 3; i + 5 <= w - 3; i += 9) { if (i + 5 > p0 - 2 && i < p0 + pw + 2) continue; WINDOWS.arched(r, rng, i, 3, '#3a3f44'); WINDOWS.arched(r, rng, i, GF + 2, '#3a3f44'); }
+    // the stone pavilion in the middle: two arched doors, a round window, the name
+    r(stone, p0, 0, pw, top + 4); r(shade(stone, 0.9), p0, 0, 1, top + 4); r(shade(stone, 0.9), p0 + pw - 1, 0, 1, top + 4);
+    for (const dx of [mid - 8, mid + 2]) DOORS.arched(r, dx, 0, '#4a3424');
+    WINDOWS.round(r, mid - 2, GF + 1);
+    sign(r, '#2f8a5a', WHITE, p0 + 2, top - 5, pw - 4, 5, 'STATION');
+    pitched(r, '#4a5560', -2, top, p0 + 2, 12, 2); pitched(r, '#4a5560', p0 + pw, top, w - p0 - pw + 2, 12, 2);   // the wings' slate roofs
+    r(stone, p0, top + 4, pw, 3); dome(r, '#4f7a6a', mid, top + 7, 11); r(GOLD, mid, top + 18, 1, 4);           // the copper dome and its finial
+  }],
+  stationWooden: ['Station: Japanese wooden', [104], (r, rng, b, wall0, roof, w) => {
+    const wood = '#8a5a3a', plaster = '#f2ead8', top = 18, mid = Math.round(w / 2);
+    r(plaster, 0, 0, w, top);
+    for (let i = 0; i < w; i += 12) r(wood, i, 0, 2, top); r(wood, w - 2, 0, 2, top); r(wood, 0, top - 2, w, 2); r(wood, 0, 0, w, 1);
+    for (let i = 4; i + 8 <= w - 2; i += 12) { if (Math.abs(i + 4 - mid) < 14) continue; WINDOWS.lattice(r, i + 1, SILL, 8, 6); }
+    for (const dx of [mid - 11, mid + 1]) DOORS.sliding(r, dx);                              // two sets of lattice doors that slide
+    r(DARKWOOD, mid - 12, 12, 24, 1);
+    for (const dx of [mid - 15, mid + 13]) lantern(r, dx, 8);                                // red lanterns either side
+    pitched(r, '#4a4442', -4, top, w + 8, 20, 3);                                           // the big tiled hipped roof
+    for (const [dx, s] of [[-6, -1], [w + 4, 1]]) { r('#4a4442', dx, top, 2, 2); r('#4a4442', dx + s, top + 1, 2, 2); }   // its upturned ends
+    sign(r, '#e8dcc0', '#4a3424', mid - 16, top + 4, 32, 6, 'STATION');
+  }],
+  kiosk: ['Kiosk', [24], (r, rng) => {
+    const red = '#c8402c';
+    r(red, 0, 0, 24, 14); r('#e8e0d0', 2, 4, 20, 6);
+    shelves(r, rng, 3, 5, 18, 1, ['#3f7fd6', '#f2c230', '#2fa36b', WHITE, '#d46a8e']);
+    r('#3a3f44', 2, 0, 20, 4); awning(r, '#f2c230', WHITE, -1, 14, 26, 3);
+    sign(r, WHITE, red, 1, 17, 22, 4, 'KIOSK');
+    flatRoof(r, red, 0, 21, 24, 6);
+  }],
+  toilets: ['Public toilets', [44], (r, rng) => {
+    const wall = '#e8e0d0';
+    r(wall, 0, 0, 44, GF); r(shade(wall, 0.86), 0, 0, 44, 1);
+    for (const [dx, c, fig] of [[4, '#3f6fa8', ['.w.', '...', 'www', '.w.', 'w.w']], [34, '#c8402c', ['.w.', '...', '.w.', 'www', 'w.w']]]) {
+      DOORS.steel(r, dx, 0, shade(c, 0.8)); r(WHITE, dx + 1, 12, 5, 7); icon(r, dx + 2, 13, fig, { w: c });   // a man and a woman on white plates
+    }
+    sign(r, '#2f8a5a', WHITE, 14, 8, 16, 5, 'WC');
+    flatTop(r, V(rng), wall, GF, 44);
+  }],
+  alleyStall: ['Alley stall (yakitori)', [24, 28], (r, rng, b, wall0, roof, w) => {
+    const v = V(rng), front = v.pick([DARKWOOD, '#5a3a28', '#3a2a22']);
+    r(front, 0, 0, w, GF);
+    WINDOWS.lattice(r, 2, SILL, w - 15, 6); DOORS.sliding(r, w - 12); noren(r, v.pick(['#8a3a2a', NAVY, '#2f4a3a']), w - 13, 8, 12);
+    lantern(r, 1, 10); lantern(r, w - 3, 13);
+    sign(r, LIGHTWOOD, INK, 2, 12, w - 15, 3, 'YAKITORI');
+    pitched(r, '#4a4442', -1, GF, w + 2, 12, 2);
   }],
 };
 

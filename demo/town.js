@@ -20,7 +20,7 @@ const town = makeTown();
 const traffic = makeTraffic(town, { cars: 18, buses: 2 });
 const area = (name) => town.areas.find((a) => a.name === name);
 
-let people, you, seed = 11;
+let people, you, seed = 11, players = [], ball = null;
 const keys = new Set();
 function walker(look, rng, within, cat = false) {
   const at = town.randomSpot(rng, within);
@@ -34,6 +34,18 @@ function newPeople() {
   for (let i = 0; i < 10; i++) people.push(walker({ ...randomCharacter(rng), ...(i % 3 === 0 ? (i % 2 ? LOOKS.schoolgirl : LOOKS.schoolboy) : {}), kid: true, carry: undefined }, rng, yard));
   for (let i = 0; i < 5; i++) people.push(walker(randomCharacter(rng), rng, shrine));
   for (let i = 0; i < 6; i++) people.push(walker(randomCharacter(rng), rng, square));
+  // the south: strollers in the park, kids on the playground and the court, commuters at the stations, cats in the alley
+  const park = area('Pond park'), play = area('Playground'), court = area('Basketball court'), plaza = area('Station plaza'), alley = area('Station alley');
+  if (park) for (let i = 0; i < 6; i++) people.push(walker(randomCharacter(rng), rng, park));
+  if (play) for (let i = 0; i < 6; i++) people.push(walker({ ...randomCharacter(rng), kid: true, size: undefined, carry: undefined, top: undefined }, rng, play));
+  if (plaza) for (let i = 0; i < 8; i++) people.push(walker(randomCharacter(rng), rng, plaza));
+  if (alley) for (let i = 0; i < 2; i++) people.push(walker({ coat: Object.keys(CAT_COATS)[Math.floor(rng() * 8)] }, rng, alley, true));
+  // a game of basketball: four kids on the court and a ball passed between them
+  players = [];
+  if (court) {
+    for (let i = 0; i < 4; i++) { const p = walker({ ...randomCharacter(rng), kid: true, size: undefined, carry: undefined, top: undefined }, rng, { x: court.x + 16, y: court.y + 14, w: court.w - 32, h: court.h - 24 }); p.player = true; people.push(p); players.push(p); }
+    ball = { ball: true, x: players[0].x, y: players[0].y, h: 0, from: players[0], to: players[1], start: 0 };
+  }
   for (let i = 0; i < 6; i++) people.push(walker({ coat: Object.keys(CAT_COATS)[Math.floor(rng() * 8)] }, rng, undefined, true));
   // dog walkers: a dog follows its owner, a little behind
   for (let i = 0; i < 5; i++) {
@@ -55,6 +67,8 @@ function newPeople() {
   people.push(you);
 }
 newPeople();
+// for trying things out in the browser's console (and for tests): the town, its traffic, you
+window.tinyTown = { town, traffic, get you() { return you; }, get people() { return people; } };
 
 const active = () => (document.body.dataset.active ?? 'town') === 'town';
 addEventListener('keydown', (e) => { if (e.key.startsWith('Arrow') && active()) e.preventDefault(); keys.add(e.key.toLowerCase()); });
@@ -187,6 +201,13 @@ function frame(now) {
     if (!p.path) p.wait = 1;
   }
   life(dt);
+  // the ball: thrown from one player to another in an arc, then the next pass (it bounces once on the way)
+  if (ball) {
+    const k = Math.min(1, (t - ball.start) / 0.9), a = ball.from, b = ball.to;
+    ball.x = a.x + (b.x - a.x) * k; ball.y = a.y + (b.y - a.y) * k + 1;
+    ball.h = 7 * Math.abs(Math.cos(Math.PI * k));                          // from hand height, one bounce half way, up to the other's hands
+    if (k >= 1) { ball.from = b; ball.to = players.filter((p) => p !== b)[Math.floor(Math.random() * 3)]; ball.start = t; b.facing = ball.to.x < b.x ? 'left' : 'right'; }
+  }
   const shownPeople = showMonsters ? people : people.filter((p) => !p.monster);
   traffic.update(dt, t, shownPeople);
   if (timeMode === 'passing') hour = (hour + dt / 8) % 24;
@@ -200,7 +221,7 @@ function frame(now) {
     w: VW, h: VH,
   };
   g.setTransform(D, 0, 0, D, 0, 0);
-  drawTownView(g, town, view, [...shownPeople, ...traffic.vehicles], t, { dpx: D, night: nightAt(hour) });
+  drawTownView(g, town, view, [...shownPeople, ...traffic.vehicles, ...(ball ? [ball] : [])], t, { dpx: D, night: nightAt(hour) });
   // lines and icon bubbles over everything (and bright at night)
   g.save(); g.translate(-view.x, -view.y); drawSpeech(g, shownPeople, t, { bounds: view }); g.restore();
   const name = town.placeAt(you.x, you.y);

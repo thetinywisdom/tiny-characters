@@ -5,7 +5,7 @@ import { BUSHES, TERRAINS, TREES, drawBush, drawTerrain, drawTree } from '../src
 import { MONSTERS, drawMonster } from '../src/tinyMonsters.js';
 import { ACTIONS, REACTIONS, SKILLS, WEAPONS, actionsFor, drawAction, drawActor, drawWeapon } from '../src/tinyCombat.js';
 import { PROPS, drawProp } from '../src/tinyStreet.js';
-import { VEHICLES, drawVehicle } from '../src/tinyTraffic.js';
+import { VEHICLES, drawTrain, drawVehicle } from '../src/tinyTraffic.js';
 import { ICONS, SPEAKERS, drawSpeech, linesOf, sayDuration } from '../src/tinySpeech.js';
 
 // The catalogue: every person, animal and building, with filters (group,
@@ -24,7 +24,8 @@ const PEOPLE = {
 const KIND = {
   Homes: ['house', 'apartment', 'woodApartment', 'mixedUse', 'tudorCottage', 'mediterraneanVilla', 'dutchCanalHouse', 'frenchCountryHouse', 'scandinavianHouse'],
   'Shops & food': ['shop', 'mixedUse', 'kissaten', 'pharmacy', 'sushi', 'florist', 'fishmonger', 'udonSoba', 'familyRestaurant', 'takoyaki', 'laundromat', 'karaoke'],
-  Civic: ['office', 'school', 'koban', 'postOffice', 'bank', 'clinic', 'fireStation', 'parkingGarage', 'gasStation'],
+  Civic: ['office', 'school', 'koban', 'postOffice', 'bank', 'clinic', 'fireStation', 'parkingGarage', 'gasStation', 'toilets'],
+  Stations: ['station', 'stationModern', 'stationBrick', 'stationWooden', 'kiosk', 'alleyStall'],
   Worship: ['shrine', 'torii', 'shrineHall', 'mosque', 'stoneChapel'],
 };
 const EUROPEAN = ['tudorCottage', 'mediterraneanVilla', 'dutchCanalHouse', 'frenchCountryHouse', 'scandinavianHouse', 'stoneChapel'];
@@ -127,12 +128,18 @@ for (const [id, { label, w, h }] of Object.entries(PARTS)) {
 
 // the things on the streets
 const PROP_TAGS = { utilityPole: ['Lights', 'Japanese'], streetLamp: ['Lights'], oldLamp: ['Lights', 'European'], stoneLantern: ['Lights', 'Japanese'], vendingMachine: ['Lights', 'Japanese'],
-  bench: ['Seats'], busStop: ['Seats'], postBox: ['Japanese'], stopSign: ['Japanese'], trafficLight: ['Lights', 'Japanese'] };
+  bench: ['Seats'], busStop: ['Seats'], postBox: ['Japanese'], stopSign: ['Japanese'], trafficLight: ['Lights', 'Japanese'],
+  swings: ['Park'], slide: ['Park'], sandbox: ['Park'], drinkingFountain: ['Park'], hoop: ['Park'], floodlight: ['Lights', 'Park'],
+  plazaClock: ['Things'], redLantern: ['Lights', 'Japanese'], crates: ['Things'], acUnit: ['Things'], crossingGate: ['Lights', 'Railway'] };
 const LIGHT_CYCLE = ['green', 'green', 'yellow', 'red', 'red'];
+// the crossing gate goes down and up, its lamps flashing
 for (const [type, { label, w, h }] of Object.entries(PROPS)) items.push({ id: `street.${type}`, label, group: 'Street', tags: PROP_TAGS[type] ?? ['Things'], seed: 1,
-  w: w + 8, h: h + 4, px: 0, animated: type === 'trafficLight',
-  draw: (g, seed, t, moving) => drawProp(g, { type, x: (w + 8) / 2, y: h + 2, seed, lit: moving ? LIGHT_CYCLE[Math.floor(t / 1.2) % 5] : 'green' }),
+  w: w + 8, h: h + 4, px: 0, animated: type === 'trafficLight' || type === 'crossingGate',
+  draw: (g, seed, t, moving) => drawProp(g, { type, x: (w + 8) / 2, y: h + 2, seed, lit: moving ? LIGHT_CYCLE[Math.floor(t / 1.2) % 5] : 'green', down: moving && Math.floor(t / 2) % 2 === 1, flash: Math.floor(t * 3) % 2 }),
   code: (seed) => `drawProp(g, { type: '${type}', x, y, seed: ${seed}${type === 'trafficLight' ? ", lit: 'green'" : ''} })` });
+// the train, side on
+items.push({ id: 'street.vehicle.train', label: 'Train', group: 'Street', tags: ['Vehicles', 'Railway'], seed: 0, noSeed: true, w: 260, h: 34, px: 0, wide: true,
+  draw: (g) => drawTrain(g, { x: 130, y: 31, dir: 1, cars: 4 }), code: () => `drawTrain(g, { x, y, dir: 1, cars: 4 })` });
 // vehicles, turning slowly all the way round (16 headings)
 for (const [type, { label, box }] of Object.entries(VEHICLES)) {
   const w = box.w + 4, h = box.h + 4;
@@ -189,7 +196,7 @@ const chip = (text, pressed, onClick, n) => {
 };
 function renderFilters() {
   $('#groups').replaceChildren(...GROUPS.map((g) => chip(g, state.g === g, () => { state.g = g; state.t.clear(); update(); }, items.filter((it) => g === 'All' || it.group === g).length)));
-  const ORDER = ['Adults', 'Kids', 'Elderly', 'Uniforms', 'Random', 'Cats', 'Dogs', 'Weapons', 'Attacks', 'Household', 'Monster skills', 'Reactions', 'Undead', 'Ghosts', 'Beasts', 'Zombie', 'Werewolf', 'Ghost girl', 'Reaper', 'Giant spider', 'Skeleton', 'Flaming skull', 'Trees', 'Bushes', 'Terrain', 'Doors', 'Windows', 'Wood', 'Glass', 'Japanese', 'European', 'Mosque', 'Homes', 'Shops & food', 'Civic', 'Worship', 'Low', 'Tall', 'Lights', 'Seats', 'Things', 'Vehicles', 'Icons', 'Lines'];
+  const ORDER = ['Adults', 'Kids', 'Elderly', 'Uniforms', 'Random', 'Cats', 'Dogs', 'Weapons', 'Attacks', 'Household', 'Monster skills', 'Reactions', 'Undead', 'Ghosts', 'Beasts', 'Zombie', 'Werewolf', 'Ghost girl', 'Reaper', 'Giant spider', 'Skeleton', 'Flaming skull', 'Trees', 'Bushes', 'Terrain', 'Doors', 'Windows', 'Wood', 'Glass', 'Japanese', 'European', 'Mosque', 'Homes', 'Shops & food', 'Civic', 'Worship', 'Low', 'Tall', 'Lights', 'Seats', 'Things', 'Vehicles', 'Park', 'Railway', 'Stations', 'Icons', 'Lines'];
   const tags = [...new Set(items.filter(inGroup).flatMap((it) => it.tags))].sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
   // each kind's count: how many you would see with it on
   $('#tags').replaceChildren(...tags.map((t) => chip(t, state.t.has(t), () => { state.t.has(t) ? state.t.delete(t) : state.t.add(t); update(); },

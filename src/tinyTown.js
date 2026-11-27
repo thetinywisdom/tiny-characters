@@ -43,7 +43,10 @@ function scaled(layout) {
     buildings: (layout.buildings ?? []).map((b) => ({ ...b, x: X(b.x), y: X(b.y), scale: k })),
     plants: (layout.plants ?? []).map((p, i) => ({ seed: i + 1, ...p, x: X(p.x), y: X(p.y), scale: k })),
     props: (layout.props ?? []).map((p, i) => ({ seed: i + 1, ...p, x: X(p.x), y: X(p.y), scale: k })),
-    areas: (layout.areas ?? []).map((a) => ({ ...a, x: X(a.x), y: X(a.y), w: m(a.w), h: m(a.h), path: a.path && { x: X(a.path.x), w: m(a.path.w), y0: X(a.path.y0) } })),
+    areas: (layout.areas ?? []).map((a) => ({ ...a, x: X(a.x), y: X(a.y), w: m(a.w), h: m(a.h), path: a.path && { x: X(a.path.x), w: m(a.path.w), y0: X(a.path.y0) }, gate: a.gate && m(a.gate) })),
+    railway: layout.railway && { y: X(layout.railway.y), h: m(layout.railway.h) },
+    parked: (layout.parked ?? []).map((v, i) => ({ seed: i + 3, ...v, x: X(v.x), y: X(v.y), vehicle: true, parked: true })),
+    wires: (layout.wires ?? []).map(([a, b, sag = 3]) => [{ x: X(a[0]), y: X(a[1]) }, { x: X(b[0]), y: X(b[1]) }, sag]),
   };
 }
 
@@ -75,8 +78,10 @@ function forestIn(rng, k, x, y, w, h, skip = () => false) {
 export const DEFAULT_TOWN = {
   scale: 1.5,                     // the town 1.5 times the size it is drawn at below; the people stay 15 px
   forest: 48,                     // a border of forest round the town, which nobody can walk into
-  W: 560, H: 448,
-  streets: [108, 200, 284, 416],
+  W: 560, H: 672,
+  streets: [108, 200, 284, 416, 640],
+  // a railway across the town (trains run along it; the cross streets cross it at level crossings)
+  railway: { y: 560, h: 16 },
   crossStreets: [180, 370],
   rows: [
     // the back row: the tall ones, with nothing behind them
@@ -95,12 +100,27 @@ export const DEFAULT_TOWN = {
   buildings: [
     { type: 'shrineHall', x: 90, y: 350 }, { type: 'torii', x: 90, y: 410 },
     { type: 'school', x: 290, y: 376 },
+    // the stations face the new street, set back behind their plaza; the alley between the modern one and a yakitori stall
+    { type: 'stationWooden', x: 56, y: 624 }, { type: 'station', x: 145, y: 624 }, { type: 'stationModern', x: 264, y: 624 },
+    { type: 'alleyStall', x: 353, y: 626 }, { type: 'stationBrick', x: 460, y: 624 }, { type: 'kiosk', x: 536, y: 630 },
+    { type: 'toilets', x: 340, y: 552 },
   ],
+  // vehicles parked for good (a taxi rank in the plaza)
+  parked: [{ type: 'taxi', x: 404, y: 636, heading: 180 }, { type: 'taxi', x: 426, y: 636, heading: 180 }],
+  // cables strung across the alley
+  wires: [[[316, 590], [340, 596], 3], [[316, 604], [340, 600], 2], [[316, 614], [340, 618], 3]],
   areas: [
     { name: 'Shrine grounds', ground: 'gravel', x: 0, y: 316, w: 180, h: 100, path: { x: 82, w: 16, y0: 350 } },
     { name: 'Schoolyard', ground: 'sand', x: 210, y: 316, w: 160, h: 100 },
     { name: 'Old-town square', ground: 'paving', x: 400, y: 316, w: 160, h: 100 },
     { name: 'Pond', ground: 'water', x: 88, y: 234, w: 44, h: 11, solid: true },
+    // the south (Nov 2026): a park with a pond, a playground, a basketball court; the station plaza and alley
+    { name: 'Pond park', ground: 'grass', x: 0, y: 452, w: 180, h: 104, ring: true },
+    { name: 'Pond', ground: 'water', shape: 'ellipse', x: 52, y: 486, w: 76, h: 36, solid: true, koi: true },
+    { name: 'Playground', ground: 'sand', x: 212, y: 456, w: 156, h: 96 },
+    { name: 'Basketball court', ground: 'court', x: 402, y: 456, w: 156, h: 96, fence: true, gate: 20 },
+    { name: 'Station plaza', ground: 'paving', x: 0, y: 576, w: 560, h: 64 },
+    { name: 'Station alley', ground: 'gravel', x: 316, y: 578, w: 24, h: 62 },
   ],
   // trees and bushes: in the back gardens, round the shrine, the school and the square
   // things on the streets and in the grounds (utility poles, lamps and vending machines are added by makeTown)
@@ -111,6 +131,16 @@ export const DEFAULT_TOWN = {
     { type: 'bench', x: 30, y: 380 }, { type: 'oldLamp', x: 408, y: 410 }, { type: 'oldLamp', x: 552, y: 410 },
     { type: 'bench', x: 452, y: 410 }, { type: 'bench', x: 508, y: 410 },
     { type: 'plantPot', x: 200, y: 106 }, { type: 'plantPot', x: 380, y: 196 }, { type: 'bins', x: 196, y: 280 },
+    // the park, the playground, the court
+    { type: 'bench', x: 70, y: 470 }, { type: 'bench', x: 120, y: 552 }, { type: 'oldLamp', x: 30, y: 504 }, { type: 'oldLamp', x: 150, y: 504 },
+    { type: 'swings', x: 240, y: 498 }, { type: 'slide', x: 290, y: 494 }, { type: 'sandbox', x: 246, y: 538 }, { type: 'drinkingFountain', x: 300, y: 540 },
+    { type: 'bench', x: 340, y: 476 },
+    { type: 'hoop', x: 412, y: 508 }, { type: 'hoop', x: 548, y: 508 },
+    { type: 'floodlight', x: 406, y: 462 }, { type: 'floodlight', x: 554, y: 462 }, { type: 'floodlight', x: 406, y: 550 }, { type: 'floodlight', x: 554, y: 550 },
+    // the station plaza and the alley
+    { type: 'plazaClock', x: 200, y: 636 }, { type: 'bikeRack', x: 110, y: 638 }, { type: 'bench', x: 512, y: 636 }, { type: 'busStop', x: 300, y: 671 },
+    { type: 'redLantern', x: 318, y: 590 }, { type: 'redLantern', x: 338, y: 598 }, { type: 'redLantern', x: 318, y: 610 }, { type: 'redLantern', x: 338, y: 618 },
+    { type: 'crates', x: 324, y: 602 }, { type: 'acUnit', x: 334, y: 588 }, { type: 'bins', x: 332, y: 630 }, { type: 'vendingMachine', x: 322, y: 624 },
   ],
   plants: [
     { tree: 'apple', x: 30, y: 152 }, { bush: 'round', x: 62, y: 148 }, { tree: 'oak', x: 150, y: 154 },
@@ -123,6 +153,9 @@ export const DEFAULT_TOWN = {
     { bush: 'azalea', x: 60, y: 362 }, { bush: 'azalea', x: 122, y: 362 }, { bush: 'pampas', x: 168, y: 380 },
     { tree: 'sakura', x: 222, y: 372 }, { tree: 'sakura', x: 358, y: 372 }, { bush: 'round', x: 224, y: 408 }, { bush: 'round', x: 356, y: 408 },
     { tree: 'poplar', x: 552, y: 384 }, { tree: 'fir', x: 480, y: 410 }, { bush: 'rose', x: 430, y: 404 }, { bush: 'lavender', x: 526, y: 404 },
+    // cherry trees round the pond; a few trees by the playground and the plaza
+    { tree: 'sakura', x: 14, y: 476 }, { tree: 'sakura', x: 166, y: 482 }, { tree: 'sakura', x: 24, y: 548 }, { tree: 'sakura', x: 158, y: 546 }, { tree: 'willow', x: 100, y: 470 },
+    { tree: 'maple', x: 360, y: 466 }, { bush: 'hydrangea', x: 220, y: 466 }, { tree: 'ginkgo', x: 186, y: 630 }, { tree: 'ginkgo', x: 392, y: 630 },
   ],
 };
 
@@ -156,13 +189,16 @@ function junctionsOf(layout) {
 function placeProps(layout, buildings, rowEnds) {
   const { W, streets, crossStreets, k, pad } = layout, { STREET, VSTREET } = streetDims(k), m = (v) => Math.round(v * k);
   const props = [...layout.props];
+  const rail = layout.railway, onRail = (y, r = 0) => rail && y > rail.y - r && y < rail.y + rail.h + r;
+  const { VSIDE } = streetDims(k);
   // a traffic light at two corners of every junction (tinyTraffic sets their colours)
   for (const jn of junctionsOf(layout)) for (const sg of jn.signals) props.push({ type: 'trafficLight', x: sg.x, y: sg.y, axis: sg.axis, junction: `${jn.i},${jn.j}`, lit: sg.axis === 'h' ? 'green' : 'red', seed: 1, scale: k });
   const box = (p) => { const { w, h } = PROPS[p.type]; return { x: p.x - (w * k) / 2, y: p.y - h * k, w: w * k, h: h * k }; };
   const hit = (a, b, pad = 1) => a.x < b.x + b.w + pad && b.x < a.x + a.w + pad && a.y < b.y + b.h + pad && b.y < a.y + a.h + pad;
   const pictures = buildings.map((b) => { const { w, h } = buildingSize(b); return { x: b.x - w / 2, y: b.y - h, w, h }; });
   const fits = (p) => { const r = box(p); return !pictures.some((q) => hit(r, q)) && !props.some((q) => hit(r, box(q), m(3))); };
-  const add = (p) => { const q = { seed: props.length + 1, scale: k, ...p }; if (fits(q)) { props.push(q); return true; } return false; };
+  // each placed thing's seed comes from where it stands, so adding things elsewhere never changes it
+  const add = (p) => { const q = { seed: 1 + ((Math.round(p.x) * 73 + Math.round(p.y) * 151) % 997), scale: k, ...p }; if (fits(q)) { props.push(q); return true; } return false; };
   // vending machines (two if there is room, a bin beside them) where a row ends
   for (const { x, end, y } of rowEnds) {
     let at = x + m(1);
@@ -180,7 +216,12 @@ function placeProps(layout, buildings, rowEnds) {
   // street lamps in the gardens along the cross streets, shining over the sidewalk
   for (const sx of crossStreets) for (let i = 0; i < streets.length - 1; i++) {
     const a = streets[i] + STREET, b = streets[i + 1];
-    for (let y = a + m(16); y < b - m(4); y += m(40)) add({ type: 'streetLamp', x: sx - m(1), y: Math.round(y) });
+    for (let y = a + m(16); y < b - m(4); y += m(40)) if (!onRail(y, m(20))) add({ type: 'streetLamp', x: sx - m(1), y: Math.round(y) });
+  }
+  // a level crossing where each cross street crosses the railway: a gate on each side, its boom across the road
+  // (placed last, so the props before keep their seeds when a railway is added)
+  if (rail) for (const [j, sx] of crossStreets.entries()) for (const [side, y] of [['north', rail.y - 2], ['south', rail.y + rail.h + m(8)]]) {
+    props.push({ type: 'crossingGate', x: Math.round(sx + VSIDE - m(2) + m(12)), y, crossing: j, side, down: false, scale: k, seed: 1 });
   }
   return props;
 }
@@ -225,6 +266,9 @@ export function makeTown(layout0 = DEFAULT_TOWN) {
   }
   const areas = layout.areas;
   const props = placeProps(layout, buildings, rowEnds);
+  const railway = layout.railway, parked = layout.parked ?? [];
+  /** Is (x, y) on the railway (anywhere but a level crossing)? */
+  const railAt = (x, y, r = 0) => !!railway && y > railway.y - r && y < railway.y + railway.h + r && !crossStreets.some((sx) => x >= sx && x < sx + VSTREET);
   // a building must not reach into the street above it, nor past the next cross street
   for (const b of buildings) {
     const { w, h } = buildingSize(b), L = b.x - w / 2, top = b.y - h;
@@ -243,14 +287,16 @@ export function makeTown(layout0 = DEFAULT_TOWN) {
   const crossingAt = (x, y) => crossings.find((c) => x >= c.x && x < c.x + c.w && y >= c.y && y < c.y + c.h);
   // trees block at the trunk, bushes at their base, a pond everywhere
   let plants = layout.plants.map((p) => ({ ...p, type: p.tree ?? p.bush, kind: p.tree ? 'tree' : 'bush' }));
-  const rng = seededRng(layout.seed ?? 7);
+  // each region has its own random sequence, so adding to a map never reshuffles the rest
+  const rngFor = (n) => seededRng((layout.seed ?? 7) * 7919 + n * 104729);
   // greenery in the back gardens: bushes and small trees where there is room, leaving paths between them
   const roomFor = (x, y, r) => !buildings.some((b) => { const { w, h } = buildingSize(b); return x > b.x - w / 2 - r && x < b.x + w / 2 + r && y > b.y - h - r && y < b.y + r + 4; })
     && !plants.some((p) => Math.hypot(p.x - x, p.y - y) < r * 2.2) && !areas.some((a) => x > a.x - r && x < a.x + a.w + r && y > a.y - r && y < a.y + a.h + r)
-    && !crossStreets.some((sx) => x > sx - r && x < sx + VSTREET + r)
+    && !crossStreets.some((sx) => x > sx - r && x < sx + VSTREET + r) && !railAt(x, y, r + 6)
+    && !parked.some((v) => Math.abs(v.x - x) < 18 + r && Math.abs(v.y - y) < 8 + r)
     && !props.some((q) => x > q.x - PROPS[q.type].w * k / 2 - r && x < q.x + PROPS[q.type].w * k / 2 + r && y > q.y - PROPS[q.type].h * k - r && y < q.y + r + 4);
   for (let i = 0; i < streets.length - 1; i++) {
-    const y0 = streets[i] + STREET, y1 = streets[i + 1], step = Math.round(13 * k);
+    const y0 = streets[i] + STREET, y1 = streets[i + 1], step = Math.round(13 * k), rng = rngFor(i + 1);   // this block's gardens
     for (let y = y0 + Math.round(6 * k); y < y1; y += step) for (let x = pad + 6; x < W - pad - 6; x += step) {
       const px = Math.round(x + (rng() - 0.5) * step * 0.7), py = Math.round(y + (rng() - 0.5) * step * 0.4);
       if (rng() < 0.4 || !roomFor(px, py, Math.round(5 * k))) continue;
@@ -265,14 +311,18 @@ export function makeTown(layout0 = DEFAULT_TOWN) {
       const w = p.kind === 'tree' ? 4 : Math.round((BUSHES[p.type]?.w ?? 8) * k * 0.8);
       return { x: Math.round(p.x - w / 2), y: p.y - 3, w, h: 5 };
     }),
-    ...areas.filter((a) => a.solid).map((a) => ({ x: a.x, y: a.y, w: a.w, h: a.h }))];
+    ...areas.filter((a) => a.solid).map((a) => ({ x: a.x, y: a.y, w: a.w, h: a.h })),
+    ...parked.map((v) => ({ x: Math.round(v.x - 15), y: v.y - 7, w: 30, h: 9 })),
+    // a fenced area (the court): its four sides, a gate in the middle of the top
+    ...areas.filter((a) => a.fence).flatMap((a) => { const g0 = a.x + Math.round((a.w - (a.gate ?? 0)) / 2), g1 = g0 + (a.gate ?? 0);
+      return [{ x: a.x, y: a.y, w: g0 - a.x, h: 3 }, { x: g1, y: a.y, w: a.x + a.w - g1, h: 3 }, { x: a.x, y: a.y + a.h - 3, w: a.w, h: 3 }, { x: a.x, y: a.y, w: 2, h: a.h }, { x: a.x + a.w - 2, y: a.y, w: 2, h: a.h }]; })];
   // the forest: behind the skyline, at the sides (gaps for the streets) and below the last street
   const lastBottom = streets[streets.length - 1] + STREET;
   const forest = [
-    ...forestIn(rng, k, 0, -Math.round(6 * k), W, streets[0] - Math.round(4 * k)),
-    ...forestIn(rng, k, 0, streets[0], pad - Math.round(4 * k), lastBottom - streets[0], (x, y) => streets.some((sy) => y > sy - 4 * k && y < sy + STREET + 20 * k)),   // crowns stay off the road
-    ...forestIn(rng, k, W - pad + Math.round(4 * k), streets[0], pad, lastBottom - streets[0], (x, y) => streets.some((sy) => y > sy - 4 * k && y < sy + STREET + 20 * k)),   // crowns stay off the road
-    ...forestIn(rng, k, 0, lastBottom + Math.round(16 * k), W, H - lastBottom),
+    ...forestIn(rngFor(100), k, 0, -Math.round(6 * k), W, streets[0] - Math.round(4 * k)),
+    ...forestIn(rngFor(101), k, 0, streets[0], pad - Math.round(4 * k), lastBottom - streets[0], (x, y) => streets.some((sy) => y > sy - 4 * k && y < sy + STREET + 20 * k) || (railway && y > railway.y - 4 * k && y < railway.y + railway.h + 20 * k)),   // crowns stay off the road and the railway
+    ...forestIn(rngFor(102), k, W - pad + Math.round(4 * k), streets[0], pad, lastBottom - streets[0], (x, y) => streets.some((sy) => y > sy - 4 * k && y < sy + STREET + 20 * k) || (railway && y > railway.y - 4 * k && y < railway.y + railway.h + 20 * k)),
+    ...forestIn(rngFor(103), k, 0, lastBottom + Math.round(16 * k), W, H - lastBottom),
   ].map((p) => ({ ...p, type: p.tree, kind: 'tree' }));
   plants = [...plants, ...forest];
 
@@ -280,6 +330,7 @@ export function makeTown(layout0 = DEFAULT_TOWN) {
   function blocked(x, y) {
     if (x < 4 || x > W - 4 || y < top || y > bottom) return true;
     if ((x < pad + 3 || x > W - pad - 3) && !onStreet(y)) return true;   // the forest at the sides (the streets run out through it)
+    if (railAt(x, y)) return true;                                       // the railway, but for the level crossings
     for (const s of solids) if (x > s.x - 3 && x < s.x + s.w + 2 && y >= s.y && y < s.y + s.h) return true;
     return false;
   }
@@ -357,13 +408,31 @@ export function makeTown(layout0 = DEFAULT_TOWN) {
   function doorOf(b) { return { x: b.x, y: b.y + 4 }; }
 
   // wires from pole to pole along each street
-  const wires = [];
+  const wires = [...(layout.wires ?? [])];
   const poles = props.filter((p) => p.type === 'utilityPole').sort((a, b) => a.y - b.y || a.x - b.x);
   for (let i = 1; i < poles.length; i++) if (poles[i].y === poles[i - 1].y) {
     const [a1, a2] = poleTops(poles[i - 1]), [b1, b2] = poleTops(poles[i]);
     wires.push([a1, b1, Math.round((b1.x - a1.x) / 22)], [a2, b2, Math.round((b2.x - a2.x) / 18)]);
   }
-  return { W, H, pad, scale: k, streets, crossStreets, dims: streetDims(k), junctions, roadAt, crossingAt, buildings, plants, props, wires, areas, solids, blocked, findPath, randomSpot, placeAt, doorOf, ground: drawGround(layout) };
+  return { W, H, pad, scale: k, streets, crossStreets, dims: streetDims(k), junctions, roadAt, crossingAt, railway, railAt, parked, buildings, plants, props, wires, areas, solids, blocked, findPath, randomSpot, placeAt, doorOf, ground: drawGround(layout) };
+}
+
+/** Koi circling slowly in a pond and two ducks paddling across it. */
+function drawPondLife(g, a, t) {
+  const cx = a.x + a.w / 2, cy = a.y + a.h / 2, px = (c, x, y, w = 1, h = 1) => { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), w, h); };
+  [['#f08a2c', 0.32, 0.55, 0], ['#f2efe8', 0.22, 0.4, 2], ['#e8402f', 0.27, 0.65, 4], ['#f08a2c', 0.18, 0.3, 5]].forEach(([c, speed, r, off]) => {
+    const ang = t * speed + off, x = cx + Math.cos(ang) * a.w * r / 2, y = cy + Math.sin(ang) * a.h * r / 2, d = Math.sign(-Math.sin(ang)) || 1;
+    px(c, x - 1, y, 3, 1); px(c, x - d, y - 1);                              // a koi, its tail behind
+  });
+  for (const [k, off] of [[0, 0], [1, 1.5]]) {
+    const x = cx + Math.sin(t * 0.12 + off) * a.w * 0.3, y = cy + (k ? -2 : 3), d = Math.cos(t * 0.12 + off) > 0 ? 1 : -1;
+    px('#f2efe8', x - 1, y, 4, 2); px('#3f7a4a', x + (d > 0 ? 2 : -1), y - 1, 2, 1); px('#f2c230', x + (d > 0 ? 4 : -2), y - 1);   // a duck: body, green head, bill
+  }
+}
+/** A basketball, bouncing: h is how high it is off the ground. */
+function drawBall(g, b) {
+  const x = Math.round(b.x), y = Math.round(b.y - (b.h ?? 0));
+  g.fillStyle = '#e8743a'; g.fillRect(x - 1, y - 3, 3, 3); g.fillStyle = '#2f3236'; g.fillRect(x, y - 2, 1, 1);
 }
 
 /** Mix two #rrggbb colours: u = 0 is a, 1 is b. */
@@ -436,7 +505,15 @@ function drawGround(layout) {
     for (let x = pad, j = 0; x < W - pad; x += m(48), j++) drawTerrain(g, { type: j % 2 ? 'meadow' : 'tallGrass', x: x + m(6), y: y0 + m(3), w: m(30), h: Math.min(m(14), y1 - y0 - m(6)), scale: k, seed: x + i });
   }
   for (const a of areas) {
+    if (a.ground === 'court') { drawCourt(g, a, k); continue; }
+    if (a.shape === 'ellipse') { g.save(); g.beginPath(); g.ellipse(a.x + a.w / 2, a.y + a.h / 2, a.w / 2, a.h / 2, 0, 0, Math.PI * 2); g.clip(); }
     drawTerrain(g, { type: TERRAIN_OF[a.ground] ?? a.ground, x: a.x, y: a.y, w: a.w, h: a.h, scale: k, seed: a.x + a.y });
+    if (a.shape === 'ellipse') { g.restore(); g.strokeStyle = '#8a8a80'; g.lineWidth = 1; g.beginPath(); g.ellipse(a.x + a.w / 2, a.y + a.h / 2, a.w / 2, a.h / 2, 0, 0, Math.PI * 2); g.stroke(); }
+    if (a.ring) {                                                           // a dirt path looping round inside it
+      const cx = a.x + a.w / 2, cy = a.y + a.h / 2, rx = a.w / 2 - m(8), ry = a.h / 2 - m(8), wd = m(6);
+      g.save(); g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); g.ellipse(cx, cy, rx - wd, ry - wd, 0, 0, Math.PI * 2); g.clip('evenodd');
+      drawTerrain(g, { type: 'dirt', x: a.x, y: a.y, w: a.w, h: a.h, scale: k, seed: a.x + 7 }); g.restore();
+    }
     if (a.path) for (let y = a.path.y0; y < a.y + a.h; y += m(5)) R('#c9c2b0', a.path.x, y, a.path.w, m(4));  // stepping stones
   }
   const y0 = streets[0], y1 = streets[streets.length - 1] + STREET;
@@ -470,7 +547,33 @@ function drawGround(layout) {
       }
     }
   }
+  // the railway: gravel, sleepers and two rails right across; at a level crossing the road goes over it
+  const rail = layout.railway;
+  if (rail) {
+    R('#9a958a', 0, rail.y, W, rail.h); R('#8a857a', 0, rail.y, W, 1);
+    const top = rail.y + Math.round(rail.h * 0.2), bot = rail.y + Math.round(rail.h * 0.72);
+    for (let x = 0; x < W; x += m(4)) R('#6a5040', x, rail.y + m(2), m(2), rail.h - m(4));
+    for (const sx of crossStreets) { R('#d8d2c4', sx, rail.y, VSTREET, rail.h); R('#5a5e62', sx + VSIDE, rail.y, ROAD, rail.h); }   // the crossing's boards
+    for (const y of [top, bot]) { R('#c8ccd0', 0, y, W, 1); R('#7a7e84', 0, y + 1, W, 1); }
+    for (const sx of crossStreets) for (const y of [rail.y - 1, rail.y + rail.h]) for (let x = sx; x < sx + VSTREET; x += m(4)) R(x % m(8) < m(4) ? '#f2c230' : '#2f3236', x, y, m(4), 1);   // striped edges
+  }
   return c;
+}
+
+/** A sports court on the ground: a blue run-off, an orange court, white lines, a chain-link fence round it with a gate in the top. */
+function drawCourt(g, a, k) {
+  const R = (col, x, y, w, h) => { g.fillStyle = col; g.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }, m = (v) => Math.round(v * k);
+  R('#3f6f9a', a.x, a.y, a.w, a.h);
+  const cx = a.x + m(10), cy = a.y + m(8), cw = a.w - m(20), ch = a.h - m(16), line = '#f2f2ee';
+  R('#c8743a', cx, cy, cw, ch);
+  R(line, cx, cy, cw, 1); R(line, cx, cy + ch - 1, cw, 1); R(line, cx, cy, 1, ch); R(line, cx + cw - 1, cy, 1, ch); R(line, cx + Math.round(cw / 2), cy, 1, ch);
+  for (const kx of [cx, cx + cw - m(22)]) { R(line, kx, cy + Math.round(ch / 2) - m(10), m(22), 1); R(line, kx, cy + Math.round(ch / 2) + m(10), m(22), 1); R(line, kx === cx ? kx + m(22) : kx, cy + Math.round(ch / 2) - m(10), 1, m(20)); }   // the keys
+  g.strokeStyle = line; g.lineWidth = 1; g.beginPath(); g.ellipse(cx + cw / 2, cy + ch / 2, m(10), m(7), 0, 0, Math.PI * 2); g.stroke();
+  // the fence: posts and wire mesh round the edge, a gap for the gate at the top
+  const g0 = a.x + Math.round((a.w - (a.gate ?? 0)) / 2), g1 = g0 + (a.gate ?? 0);
+  for (let x = a.x; x < a.x + a.w; x += m(4)) { if (x >= g0 && x < g1) continue; R('#9aa0a8', x, a.y, 1, 3); R('#9aa0a8', x, a.y + a.h - 3, 1, 3); }
+  R('#8a9096', a.x, a.y, g0 - a.x, 1); R('#8a9096', g1, a.y, a.x + a.w - g1, 1); R('#8a9096', a.x, a.y + a.h - 1, a.w, 1);
+  for (let y = a.y; y < a.y + a.h; y += m(3)) { R('#9aa0a8', a.x, y, 2, 2); R('#9aa0a8', a.x + a.w - 2, y, 2, 2); }
 }
 
 /**
@@ -491,7 +594,13 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0
     if (b.x + w / 2 > view.x && b.x - w / 2 < view.x + view.w && b.y > view.y && b.y - h < view.y + view.h) items.push({ y: b.y, b });
   }
   // water ripples, drawn again each frame
-  for (const a of town.areas) if (a.ground === 'water' && a.x < view.x + view.w && a.x + a.w > view.x && a.y < view.y + view.h && a.y + a.h > view.y) drawTerrain(g, { type: 'water', x: a.x, y: a.y, w: a.w, h: a.h, scale: town.scale, seed: a.x + a.y, t });
+  for (const a of town.areas) if (a.ground === 'water' && a.x < view.x + view.w && a.x + a.w > view.x && a.y < view.y + view.h && a.y + a.h > view.y) {
+    if (a.shape === 'ellipse') { g.save(); g.beginPath(); g.ellipse(a.x + a.w / 2, a.y + a.h / 2, a.w / 2 - 0.5, a.h / 2 - 0.5, 0, 0, Math.PI * 2); g.clip(); }
+    drawTerrain(g, { type: 'water', x: a.x, y: a.y, w: a.w, h: a.h, scale: town.scale, seed: a.x + a.y, t });
+    if (a.koi) drawPondLife(g, a, t);
+    if (a.shape === 'ellipse') g.restore();
+  }
+  for (const v of town.parked ?? []) if (v.x > view.x - 30 && v.x < view.x + view.w + 30 && v.y > view.y && v.y < view.y + view.h + 30) items.push({ y: v.y, s: v });
   for (const p of town.props) if (p.x > view.x - 20 && p.x < view.x + view.w + 20 && p.y > view.y && p.y < view.y + view.h + 50) items.push({ y: p.y, prop: p });
   for (const p of town.plants) if (p.x > view.x - 30 && p.x < view.x + view.w + 30 && p.y > view.y && p.y < view.y + view.h + 60) items.push({ y: p.y, p });
   for (const s of sprites) if (s.x > view.x - 24 && s.x < view.x + view.w + 24 && s.y > view.y - 2 && s.y < view.y + view.h + 24) items.push({ y: s.y, s });
@@ -500,7 +609,8 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0
     if (it.b) drawBuilding(g, dpx === 1 ? it.b : { ...it.b, dpx });
     else if (it.prop) drawProp(g, it.prop);
     else if (it.p) (it.p.kind === 'tree' ? drawTree : drawBush)(g, it.p);
-    else if (it.s.vehicle) drawVehicle(g, it.s);                                   // cars, buses: { vehicle: true, type, facing, ... }
+    else if (it.s.vehicle) drawVehicle(g, it.s);
+    else if (it.s.ball) drawBall(g, it.s);                                          // a ball { ball: true, x, y, h (its height off the ground) }                                   // cars, buses: { vehicle: true, type, facing, ... }
     else if (it.s.monster) drawMonster(g, { ...it.s, type: it.s.monster }, t);   // monsters: { monster: 'zombie', variant, ... }
     else (it.s.dog ? drawDog : it.s.cat ? drawCat : drawCharacter)(g, it.s, t);
   }

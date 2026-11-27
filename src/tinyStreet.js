@@ -98,6 +98,52 @@ const DEFS = {
     r(lit === 'green' ? '#3fd0a0' : '#34463f', 1, 16, 2, 2); r(lit === 'yellow' ? '#f2c230' : '#4a4636', 3, 16, 2, 2); r(lit === 'red' ? '#e8403a' : '#4a3434', 5, 16, 2, 2);
     r(DARK, 4, 6, 4, 6); r(walk ? '#4a3434' : '#e8403a', 5, 9, 2, 2); r(walk ? '#3fd0a0' : '#34463f', 5, 7, 2, 2);
   }],
+  // --- the park, the playground, the court, the station area (Nov 2026) ---
+  swings: ['Swings', 30, 22, 3, (r) => {
+    r('#c8402c', 0, 0, 2, 21); r('#c8402c', 28, 0, 2, 21); r('#c8402c', 0, 20, 30, 2); r(shade('#c8402c', 0.8), 0, 20, 30, 1);
+    for (const dx of [6, 18]) { r(INK, dx, 5, 1, 15); r(INK, dx + 5, 5, 1, 15); r('#3f7fd6', dx, 3, 6, 2); }   // chains, seats
+  }],
+  slide: ['Slide', 22, 18, 6, (r) => {
+    r('#8a9096', 0, 0, 1, 14); r('#8a9096', 5, 0, 1, 14); for (let k = 2; k < 14; k += 3) r('#8a9096', 0, k, 6, 1);   // the ladder
+    r('#f2c230', 0, 14, 8, 4); r(shade('#f2c230', 0.85), 0, 14, 8, 1);                                         // the top
+    for (let k = 0; k < 14; k++) r(k % 4 === 3 ? '#e8b830' : '#e8c040', 8 + k, 13 - k, 2, 2);                   // the chute
+  }],
+  sandbox: ['Sandbox', 26, 10, 10, (r, rng) => {
+    r('#8a6440', 0, 0, 26, 10); r('#e8d8a8', 2, 1, 22, 8);
+    r('#c8b888', 6, 3, 5, 2); r('#c8b888', 15, 5, 4, 2); r(rng() < 0.5 ? '#c8402c' : '#3f7fd6', 18, 2, 3, 3); r(INK, 19, 5, 1, 1);   // a castle, a bucket
+  }],
+  drinkingFountain: ['Drinking fountain', 6, 11, 2, (r) => {
+    r('#b0aca2', 1, 0, 4, 8); r(shade('#b0aca2', 0.85), 4, 0, 1, 8); r('#c8c4ba', 0, 8, 6, 2); r('#8a9096', 2, 10, 2, 1); r('#9fd0f0', 3, 9, 1, 1);
+  }],
+  hoop: ['Basketball hoop', 10, 24, 2, (r) => {
+    r('#8a9096', 4, 0, 2, 17); r(shade('#8a9096', 0.8), 5, 0, 1, 17);
+    r(WHITE, 0, 16, 10, 7); r(INK, 0, 22, 10, 1); r(INK, 0, 16, 1, 7); r(INK, 9, 16, 1, 7); r('#e8402f', 3, 17, 4, 3); r(WHITE, 4, 18, 2, 1);   // the backboard
+    r('#e8402f', 3, 15, 5, 1); r(WHITE, 3, 13, 1, 2); r(WHITE, 5, 12, 1, 3); r(WHITE, 7, 13, 1, 2);                                    // the rim and net
+  }],
+  floodlight: ['Floodlight', 6, 36, 2, (r) => {
+    r('#6a6f76', 2, 0, 2, 32); r(DARK, 0, 32, 6, 3); r(LAMP, 1, 32, 4, 1);
+  }, [[3, 32.5, 22]]],
+  plazaClock: ['Plaza clock', 8, 28, 2, (r) => {
+    r(METAL, 3, 0, 2, 20); r(DARK, 2, 0, 4, 1);
+    r('#e8e0d0', 0, 20, 8, 8); r(INK, 1, 21, 6, 6); r(WHITE, 2, 22, 4, 4); r(INK, 4, 24, 1, 2); r(INK, 4, 24, 2, 1);
+  }],
+  redLantern: ['Red lantern', 4, 15, 1, (r) => {
+    r(DARK, 1, 0, 1, 9); r(DARK, 0, 9, 4, 1); r('#d8402f', 0, 10, 4, 4); r('#f06a50', 1, 11, 1, 2); r(INK, 0, 14, 4, 1); r(INK, 0, 10, 4, 1);
+  }, [[2, 12, 9]]],
+  crates: ['Crates', 10, 9, 4, (r) => {
+    for (const [dx, up] of [[0, 0], [5, 0], [2, 4]]) { r('#a87a4a', dx, up, 5, 4); r('#8a6440', dx, up + 2, 5, 1); r(shade('#a87a4a', 1.15), dx, up + 3, 5, 1); }
+  }],
+  acUnit: ['AC unit', 10, 8, 4, (r) => {
+    r('#d8dce0', 0, 0, 10, 8); r('#b8bcc0', 0, 0, 10, 1); r('#8a9096', 1, 1, 6, 6); r('#5a5f66', 2, 2, 4, 4); r('#8a9096', 3, 3, 2, 2); r('#b8bcc0', 8, 2, 1, 4);
+  }],
+  // p.down: the boom is down across the road (a train is coming); p.flash: which lamp is lit
+  crossingGate: ['Level crossing gate', 24, 16, 2, (r, rng, p) => {
+    r(WHITE, 1, 0, 2, 14); r(INK, 1, 2, 2, 1); r(INK, 1, 6, 2, 1); r(INK, 1, 10, 2, 1);                       // the post
+    r(INK, 0, 12, 4, 2); r(p.down && p.flash ? '#ff4a3a' : '#6a3434', 0, 12, 1, 2); r(p.down && !p.flash ? '#ff4a3a' : '#6a3434', 3, 12, 1, 2);   // its two lamps
+    r(INK, 1, 14, 2, 2); r('#f2c230', 0, 15, 4, 1);                                                          // the X sign
+    if (p.down) for (let i = 4; i < 24; i += 2) r(i % 4 ? INK : '#f2c230', i, 7, 2, 1);                       // the boom, across
+    else for (let k = 0; k < 9; k++) r(k % 2 ? INK : '#f2c230', 3, 7 + k, 1, 1);                              // the boom, up
+  }],
   stopSign: ['Stop sign (tomare)', 5, 14, 1, (r) => {
     r(METAL, 2, 0, 1, 10);
     r(RED, 0, 12, 5, 2); r(RED, 1, 11, 3, 1); r(RED, 2, 10, 1, 1); r(WHITE, 1, 13, 3, 1);
@@ -118,7 +164,7 @@ export function drawProp(g, p) {
 }
 
 // poles and lamps take only the ground under their pole: [dx, w]
-const FOOT = { trafficLight: [3, 1], utilityPole: [4, 2], streetLamp: [0, 3], oldLamp: [1, 3], stopSign: [2, 1] };
+const FOOT = { trafficLight: [3, 1], utilityPole: [4, 2], streetLamp: [0, 3], oldLamp: [1, 3], stopSign: [2, 1], hoop: [4, 2], floodlight: [2, 2], plazaClock: [3, 2], redLantern: [1, 1], crossingGate: [1, 2] };
 /** The ground it stands on, which nobody walks through: { x, y, w, h }. */
 export function propSolid(p) {
   const { w, depth } = PROPS[p.type], k = p.scale ?? 1, [fx, fw] = FOOT[p.type] ?? [0, w];
@@ -128,6 +174,7 @@ export function propSolid(p) {
 /** Where it lights up at night (in the canvas): [{ x, y, r, c }] (c: the light's colour). */
 export function propLights(p) {
   const k = p.scale ?? 1, L = left(p, k);
+  if (p.type === 'crossingGate') return p.down ? [{ x: L + (p.flash ? 0.5 : 3.5) * k, y: p.y - 13 * k, r: 5 * k, c: '#ff4a3a' }] : [];
   if (p.type === 'trafficLight') {
     const [dx, c] = { green: [2, '#3fd0a0'], yellow: [4, '#f2c230'], red: [6, '#e8403a'] }[p.lit ?? 'green'];
     return [{ x: L + dx * k, y: p.y - 17 * k, r: 6 * k, c }, { x: L + 6 * k, y: p.y - (p.lit === 'red' ? 7 : 9) * k, r: 3 * k, c: p.lit === 'red' ? '#3fd0a0' : '#e8403a' }];

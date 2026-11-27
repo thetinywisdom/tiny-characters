@@ -211,6 +211,37 @@ hidden, so in a town nobody can stand there (see the map rules below).
 
 ## How the town map works
 
+**Layout pieces (Nov 2026; the demo map is a showcase, users will make
+their own):** `railway: { y, h }` (a band of gravel, sleepers and rails;
+solid but where a cross street crosses it, `railAt`; crossing gates are
+placed at each level crossing, after the other props); areas: `ground:
+'court'` (`drawCourt`: run-off, court, lines, keys, a chain-link fence with
+a `gate` gap at the top; `fence: true` makes the fence solid), `shape:
+'ellipse'` (drawn and redrawn clipped), `ring: true` (a dirt path round
+inside it), `koi: true` (on water: `drawPondLife`, koi circling and two
+ducks); `parked: [{ type, x, y, heading }]` (vehicles drawn and solid);
+`wires: [[[x, y], [x, y], sag]]`. Sprites with `ball: true` (`drawBall`,
+`h` its height) draw a basketball. New buildings: `station`,
+`stationModern`, `stationBrick`, `stationWooden`, `kiosk`, `toilets`,
+`alleyStall` (their doors from the shared kit: the owner found the mock-up
+doors too big). New props: swings, slide, sandbox, drinkingFountain, hoop,
+floodlight, plazaClock, redLantern, crates, acUnit, crossingGate (`down`,
+`flash`).
+
+**Stable maps:** each block's gardens and each strip of forest has its own
+random sequence (`rngFor`), and every placed prop's seed comes from where it
+stands, so adding something to a map never changes anything elsewhere
+(checked: the town with and without the south area match above it, but for
+the grass texture's dots).
+
+**Trains** (tinyTraffic, when the town has a railway): one train of four
+carriages (`drawTrain`, side on, drawn at the people's size), slowing for
+and stopping 3 s at each station building's middle, leaving town and coming
+back the other way after a pause. `crossingClosed(j)`: the train within
+reach of cross street j's crossing; the gates go down and flash, cars on
+that cross street stop before the rails, `mayCross` keeps people off the
+rails until it opens.
+
 **Drawing for 1.5 (the owner found broken icons and "random stripes"):**
 `painter` scales every rectangle to the same size wherever it sits (a 1 px
 line is always 2 px, a 2 px stripe always 3), so keep these rules:

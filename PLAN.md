@@ -40,6 +40,8 @@ bubble lab, so games can use them and they can grow.
   things look before switching everything over; for new things, show a
   picture of every option (on the real town) before building, since words
   are imagined differently.
+- Maps (Nov 2026): the demo's town is a showcase; users will build their
+  own maps from the same pieces, so every new place is a layout item.
 - Speech (Nov 2026): icon bubbles in the town, floating text (no box) when
   you tap someone, typing out; passers-by chat in icons; lines that suit
   the speaker; English first, code ready for Japanese and Indonesian.
@@ -241,11 +243,20 @@ bubble lab, so games can use them and they can grow.
     catalogue. Also: the player now starts on the sidewalk (they started in
     the cross street, and turning cars queued up waiting for them).
 
+33. **More town** (the owner chose from mock-ups: grow the map; all of the
+    places; both stations, and then all three big station designs with
+    smaller doors): the map grows south with a pond park, a playground and
+    extras, a fenced basketball court, a railway with level crossings and a
+    train, a small station and three big ones (modern glass, classic brick,
+    Japanese wooden) with their plaza, kiosk and taxi rank, and a station
+    alley; people, kids, a basketball game and cats there; every piece a
+    reusable layout item for maps of one's own; maps made stable (adding to
+    a map changes nothing elsewhere; the forest and garden filler and some
+    vending machine colours were dealt once anew for it).
+
 ## Next (only when the owner asks)
 
-1. **More town** (next, the owner's order): a station plaza, a back alley,
-   a park, a basketball court. Show the owner pictures of each idea first.
-2. Small life (the owner's list of ideas, not yet asked for): pigeons that scatter, laundry on balconies, shopkeepers,
+1. Small life (the owner's list of ideas, not yet asked for): pigeons that scatter, laundry on balconies, shopkeepers,
    steam from the ramen shop, people chatting or sitting on benches.
 
 ## Known issues and small ideas
