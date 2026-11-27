@@ -325,6 +325,11 @@ bubble lab, so games can use them and they can grow.
     under whoever the mouse points at (with the hand cursor), or whoever you
     tap while they say their line (phones have no hover).
 
+44. **Pixel steam** (the owner: it should be pixelated; chose C from
+    animated mock-ups): two thin curling wisps of single pixels that thin out
+    as they rise (dithered, not faded), over every food stall and the ramen
+    shops.
+
 ## Next (only when the owner asks)
 
 Nothing agreed yet: ask the owner (pictures first). Ideas: weather and time

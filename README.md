@@ -400,7 +400,7 @@ the ducks** (who paddle over, ducklings behind), have a **picnic** under the
 cherry trees. **Shopkeepers** stand at their doors, sweep in the morning and
 bow to passers-by; at night their **shutters** come down and the windows
 above light up and go dark one by one. **Laundry** and futons hang on the
-balconies by day, **rubbish** goes out in the morning, **steam** rises from
+balconies by day, **rubbish** goes out in the morning, pixel **steam** curls up from
 the ramen shop and the food stalls, the alley's **lanterns sway** and
 **petals** fall. Kids play on the **swings**, the **slide** and **kick a
 ball** in the schoolyard. **Pigeons** peck about and fly off when you come
