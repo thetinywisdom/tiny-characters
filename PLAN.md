@@ -303,6 +303,12 @@ bubble lab, so games can use them and they can grow.
     gives up out on a crossing, and someone held up on a crossing squeezes
     past. A 100 s run: no car held up for 15 s or more (before: about ten).
 
+40. **Half the walkers** (the owner: too many people): 86 walkers down to 44
+    (20 anywhere, 5 schoolyard kids, 4 at the plaza, 3 each at the shrine,
+    the square, the park and the playground, 3 dog walkers). Small life,
+    monsters, cats and the basketball game are as they were: 99 on foot in
+    all (was 142).
+
 ## Next (only when the owner asks)
 
 Nothing agreed yet: ask the owner (pictures first). Ideas: weather and time

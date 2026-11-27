@@ -57,7 +57,10 @@ demo/catalogue.css     the catalogue's look
 demo/demo.js           the demo: strolling crowd and cats, you (keys / tap
                        to walk), tap someone to make them talk; every look;
                        the gallery
-demo/town.js           the town (walk around the map; townspeople, kids in
+demo/town.js           the town (walk around the map; 44 walkers since the
+                       owner halved them: 20 anywhere, 5 schoolyard kids, 4
+                       plaza, 3 each shrine, square, park, playground, 3 dog
+                       walkers; townspeople, kids in
                        the schoolyard, shrine visitors, cats) and the
                        Buildings sheet
 demo/life.js           small life in the demo town: who sits, rides, sweeps,

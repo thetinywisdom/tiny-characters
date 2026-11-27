@@ -31,16 +31,16 @@ function walker(look, rng, within, cat = false) {
 function newPeople() {
   const rng = seeded(seed++);
   people = [];
-  for (let i = 0; i < 40; i++) people.push(walker(randomCharacter(rng), rng));
+  for (let i = 0; i < 20; i++) people.push(walker(randomCharacter(rng), rng));
   const yard = area('Schoolyard'), shrine = area('Shrine grounds'), square = area('Old-town square');
-  for (let i = 0; i < 10; i++) people.push(walker({ ...randomCharacter(rng), ...(i % 3 === 0 ? (i % 2 ? LOOKS.schoolgirl : LOOKS.schoolboy) : {}), kid: true, carry: undefined }, rng, yard));
-  for (let i = 0; i < 5; i++) people.push(walker(randomCharacter(rng), rng, shrine));
-  for (let i = 0; i < 6; i++) people.push(walker(randomCharacter(rng), rng, square));
+  for (let i = 0; i < 5; i++) people.push(walker({ ...randomCharacter(rng), ...(i % 3 === 0 ? (i % 2 ? LOOKS.schoolgirl : LOOKS.schoolboy) : {}), kid: true, carry: undefined }, rng, yard));
+  for (let i = 0; i < 3; i++) people.push(walker(randomCharacter(rng), rng, shrine));
+  for (let i = 0; i < 3; i++) people.push(walker(randomCharacter(rng), rng, square));
   // the south: strollers in the park, kids on the playground and the court, commuters at the stations, cats in the alley
   const park = area('Pond park'), play = area('Playground'), court = area('Basketball court'), plaza = area('Station plaza'), alley = area('Station alley');
-  if (park) for (let i = 0; i < 6; i++) people.push(walker(randomCharacter(rng), rng, park));
-  if (play) for (let i = 0; i < 6; i++) people.push(walker({ ...randomCharacter(rng), kid: true, size: undefined, carry: undefined, top: undefined }, rng, play));
-  if (plaza) for (let i = 0; i < 8; i++) people.push(walker(randomCharacter(rng), rng, plaza));
+  if (park) for (let i = 0; i < 3; i++) people.push(walker(randomCharacter(rng), rng, park));
+  if (play) for (let i = 0; i < 3; i++) people.push(walker({ ...randomCharacter(rng), kid: true, size: undefined, carry: undefined, top: undefined }, rng, play));
+  if (plaza) for (let i = 0; i < 4; i++) people.push(walker(randomCharacter(rng), rng, plaza));
   if (alley) for (let i = 0; i < 2; i++) people.push(walker({ coat: Object.keys(CAT_COATS)[Math.floor(rng() * 8)] }, rng, alley, true));
   // a game of basketball: four kids on the court and a ball passed between them
   players = [];
@@ -50,7 +50,7 @@ function newPeople() {
   }
   for (let i = 0; i < 6; i++) people.push(walker({ coat: Object.keys(CAT_COATS)[Math.floor(rng() * 8)] }, rng, undefined, true));
   // dog walkers: a dog follows its owner, a little behind
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 3; i++) {
     const owner = walker(randomCharacter(rng), rng);
     const breed = Object.keys(DOG_BREEDS)[Math.floor(rng() * Object.keys(DOG_BREEDS).length)];
     people.push(owner, { dog: true, ...dogFor(breed, 1 + Math.floor(rng() * 99)), collar: ['#d8443c', '#3f7fd6', '#2fa36b', '#f2c230'][i % 4], owner, x: owner.x - 6, y: owner.y, talk: 0 });

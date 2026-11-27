@@ -393,7 +393,8 @@ The catalogue has every icon and each speaker saying its lines (Speech).
 
 ## Small life
 
-The town lives through the day (`src/tinyLife.js` draws it; the demo's
+The town is quieter now (about 44 walkers, plus the shopkeepers, the kids
+at play, cats, dogs and monsters). It lives through the day (`src/tinyLife.js` draws it; the demo's
 `demo/life.js` decides who does what). People **sit on benches**, **ride
 bikes** along the sidewalks, stop at a **vending machine** for a can, **feed
 the ducks** (who paddle over, ducklings behind), have a **picnic** under the
