@@ -378,10 +378,17 @@ bubble lab, so games can use them and they can grow.
     change, things that bit before), SKILLS' testing recipes, a "Working on
     it" pointer in the README.
 
+51. **The plan to redraw everything by hand** (the owner: it all looks like
+    AI slop): `ART_PLAN.md` — the style choices to make first, tools, how to
+    hand over images (names, anchors, frames, variants, night images), the
+    full list of what to draw with sizes, the order, and what the code does
+    at each step (a sprite loader with the current drawings as fallback).
+
 ## Next (only when the owner asks)
 
-Nothing agreed yet: ask the owner, then mock up the options (pictures
-first, build after the owner picks). Ideas offered so far:
+**The redraw (`ART_PLAN.md`) comes first.** Waiting for the owner's Step 0
+choices and the style-test images; the code side's first job then is the
+sprite loader. Other ideas offered before (on hold):
 - weather and time (the backlog): wind, rain, seasons
 - a map maker: place streets, buildings, props and areas, save and load
   (every place is already a layout piece)
@@ -431,6 +438,7 @@ first, build after the owner picks). Ideas offered so far:
 
 ## Open questions for the owner
 
+- The redraw's Step 0 choices (`ART_PLAN.md`, Decisions for the owner).
 - Redraw the basketball court's centre circle in pixels, like the ring under
   your feet?
 - What next (see Next)?

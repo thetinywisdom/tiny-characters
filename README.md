@@ -18,6 +18,8 @@ python3 -m http.server 8000   # then open http://localhost:8000
 
 ## Working on it
 
+The art is being redrawn by hand: see `ART_PLAN.md`.
+
 Agents and contributors: start with `CLAUDE.md` (the owner's rules and how
 to check a change), then `PLAN.md` (what is done, decided and next) and
 `SKILLS.md` (how everything works). No build step: serve the folder

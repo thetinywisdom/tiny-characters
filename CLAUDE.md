@@ -7,7 +7,12 @@ canvas, no build step, no dependencies. Live demo (GitHub Pages, from `main`):
 https://thetinywisdom.github.io/tiny-characters/ and the catalogue
 https://thetinywisdom.github.io/tiny-characters/catalogue.html
 
-**Read before working:** this file, then `PLAN.md` (what is done, the owner's
+**The big change under way: the owner will redraw every picture by hand**
+(`ART_PLAN.md`: the code moves to the owner's PNG images one kind at a time,
+with the current drawings as a fallback until each is replaced). Read it
+first; do not polish the code-drawn art any more unless asked.
+
+**Read before working:** this file, `ART_PLAN.md`, then `PLAN.md` (what is done, the owner's
 decisions, what is next, open questions), `SKILLS.md` (how everything is
 drawn and works, file by file, and how to check it) and `README.md` (what
 people see and the public API).
