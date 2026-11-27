@@ -59,7 +59,7 @@ function bole(r, cx, h, c = BARK, w = 3, flare = true) {
 // --- the trees -----------------------------------------------------------------------
 export const PART = {
   // 29 x 36: a ringed trunk leaning right, a crown of feathered fronds, coconuts
-  palm: { approved: false, draw(r, rng, cx) {
+  palm: { approved: true, draw(r, rng, cx) {
     const T = '#b89a6a', TD = '#8a7048', TL = '#ccb084', top = 27, lean = 5;
     let tx = cx;
     for (let y = 0; y < top; y++) {                                          // the ringed trunk
@@ -104,7 +104,7 @@ export const PART = {
   } },
 
   // 32 x 30: a dome on a forked trunk, curtains of strands hanging to the ground
-  willow: { approved: false, draw(r, rng, cx) {
+  willow: { approved: true, draw(r, rng, cx) {
     bole(r, cx, 16, BARK, 3);
     const C = '#8aa85a', S1 = '#7a9a4e', S2 = '#9ab86a', cy = 21, rx = 13, ry = 7;
     const edge = (i) => { const a = Math.abs(i) / (rx + 0.5); return Math.round(cy - ry * Math.sqrt(Math.max(0, 1 - a * a))); };
@@ -129,7 +129,7 @@ export const PART = {
   } },
 
   // 23 x 33: an upright crown of golden clumps on a straight trunk, fallen leaves
-  ginkgo: { approved: false, draw(r, rng, cx) {
+  ginkgo: { approved: true, draw(r, rng, cx) {
     bole(r, cx, 13, BARK, 3);
     const Y = '#e8c040', YL = '#f2d860', YD = '#c8a030';
     mass(r, cx, 21, 8, 11, shade(Y, 0.78));
@@ -151,7 +151,7 @@ export const PART = {
   } },
 
   // 23 x 39: four jointed stalks, slender leaves at the tops and on side twigs
-  bamboo: { approved: false, draw(r, rng, cx) {
+  bamboo: { approved: true, draw(r, rng, cx) {
     const S = '#6aa04a', SD = '#4f8038', SL = '#8ac060', N = '#4a7a34', LF = '#5a9a44', LFL = '#7ab45a', LFD = '#467a36';
     const stalks = [[-7, 30], [-3, 36], [2, 33], [6, 28]];
     const leaf = (x, y, dir, len, c) => { for (let k = 0; k < len; k++) px(r, c, x + dir * k, y - (k >= len - 1 ? 1 : 0)); };
@@ -171,7 +171,7 @@ export const PART = {
   } },
 
   // 26 x 27: a round crown of clumps on a forked trunk, apples with a shine
-  apple: { approved: false, draw(r, rng, cx) {
+  apple: { approved: true, draw(r, rng, cx) {
     bole(r, cx, 11, BARK, 3);
     line(r, BARK, cx - 1, 10, cx - 5, 14, 2); line(r, shade(BARK, 0.8), cx + 1, 10, cx + 5, 15, 2);
     const G = '#5f9a4a';
@@ -191,7 +191,7 @@ export const PART = {
   } },
 
   // 14 x 42: a tall column of stacked clumps on a short trunk
-  poplar: { approved: false, draw(r, rng, cx) {
+  poplar: { approved: true, draw(r, rng, cx) {
     bole(r, cx, 9, BARK, 3, false);
     const G = '#5f9a4e', D = shade(G, 0.8), DD = shade(G, 0.66), L = shade(G, 1.16), H = shade(G, 1.3);
     const lean = rng() < 0.5 ? 0 : 1;
@@ -213,7 +213,7 @@ export const PART = {
   } },
 
   // 14 x 38: a dark flame of twisting foliage
-  cypress: { approved: false, draw(r, rng, cx) {
+  cypress: { approved: true, draw(r, rng, cx) {
     bole(r, cx, 5, DARK_BARK, 2, false);
     const C = '#355a40', D = '#2a4a34', DD = '#22402c', L = '#44704e', H = '#548258';
     const phase = Math.floor(rng() * 4), turn = rng() < 0.5 ? 1 : 0;
@@ -234,7 +234,7 @@ export const PART = {
   } },
 
   // 26 x 30: a bare trunk opening into a fan of branches, twigs at their tips
-  bare: { approved: false, draw(r, rng, cx) {
+  bare: { approved: true, draw(r, rng, cx) {
     const B = '#5a4a3a', BD = shade(B, 0.78), BL = shade(B, 1.2);
     bole(r, cx, 14, B, 3); r(B, cx - 1, 14, 2, 2); px(r, BD, cx, 14);
     const j = () => Math.floor(rng() * 2);

@@ -131,7 +131,7 @@ function leafy(G, rng, cx, c) {
 
 export const PART = {
   // 17 x 12: a rounded shrub of clumps
-  round: { approved: false, draw(r, rng, cx) {
+  round: { approved: true, draw(r, rng, cx) {
     const G = grid(), c = '#5f8f4a';
     leafy(G, rng, cx, c);
     tips(G, rng, c, 3); leaves(G, rng, c, 3);
@@ -140,7 +140,7 @@ export const PART = {
 
   // 23 x 11: a clipped box: the lit flat top with a few dips, the front face with clusters
   // of leaves, darker low down, a dark foot
-  hedge: { approved: false, draw(r, rng, cx) {
+  hedge: { approved: true, draw(r, rng, cx) {
     const x0 = cx - 11, W = 23, B = '#4a7a3e', M = '#5f8f4a', T = '#6f9f58';
     r(B, x0, 0, W, 7); r(shade(B, 0.92), x0, 0, W, 3); r(shade(B, 0.78), x0 + 1, 0, W - 2, 1);   // the face, darker low down, its foot
     r(shade(B, 1.1), x0, 1, 1, 6); r(shade(B, 0.82), x0 + W - 1, 1, 1, 6);            // the lit end, the shaded end
@@ -158,7 +158,7 @@ export const PART = {
   } },
 
   // 17 x 12: a shrub covered in pink flowers
-  azalea: { approved: false, draw(r, rng, cx) {
+  azalea: { approved: true, draw(r, rng, cx) {
     const G = grid(), c = '#4f7f42';
     leafy(G, rng, cx, c);
     tips(G, rng, c, 3); leaves(G, rng, c, 4);
@@ -170,7 +170,7 @@ export const PART = {
   } },
 
   // 17 x 12: a shrub with four or five big round heads of blue or purple flowers
-  hydrangea: { approved: false, draw(r, rng, cx) {
+  hydrangea: { approved: true, draw(r, rng, cx) {
     const G = grid(), c = '#4f7f42';
     leafy(G, rng, cx, c);
     tips(G, rng, c, 3); leaves(G, rng, c, 5);
@@ -186,7 +186,7 @@ export const PART = {
   } },
 
   // 17 x 12: a dark green bush with red roses
-  rose: { approved: false, draw(r, rng, cx) {
+  rose: { approved: true, draw(r, rng, cx) {
     const G = grid(), c = '#3f6a3a';
     leafy(G, rng, cx, c);
     tips(G, rng, c, 4); leaves(G, rng, c, 6);
@@ -200,7 +200,7 @@ export const PART = {
   } },
 
   // 17 x 12: stems standing up out of a low grey-green mound, purple spikes in whorls
-  lavender: { approved: false, draw(r, rng, cx) {
+  lavender: { approved: true, draw(r, rng, cx) {
     const S = '#7a9a6a', F = '#9a7ac8', SL = shade(S, 1.15), SD = shade(S, 0.85);
     for (let i = -6; i <= 6; i += 2) {                                               // stems, each with a purple spike in whorls
       const h = 7 + Math.floor(rng() * 4) + (Math.abs(i) < 4 ? 1 : 0), lean = i < -3 ? -1 : i > 3 ? 1 : 0, x = cx + i;
@@ -215,7 +215,7 @@ export const PART = {
   } },
 
   // 20 x 11: fronds arching out from the middle and drooping at the tips, leaflets along each
-  fern: { approved: false, draw(r, rng, cx) {
+  fern: { approved: true, draw(r, rng, cx) {
     const D = '#4a8a44', L = '#5f9f52', H = shade(L, 1.15), S = shade(D, 0.85);
     const lift = Math.floor(rng() * 2);
     const arch = [[1, 2], [2, 3], [3, 4], [4, 5], [5, 6 + lift], [6, 6 + lift], [7, 6], [8, 5], [9, 4]];
@@ -235,7 +235,7 @@ export const PART = {
   } },
 
   // 17 x 21: a fountain of long grass blades, tall stems with cream plumes
-  pampas: { approved: false, draw(r, rng, cx) {
+  pampas: { approved: true, draw(r, rng, cx) {
     const G = '#8a9a6a', GL = shade(G, 1.12), GD = shade(G, 0.82), S = '#9aa878', P = '#eee4c8', PD = '#e0d4b0';
     const plumes = [[-4, 15], [-2, 19], [1, 18], [4, 14]];
     if (rng() < 0.5) plumes.push([-1 + Math.floor(rng() * 2) * 3, 12 + Math.floor(rng() * 3)]);
@@ -258,7 +258,7 @@ export const PART = {
   } },
 
   // 17 x 12: dark glossy leaves with spiky edges, bunches of red berries
-  holly: { approved: false, draw(r, rng, cx) {
+  holly: { approved: true, draw(r, rng, cx) {
     const G = grid(), c = '#2f5a36';
     leafy(G, rng, cx, c);
     prickles(G, rng, c); leaves(G, rng, c, 7);
@@ -270,7 +270,7 @@ export const PART = {
   } },
 
   // 14 x 18: a ribbed column with two arms bending up, a few spines, a pink flower on top
-  cactus: { approved: false, draw(r, rng, cx) {
+  cactus: { approved: true, draw(r, rng, cx) {
     const C = '#5a9a54', L = shade(C, 1.15), D = '#4a8044', DD = shade(D, 0.85), SP = '#d4e4a4', F = '#e870a0';
     const H = 15 + Math.floor(rng() * 2);
     const upright = (x, y0, h) => {                                                  // an arm's upright: lit, green, shaded; a round top

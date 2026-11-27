@@ -92,7 +92,7 @@ const jit = (rng, n = 1) => Math.round((rng() * 2 - 1) * n);
 
 export const PART = {
   // 29 x 33: a stout trunk forking into a round crown of three big clumps, broken into leaf clusters
-  oak: { approved: false, draw(r, rng, cx) {
+  oak: { approved: true, draw(r, rng, cx) {
     const P = sheet(), G = '#5f8f4a', G2 = '#6a9a52';
     trunk(P, rng, cx, 14, BARK, 4, { marks: 2, foot: false });
     const W = shade(BARK, 0.85);
@@ -112,7 +112,7 @@ export const PART = {
   } },
 
   // 26 x 29: a dark trunk, three red-to-orange clumps (deeper below), bright and dark leaves in clusters
-  maple: { approved: false, draw(r, rng, cx) {
+  maple: { approved: true, draw(r, rng, cx) {
     const P = sheet(), A = '#c8402c', B = '#d85a34', C = '#e8703a';
     trunk(P, rng, cx, 12, DARK_BARK, 3, { marks: 1, foot: false });
     branch(P, cx - 1, 10, -4, 4, DARK_BARK); branch(P, cx, 10, 4, 5, shade(DARK_BARK, 0.85));
@@ -129,7 +129,7 @@ export const PART = {
 
   // 29 x 30: a dark trunk with two spreading branches showing under a pale pink crown, a twig in it,
   // white and deep pink blossom in clusters, petals on the ground
-  sakura: { approved: false, draw(r, rng, cx) {
+  sakura: { approved: true, draw(r, rng, cx) {
     const P = sheet(), WOOD = '#4a3434', K = '#f2b8c8', K2 = '#f6c8d4';
     trunk(P, rng, cx, 13, WOOD, 3, { marks: 1, foot: false });
     branch(P, cx - 1, 10, -8, 2, WOOD); branch(P, cx + 1, 11, 8, 2, shade(WOOD, 0.85));     // the branches
@@ -148,7 +148,7 @@ export const PART = {
   } },
 
   // 32 x 32: a crooked trunk leaning up to the right, three flat cloud pads of needles
-  pine: { approved: false, draw(r, rng, cx) {
+  pine: { approved: true, draw(r, rng, cx) {
     const P = sheet(), WOOD = DARK_BARK, N = '#3f6a44', N2 = '#4a7a4e';
     const seg = (x, y, h) => { P.rect(WOOD, x, y, 3, h); P.rect(shade(WOOD, 1.25), x, y, 1, h); P.rect(shade(WOOD, 0.75), x + 2, y, 1, h); };
     seg(cx - 2, 0, 9); seg(cx - 1, 9, 8); seg(cx, 17, 9);                                  // a crooked trunk
@@ -175,7 +175,7 @@ export const PART = {
   } },
 
   // 17 x 48: a tall narrow cone in tiers, lit on the left; each tier's darker hem hangs out a little (each seed its own)
-  cedar: { approved: false, draw(r, rng, cx) {
+  cedar: { approved: true, draw(r, rng, cx) {
     const P = sheet(), C = '#3a6a48', BAND = '#2f5a3c', EDGE = '#2a4a34', LIT = '#467a52';
     trunk(P, rng, cx, 7, BARK, 3, { marks: 1, foot: false });
     const flare = [0, 6, 12, 18, 24, 30].map(() => [[1, 1], [1, 0], [0, 1], [1, 1]][Math.floor(rng() * 4)]);   // which hems hang out, each seed its own
@@ -193,7 +193,7 @@ export const PART = {
   } },
 
   // 23 x 36: three tiers, lit on the left, shaded on the right, each hem hanging in tips
-  fir: { approved: false, draw(r, rng, cx) {
+  fir: { approved: true, draw(r, rng, cx) {
     const P = sheet(), C = '#3f7048', LIT = '#4c8056', SH = '#355f40', EDGE = '#2a4a34', HEM = '#2f5a3c';
     trunk(P, rng, cx, 6, BARK, 3, { marks: 0, foot: false });
     const tiers = [[4, 11, 12], [13, 9, 11], [22, 6, 11]];
@@ -218,7 +218,7 @@ export const PART = {
   } },
 
   // 23 x 33: a white trunk with dark marks, an egg-shaped light crown (lit on top, shaded below), a few gaps and bright leaves
-  birch: { approved: false, draw(r, rng, cx) {
+  birch: { approved: true, draw(r, rng, cx) {
     const P = sheet(), W = '#eeeae0', W2 = '#d8d4ca', INK = '#3a3a3a', G = '#8ab45a';
     P.rect(W, cx - 1, 0, 3, 21); P.rect(W2, cx + 1, 0, 1, 21); P.rect(shade(W2, 0.85), cx - 1, 0, 3, 1);
     branch(P, cx, 17, -5, 4, W2, 1); branch(P, cx + 1, 18, 4, 4, W2, 1);
