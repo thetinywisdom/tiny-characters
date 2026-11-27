@@ -648,8 +648,8 @@ the demo decides who does what.
   the light on the ground, lamps' and headlights', has every vehicle and
   everyone on foot painted out of it, so it never washes over them; a
   vehicle's own lamps are added on it after;
-  'soft' until the owner picks one; the demo takes `?lights=mixed` and
-  `?time=night` in its address to try them live).
+  'bands', three flat steps, is the default: the owner's choice; the demo
+  takes `?lights=soft|dither|mixed` and `?time=night` in its address).
 - **Swings in use**: a swings prop with `riders: [{ angle, kid } | null,
   ...]` is drawn by `drawSwings` (each seat at its own angle); without
   `riders` it is the plain prop.

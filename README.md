@@ -349,7 +349,9 @@ from 0 (day) to 1 (night). As evening comes the town turns golden, then
 deep blue; then the lights come on: lit windows (about half the windows of
 each building, always the same ones), shop glass, signs, neon, lanterns,
 street lamps, vending machines, traffic lights, and cars' headlights and
-tail lights. In the demo an hour passes every 8 seconds from 4 in the
+tail lights. The light is pixel art too: three flat steps round each lamp
+and in the headlights' pools, and it never washes over cars or people
+(`lights: 'soft' | 'dither' | 'mixed'` for other looks). In the demo an hour passes every 8 seconds from 4 in the
 afternoon (the clock is under the town); **Time** keeps it day or night
 instead.
 

@@ -113,9 +113,10 @@ monstersButton.onclick = () => { showMonsters = !showMonsters; monstersButton.te
 // the time of day: an hour every 8 seconds, from 4 in the afternoon (so the
 // evening comes soon); the button keeps it day or night instead
 let hour = 16, timeMode = 'passing';
-// trying the night lights' styles: ?lights=bands | dither | mixed in the address (soft without it);
+// the night lights' style: flat steps ('bands', the owner's choice); ?lights=soft | dither | mixed in
+// the address tries the others;
 // ?time=night starts at night
-const params = new URLSearchParams(location.search), LIGHTS = ['soft', 'bands', 'dither', 'mixed'].includes(params.get('lights')) ? params.get('lights') : 'soft';
+const params = new URLSearchParams(location.search), LIGHTS = ['soft', 'bands', 'dither', 'mixed'].includes(params.get('lights')) ? params.get('lights') : 'bands';
 const timeButton = document.querySelector('#time'), clock = document.querySelector('#clock');
 timeButton.onclick = () => {
   timeMode = { passing: 'day', day: 'night', night: 'passing' }[timeMode];

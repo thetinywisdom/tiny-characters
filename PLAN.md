@@ -62,8 +62,8 @@ bubble lab, so games can use them and they can grow.
   floors, windows' kind, number and spacing, door, roof, details), not only
   its colours; all on the shared door and window sizes.
 - Pixels everywhere (Nov 2026): it is a pixel world, so effects are drawn on
-  the pixel grid too (the steam: see-through pixel puffs, not soft circles).
-  The light glows at night are the one soft exception so far.
+  the pixel grid too (the steam: see-through pixel puffs, not soft circles;
+  the night's light: flat steps, A, round lamps and in the headlights' pools).
 - Small life (Nov 2026): all of it, as agreed from mock-ups; the kids at play
   and the picnic go home at six, shopkeepers when their shutters come down.
 - Fewer people (Nov 2026): half the walkers (44); the town should not feel
@@ -346,7 +346,7 @@ bubble lab, so games can use them and they can grow.
     lamp's glow destroyed the car behind it): the light on the ground has
     every vehicle and everyone on foot painted out of it; the night's pixel
     light styles can be tried live with `?lights=bands|dither|mixed` (and
-    `?time=night`); the owner is choosing one.
+    `?time=night`); the owner chose A, flat steps: now the default.
 
 ## Next (only when the owner asks)
 
@@ -373,8 +373,8 @@ first, build after the owner picks). Ideas offered so far:
 - The town's back row is packed from the left, so narrower seeds leave a
   gap at its right end.
 
-- The glows round lights are soft gradients, not pixels (light in pixel
-  games usually is); the catalogue has no night view yet.
+- The catalogue has no night view yet.
+- A car's tail-light glow can tint a tree standing right in front of it.
 - Sign text is drawn by the canvas, so its edges are a little soft (not
   snapped to the pixel grid like everything else).
 

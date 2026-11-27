@@ -482,7 +482,7 @@ function pixelLight(G, w, h, style) {
   G.setTransform(1, 0, 0, 1, 0, 0); G.putImageData(im, 0, 0);
 }
 let lightLayer = null;
-function drawNight(g, view, items, night, dpx, drawItem, t = 0, lights = 'soft') {
+function drawNight(g, view, items, night, dpx, drawItem, t = 0, lights = 'bands') {
   const dusk = Math.max(0, 1 - Math.abs(night - 0.35) / 0.35);              // the warm light of dusk, early in the evening
   g.save();
   g.globalCompositeOperation = 'multiply';
@@ -641,7 +641,7 @@ function drawCourt(g, a, k) {
  * dpx: device pixels per canvas pixel, when the canvas is drawn bigger
  * underneath (g scaled by dpx) so the signs' names can be written.
  */
-export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0, above = [], petals = true, steam = drawSteam, lights = 'soft' } = {}) {
+export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0, above = [], petals = true, steam = drawSteam, lights = 'bands' } = {}) {
   g.imageSmoothingEnabled = false;
   g.drawImage(town.ground, view.x, view.y, view.w, view.h, 0, 0, view.w, view.h);
   g.save(); g.translate(-view.x, -view.y);
