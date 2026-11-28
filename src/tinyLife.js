@@ -265,9 +265,7 @@ export function drawMotorbike(g, v) {
       px(g, SEAT, X(-6, 6), y - 9, 6, 2); px(g, c, X(-9, 4), y - 9, 4, 2); px(g, tail, X(-10), y - 9);
       px(g, DARK, X(6), y - 11, 1, 6); px(g, DARK, X(5, 3), y - 13, 3, 1); px(g, LAMP, X(7), y - 10, 1, 2);
       if (near) { px(g, AMBER, X(7), y - 12); px(g, AMBER, X(-10), y - 10); }
-      upper(g, { ...r, facing }, X(-2), y - 7);
-      px(g, r.legs, X(-3, 5), y - 10, 5, 2); px(g, r.legs, X(1, 2), y - 9, 2, 3);
-      helmet(g, X(-2), y - 7, hc, facing);
+      if (!v.parked) { upper(g, { ...r, facing }, X(-2), y - 7); px(g, r.legs, X(-3, 5), y - 10, 5, 2); px(g, r.legs, X(1, 2), y - 9, 2, 3); helmet(g, X(-2), y - 7, hc, facing); }
     } else {
       px(g, c, X(-8, 6), y - 8, 6, 4); px(g, shade(c, 0.85), X(-8, 6), y - 5, 6, 1);                  // the back
       px(g, DARK, X(-2, 5), y - 4, 5, 1);                                                            // the floorboard
@@ -275,9 +273,8 @@ export function drawMotorbike(g, v) {
       px(g, SEAT, X(-7, 5), y - 9, 5, 1); px(g, tail, X(-9), y - 7);
       px(g, DARK, X(3, 4), y - 13, 4, 1); px(g, LAMP, X(6), y - 11, 1, 2);
       if (near) { px(g, AMBER, X(6), y - 13); px(g, AMBER, X(-9), y - 8); }
-      upper(g, { ...r, facing }, X(-4), y - 6);
-      px(g, r.legs, X(-4, 5), y - 9, 5, 2); px(g, r.legs, X(0, 2), y - 8, 2, 4);
-      helmet(g, X(-4), y - 6, hc, facing);
+      if (!v.parked) { upper(g, { ...r, facing }, X(-4), y - 6); px(g, r.legs, X(-4, 5), y - 9, 5, 2); px(g, r.legs, X(0, 2), y - 8, 2, 4); helmet(g, X(-4), y - 6, hc, facing); }
+      else { px(g, hc, X(3, 3), y - 15, 3, 2); px(g, shade(hc, 0.8), X(5), y - 15, 1, 2); }   // parked: its helmet hung on the bars
     }
     return;
   }
@@ -285,8 +282,7 @@ export function drawMotorbike(g, v) {
   const back = h >= 225, f = back ? 'up' : 'down';
   px(g, TYRE, x - 1, y - 5, 2, 5);
   if (back) { px(g, c, x - 2, y - 9, 4, 4); px(g, tail, x - 1, y - 7, 2, 1); }
-  upper(g, { ...r, facing: f }, x, y - 6);
-  helmet(g, x, y - 6, hc, f);
+  if (!v.parked) { upper(g, { ...r, facing: f }, x, y - 6); helmet(g, x, y - 6, hc, f); }
   if (!back) { px(g, c, x - 2, y - 10, 4, 6); px(g, LAMP, x - 1, y - 8, 2, 1); }
   px(g, DARK, x - 4, y - 11, 8, 1);
   if (blink) px(g, AMBER, (v.signal === 'r') === back ? x + 4 : x - 5, y - 11);   // its right is your left when it faces you

@@ -422,9 +422,9 @@ export function makeLife({ town, traffic, people, follow, rng = Math.random }) {
     }
     dwelling = now;
     // the taxi rank: now and then someone comes out of the station and gets into the first taxi
-    if ((nextTaxi -= dt) <= 0 && town.parked?.length) {
+    if ((nextTaxi -= dt) <= 0 && town.parked?.some((q) => q.type === 'taxi')) {
       nextTaxi = 25 + rng() * 25;
-      const taxi = town.parked.slice().sort((a, b) => a.x - b.x)[0], st = stations.slice().sort((a, b) => Math.abs(a.x - taxi.x) - Math.abs(b.x - taxi.x))[0];
+      const taxi = town.parked.filter((q) => q.type === 'taxi').sort((a, b) => a.x - b.x)[0], st = stations.slice().sort((a, b) => Math.abs(a.x - taxi.x) - Math.abs(b.x - taxi.x))[0];
       const p = commuter(town.doorOf(st)), door = { x: taxi.x - 4, y: taxi.y - 9 };
       if (free(door.x, door.y) && free(p.x, p.y)) {
         people.push(p);
