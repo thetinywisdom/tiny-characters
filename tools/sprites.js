@@ -1,6 +1,6 @@
 // Sprite export: every drawing of the library as plain PNG frames, for engines
 // that load images (the Swift / SpriteKit game). Run by tools/export-sprites.mjs;
-// window.exportSprites() returns { groups: { name: { scale, frames: [{ name, png, w, h, ax, ay }] } } }.
+// window.exportSprites() returns { groups: { name: { scale, frames: [{ name, png, w, h, ax, ay }] } }, anims }.
 // One PNG pixel = one person pixel (buildings: `scale` 4, so the signs' letters stay crisp).
 // ax, ay: where the feet (the drawing's x, y) are in the frame, from its top left.
 import { LOOKS, lookFor, drawCharacter } from '../src/tinyCharacters.js';
@@ -44,16 +44,23 @@ function frameSet(list, size, k = 1) {
   return list.map((f, i) => ({ name: f.name, png: crop(cs[i], b), w: b.w, h: b.h, ax: size / 2 * k - b.x0, ay: size * 0.75 * k - b.y0 }));
 }
 // Standing + the walk cycle in each view, for anything drawn as fn(g, { x, y, facing, walking }, t).
+// The cycle is sampled 8 times a second over a second; each different picture is one frame
+// (walk0, walk1 ...), and anims[`${name}_${facing}`] is the order to play them in, 0.125 s each.
+const anims = {};
 function walker(name, fn, extra, size = 64) {
   const list = [];
   for (const facing of VIEWS) {
     list.push({ name: `${name}_${facing}_stand`, draw: (g, x, y) => fn(g, { ...extra, x, y, facing, walking: false }, 0) });
-    const seen = new Set(); let n = 0;
+    const seen = new Map(), seq = [];
     for (const t of STEPS) {
       const c = render((g, x, y) => fn(g, { ...extra, x, y, facing, walking: true }, t), size), h = hashOf(c);
-      if (seen.has(h)) continue; seen.add(h);
-      list.push({ name: `${name}_${facing}_walk${n++}`, draw: (g, x, y) => fn(g, { ...extra, x, y, facing, walking: true }, t) });
+      if (!seen.has(h)) {
+        const frame = `${name}_${facing}_walk${seen.size}`; seen.set(h, frame);
+        list.push({ name: frame, draw: (g, x, y) => fn(g, { ...extra, x, y, facing, walking: true }, t) });
+      }
+      seq.push(seen.get(h));
     }
+    anims[`${name}_${facing}`] = seq;
   }
   return frameSet(list, size);
 }
@@ -80,6 +87,6 @@ window.exportSprites = async () => {
     const scale = plantScale(type); if (scale !== 1.5) continue;
     for (let seed = 1; seed <= 2; seed++) groups.Plants.frames.push(...frameSet([{ name: `${kind}_${type}_${seed}`, draw: (g, x, y) => fn(g, { type, x, y, seed, scale }) }], 128));
   }
-  return groups;
+  return { groups, anims };
 };
 window.spritesReady = true;

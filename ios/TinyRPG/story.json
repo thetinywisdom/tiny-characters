@@ -1,0 +1,64 @@
+{
+  "title": "The Quiet Bell",
+  "start": "start",
+  "goals": {
+    "start": "Talk to Grandpa Ito",
+    "asked": "Go up to the shrine",
+    "cleared": "Go back to Grandpa Ito",
+    "done": "The end... for now"
+  },
+  "npcs": [
+    {
+      "id": "ito", "name": "Grandpa Ito", "look": "grandpa", "x": 262, "y": 196, "facing": "down",
+      "talk": [
+        { "when": "start", "set": "asked", "lines": [
+          "Ah, a new face. Welcome to Hoshimachi.",
+          "The shrine bell didn't ring this evening. First time in forty years.",
+          "And something has been shuffling round the torii since sundown.",
+          "My knees won't take those steps. Would you go up and look?"
+        ] },
+        { "when": "asked", "lines": ["The shrine is straight up the path. Mind yourself."] },
+        { "when": "cleared", "set": "done", "lines": [
+          "You chased it off? Listen...",
+          "*bong*",
+          "There it is! Forty-one years, then.",
+          "Thank you. Hoshimachi owes you one. Come back tomorrow: bells are not the only thing going quiet round here."
+        ] },
+        { "when": "done", "lines": ["Tea's on me, any time."] }
+      ]
+    },
+    {
+      "id": "mori", "name": "Officer Mori", "look": "police", "x": 300, "y": 176, "facing": "down",
+      "talk": [
+        { "when": "start", "lines": ["Evening. Quiet night.", "Well. Quiet apart from the shrine. I'm not paid enough for ghosts."] },
+        { "when": "asked", "lines": ["Going up there? Tap the thing and stand your ground. Guard when it swings."] },
+        { "when": "cleared", "lines": ["You went up there? Brave. Or silly. I'll write 'brave'."] },
+        { "when": "done", "lines": ["Hoshimachi police. Mostly lost umbrellas."] }
+      ]
+    },
+    {
+      "id": "yui", "name": "Yui", "look": "schoolgirl", "x": 118, "y": 170, "facing": "right",
+      "talk": [
+        { "when": "start", "lines": ["Everyone says the thing at the shrine is just old Mr. Kondo in a mask.", "I'm not going up there to check, though."] },
+        { "when": "asked", "lines": ["You're going? Take a photo! Actually, don't."] },
+        { "when": "cleared", "lines": ["So was it Mr. Kondo?", "...A zombie in a suit. That's worse."] },
+        { "when": "done", "lines": ["Tomorrow I'm going to be brave too. Probably."] }
+      ]
+    },
+    {
+      "id": "ken", "name": "Tired salaryman", "look": "salaryman", "x": 404, "y": 150, "facing": "left",
+      "talk": [
+        { "when": "*", "lines": ["Last train's gone. Again.", "If I see one more spreadsheet I'll start shuffling round shrines myself."] }
+      ]
+    }
+  ],
+  "foes": [
+    {
+      "id": "zombie", "name": "Shambling salaryman", "sprite": "zombie_office", "x": 240, "y": 262,
+      "hp": 14, "attack": [2, 4], "win": "cleared",
+      "intro": "A shambling salaryman blocks the torii!",
+      "taunts": ["Urrgh... overtime...", "Mrrh... one more meeting...", "Braaains... and coffee..."],
+      "defeat": "The salaryman groans, drops his briefcase and shuffles off home."
+    }
+  ]
+}
