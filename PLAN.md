@@ -716,6 +716,15 @@ bubble lab, so games can use them and they can grow.
     bike's, the scooters' and the delivery scooter's bars are drawn before the rider, so the body hides
     them (as the plain bike already did); head on they stay in front.
 
+102. **Tiny Race** (the owner: four mini games, horror, puzzle, racing, fighting; racing first, a new
+    map, full screen; chose B, a circuit in the fields, from three mock-ups; C, a mountain road, to be
+    the second track): `race.html`, you and four computer cars, three laps on the Meadow circuit
+    (kerbs, tyre stacks, three grandstands, start lights, a grid), the signs on the view's own pixels,
+    keys or touch buttons, results and race again. New: `src/tinyRace.js` (a track is a layout:
+    anyone can make their own), Racing in the catalogue (grandstand, start lights, tyre stack, a
+    track). Played through and tuned: crashes slide along instead of sticking, the computer cars no
+    longer swerve into each other on the grid, close racing, the phone's buttons clear of the signs.
+
 ## In progress
 
 - Vehicles, round two (the owner's order, Nov 2026; all done: 77, 78, 82 as a parcel truck, 84 as a coin-parking lot): 1. a more detailed redraw of the cars,
@@ -736,6 +745,9 @@ bubble lab, so games can use them and they can grow.
     bike lamps at night, smoother bike turns.
 
 ## Next (only when the owner asks)
+
+- Mini games (the owner, Nov 2026): horror, puzzle, racing (built: 102), fighting. Racing's second
+  track: C, the mountain road through the forest (yellow centre line, guardrails), from the mock-up.
 
 - The Swift game: plan it with the owner from pictures first (nothing built yet).
 

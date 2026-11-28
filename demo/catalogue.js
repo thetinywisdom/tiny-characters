@@ -7,6 +7,7 @@ import { ACTIONS, REACTIONS, SKILLS, WEAPONS, actionsFor, drawAction, drawActor,
 import { PROPS, drawProp, propScale } from '../src/tinyStreet.js';
 import { VEHICLES, drawTrain, drawVehicle } from '../src/tinyTraffic.js';
 import { ICONS, SPEAKERS, drawSpeech, linesOf, sayDuration } from '../src/tinySpeech.js';
+import { makeTrack, drawGrandstand, drawStartLights, drawTyreStack } from '../src/tinyRace.js';
 import { POSES, drawPose, drawPigeon, drawCrow, drawNappingCat, drawSwings, drawSteam, drawPetals, drawRubbish } from '../src/tinyLife.js';
 
 // The catalogue: every person, animal and building, with filters (group,
@@ -223,8 +224,23 @@ for (const [type, label] of [['apartment', 'Laundry on the balconies'], ['woodAp
     draw: (g, seed) => drawBuilding(g, { type: 'shop', shopType: 'bookshop', x: 4 + w / 2, y: h + 2, seed, dpx: 6, shut: true, scale }),
     code: (seed) => `drawBuilding(g, { type: 'shop', shopType: 'bookshop', x, y, seed: ${seed}, shut: true${sc} })` }); }
 
+// racing (the owner chose B, a circuit in the fields, Nov 2026): the track and the things round it
+items.push({ id: 'race.grandstand', label: 'Grandstand', group: 'Racing', tags: ['Track'], seed: 1, w: 76, h: 54, px: 3, animated: true,
+  draw: (g, seed, t, moving) => drawGrandstand(g, { x: 4, y: 50, w: 68, seed, t, cheer: moving }),
+  code: (seed) => `drawGrandstand(g, { x, y, w: 68, seed: ${seed}, t, cheer })` });
+items.push({ id: 'race.lights', label: 'Start lights', group: 'Racing', tags: ['Track'], seed: 0, noSeed: true, w: 32, h: 34, px: 4, animated: true,
+  draw: (g, seed, t, moving) => { const u = moving ? t % 5 : 2.2; drawStartLights(g, { x: 15, y: 32, lit: Math.min(4, Math.floor(u / 0.75) + 1), go: u >= 3 }); },
+  code: () => 'drawStartLights(g, { x, y, lit: 0-4, go })' });
+items.push({ id: 'race.tyres', label: 'Tyre stack', group: 'Racing', tags: ['Track'], seed: 0, noSeed: true, w: 14, h: 12, px: 6,
+  draw: (g) => drawTyreStack(g, { x: 7, y: 10 }), code: () => 'drawTyreStack(g, { x, y })' });
+{ let mini = null;
+  const MINI = { W: 120, H: 76, seed: 2, hw: 12, start: 40, points: [[20, 58], [70, 60], [104, 44], [96, 18], [56, 22], [28, 16], [14, 34]], trees: { count: 0 } };
+  items.push({ id: 'race.track', label: 'A track (your own layout)', group: 'Racing', tags: ['Track'], seed: 0, noSeed: true, w: 120, h: 76, px: 3,
+    draw: (g) => { mini ??= makeTrack(MINI); g.drawImage(mini.ground, 0, 0); for (const o of mini.things) if (o.kind === 'tyres') drawTyreStack(g, o); },
+    code: () => "const track = makeTrack({ W, H, hw: 12, start: 40, points: [[20, 58], [70, 60], ...] }); g.drawImage(track.ground, 0, 0)" }); }
+
 // --- filters ---------------------------------------------------------------------
-const GROUPS = ['All', 'People', 'Animals', 'Monsters', 'Combat', 'Speech', 'Life', 'Buildings', 'Doors & windows', 'Street', 'Nature'];
+const GROUPS = ['All', 'People', 'Animals', 'Monsters', 'Combat', 'Speech', 'Life', 'Buildings', 'Doors & windows', 'Street', 'Nature', 'Racing'];
 const state = { g: 'All', t: new Set(), q: '' };
 const fromHash = () => {
   const h = new URLSearchParams(location.hash.slice(1));

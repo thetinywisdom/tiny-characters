@@ -61,6 +61,11 @@ src/tinyLife.js        small life (drawing only): POSES, drawPose (sitBench,
 src/tinyTown.js        the 2D town map: makeTown, drawTownView,
                        DEFAULT_TOWN (layout, ground, walkable ground,
                        path finding, place names)
+src/tinyRace.js        race tracks: CIRCUIT (a layout), makeTrack,
+                       paintTrack, drawGrandstand, drawStartLights,
+                       drawTyreStack, drawThing
+race.html + demo/race.js  Tiny Race: the full-screen race game (you and four
+                       computer cars, three laps; keys or touch buttons)
 index.html             the demo page (town, looks, buildings, gallery)
 catalogue.html         the catalogue page: every item on a card, filters,
                        seeds, copy code
@@ -948,6 +953,55 @@ the demo decides who does what.
   into a taxi. Laundry 8-16, shutters 21-7, rubbish 6-11, sweeping 6-10.
   Commuters come out one by one when the train stops and go home when they
   get where they were going.
+
+## How the race works (src/tinyRace.js, demo/race.js)
+
+The owner chose B (a circuit in the fields) from three mock-ups (A a street circuit in a closed-off
+town, B a circuit, C a mountain road through the forest; C is to be the second track). Its own page,
+`race.html`, fills the window (Full screen asks the browser for the whole screen; Esc leaves).
+
+**A track is a layout** (`CIRCUIT`): `{ W, H, seed, terrain, hw, points, start, stands, trees }`.
+`makeTrack` runs a closed Catmull-Rom curve through `points` (the middle of the road, driven in that
+order), sampled every half pixel with its tangent and bend (`k`, 1 / radius, signed; from the tangents
+6 px either side). For every pixel within reach of the road a table keeps the nearest sample and the
+distance (`dist`, `idx`): the ground is painted from it (`paintTrack`: grass by `drawTerrain`, the road's
+grey with a few grains, white edge lines 1 px in, red and white kerbs 4 px long on bends sharper than
+`k` 0.009, the chequered line at `start`, the grid's white brackets) and `track.surface(x, y)`,
+`track.near(x, y)` read it. Things (`track.things`): tyre stacks outside the bends, the grandstands
+(`stands`, fronts on the ground, five rows of the crowd going back, a roof; the crowd jumps with arms up
+at the start and the finish), the start lights by the line, trees from the layout's own random stream
+clear of the road (more room below the road, where a crown would hide it). `track.solids` are what you
+bump into (circles, the stands' boxes). The ground is drawn flat on the screen like the town's, the
+cars are the town's voxel cars (`drawVehicle`, 16 directions): a car going at screen angle `a` is drawn
+at heading `atan2(sin a / KY, cos a)`.
+
+**Driving** (one model for everyone, 120 steps a second): speed along the heading; the gas pulls up to
+the top speed (`VMAX` 172 px/s on the road, 64 on the grass, which also slows you down hard); the
+brake, then reverse; rolling to a stop. Turning is never tighter than the tyres hold: the turn rate is
+`min(WMAX, GRIP / speed)` (so a hairpin needs braking), and a car pressing a pedal can still turn a
+little standing still (never stuck nosed into a tree). The slipstream: right behind another car, 4 %
+more top speed. Bumping: each car is two circles along it (foreshortened going up and down); against a
+tree, tyres or a stand the speed into it is lost and the front glances round to slide along; cars push
+each other apart, the one behind slowed.
+
+**The computer cars** (`think`): aim at the road 22 px + 0.3 s ahead, in their lane (±8 px; moved over
+only for a slower car right ahead in it, and only when the other lane is clear), and brake for the
+bends ahead with room to stop (`safeSpeed`: for each bend in braking reach, the corner speed
+`sqrt(GRIP * nerve / k)`). Each has its `power` (top speed) and `nerve` (how hard it takes bends);
+close racing: a car more than 3 % of a lap ahead of you eases off (down to 93 %), one well behind
+pushes (up to 104 %). ?auto lets you drive yourself (for checks).
+
+**The race**: the grid (you third), the lights (a lamp each 0.75 s, 3 2 1, then green: GO!), three
+laps. Laps count only through the four quarters in order (cutting across does not count); the places
+from laps and how far into this one. The view follows you, a little ahead of where you are going, and
+stops at the map's edges. The signs (a 3 × 5 pixel font on the view's own pixels): lap and time, your
+best lap, your place, the speed (km/h = px/s × 1.1), FINAL LAP, WRONG WAY, PAUSED, and the results
+(places, times, best laps; R or a tap races again). Keys: arrows / WASD, P pause, R restart; on touch
+screens buttons (steer left, right; brake, gas). A phone's view is about 190 of the map's pixels on its
+short side (the canvas is `dpx` device pixels per map pixel, a whole number).
+
+**Checks**: ?auto runs a whole race (no page errors; about 18.5 s a lap, 56 s a race); a keyboard player
+(keys pressed 20 times a second, on or off) finishes; frame time under 1 ms at 1280 and 1920 wide.
 
 ## Common tasks
 

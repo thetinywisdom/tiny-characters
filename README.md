@@ -12,7 +12,7 @@ parking or a bus at its stop, press E or tap the hint; E again to get off; drive
 hour passes every 8 seconds; a 2D map of streets, blocks and grounds; the view
 follows you; tap a building to walk to its door; move the one with the gold
 ring with the arrow keys / WASD or by tapping; tap anyone to make them talk),
-every look they can have, every building, and a gallery of random looks.
+every look they can have, every building, and a gallery of random looks. And a car race: `race.html` (see Tiny Race).
 
 ```bash
 python3 -m http.server 8000   # then open http://localhost:8000
@@ -32,6 +32,26 @@ to check a change), then `PLAN.md` (what is done, decided and next) and
 PNG sprites for other engines (the Swift game): `node tools/export-sprites.mjs`
 writes every person, animal, monster, building, street thing and plant as PNG
 frames in Xcode `.atlas` folders, with `sprites.json` (sizes and feet points).
+
+## Tiny Race
+
+`race.html` (https://thetinywisdom.github.io/tiny-characters/race.html): a car race, full screen.
+You (the yellow car in the gold frame) and four computer cars, three laps of a circuit in the fields:
+kerbs and tyre stacks on the bends, grandstands, start lights, a grid. Arrow keys or WASD (on a phone:
+the buttons), P pauses, R races again. Lap and time, your best lap, your place and speed on the
+screen; the results at the end.
+
+Make your own track: a track is a layout (the middle of the road as points, a closed loop):
+
+```js
+import { makeTrack, drawThing } from './src/tinyRace.js';
+const track = makeTrack({ W: 600, H: 400, seed: 1, hw: 16, start: 100,
+  points: [[100, 320], [480, 320], [540, 200], [420, 80], [140, 90], [70, 200]],
+  stands: [{ x: 150, y: 280, w: 120 }], trees: { count: 200, types: ['oak', 'fir'], clear: 44 } });
+g.drawImage(track.ground, 0, 0);                    // grass, road, kerbs, the line, the grid
+for (const o of track.things) drawThing(g, o, t);   // trees, tyres, stands, lights (sort by o.y)
+track.surface(x, y);                                // 'road', 'kerb', 'grass' or 'out'
+```
 
 ## The catalogue
 
