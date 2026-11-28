@@ -29,6 +29,13 @@ to check a change), then `PLAN.md` (what is done, decided and next) and
 `SKILLS.md` (how everything works). No build step: serve the folder
 (`python3 -m http.server`) and open `index.html`.
 
+PNG sprites for other engines (the Swift game): `node tools/export-sprites.mjs`
+writes every person, animal, monster, building, street thing and plant as PNG
+frames in Xcode `.atlas` folders, with `sprites.json` (sizes and feet points).
+
+Tiny RPG, a small story game for iOS in Swift (SpriteKit) with these people, is
+in `ios/` (open `ios/TinyRPG.xcodeproj` in Xcode and Run; see `ios/README.md`).
+
 ## The catalogue
 
 `catalogue.html` (linked from the demo) shows every person, animal and

@@ -93,6 +93,9 @@ bubble lab, so games can use them and they can grow.
   animated mock-ups: up to 2 px at the top, trunks still); bushes stay still.
 - The front page (Nov 2026): no park (the owner never used it): the town,
   the looks, the buildings and the gallery.
+- An iOS game (Nov 2026): a story-driven RPG with a little fighting, written in
+  Swift (SpriteKit), using these drawings exported to PNG frames
+  (`tools/export-sprites.mjs`); the library itself stays plain JS.
 
 ## Done
 
@@ -640,7 +643,23 @@ bubble lab, so games can use them and they can grow.
     there (7 s, not 3) the ones waiting walk to its doors and step in behind it, and others step
     off and walk away.
 
-89. **Riding** (the owner: ride a car, a scooter, a bicycle, the bus; steered like walking on the
+89. **Sprite export for the Swift game** (the owner: an iOS RPG in Swift from these assets):
+    `node tools/export-sprites.mjs [outDir]` draws everything with the library in Chromium and
+    writes PNG frames into `<Group>.atlas` folders (Xcode makes texture atlases of them), a
+    `sprites.json` (size and feet point of each frame) and a preview sheet per group. People (the
+    13 looks, 12 random, 4 kids), cats, dogs and monsters in four views, standing and every walk
+    frame; buildings (3 seeds, each shop type) at 4 px per pixel for crisp signs; approved street
+    things, trees and bushes. Nothing in `src/` changed. Output (`export/`) is not committed.
+
+90. **Tiny RPG for iOS, first playable** (the owner: a story-driven RPG with a little fighting,
+    in Swift): `ios/TinyRPG.xcodeproj` (SpriteKit, iOS 17+), built from the exported sprites
+    (`ios/TinyRPG/Sprites`, re-export with `node tools/export-sprites.mjs ios/TinyRPG/Sprites
+    --no-preview`). A small town with the shrine at the top; tap to walk, tap someone to talk
+    (typing dialogue box in DotGothic16), a turn-based fight (Attack, Guard, Run). The first
+    chapter, "The Quiet Bell", is in `story.json`. The export now records each walk cycle's order
+    (`anims` in sprites.json). Built and launched in the iPhone simulator with no errors.
+
+91. **Riding** (the owner: ride a car, a scooter, a bicycle, the bus; steered like walking on the
     roads; the bus as a passenger): near the bike parking, the parked scooter (new, by the sushi
     shop), a car in the coin-parking lot, or a bus stopped at your stop, a hint shows (E: RIDE / E:
     GET ON); E or a tap gets you on. A bicycle goes twice as fast anywhere you can walk; the scooter
@@ -669,6 +688,9 @@ bubble lab, so games can use them and they can grow.
     bike lamps at night, smoother bike turns.
 
 ## Next (only when the owner asks)
+
+- The Swift game (`ios/`): ground tiles and vehicles in the export; play-test walking, talking
+  and the fight on a phone; more of the story.
 
 The full-size redraw is done. Ideas offered before (on hold):
 - the catalogue in the seasons and the weather (the backlog)

@@ -28,6 +28,10 @@ src/tinyBuildingsFull.js  the buildings' kit (storeys, doors, windows,
 src/tinyStreetFull.js  FULL_PROPS: the street things' drawings
 src/tinyNatureFull.js  FULL_TREES, FULL_BUSHES, FULL_TERRAINS
 src/tinyGroundFull.js  FULL_GROUND: the streets, railway, court, pond, paths
+ios/                   Tiny RPG, the Swift / SpriteKit game (see ios/README.md)
+tools/export-sprites.mjs + tools/sprites.html / sprites.js
+                       the sprite export for the Swift game (see Common
+                       tasks: export the sprites)
 src/full/*.js          the drawings themselves, in parts (a-h buildings,
                        p1-p3 street things, n1-n3 plants, t1 terrains, g1-g2
                        ground), each entry { approved, draw ... }; the parts
@@ -933,6 +937,20 @@ the demo decides who does what.
   get where they were going.
 
 ## Common tasks
+
+- **Export the sprites** (for the Swift / SpriteKit game): `node
+  tools/export-sprites.mjs [outDir]` (default `export/sprites`, ignored by git).
+  It serves the folder itself, opens `tools/sprites.html` in Playwright's
+  Chromium and calls `window.exportSprites()`. Each thing is drawn on a
+  scratch canvas with its feet at the centre; a thing's frames share one
+  cropped box so an animation does not jump; `sprites.json` gives each frame's
+  `w`, `h` and `ax, ay` (the feet, from the top left) under `groups`, each
+  group's `scale` (1, or 4 for buildings: drawn with `dpx: 4` so the signs are
+  crisp), and `anims["<name>_<facing>"]`: the walk cycle sampled 8 times over
+  a second (each different picture is one frame; play the list at 0.125 s).
+  The game's copy: `node tools/export-sprites.mjs ios/TinyRPG/Sprites --no-preview`. To
+  add a thing, add it to a group in `tools/sprites.js`. Look at the
+  `preview-*.png` sheets after a change.
 
 - **A new look part:** add a value to the list (`HATS`, `TOPS` ...), draw it
   in `drawCharacter` with a few `R(...)` calls relative to `B` / `Hd`, add it
