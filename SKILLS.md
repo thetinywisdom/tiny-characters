@@ -536,7 +536,10 @@ sprite sheet turning round: every view must be the same car). `SHAPES[type]`
 has its size in blocks (`L` long, `W` wide, `H` tall; one block = one pixel,
 the people's size, not scaled with the town) and `shape(u, v, z, c, c2)`:
 the colour of the block at `u` along it (+ its front), `v` across (+ its
-right), `z` up, or null. `carShape(o)` builds the car-likes: wheels (tyre and
+right), `z` up, or null. `carShape(o)` builds the car-likes (more detail, the owner's A, Nov 2026: rims round a dark hub,
+lamps in `RUBBER` surrounds, grille slats, `BUMPER` grey, door handles at `door` + 2 and
+`door2` + 2, a lighter crease under the windows, `RUBBER` along the windows' bottom, the roof's
+rim darker, a `GLINT` on the windscreen): wheels (tyre and
 hub) in dark arches, the lower body (bumpers, white plates, twin headlamps,
 grille, tail lamps, a side skirt, the doors' line, a stripe for taxis and
 vans) up to `body`, then a cabin a block narrower each side whose front and

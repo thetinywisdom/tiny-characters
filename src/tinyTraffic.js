@@ -25,6 +25,7 @@ import { KY, voxelSprite } from './tinyVoxel.js';
 import { drawScooter, drawMotorbike } from './tinyLife.js';
 
 const INK = '#2f3236', WHITE = '#f2f2ee', METAL = '#a8aeb4', DARK = '#3a3f44';
+const GLINT = '#8ea6c0', RUBBER = '#2a2e34', BUMPER = '#4a4e54', HUB = '#5a5f66';
 const LAMP = '#fff2c0', TAIL = '#e8403a', GLASS = '#5d7590', TYRE = '#26282c', ORANGE = '#f2a040';
 
 /** Body colours: white and silver most, then black, red, blue, a few bright ones. */
@@ -36,50 +37,58 @@ const TAXI_COLORS = [['#f2c230', '#3a3d42'], ['#3a3d42', '#f2c230'], ['#3f8a5a',
 // along the vehicle (+ is its front), v across it (+ is its left), z up.
 // Blocks are 1 x 1 x 1; the colours are the paint, the renderer shades them.
 
-/** A car-like body: wheels in arches, a lower body with lamps, bumpers, grille, plates and a side skirt, a cabin with a sloped windscreen and rear window, pillars and mirrors. */
+/**
+ * A car-like body (the owner chose A, more detail, Nov 2026): wheels (tyre, rim, hub) in arches, a
+ * lower body with lamps in dark surrounds, a slatted grille, bumpers, plates, a side skirt, the doors'
+ * line, door handles, a crease catching the light; a cabin with a sloped windscreen (a glint on it)
+ * and rear window, dark window rubber, pillars, mirrors, a roof with a darker rim.
+ */
 function carShape(o) {
   const hl = o.L / 2, hw = o.W / 2, R = o.r ?? 2.6, base = R * 0.75;
   return (u, v, z, c, c2) => {
     const au = Math.abs(u), av = Math.abs(v);
     if (au > hl || av > hw || z < 0) return null;
-    // wheels (a tyre and a hub), in dark arches
-    for (const uc of o.wheels) {
+    for (const uc of o.wheels) {                                       // tyres, rims round a dark hub, in dark arches
       const d = (u - uc) ** 2 + (z - R) ** 2;
-      if (d <= R * R && av >= hw - 2.2) return d < 1.3 && av > hw - 0.7 ? METAL : TYRE;
+      if (d <= R * R && av >= hw - 2.2) return av > hw - 0.7 ? (d < 0.7 ? HUB : d < 2.4 ? METAL : TYRE) : TYRE;
       if (d <= (R + 0.9) ** 2 && av > hw - 0.7 && z >= base) return shade(c, 0.45);
     }
     if (z < base) return null;
-    if (au > hl - 1 && av > hw - 1) return null;                         // rounded corners
+    if (au > hl - 1 && av > hw - 1) return null;
     if (z < o.body) {
-      const frontFace = u > hl - 1, backFace = u < -hl + 1, low = z < base + 1.2;
-      if (low && (frontFace || backFace)) return av < 1.3 ? WHITE : DARK;   // bumpers, plates
-      if (frontFace && z >= o.body - 2.5 && z < o.body - 0.8 && av >= hw - 3.2) return av > hw - 1.6 ? LAMP : shade(LAMP, 0.85);   // twin headlamps
-      if (frontFace && av < 2.6) return DARK;                             // grille
-      if (backFace && z >= o.body - 2.5 && z < o.body - 0.8 && av >= hw - 3) return TAIL;
-      if (low && av > hw - 0.7) return shade(c, 0.62);                    // the side skirt
+      const frontFace = u > hl - 1, backFace = u < -hl + 1, low = z < base + 1.2, lampRow = z >= o.body - 2.5 && z < o.body - 0.8;
+      if (low && (frontFace || backFace)) return av < 1.3 ? WHITE : BUMPER;                       // bumpers, plates
+      if (frontFace && lampRow && av >= hw - 3.2) return av > hw - 1.6 ? LAMP : shade(LAMP, 0.85);
+      if (frontFace && lampRow && av >= hw - 3.9) return RUBBER;                                   // the lamps' dark surround
+      if (frontFace && av < 2.6) return Math.floor(z * 2) % 2 ? DARK : '#5a5f66';                   // the grille's slats
+      if (backFace && lampRow && av >= hw - 3) return av > hw - 1.2 ? TAIL : '#c8302c';
+      if (backFace && lampRow && av >= hw - 3.7) return RUBBER;
+      if (low && av > hw - 0.7) return shade(c, 0.62);
       if (o.stripe && z >= o.body - 2 && z < o.body - 1) return c2;
-      if (av > hw - 0.7 && Math.abs(u - o.door) < 0.6 && z > base + 1) return shade(c, 0.72);   // the doors' line
+      if (av > hw - 0.7 && Math.abs(u - o.door) < 0.6 && z > base + 1) return shade(c, 0.72);
+      if (av > hw - 0.7 && z >= o.body - 2 && z < o.body - 1.3 && (Math.abs(u - o.door - 2) < 0.7 || (o.door2 !== undefined && Math.abs(u - o.door2 - 2) < 0.7))) return RUBBER;   // door handles
+      if (av > hw - 0.7 && z >= o.body - 1 && z < o.body - 0.4) return shade(c, 1.12);            // a crease catching the light
       return c;
     }
     if (z >= o.H) return o.extra ? o.extra(u, v, z, c, c2) : null;
-    // the cabin: narrower than the body, its front and back sloping in
-    const k = z - o.body, front = o.cabF - k * o.slopeF, back = o.cabB + k * o.slopeB;
-    if (u > front || u < back || av > hw - 1 - k * 0.15) {
-      if (z < o.body + 1.2 && av > hw - 0.9 && Math.abs(u - (o.cabF - 0.8)) < 0.8) return shade(c, 0.55);   // mirrors
+    const k = z - o.body, front = o.cabF - k * o.slopeF, back = o.cabB + k * o.slopeB, side = hw - 1 - k * 0.15;
+    if (u > front || u < back || av > side) {
+      if (z < o.body + 1.2 && av > hw - 0.9 && Math.abs(u - (o.cabF - 0.8)) < 0.8) return shade(c, 0.55);
       return null;
     }
-    if (z >= o.H - 1) return c;                                          // the roof
-    if (o.panel && u < o.panel) return c;                                 // a van's panel sides
-    if (av > hw - 2.6 && Math.abs(u - o.door) < 0.7) return c;            // the pillar between the windows
+    if (z >= o.H - 1) return u > front - 0.9 || u < back + 0.9 || av > side - 0.9 ? shade(c, 0.86) : c;   // the roof, its rim
+    if (o.panel && u < o.panel) return c;
+    if (av > hw - 2.6 && Math.abs(u - o.door) < 0.7) return c;
+    if (z < o.body + 0.8) return RUBBER;                                                         // the window rubber along the bottom
+    if (u > front - 1 && (Math.floor(av + z * 1.3) % 6 === 0)) return GLINT;                     // a glint on the windscreen
     return GLASS;
   };
 }
-
 const wheel = (u, v, z, uc, R, hw) => { const d = (u - uc) ** 2 + (z - R) ** 2; return d <= R * R && Math.abs(v) >= hw - 2.2 ? (d < 1.3 && Math.abs(v) > hw - 0.7 ? METAL : TYRE) : null; };
-const CAR = { L: 30, W: 13, H: 11.5, body: 6.5, cabF: 5.5, slopeF: 0.9, cabB: -8.5, slopeB: 0.6, door: -1.5, wheels: [9, -9] };
+const CAR = { L: 30, W: 13, H: 11.5, body: 6.5, cabF: 5.5, slopeF: 0.9, cabB: -8.5, slopeB: 0.6, door: -1.5, door2: -7.5, wheels: [9, -9] };
 const SHAPES = {
   car: { label: 'Car', L: 30, W: 13, H: 11.5, shape: carShape(CAR) },
-  kei: { label: 'Kei car', L: 24, W: 12, H: 13, shape: carShape({ L: 24, W: 12, H: 13, body: 6.5, cabF: 7, slopeF: 0.7, cabB: -11.5, slopeB: 0.15, door: -1, wheels: [7.5, -7.5], r: 2.4 }) },
+  kei: { label: 'Kei car', L: 24, W: 12, H: 13, shape: carShape({ L: 24, W: 12, H: 13, body: 6.5, cabF: 7, slopeF: 0.7, cabB: -11.5, slopeB: 0.15, door: -1, door2: -7, wheels: [7.5, -7.5], r: 2.4 }) },
   taxi: { label: 'Taxi', L: 30, W: 13, H: 14, shape: carShape({ ...CAR, stripe: true,
     extra: (u, v, z, c, c2) => (z < CAR.H + 2 && Math.abs(u + 2) < 2 && Math.abs(v) < 2.2 ? (z < CAR.H + 1.2 ? WHITE : c2) : null) }) },   // the roof sign
   van: { label: 'Delivery van', L: 30, W: 13, H: 14, shape: carShape({ L: 30, W: 13, H: 14, body: 6.5, cabF: 11, slopeF: 0.9, cabB: -15, slopeB: 0, door: 6, panel: 5.5, stripe: true, wheels: [10, -10] }) },
@@ -152,7 +161,7 @@ const SHAPES = {
 const SPRITES = new Map();
 const DIRS = 16;
 // glass: the sloped windscreen and rear window one tone (no steps), the side windows darker; lamps unshaded
-const tone = (col, f, face) => (col === GLASS ? (face === 'side' ? 0.8 : 1.04) : col === LAMP || col === TAIL || col === ORANGE || col === BRAKE || col === AMBER ? 1 : f);
+const tone = (col, f, face) => (col === GLASS || col === GLINT ? (face === 'side' ? 0.8 : 1.04) : col === LAMP || col === TAIL || col === ORANGE || col === BRAKE || col === AMBER ? 1 : f);
 // the lamps as they change (the owner, Nov 2026): the tail lamps brighter while braking or standing,
 // the corner lamps of one side blinking amber before and through a turn; snow on the tops in winter
 const BRAKE = '#ff2a1c', AMBER = '#ffb428', SNOWTOP = '#eef2f6';

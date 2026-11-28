@@ -564,9 +564,15 @@ bubble lab, so games can use them and they can grow.
     station, and behind a bush near the park) are gone from DEFAULT_TOWN; the bike parking stays.
     (`bikeRack` is still a prop in the library and the catalogue.)
 
+77. **More detail on the cars** (the owner chose A from mock-ups, over A with an outline):
+    cars, kei cars, taxis, vans and the kei truck's cab: rims and hubs on the wheels, lamps in
+    dark surrounds, a slatted grille, grey bumpers, door handles, a crease along the side,
+    dark window rubber, a darker rim round the roof, a glint on the windscreen. Same shapes
+    and sizes.
+
 ## In progress
 
-- Vehicles, round two (the owner's order, Nov 2026): 1. a more detailed redraw of the cars,
+- Vehicles, round two (the owner's order, Nov 2026; 1 done, 77): 1. a more detailed redraw of the cars,
   2. a police car and a fire engine, 3. the delivery van stopping at shops, 4. parked cars;
   each from mock-ups first.
 - Vehicles, round one (done): 1. small fixes, 2. motorbikes in the traffic,
