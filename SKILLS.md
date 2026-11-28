@@ -425,6 +425,15 @@ face, paws, tail), `spots`, `face` (a pug's dark face), `plain`.
 - a dog standing still wags its tail
 A new breed is an entry in `DOG_BREEDS` (and coats in `DOG_COATS`).
 
+- **Sitting, flicking, wagging** (the owner, Nov 2026): standing still, an animal sits by turns
+  (`sits`: 5 s on, 5 s off, out of step by its seed or place; `a.sit` true / false chooses),
+  drawn by `sitting()`: side on the haunch (3 wide, 4 for big dogs) low at the back, the front
+  legs straight, the chest, the head on top, the tail round the paws (a cat's tip flicking, a
+  dog's sweeping); head on a body wider at the bottom, the head, ears, collar, the tail round.
+  Coats: tabby stripes, calico patches, a tuxedo's white chest, dark points. A standing cat's
+  tail tip flicks a pixel now and then (`flick`); dogs wag walking (7 a second) and standing (5).
+  Head on a cat is 4 wide with a 4-wide head, ears two rows up, the tail standing beside it.
+
 ## How monsters are drawn (src/tinyMonsters.js)
 
 `drawMonster` picks the variant (index or name), sets up `R` (mirrored for

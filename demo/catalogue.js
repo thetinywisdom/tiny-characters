@@ -43,15 +43,15 @@ for (const [name, [label, tags]] of Object.entries(PEOPLE)) {
 const turning = (t, anim) => (anim ? ['down', 'right', 'up', 'left'][Math.floor(t / 1.5) % 4] : 'right');
 for (const [coat, [label]] of Object.entries(CAT_COATS)) {
   items.push({ id: `animal.cat.${coat}`, label: `Cat: ${label.toLowerCase()}`, group: 'Animals', tags: ['Cats'], seed: 0, noSeed: true, w: 20, h: 12, px: 6,
-    draw: (g, seed, t, anim) => drawCat(g, { x: 10, y: 10, coat, walking: anim, facing: turning(t, anim) }, t),
-    code: () => `drawCat(g, { x, y, coat: '${coat}', facing, walking }, t)` });
+    draw: (g, seed, t, anim) => drawCat(g, { x: 10, y: 10, coat, walking: anim, facing: turning(t, anim), sit: false }, t),
+    code: () => `drawCat(g, { x, y, coat: '${coat}', facing, walking, sit: false }, t)` });
 }
 const COLLARS = ['#d8443c', '#3f7fd6', '#2fa36b', '#f2c230', '#d46a8e'];
 for (const [breed, { label }] of Object.entries(DOG_BREEDS)) {
   const dog = (seed) => ({ ...dogFor(breed, seed), collar: COLLARS[seed % COLLARS.length] });
   items.push({ id: `animal.dog.${breed}`, label: `Dog: ${label.toLowerCase()}`, group: 'Animals', tags: ['Dogs'], seed: 0, w: 22, h: 14, px: 6,
-    draw: (g, seed, t, anim) => drawDog(g, { x: 11, y: 12, ...dog(seed), walking: anim, facing: turning(t, anim) }, t),
-    code: (seed) => `drawDog(g, { x, y, ...dogFor('${breed}', ${seed}), collar: '${dog(seed).collar}', facing, walking }, t)` });
+    draw: (g, seed, t, anim) => drawDog(g, { x: 11, y: 12, ...dog(seed), walking: anim, facing: turning(t, anim), sit: false }, t),
+    code: (seed) => `drawDog(g, { x, y, ...dogFor('${breed}', ${seed}), collar: '${dog(seed).collar}', facing, walking, sit: false }, t)` });
 }
 
 // monsters: each variant, walking (or floating) and turning round

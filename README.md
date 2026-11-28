@@ -218,6 +218,8 @@ drawTownView(g, town, { x: viewX, y: viewY, w: 200, h: 150 }, [you, ...others], 
 
 ## Animals
 
+Standing a while, cats and dogs sit now and then; cats flick their tails, dogs wag (`sit: true / false` to choose).
+
 `src/tinyAnimals.js`: cats and dogs with four views like the people
 (`facing`: `'down'`, `'up'`, `'left'`, `'right'`), walking steps, and no faces
 (a dog has a nose and a collar).

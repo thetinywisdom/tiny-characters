@@ -584,6 +584,12 @@ bubble lab, so games can use them and they can grow.
     (the legs' lower halves forward and back, passing, a bob) with the near hand swinging. Front
     and back views as they were. Poses, cyclists and riders get the profile too.
 
+80. **Cats and dogs** (the owner, from mock-ups): cats from the front and back have a 4-pixel
+    chest, a bigger head with ears up, and the tail up beside them, curling in at the foot; a
+    standing cat flicks its tail tip now and then; dogs wag walking too (big breeds a pixel wider
+    head on); standing a while, cats and dogs sit now and then (haunches low, front legs straight,
+    head up, the tail round the paws, a dog's sweeping; their coats show). Catalogue cards stand.
+
 ## In progress
 
 - Vehicles, round two (the owner's order, Nov 2026; 1 done, 77; 2 done, 78): 1. a more detailed redraw of the cars,
@@ -654,7 +660,7 @@ The full-size redraw is done. Ideas offered before (on hold):
 
 ## Open questions for the owner
 
-- Characters, next (offered): cats from the front and back, tails flicking and sitting, dogs
-  wagging; older people stooping and slower; zombies' arms out; werewolves less boxy.
+- Characters, next (offered): older people stooping and slower; zombies' arms out; werewolves
+  less boxy.
 
 - What next (see Next)?
