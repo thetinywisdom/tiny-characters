@@ -2,7 +2,7 @@ import { BUILDINGS, SIGN_FONT, buildingSize, buildingSolids, drawBuilding } from
 import { LOOKS, facingFor, isOld, randomCharacter, seeded } from '../src/tinyCharacters.js';
 import { CAT_COATS, DOG_BREEDS, dogFor } from '../src/tinyAnimals.js';
 import { drawTownView, makeTown } from '../src/tinyTown.js';
-import { makeTraffic } from '../src/tinyTraffic.js';
+import { VEHICLES, makeTraffic } from '../src/tinyTraffic.js';
 import { drawSpeech, emote, moodFor, sayDuration, speak } from '../src/tinySpeech.js';
 import { makeLife } from './life.js';
 
@@ -505,6 +505,7 @@ function getOff() {
   if (ride.kind === 'bus') { delete v.you; const stop = town.props.filter((q) => q.type === 'busStop').sort((a, b) => Math.hypot(a.x - v.x, a.y - v.y) - Math.hypot(b.x - v.x, b.y - v.y))[0]; Object.assign(you, standNear(stop ? stop.x : v.x, stop ? stop.y + 2 : v.y)); }
   else {
     const at = standNear(v.x, v.y);
+    delete v.rider;                                                             // (its own rider again, not you: you got off)
     if (!(town.roadAt(v.x, v.y) && traffic.handBack(v))) {                     // off the road (or no lane near): parked where it is
       traffic.vehicles.splice(traffic.vehicles.indexOf(v), 1);
       const { player, you: _, lane, speed, served, to, ...rest } = v;
@@ -523,12 +524,35 @@ function driveStep(dt, dx, dy) {
   if (town.roadAt(v.x, v.y)) v.onRoad = true;
   const stuck = town.blocked(v.x, v.y);                                       // (parked somewhere marked blocked: it may drive out of it)
   const drivable = (x, y) => town.roadAt(x, y) || lotAt(x, y) || (!v.onRoad && (stuck || !town.blocked(x, y)));   // (from where it was parked, out onto the road)
-  const clearOf = (x, y) => !traffic.vehicles.some((o) => o !== v && o.type !== 'train' && Math.abs(o.x - x) < 18 && Math.abs(o.y - y) < 8)
-    && !people.some((p) => p !== you && !p.away && Math.abs(p.x - x) < 6 && Math.abs(p.y - y) < 4);
+  // how far into other vehicles (their footprints on the screen, by their headings) it would be at (x, y);
+  // a move is fine when it ends clear, or less far in than now (so it can always back out of a squeeze)
+  const half = (o) => { const V = VEHICLES[o.type] ?? VEHICLES.car, th = ((o.heading ?? 0) * Math.PI) / 180, c = Math.abs(Math.cos(th)), s = Math.abs(Math.sin(th));
+    return [c * V.length / 2 + s * V.width / 2, (s * V.length / 2 + c * V.width / 2) * 0.6]; };
+  const [mx, my] = half(v);
+  const depth = (x, y) => traffic.vehicles.reduce((sum, o) => {
+    if (o === v || o.type === 'train') return sum;
+    const [ox, oy] = half(o), dx = mx + ox - Math.abs(o.x - x), dy = my + oy - Math.abs(o.y - y);
+    return dx > 0 && dy > 0 ? sum + Math.min(dx, dy) : sum;
+  }, 0);
+  const now = depth(v.x, v.y);
+  // held up a while (cars waiting for you while you wait for them): you may edge through the cars until clear
+  const ghost = (v.heldT ?? 0) > 1.2 || (v.ghost && now > 0);
+  if (!ghost || now === 0) v.ghost = false;
+  const clearOf = (x, y) => { const d = depth(x, y); return (ghost || d === 0 || d < now) && !people.some((p) => p !== you && !p.away && Math.abs(p.x - x) < 6 && Math.abs(p.y - y) < 4); };
   const sp = DRIVE_SPEED[ride.kind], ox = v.x, oy = v.y, nx = v.x + dx * sp * dt, ny = v.y + dy * sp * 0.66 * dt;
   if (drivable(nx, v.y) && clearOf(nx, v.y)) v.x = nx;
   if (drivable(v.x, ny) && clearOf(v.x, ny)) v.y = ny;
-  if (v.x === ox && v.y === oy) { v.brake = true; ride.to = null; return; }
+  // blocked ahead (a car coming the other way, one stopped): slide round it, the other way across the road
+  if (v.x === ox && v.y === oy) {
+    const across = Math.abs(dx) >= Math.abs(dy), step = sp * dt * (across ? 0.66 : 1);
+    for (const k of [1, -1]) {
+      const sx = across ? v.x : v.x + k * step, sy = across ? v.y + k * step : v.y;
+      if (drivable(sx, sy) && clearOf(sx, sy)) { v.x = sx; v.y = sy; break; }
+    }
+  }
+  if (v.x === ox && v.y === oy) { v.brake = true; v.heldT = (v.heldT ?? 0) + dt; return; }
+  if ((v.heldT ?? 0) > 1.2) v.ghost = true;
+  v.heldT = 0;
   const want = ((Math.atan2((v.y - oy) / 0.6, v.x - ox) * 180) / Math.PI + 360) % 360;
   if (ride.kind === 'scooter') v.heading = (Math.round(want / 45) * 45) % 360;   // eight ways (it has 3/4 views)
   else { const diff = ((want - v.heading + 540) % 360) - 180, by = 320 * dt; v.heading = (Math.abs(diff) <= by ? want : v.heading + Math.sign(diff) * by + 360) % 360; }

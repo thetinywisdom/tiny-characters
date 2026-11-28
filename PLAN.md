@@ -681,6 +681,13 @@ bubble lab, so games can use them and they can grow.
     each part whole), so they turn round smoothly in eight views; the scooter you ride steers eight
     ways.
 
+94. **Riding fixes** (the owner): a car no longer sticks beside traffic in the other lane (it checks
+    real footprints, may always back out of an overlap, slides round what blocks it, and after a
+    second held up may edge through the cars till clear); getting off a scooter on the road no longer
+    leaves a copy of you riding it away (it gets its own rider back); the scooter's and motorbike's
+    3/4 views are solid shapes of blocks like the cars (the squeezed side drawing looked bad), the
+    rider flat on the seat.
+
 ## In progress
 
 - Vehicles, round two (the owner's order, Nov 2026; all done: 77, 78, 82 as a parcel truck, 84 as a coin-parking lot): 1. a more detailed redraw of the cars,

@@ -629,8 +629,9 @@ the bike parking (`getOnBike`: you in the city-bike pose, 2 x speed), a parked m
 in `town.parked` (`getInto`: out of the list and any lot bay, into `traffic.vehicles` as a `player`
 vehicle with `you`, a dummy lane, your look as its rider), a bus standing at the stop you are at
 (`board`: you `away`, the bus `you`). E or a tap on the hint acts. `driveStep`: the keys or `ride.to`
-(a tap), on `roadAt` or a parking lot (or, until it first reaches a road, anywhere not blocked),
-clear of vehicles and people; the scooter turns four ways, the car smoothly. traffic: `v.player` is
+(a tap), on `roadAt` or a parking lot (or, until it first reaches a road, anywhere not blocked);
+other vehicles by their footprints (`depth`: a move is fine if it ends clear or less deep in), blocked
+ahead it slides sideways, held over 1.2 s it may edge through cars (`ghost`) till clear; clear of people; the scooter turns four ways, the car smoothly. traffic: `v.player` is
 skipped by update (others still avoid it); `handBack(v)` puts it in the nearest lane (within 14 px)
 as ordinary traffic; `drawVehicle` draws a gold frame round a vehicle with `you` (two wheels: the
 people's ring); a parked moped has no rider (its helmet on the bars). `getOff`: a car or scooter on
@@ -701,9 +702,9 @@ further in, a mudguard in the bike's colour with a red reflector, the rack, the 
 handlebar and (four in five) a basket beyond, a rail in front.
 
 **Scooters and motorbikes** (`moped`, `motorbike`; the owner chose flat like the people, A; eight views,
-the owner: within 22.5 degrees of 0 / 180 side on, of 90 / 270 head on or from behind, else 3/4: `P`
-draws each part of the side drawing at 0.72 of its width and position, moved down (towards you) or up
-by 0.38 of how far along it is, `A` places the rider):
+the owner: within 22.5 degrees of 0 / 180 side on, of 90 / 270 head on or from behind, else 3/4: `motoBlocks`, a shape of
+blocks (`MOTO_SHAPES`, tinyVoxel like the cars; the owner: the squeezed side drawing looked bad) with
+the flat rider on the seat in profile, behind the bike when it comes towards you):
 tinyLife's `drawMotorbike` draws them the way `drawScooter` draws the delivery scooter (side on
 for headings near 0 / 180, else head on or from behind), the rider by `upper` with a `helmet`
 over the head; `motoLook` picks the colour (`MOPED_COLORS`, `MOTORBIKE_COLORS`), helmet and

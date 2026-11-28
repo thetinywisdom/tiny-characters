@@ -19,6 +19,7 @@
 // Plain ES module.
 
 import { drawCharacter, drawRing, randomCharacter, seeded, shade } from './tinyCharacters.js';
+import { KY, voxelSprite } from './tinyVoxel.js';
 import { drawWeapon } from './tinyCombat.js';
 import { drawProp } from './tinyStreet.js';
 import { SWING_SEATS, chainColour } from './full/p3.js';
@@ -266,6 +267,7 @@ export function drawMotorbike(g, v) {
   };
   const A = (dx, ay) => (diag ? [x + s * Math.round(dx * 0.72), ay + Math.round(dx * 0.38 * tilt)] : [s > 0 ? x + dx : x - dx, ay]);
   const { c, hc, r } = motoLook(v), tail = v.brake ? BRAKE : TAIL, blink = v.signal && v.blinkOn;
+  if (diag) { motoBlocks(g, v, h, c, hc, r, tail); return; }                    // 3/4: a solid body of blocks, like the cars
   if (side || diag) {
     const facing = s > 0 ? 'right' : 'left';
     // its near side faces you: going right that is its right side, going left its left
@@ -300,6 +302,48 @@ export function drawMotorbike(g, v) {
   if (!back) { px(g, c, x - 2, y - 10, 4, 6); px(g, LAMP, x - 1, y - 8, 2, 1); }
   px(g, DARK, x - 4, y - 11, 8, 1);
   if (blink) px(g, AMBER, (v.signal === 'r') === back ? x + 4 : x - 5, y - 11);   // its right is your left when it faces you
+}
+
+// 3/4 views (the owner: the squeezed side drawing looked bad; "more like the car, with a fuller body"): the
+// scooter and the motorbike as small shapes of blocks, drawn by tinyVoxel like the cars, the rider (flat, like
+// everyone) on the seat in profile
+const DISC = (u, z, uc, R) => (u - uc) ** 2 + (z - R) ** 2 <= R * R;
+const MOTO_SHAPES = {
+  moped: { L: 17, W: 6, H: 10, seat: -4, shape: (u, v, z, c, tail) => {
+    const av = Math.abs(v); if (av > 3 || z < 0) return null;
+    for (const uc of [5.5, -5.5]) if (av < 1 && DISC(u, z, uc, 2.3)) return (u - uc) ** 2 + (z - 2.3) ** 2 < 1 ? METAL : TYRE;
+    if (u > 2.5 && u < 5 && z >= 2 && z < 9 && av < 2.6) return u > 4.2 && z > 6.5 && z < 8 && av < 1 ? LAMP : z >= 8 ? shade(c, 1.1) : c;   // the front shield
+    if (z >= 9 && z < 10 && u > 2.5 && u < 4.5 && av < 3) return DARK;                                   // the bars
+    if (u >= -2.5 && u <= 2.5 && z >= 2 && z < 3.2 && av < 2) return DARK;                                // the floorboard
+    if (u > -8.5 && u < -2 && z >= 2.5 && z < 6.5 && av < 2.6) return u < -7.7 && z > 4 && z < 5.4 && av < 1.2 ? tail : z < 3.5 ? shade(c, 0.85) : c;   // the back
+    if (u > -7 && u < -1.5 && z >= 6.5 && z < 7.5 && av < 2) return SEAT;
+    return null;
+  } },
+  motorbike: { L: 21, W: 6, H: 10, seat: -2.5, shape: (u, v, z, c, tail) => {
+    const av = Math.abs(v); if (av > 3 || z < 0) return null;
+    for (const uc of [7, -7]) if (av < 1 && DISC(u, z, uc, 2.8)) return (u - uc) ** 2 + (z - 2.8) ** 2 < 1.2 ? METAL : TYRE;
+    if (u > -3.5 && u < 3.5 && z >= 2 && z < 5.5 && av < 2.4) return z < 3 ? DARK : METAL;                // the engine
+    if (v > 1.5 && v < 2.6 && u > -9 && u < -1 && z >= 2.5 && z < 3.5) return METAL;                       // the exhaust
+    if (u >= 0 && u < 5.5 && z >= 5.5 && z < 8.5 && av < 2.4) return z >= 7.5 ? shade(c, 1.12) : c;      // the tank
+    if (u > -6.5 && u < 0 && z >= 5.5 && z < 7.2 && av < 2) return SEAT;
+    if (u > -10 && u <= -6.5 && z >= 5 && z < 6.8 && av < 1.8) return u < -9.4 ? tail : c;
+    if (u >= 5.5 && u < 7 && z >= 5 && z < 9 && av < 1.4) return u > 6.2 && z < 7 ? LAMP : DARK;          // the fork, the lamp
+    if (u >= 5 && u < 6 && z >= 9 && z < 10 && av < 3) return DARK;                                       // the bars
+    return null;
+  } },
+};
+const MOTO_SPRITES = new Map();
+const motoTone = (col, f) => (col === LAMP || col === TAIL || col === BRAKE ? 1 : f);
+function motoBlocks(g, v, h, c, hc, r, tail) {
+  const S = MOTO_SHAPES[v.type] ?? MOTO_SHAPES.moped, dir = ((Math.round(h / 22.5) % 16) + 16) % 16, key = `${v.type}|${c}|${tail}|${dir}`;
+  if (!MOTO_SPRITES.has(key)) MOTO_SPRITES.set(key, voxelSprite((bu, bv, bz) => S.shape(bu + 0.5, bv + 0.5, bz + 0.5, c, tail), S, dir * 22.5, motoTone));
+  const sp = MOTO_SPRITES.get(key), x = Math.round(v.x), y = Math.round(v.y), th = (dir * 22.5 * Math.PI) / 180;
+  const towards = Math.sin(th) > 0, facing = Math.cos(th) >= 0 ? 'right' : 'left';
+  const rx = Math.round(x + S.seat * Math.cos(th)), ry = Math.round(y + S.seat * Math.sin(th) * KY) - 6;   // the seat, on the screen
+  const rider = () => { if (v.parked) return; upper(g, { ...r, facing }, rx, ry); helmet(g, rx, ry, hc, facing); px(g, r.legs, rx - 2, ry - 3, 4, 2); };
+  if (towards) { rider(); g.drawImage(sp.canvas, x - sp.ox, y - sp.oy); }        // coming towards you: the bike in front of the rider's legs
+  else { g.drawImage(sp.canvas, x - sp.ox, y - sp.oy); rider(); }
+  if (v.parked) px(g, hc, Math.round(x + 4 * Math.cos(th)) - 1, Math.round(y + 4 * Math.sin(th) * KY) - 12, 3, 2);   // its helmet on the bars
 }
 
 // --- the city bike (mamachari; the owner chose a mix of these and the plain bike, Nov 2026) ----------
