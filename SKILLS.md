@@ -701,7 +701,10 @@ for a kid. The demo's two schoolkid cyclists and the child come from their own s
 further in, a mudguard in the bike's colour with a red reflector, the rack, the saddle, the
 handlebar and (four in five) a basket beyond, a rail in front.
 
-**Scooters and motorbikes** (`moped`, `motorbike`; the owner chose flat like the people, A):
+**Scooters and motorbikes** (`moped`, `motorbike`; the owner chose flat like the people, A; eight views,
+the owner: within 22.5 degrees of 0 / 180 side on, of 90 / 270 head on or from behind, else 3/4: `P`
+draws each part of the side drawing at 0.72 of its width and position, moved down (towards you) or up
+by 0.38 of how far along it is, `A` places the rider):
 tinyLife's `drawMotorbike` draws them the way `drawScooter` draws the delivery scooter (side on
 for headings near 0 / 180, else head on or from behind), the rider by `upper` with a `helmet`
 over the head; `motoLook` picks the colour (`MOPED_COLORS`, `MOTORBIKE_COLORS`), helmet and

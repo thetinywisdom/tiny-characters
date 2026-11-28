@@ -668,6 +668,11 @@ bubble lab, so games can use them and they can grow.
     at a stop. Getting out of a car or scooter on the road hands it back to the traffic; anywhere
     else it stays parked there. Also: the taxi rank no longer picks a lot's car as its taxi.
 
+92. **Scooters and motorbikes in 3/4 view** (the owner): between side on and head on they now show
+    a 3/4 view (the side drawing squeezed to 0.72 of its length and tilted, the end nearer you lower,
+    each part whole), so they turn round smoothly in eight views; the scooter you ride steers eight
+    ways.
+
 ## In progress
 
 - Vehicles, round two (the owner's order, Nov 2026; all done: 77, 78, 82 as a parcel truck, 84 as a coin-parking lot): 1. a more detailed redraw of the cars,

@@ -530,7 +530,7 @@ function driveStep(dt, dx, dy) {
   if (drivable(v.x, ny) && clearOf(v.x, ny)) v.y = ny;
   if (v.x === ox && v.y === oy) { v.brake = true; ride.to = null; return; }
   const want = ((Math.atan2((v.y - oy) / 0.6, v.x - ox) * 180) / Math.PI + 360) % 360;
-  if (ride.kind === 'scooter') v.heading = (Math.round(want / 90) * 90) % 360;
+  if (ride.kind === 'scooter') v.heading = (Math.round(want / 45) * 45) % 360;   // eight ways (it has 3/4 views)
   else { const diff = ((want - v.heading + 540) % 360) - 180, by = 320 * dt; v.heading = (Math.abs(diff) <= by ? want : v.heading + Math.sign(diff) * by + 360) % 360; }
   v.brake = false; v.lane.y = v.y;
 }

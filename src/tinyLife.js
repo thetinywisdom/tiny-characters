@@ -251,35 +251,49 @@ function motoLook(v) {
  */
 export function drawMotorbike(g, v) {
   const x = Math.round(v.x), y = Math.round(v.y) + 2, h = (((v.heading ?? 0) % 360) + 360) % 360, big = v.type === 'motorbike';
-  const side = h < 45 || h >= 315 || (h >= 135 && h < 225), s = h >= 135 && h < 225 ? -1 : 1, X = (dx, w = 1) => (s > 0 ? x + dx : x - dx - w + 1);
+  // eight views (the owner: a 3/4 view too, Nov 2026): side on near 0 / 180, head on or from behind near
+  // 90 / 270, and between them the side drawing foreshortened: its length at 0.72, tilted, the end
+  // nearer you lower
+  const near0 = (a) => Math.abs(((h - a + 540) % 360) - 180) <= 22.5;
+  const side = near0(0) || near0(180), diag = !side && !near0(90) && !near0(270);
+  const s = Math.cos((h * Math.PI) / 180) >= 0 ? 1 : -1, tilt = Math.sin((h * Math.PI) / 180) > 0 ? 1 : -1;
+  // P: a rectangle of the side drawing at dx along it (its front +), absolute row ay; mirrored going left;
+  // in a 3/4 view each part squeezed in and moved down (or up) by how far along it is
+  const P = (col, dx, ay, w = 1, hh = 1) => {
+    if (!diag) { px(g, col, s > 0 ? x + dx : x - dx - w + 1, ay, w, hh); return; }
+    const W = Math.max(1, Math.round(w * 0.72)), sx = s > 0 ? x + Math.round(dx * 0.72) : x - Math.round(dx * 0.72) - W + 1;
+    px(g, col, sx, ay + Math.round((dx + w / 2) * 0.38 * tilt), W, hh);           // each part whole: squeezed, moved by its middle
+  };
+  const A = (dx, ay) => (diag ? [x + s * Math.round(dx * 0.72), ay + Math.round(dx * 0.38 * tilt)] : [s > 0 ? x + dx : x - dx, ay]);
   const { c, hc, r } = motoLook(v), tail = v.brake ? BRAKE : TAIL, blink = v.signal && v.blinkOn;
-  if (side) {
+  if (side || diag) {
     const facing = s > 0 ? 'right' : 'left';
     // its near side faces you: going right that is its right side, going left its left
     const near = blink && (v.signal === 'r') === (s > 0);
-    for (const wx of big ? [-8, 8] : [-6, 6]) { px(g, TYRE, X(wx - 2, 5), y - 5, 5, 5); px(g, METAL, X(wx - 1, 3), y - 4, 3, 3); px(g, TYRE, X(wx), y - 3); }
+    const rider = (dx, ay) => { const [ax, ry] = A(dx, ay); upper(g, { ...r, facing }, ax, ry); helmet(g, ax, ry, hc, facing); };
+    for (const wx of big ? [-8, 8] : [-6, 6]) { P(TYRE, wx - 2, y - 5, 5, 5); P(METAL, wx - 1, y - 4, 3, 3); P(TYRE, wx, y - 3); }
     if (big) {
-      px(g, METAL, X(-3, 7), y - 6, 7, 3); px(g, DARK, X(-2, 5), y - 5, 5, 2);                         // the engine
-      px(g, METAL, X(-10, 8), y - 4, 8, 1);                                                          // the exhaust
-      px(g, c, X(0, 6), y - 10, 6, 3); px(g, shade(c, 1.15), X(1, 4), y - 10, 4, 1);                 // the tank
-      px(g, SEAT, X(-6, 6), y - 9, 6, 2); px(g, c, X(-9, 4), y - 9, 4, 2); px(g, tail, X(-10), y - 9);
-      px(g, DARK, X(6), y - 11, 1, 6); px(g, DARK, X(5, 3), y - 13, 3, 1); px(g, LAMP, X(7), y - 10, 1, 2);
-      if (near) { px(g, AMBER, X(7), y - 12); px(g, AMBER, X(-10), y - 10); }
-      if (!v.parked) { upper(g, { ...r, facing }, X(-2), y - 7); px(g, r.legs, X(-3, 5), y - 10, 5, 2); px(g, r.legs, X(1, 2), y - 9, 2, 3); helmet(g, X(-2), y - 7, hc, facing); }
+      P(METAL, -3, y - 6, 7, 3); P(DARK, -2, y - 5, 5, 2);                                         // the engine
+      P(METAL, -10, y - 4, 8, 1);                                                                  // the exhaust
+      P(c, 0, y - 10, 6, 3); P(shade(c, 1.15), 1, y - 10, 4, 1);                                   // the tank
+      P(SEAT, -6, y - 9, 6, 2); P(c, -9, y - 9, 4, 2); P(tail, -10, y - 9);
+      P(DARK, 6, y - 11, 1, 6); P(DARK, 5, y - 13, 3, 1); P(LAMP, 7, y - 10, 1, 2);
+      if (near) { P(AMBER, 7, y - 12); P(AMBER, -10, y - 10); }
+      if (!v.parked) { rider(-2, y - 7); P(r.legs, -3, y - 10, 5, 2); P(r.legs, 1, y - 9, 2, 3); }
     } else {
-      px(g, c, X(-8, 6), y - 8, 6, 4); px(g, shade(c, 0.85), X(-8, 6), y - 5, 6, 1);                  // the back
-      px(g, DARK, X(-2, 5), y - 4, 5, 1);                                                            // the floorboard
-      px(g, c, X(3, 3), y - 12, 3, 9); px(g, shade(c, 1.12), X(3), y - 12, 1, 9);                    // the front shield
-      px(g, SEAT, X(-7, 5), y - 9, 5, 1); px(g, tail, X(-9), y - 7);
-      px(g, DARK, X(3, 4), y - 13, 4, 1); px(g, LAMP, X(6), y - 11, 1, 2);
-      if (near) { px(g, AMBER, X(6), y - 13); px(g, AMBER, X(-9), y - 8); }
-      if (!v.parked) { upper(g, { ...r, facing }, X(-4), y - 6); px(g, r.legs, X(-4, 5), y - 9, 5, 2); px(g, r.legs, X(0, 2), y - 8, 2, 4); helmet(g, X(-4), y - 6, hc, facing); }
-      else { px(g, hc, X(3, 3), y - 15, 3, 2); px(g, shade(hc, 0.8), X(5), y - 15, 1, 2); }   // parked: its helmet hung on the bars
+      P(c, -8, y - 8, 6, 4); P(shade(c, 0.85), -8, y - 5, 6, 1);                                    // the back
+      P(DARK, -2, y - 4, 5, 1);                                                                    // the floorboard
+      P(c, 3, y - 12, 3, 9); P(shade(c, 1.12), 3, y - 12, 1, 9);                                    // the front shield
+      P(SEAT, -7, y - 9, 5, 1); P(tail, -9, y - 7);
+      P(DARK, 3, y - 13, 4, 1); P(LAMP, 6, y - 11, 1, 2);
+      if (near) { P(AMBER, 6, y - 13); P(AMBER, -9, y - 8); }
+      if (!v.parked) { rider(-4, y - 6); P(r.legs, -4, y - 9, 5, 2); P(r.legs, 0, y - 8, 2, 4); }
+      else { P(hc, 3, y - 15, 3, 2); P(shade(hc, 0.8), 5, y - 15, 1, 2); }                          // parked: its helmet hung on the bars
     }
     return;
   }
   // head on (towards you) or from behind: narrow; the signal at the ends of the handlebar
-  const back = h >= 225, f = back ? 'up' : 'down';
+  const back = near0(270), f = back ? 'up' : 'down';
   px(g, TYRE, x - 1, y - 5, 2, 5);
   if (back) { px(g, c, x - 2, y - 9, 4, 4); px(g, tail, x - 1, y - 7, 2, 1); }
   if (!v.parked) { upper(g, { ...r, facing: f }, x, y - 6); helmet(g, x, y - 6, hc, f); }
