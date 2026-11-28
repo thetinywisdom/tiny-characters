@@ -642,7 +642,8 @@ where you leave it (the owner: nobody else is on it), parked just off the road i
 (`standNear`), you beside it. Riders (you and the cyclists) get `heading` (8 ways) from how they moved;
 on a diagonal the `ride` pose draws `bikeBlocks`: a bike of blocks (`BIKES`, plain or city with basket
 and rack, tinyVoxel), the legs on turning pedals (far one darker, behind), both arms from their own
-shoulders to the bars' ends, as on the 3/4 scooter.
+shoulders to the bars' ends, as on the 3/4 scooter. Seen from behind, every two-wheeler draws its bars before the
+rider (the body hides them); head on, after.
 
 **The time on the town** (demo/town.js `drawClock`, after the view and the speech, so the night
 does not darken it): a plate (`rgba(32,36,44,0.78)`) at (4, 4), 34 x 11 town pixels, a sun

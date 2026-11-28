@@ -712,6 +712,10 @@ bubble lab, so games can use them and they can grow.
     bars from their own shoulders; riders get an 8-way heading from how they move. The car and the
     scooter go anywhere not blocked (pavements, grass, plazas), not only roads and lots.
 
+101. **No handlebar across the rider's back** (the owner: "wtf is dat"): seen from behind, the city
+    bike's, the scooters' and the delivery scooter's bars are drawn before the rider, so the body hides
+    them (as the plain bike already did); head on they stay in front.
+
 ## In progress
 
 - Vehicles, round two (the owner's order, Nov 2026; all done: 77, 78, 82 as a parcel truck, 84 as a coin-parking lot): 1. a more detailed redraw of the cars,

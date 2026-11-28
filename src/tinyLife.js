@@ -234,8 +234,9 @@ export function drawScooter(g, v, t = 0) {
   const back = h >= 225;
   px(g, INK, x - 1, y - 4, 2, 4);
   if (back) { px(g, '#c8402c', x - 4, y - 13, 8, 7); px(g, WHITE, x - 3, y - 11, 6, 1); px(g, '#e8402f', x - 1, y - 6, 2, 1); }
+  if (back) px(g, INK, x - 4, y - 9, 8, 1);                           // from behind the bars are behind the rider
   upper(g, { ...rider, facing: back ? 'up' : 'down' }, x, y - 5);
-  px(g, '#e8402f', x - 3, y - 7, 6, 4); px(g, WHITE, x - 2, y - 8, 4, 1); px(g, INK, x - 4, y - 9, 8, 1);
+  px(g, '#e8402f', x - 3, y - 7, 6, 4); px(g, WHITE, x - 2, y - 8, 4, 1); if (!back) px(g, INK, x - 4, y - 9, 8, 1);
   if (!back) px(g, '#fff2c0', x - 1, y - 6, 2, 1);
 }
 
@@ -316,9 +317,10 @@ export function drawMotorbike(g, v) {
   const back = near0(270), f = back ? 'up' : 'down';
   px(g, TYRE, x - 1, y - 5, 2, 5);
   if (back) { px(g, c, x - 2, y - 9, 4, 4); px(g, tail, x - 1, y - 7, 2, 1); }
+  if (back || v.parked) px(g, DARK, x - 4, y - 11, 8, 1);             // from behind the bars are behind the rider
   if (!v.parked) { upper(g, { ...r, facing: f }, x, y - 6); helmet(g, x, y - 6, hc, f); }
   if (!back) { px(g, c, x - 2, y - 10, 4, 6); px(g, LAMP, x - 1, y - 8, 2, 1); }
-  px(g, DARK, x - 4, y - 11, 8, 1);
+  if (!back && !v.parked) px(g, DARK, x - 4, y - 11, 8, 1);
   if (blink) px(g, AMBER, (v.signal === 'r') === back ? x + 4 : x - 5, y - 11);   // its right is your left when it faces you
 }
 
@@ -456,11 +458,12 @@ function cityBike(g, p, t) {
   const back = p.facing === 'up';
   px(g, INK, x - 1, y - 5, 2, 5);
   if (back) { px(g, BMETAL, x - 2, y - 8, 4, 1); if (p.child) px(g, '#3a3d42', x - 2, y - 10, 4, 3); }
+  if (back) px(g, INK, x - 4, y - 10, 8, 1);                          // from behind the bars are behind them (the owner)
   upper(g, p, x, y - 4);
   if (p.helmet) whiteHelmet(g, x, y - 4, kid);
   if (back && p.child) upper(g, { ...p.child, facing: 'up', kid: true }, x, y - 5);
   px(g, legColour(p), x - 3, y - 7, 2, 3 - step); px(g, legColour(p), x + 1, y - 7, 2, 2 + step);
-  px(g, INK, x - 4, y - 10, 8, 1);
+  if (!back) px(g, INK, x - 4, y - 10, 8, 1);
   if (!back) { px(g, BASKET, x - 2, y - 9, 4, 3); px(g, BASKET2, x - 1, y - 8, 2, 1); px(g, BLAMP, x, y - 6); }
 }
 
