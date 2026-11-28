@@ -592,6 +592,12 @@ bubble lab, so games can use them and they can grow.
 
 ## In progress
 
+- Characters (built on the working branch, waiting for the owner's look before `main`): older
+  people stooping (`isOld`: grey or white hair, not a kid, or `stoop`; the head a pixel lower,
+  side on a pixel forward over a rounded back; slower steps, 9 px/s against 14), zombies'
+  arms held out (side on long and level, head on wide at the chest) with a lurch, werewolves
+  less boxy (broad shoulders over a narrow waist, a hump, ragged sides, long clawed arms, the
+  head forward side on).
 - Vehicles, round two (the owner's order, Nov 2026; 1 done, 77; 2 done, 78): 1. a more detailed redraw of the cars,
   2. a police car and a fire engine, 3. the delivery van stopping at shops, 4. parked cars;
   each from mock-ups first.

@@ -101,6 +101,10 @@ demo/demo.css          the demo page's look (light and dark)
   the wearer and whatever stands in front painted out, so they keep their
   colour). The owner chose the thin ring, still (no pulse)
 
+**Old people** (`isOld(p)`: `p.stoop`, else grey or white hair on an adult): `frameOf` puts
+the head a pixel lower (a stoop); side on the head goes a pixel forward too with a rounded
+back behind it; the walk is slower (5 steps a second, not 8; the demo walks them at 9 px/s).
+
 **Side on** (`drawSide`, the owner's A, Nov 2026: drawCharacter hands every left / right
 facing to it): the body 4 wide (columns -2..1, its front at +1, mirrored when facing left),
 the head 3 x 4 with a nose pixel at +2, the hair over the top, a column down the back (long:

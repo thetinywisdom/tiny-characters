@@ -52,12 +52,14 @@ const light = (hex) => [1, 3, 5].reduce((a, i) => a + parseInt(hex.slice(i, i + 
 const DEFAULT_HAT = { cap: RED, wide: '#d8b860' };
 const DEFAULT_CARRY = { backpack: '#e8402f', bag: '#c9b48a', briefcase: '#2f3236', umbrella: '#3f7fd6', stick: '#6b4a2a', boxes: '#c09060' };
 
-// Row offsets (from the feet) of a person: legs, body top, head top.
+/** Is someone old (grey or white hair, not a kid; or p.stoop): they stoop and walk slower (the owner, Nov 2026). */
+export const isOld = (p) => p.stoop ?? (!p.kid && (p.hair === '#b3b0a8' || p.hair === '#f2efe8'));
+// Row offsets (from the feet) of a person: legs, body top, head top (an old person's head a pixel lower: a stoop).
 function frameOf(p, bob = 0) {
   // a kid 11 px tall, short 14, everyone else 15, tall 17
   const legH = p.kid ? 2 : p.size === 'tall' ? 4 : 3, bodyH = p.kid ? 4 : p.size === 'tall' ? 7 : p.size === 'short' ? 5 : 6;
   const B = -legH - bodyH + bob;
-  return { legH, bodyH, B, Hd: B - 4 };
+  return { legH, bodyH, B, Hd: B - 4 + (isOld(p) ? 1 : 0) };
 }
 
 /**
@@ -78,7 +80,7 @@ export function drawCharacter(g, p, t = 0) {
   const x = Math.round(p.x), y = Math.round(p.y);
   if (p.you || p.ring) drawRing(g, x, y, p.ring ?? COLORS.gold);   // round the feet, under everything
   const talkBob = p.talking && Math.floor(t * 6) % 2 ? -1 : 0;
-  const step = p.walking ? Math.floor(t * 8) % 2 : -1;      // which leg is lifted (-1: standing)
+  const step = p.walking ? Math.floor(t * (isOld(p) ? 5 : 8)) % 2 : -1;      // which leg is lifted (-1: standing; slower when old)
   const walkBob = p.walking && step === 1 ? -1 : 0;
   const bob = talkBob || walkBob;
   // four views: front ('down', or nothing), back ('up'), and the sides
@@ -197,7 +199,7 @@ function drawSide(g, p, t = 0, bw = 4) {
   if (p.you || p.ring) drawRing(g, x, y, p.ring ?? COLORS.gold);
   const s = p.facing === 'left' ? -1 : 1;
   const R = (c, dx, dy, w = 1, h = 1) => { g.fillStyle = c; g.fillRect(s > 0 ? x + dx : x - dx - w + 1, y + dy, w, h); };
-  const phase = p.walking ? Math.floor(t * 8) % 4 : -1;                 // 0: near leg forward, 2: far leg forward, 1 / 3: passing
+  const old = isOld(p), phase = p.walking ? Math.floor(t * (old ? 5 : 8)) % 4 : -1;                 // 0: near leg forward, 2: far leg forward, 1 / 3: passing
   const talkBob = p.talking && Math.floor(t * 6) % 2 ? -1 : 0, bob = talkBob || (phase === 1 || phase === 3 ? -1 : 0);
   const { legH, bodyH, B, Hd } = frameOf(p, bob);
   const body = p.body ?? BODY_COLORS[0], legs = p.legs ?? COLORS.ink, skin = p.skin ?? SKIN_COLORS[1], hair = p.hair ?? COLORS.ink;
@@ -242,23 +244,25 @@ function drawSide(g, p, t = 0, bw = 4) {
     R(skin, swing === 0 ? 0 : swing, B + bodyH - 3 + (swing ? 0 : 1), 1, 2);
   }
   if (carry === 'boxes') { R(carryColor, 1, B, 3, 4); R('#8a6440', 1, B + 2, 3, 1); R(skin, 1, B + 2); }
+  const H = (c, dx, dy, w = 1, h = 1) => R(c, dx + (old ? 1 : 0), dy, w, h);   // the head (old: a pixel forward, over a rounded back)
+  if (old) R(body, L, B - 1, 2, 1);
   // the head in profile: the face at the front, a nose, hair over the top and the back
-  R(skin, -1, Hd, 3, 4); R(skin, 2, Hd + 2);                              // head, nose
-  R(shade(skin, 0.88), -1, Hd + 1, 1, 3);
+  H(skin, -1, Hd, 3, 4); H(skin, 2, Hd + 2);                              // head, nose
+  H(shade(skin, 0.88), -1, Hd + 1, 1, 3);
   let style = p.hairStyle ?? 'short';
   if (p.hat && (style === 'afro' || style === 'bun' || style === 'mohawk')) style = style === 'mohawk' ? 'bald' : 'short';
-  if (style === 'afro') { R(hair, -2, Hd - 2, 4, 3); R(hair, -2, Hd + 1, 2, 2); }
-  else if (style === 'mohawk') R(hair, -1, Hd - 1, 3, 1);
+  if (style === 'afro') { H(hair, -2, Hd - 2, 4, 3); H(hair, -2, Hd + 1, 2, 2); }
+  else if (style === 'mohawk') H(hair, -1, Hd - 1, 3, 1);
   else if (style !== 'bald') {
-    R(hair, -1, Hd - 1, 3, 1); R(hair, -1, Hd, 2, 1); R(hair, -1, Hd + 1, 1, 1);
-    if (style === 'long') { R(hair, -2, Hd, 1, 5); R(hair, -1, Hd + 2, 1, 3); }
-    if (style === 'bun') R(hair, -2, Hd - 1, 1, 2);
-    if (style === 'ponytail') { const sw = phase === 1 || phase === 3 ? -1 : 0; R(hair, -2, Hd, 1, 1); R(hair, -3 + sw, Hd + 1, 1, 3); }
+    H(hair, -1, Hd - 1, 3, 1); H(hair, -1, Hd, 2, 1); H(hair, -1, Hd + 1, 1, 1);
+    if (style === 'long') { H(hair, -2, Hd, 1, 5); H(hair, -1, Hd + 2, 1, 3); }
+    if (style === 'bun') H(hair, -2, Hd - 1, 1, 2);
+    if (style === 'ponytail') { const sw = phase === 1 || phase === 3 ? -1 : 0; H(hair, -2, Hd, 1, 1); H(hair, -3 + sw, Hd + 1, 1, 3); }
   }
-  if (p.moustache) R(hair, 1, Hd + 3);
+  if (p.moustache) H(hair, 1, Hd + 3);
   const hatColor = p.hatColor ?? DEFAULT_HAT[p.hat];
-  if (p.hat === 'cap') { R(hatColor, -1, Hd - 2, 3, 2); R(hatColor, 2, Hd - 1); }
-  else if (p.hat === 'wide') { R(hatColor, -2, Hd - 1, 5, 1); R(hatColor, -1, Hd - 2, 3, 1); }
+  if (p.hat === 'cap') { H(hatColor, -1, Hd - 2, 3, 2); H(hatColor, 2, Hd - 1); }
+  else if (p.hat === 'wide') { H(hatColor, -2, Hd - 1, 5, 1); H(hatColor, -1, Hd - 2, 3, 1); }
   // carried in the near hand
   const hx = swing, hy = B + bodyH - 1;
   if (carry === 'bag') R(carryColor, hx - 1 + (swing < 0 ? 0 : 0), -legH - 1, 2, 3);

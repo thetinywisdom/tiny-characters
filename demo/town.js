@@ -1,5 +1,5 @@
 import { BUILDINGS, SIGN_FONT, buildingSize, buildingSolids, drawBuilding } from '../src/tinyBuildings.js';
-import { LOOKS, facingFor, randomCharacter, seeded } from '../src/tinyCharacters.js';
+import { LOOKS, facingFor, isOld, randomCharacter, seeded } from '../src/tinyCharacters.js';
 import { CAT_COATS, DOG_BREEDS, dogFor } from '../src/tinyAnimals.js';
 import { drawTownView, makeTown } from '../src/tinyTown.js';
 import { makeTraffic } from '../src/tinyTraffic.js';
@@ -363,7 +363,7 @@ function frame(now) {
     if (p.talking) { p.walking = false; continue; }
     if (p.busy) continue;                                                  // sitting, sweeping, playing... (demo/life.js moves them)
     if (chatting(p)) continue;
-    if (p.path) { if (follow(p, p.monster ? MONSTER_SPEED[p.monster] : p.cat ? 18 : p.rider ? 32 : 14, dt)) { p.walking = false; p.wait = 1 + Math.random() * 4; } continue; }
+    if (p.path) { if (follow(p, p.monster ? MONSTER_SPEED[p.monster] : p.cat ? 18 : p.rider ? 32 : isOld(p) ? 9 : 14, dt)) { p.walking = false; p.wait = 1 + Math.random() * 4; } continue; }
     p.walking = false;
     if ((p.wait -= dt) > 0) continue;
     const range = (p.cat ? 70 : p.monster ? 220 : 170) * town.scale;

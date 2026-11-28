@@ -46,8 +46,12 @@ const ZOMBIES = [
   { skin: '#8fa078', top: '#c8a060', legs: '#4a6a8a', hair: '#6a5a3a', overalls: '#4a6a8a', hat: '#d8b860' },  // farmer
   { skin: '#7a8a60', top: '#6a5a48', legs: '#5a4a3a', hair: null, ribs: true },                     // rotten
 ];
-function zombie({ R, W, v, side, back, t, walking }) {
+function zombie({ R: R0, W: W0, v, side, back, t, walking }) {
   const z = ZOMBIES[v], step = walking ? Math.floor(t * 4) % 2 : -1;      // a slow shamble
+  // a lurch from side to side as it shambles (head on), its top half leaning in (side on)
+  const sway = walking && !side ? (step ? 1 : -1) : 0;
+  const R = (c, dx, dy, w, h) => R0(c, dx + (dy < -3 ? sway : 0) + (side && dy < -8 ? 1 : 0), dy, w, h);
+  const W = (c, dx, dy, w, h) => W0(c, dx + (dy < -3 ? sway : 0) + (side && dy < -8 ? 1 : 0), dy, w, h);
   const B = -9, Hd = -13, blood = '#7a2a22';
   // legs: one drags (lifts less)
   for (const [dx, lifted] of [[-2, step === 0], [1, step === 1]]) {
@@ -65,9 +69,11 @@ function zombie({ R, W, v, side, back, t, walking }) {
   if (z.tie && !back) R(z.tie, 0, B, 1, 3);
   R(z.top, -2, B + 5, 1, 1); R(shade(z.top, 0.8), 2, B, 1, 6);              // ragged hem, shaded side
   // arms reaching forward
-  if (side) { R(shade(z.top, 0.85), 2, B + 1, 3, 1); R(z.skin, 5, B + 1, 1, 1); R(z.skin, 5, B + 2, 1, 1); }
-  else if (back) { R(z.skin, -3, B + 1, 1, 1); R(z.skin, 3, B + 1, 1, 1); }
-  else { R(z.skin, -2, B + 1, 1, 2); R(z.skin, 2, B + 1, 1, 2); R(shade(z.skin, 1.1), -2, B + 1, 1, 1); R(shade(z.skin, 1.1), 2, B + 1, 1, 1); }
+  // arms held out in front (the owner, Nov 2026): side on long and level, the hands drooping; head on
+  // reaching at you, sleeves and hands over the chest, a little apart; from behind, the elbows out
+  if (side) { R(shade(z.top, 0.85), 2, B + 1, 4, 1); R(shade(z.top, 0.7), 2, B + 2, 3, 1); R(z.skin, 6, B + 1, 1, 2); R(z.skin, 5, B + 3, 1, 1); }
+  else if (back) { R(shade(z.top, 0.85), -3, B + 1, 1, 2); R(shade(z.top, 0.85), 3, B + 1, 1, 2); }
+  else { R(shade(z.top, 0.85), -3, B + 1, 2, 2); R(shade(z.top, 0.85), 2, B + 1, 2, 2); R(z.skin, -3, B + 3, 2, 1); R(z.skin, 2, B + 3, 2, 1); R(shade(z.skin, 0.8), -3, B + 3, 1, 1); R(shade(z.skin, 0.8), 3, B + 3, 1, 1); }
   // head: grey-green, sunken eyes, hair or none
   R(z.skin, -1, Hd, 3, 4);
   if (back) { if (z.hair) R(z.hair, -1, Hd - 1, 3, z.long ? 6 : 3); }
@@ -90,7 +96,7 @@ const WOLVES = [
 function werewolf({ R, W, v, side, back, t, walking }) {
   const f = WOLVES[v], fur = f.fur, dark = shade(fur, 0.72), light = shade(fur, 1.22), claw = '#f2efe8';
   const step = walking ? Math.floor(t * 6) % 2 : -1;
-  const B = -11, Hd = -15;                                                  // taller than a person, hunched
+  const B = -11, Hd = -14;                                                  // taller than a person, hunched (the head low)
   // legs bent like a wolf's: thigh, shin, a clawed foot
   for (const [dx, lifted] of [[-3, step === 0], [1, step === 1]]) {
     const up = lifted ? 1 : 0;
@@ -98,25 +104,30 @@ function werewolf({ R, W, v, side, back, t, walking }) {
   }
   R(f.rags, -3, -5, 7, 2); R(shade(f.rags, 0.75), -3, -4, 1, 1); R(shade(f.rags, 0.75), 3, -4, 1, 1);   // torn trousers
   if ((back || side) && true) { const tx = side ? -4 : 0; R(fur, tx, -6, 1, 3); R(dark, tx - (side ? 1 : 0), -4, 1, 1); }    // tail
-  // a broad furry body, a lighter chest
-  R(fur, -3, B, 7, 7); W(dark, 3, B, 1, 7);
-  if (!back) R(light, -1, B + 1, side ? 2 : 3, 4);
-  R(dark, -3, B, 7, 1);                                                     // the hunched shoulders
-  // long arms with claws
-  if (side) { R(fur, 1, B + 2, 2, 4); R(fur, 3, B + 5, 1, 2); R(claw, 4, B + 6, 1, 1); R(claw, 3, B + 7, 1, 1); }
-  else { for (const ax of [-4, 4]) { R(fur, ax, B + 1, 1, 6); R(claw, ax, B + 7, 1, 1); } }
+  // a hunched beast (the owner, Nov 2026: less boxy): broad shoulders over a narrow waist, shaggy edges, a
+  // lighter chest, the head low and forward between the shoulders
+  R(fur, -2, B + 3, 5, 4); R(fur, -3, B, 7, 3); R(fur, -4, B + 1, 1, 2); R(fur, 4, B + 1, 1, 2);   // waist, chest, shoulders
+  R(dark, -3, B + 5, 1, 1); R(dark, 3, B + 4, 1, 1); R(fur, -3, B + 3, 1, 1); R(fur, 3, B + 3, 1, 1); // shaggy sides
+  W(dark, 2, B + 3, 1, 4);
+  if (!back) { R(light, -1, B + 1, side ? 2 : 3, 3); R(light, 0, B + 4, 1, 1); }
+  else R(dark, 0, B + 1, 1, 4);                                             // the spine
+  R(dark, -3, B, 7, 1); R(fur, -2, B - 1, 5, 1);                            // the hump of the shoulders
+  // long arms hanging low, claws by the knees
+  if (side) { R(fur, 1, B + 2, 2, 3); R(fur, 2, B + 5, 2, 2); R(dark, 2, B + 6, 1, 1); R(claw, 4, B + 7, 1, 1); R(claw, 3, B + 8, 1, 1); R(claw, 2, B + 8, 1, 1); }
+  else { for (const ax of [-5, 5]) { R(fur, ax, B + 2, 1, 5); R(dark, ax, B + 5, 1, 1); R(claw, ax, B + 7, 1, 1); R(claw, ax + (ax < 0 ? 1 : -1), B + 7, 1, 1); } }
+  const Hh = (c, dx, dy, w = 1, h = 1) => R(c, dx + (side ? 1 : 0), dy, w, h);   // side on, the head jutting forward
   // the wolf's head: ears up, a snout
   if (side) {
-    R(fur, -1, Hd, 4, 4); R(fur, 3, Hd + 2, 2, 2); R(light, 3, Hd + 3, 2, 1); R(INK, 5, Hd + 2, 1, 1);   // snout, nose
-    R(fur, -1, Hd - 2, 1, 2); R(dark, 0, Hd - 1, 1, 1);                     // ear
-    R(f.eye, 1, Hd + 1, 1, 1); R(claw, 4, Hd + 3, 1, 1);                    // eye, a fang
+    Hh(fur, -1, Hd, 4, 4); Hh(fur, 3, Hd + 2, 2, 2); Hh(light, 3, Hd + 3, 2, 1); Hh(INK, 5, Hd + 2, 1, 1);   // snout, nose
+    Hh(fur, -1, Hd - 2, 1, 2); Hh(dark, 0, Hd - 1, 1, 1);                     // ear
+    Hh(f.eye, 1, Hd + 1, 1, 1); Hh(claw, 4, Hd + 3, 1, 1);                    // eye, a fang
   } else {
-    R(fur, -2, Hd, 5, 4);
-    R(fur, -2, Hd - 2, 1, 2); R(fur, 2, Hd - 2, 1, 2); R(dark, -2, Hd - 2, 1, 1); R(dark, 2, Hd - 2, 1, 1);   // ears
+    Hh(fur, -2, Hd, 5, 4);
+    Hh(fur, -2, Hd - 2, 1, 2); Hh(fur, 2, Hd - 2, 1, 2); Hh(dark, -2, Hd - 2, 1, 1); Hh(dark, 2, Hd - 2, 1, 1);   // ears
     if (!back) {
-      R(light, -1, Hd + 2, 3, 2); R(INK, 0, Hd + 2, 1, 1); R(claw, -1, Hd + 3, 1, 1); R(claw, 1, Hd + 3, 1, 1);   // muzzle, nose, fangs
-      R(f.eye, -1, Hd + 1, 1, 1); R(f.eye, 1, Hd + 1, 1, 1);
-    } else R(dark, -1, Hd + 3, 3, 1);
+      Hh(light, -1, Hd + 2, 3, 2); Hh(INK, 0, Hd + 2, 1, 1); Hh(claw, -1, Hd + 3, 1, 1); Hh(claw, 1, Hd + 3, 1, 1);   // muzzle, nose, fangs
+      Hh(f.eye, -1, Hd + 1, 1, 1); Hh(f.eye, 1, Hd + 1, 1, 1);
+    } else Hh(dark, -1, Hd + 3, 3, 1);
   }
 }
 
