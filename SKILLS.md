@@ -28,7 +28,6 @@ src/tinyBuildingsFull.js  the buildings' kit (storeys, doors, windows,
 src/tinyStreetFull.js  FULL_PROPS: the street things' drawings
 src/tinyNatureFull.js  FULL_TREES, FULL_BUSHES, FULL_TERRAINS
 src/tinyGroundFull.js  FULL_GROUND: the streets, railway, court, pond, paths
-ios/                   Tiny RPG, the Swift / SpriteKit game (see ios/README.md)
 tools/export-sprites.mjs + tools/sprites.html / sprites.js
                        the sprite export for the Swift game (see Common
                        tasks: export the sprites)
@@ -951,7 +950,7 @@ the demo decides who does what.
   group's `scale` (1, or 4 for buildings: drawn with `dpx: 4` so the signs are
   crisp), and `anims["<name>_<facing>"]`: the walk cycle sampled 8 times over
   a second (each different picture is one frame; play the list at 0.125 s).
-  The game's copy: `node tools/export-sprites.mjs ios/TinyRPG/Sprites --no-preview`. To
+  `--no-preview` leaves out the preview sheets (for copying into an app). To
   add a thing, add it to a group in `tools/sprites.js`. Look at the
   `preview-*.png` sheets after a change.
 

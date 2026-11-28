@@ -93,9 +93,11 @@ bubble lab, so games can use them and they can grow.
   animated mock-ups: up to 2 px at the top, trunks still); bushes stay still.
 - The front page (Nov 2026): no park (the owner never used it): the town,
   the looks, the buildings and the gallery.
-- An iOS game (Nov 2026): a story-driven RPG with a little fighting, written in
-  Swift (SpriteKit), using these drawings exported to PNG frames
-  (`tools/export-sprites.mjs`); the library itself stays plain JS.
+- An iOS game (Nov 2026): Swift (SpriteKit), using these drawings exported to PNG
+  frames (`tools/export-sprites.mjs`); the library itself stays plain JS. What the
+  game is gets planned with the owner from pictures first: the first playable
+  (story, fight) was built unasked and removed (the owner: "i only ask you if you
+  can use the assets").
 
 ## Done
 
@@ -657,7 +659,10 @@ bubble lab, so games can use them and they can grow.
     --no-preview`). A small town with the shrine at the top; tap to walk, tap someone to talk
     (typing dialogue box in DotGothic16), a turn-based fight (Attack, Guard, Run). The first
     chapter, "The Quiet Bell", is in `story.json`. The export now records each walk cycle's order
-    (`anims` in sprites.json). Built and launched in the iPhone simulator with no errors.
+    (`anims` in sprites.json). Built and played through in the iPhone simulator; play-test fixes:
+    the camera's children are already in screen points (no counter-scale), fighters are scaled
+    through a holder (a new frame resets a sprite's size), a slide of a sliver of a pixel counts
+    as blocked, and blocked within 40 px of someone you tapped starts the talk.
 
 91. **Riding** (the owner: ride a car, a scooter, a bicycle, the bus; steered like walking on the
     roads; the bus as a passenger): near the bike parking, the parked scooter (new, by the sushi
@@ -668,7 +673,10 @@ bubble lab, so games can use them and they can grow.
     at a stop. Getting out of a car or scooter on the road hands it back to the traffic; anywhere
     else it stays parked there. Also: the taxi rank no longer picks a lot's car as its taxi.
 
-92. **Scooters and motorbikes in 3/4 view** (the owner): between side on and head on they now show
+92. **Tiny RPG removed** (the owner chose: remove the game, keep the export): `ios/` is gone
+    (in git history, entry 90); the sprite export stays.
+
+93. **Scooters and motorbikes in 3/4 view** (the owner): between side on and head on they now show
     a 3/4 view (the side drawing squeezed to 0.72 of its length and tilted, the end nearer you lower,
     each part whole), so they turn round smoothly in eight views; the scooter you ride steers eight
     ways.
@@ -694,8 +702,7 @@ bubble lab, so games can use them and they can grow.
 
 ## Next (only when the owner asks)
 
-- The Swift game (`ios/`): ground tiles and vehicles in the export; play-test walking, talking
-  and the fight on a phone; more of the story.
+- The Swift game: plan it with the owner from pictures first (nothing built yet).
 
 The full-size redraw is done. Ideas offered before (on hold):
 - the catalogue in the seasons and the weather (the backlog)
