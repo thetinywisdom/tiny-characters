@@ -21,3 +21,10 @@ button:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
 .sheet figcaption { font-size: 12px; color: var(--muted); margin-top: 4px; }
 @media (max-width: 600px) { .sheet { --px: 2; } }
 header a { color: inherit; font-weight: 600; }
+
+/* full screen (the owner, Nov 2026): the town fills the screen, its shape kept; Esc (or the button) leaves */
+#townBox { position: relative; }
+#townBox:fullscreen, #townBox.full { display: flex; align-items: center; justify-content: center; background: #20242c; }
+#townBox.full { position: fixed; inset: 0; z-index: 100; }
+#townBox:fullscreen #town, #townBox.full #town { width: min(100vw, calc(100vh * 4 / 3)); height: auto; border: 0; }
+#exitFull { position: absolute; right: 12px; bottom: 12px; }

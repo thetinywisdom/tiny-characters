@@ -5,6 +5,7 @@ import { drawTownView, makeTown } from '../src/tinyTown.js';
 import { makeTraffic } from '../src/tinyTraffic.js';
 import { drawSpeech, emote, moodFor, sayDuration, speak } from '../src/tinySpeech.js';
 import { makeLife } from './life.js';
+import { makeMaps } from './minimap.js';
 
 // The town: a 2D map of streets and blocks. The view follows you (the gold
 // ring): arrow keys / WASD, or tap where to go (tap a building to walk to its
@@ -92,8 +93,18 @@ function pointAt(e) {
 let pointed = null;
 canvas.addEventListener('pointermove', (e) => { if (e.pointerType !== 'mouse') return; pointed = pointAt(e).who ?? null; canvas.style.cursor = pointed ? 'pointer' : ''; });
 canvas.addEventListener('pointerleave', () => { pointed = null; canvas.style.cursor = ''; });
+// the maps (the owner chose a radar that opens the big map, Nov 2026)
+const maps = makeMaps(town, buildingSize);
+let bigMap = false;
 canvas.addEventListener('pointerdown', (e) => {
   document.body.dataset.active = 'town';
+  const r = canvas.getBoundingClientRect(), lx = (e.clientX - r.left) / r.width * VW, ly = (e.clientY - r.top) / r.height * VH, here = { w: VW, h: VH };
+  if (bigMap) {                                                                 // the big map: tap a place to walk there; elsewhere closes it
+    const at = maps.bigAt(lx, ly, here);
+    if (at && !town.blocked(at.x, at.y)) you.path = town.findPath(you, at);
+    bigMap = false; return;
+  }
+  if (maps.onRadar(lx, ly, here)) { bigMap = true; return; }                    // the radar: open the big map
   const { x, y, who: hit } = pointAt(e);
   // tap someone: they stop and say a line that suits them (a white ring under them while they say it)
   if (hit) { const said = speak(hit, t); hit.talk = Math.min(4, sayDuration(said.text) - 0.8); hit.ringUntil = t + sayDuration(said.text); return; }
@@ -152,6 +163,20 @@ const label = () => {
   weatherButton.textContent = `Weather: ${weatherMode === 'auto' ? `auto (${name})` : name}`;
 };
 seasonButton.onclick = () => { seasonMode = SEASON_MODES[(SEASON_MODES.indexOf(seasonMode) + 1) % SEASON_MODES.length]; label(); };
+// full screen (the owner, Nov 2026): the town fills the screen; Esc leaves (the browser's own way out where it
+// has full screen; elsewhere, an iPhone, the town covers the page and Esc or the button closes it)
+const townBox = document.querySelector('#townBox'), fullButton = document.querySelector('#full'), exitFull = document.querySelector('#exitFull');
+const isFull = () => document.fullscreenElement === townBox || townBox.classList.contains('full');
+const showFull = () => { exitFull.hidden = !isFull(); fullButton.textContent = isFull() ? 'Exit full screen' : 'Full screen'; };
+const leaveFull = () => { if (document.fullscreenElement) document.exitFullscreen(); townBox.classList.remove('full'); showFull(); };
+fullButton.onclick = () => {
+  if (isFull()) return leaveFull();
+  if (townBox.requestFullscreen) townBox.requestFullscreen().catch(() => townBox.classList.add('full')).finally(showFull);
+  else { townBox.classList.add('full'); showFull(); }
+};
+exitFull.onclick = leaveFull;
+document.addEventListener('fullscreenchange', showFull);
+document.addEventListener('keydown', (e) => { if (e.key !== 'Escape') return; if (bigMap) { bigMap = false; return; } if (isFull()) leaveFull(); });
 weatherButton.onclick = () => { weatherMode = WEATHER_MODES[(WEATHER_MODES.indexOf(weatherMode) + 1) % WEATHER_MODES.length]; label(); };
 /** While it rains (or snows), walkers put their umbrellas up; afterwards they carry what they had (new people too). */
 function umbrellas(raining) {
@@ -404,6 +429,7 @@ function frame(now) {
   // lines and icon bubbles over everything (and bright at night)
   g.save(); g.translate(-view.x, -view.y); drawSpeech(g, shownPeople, t, { bounds: view }); g.restore();
   drawClock(g, time, hour);
+  if (bigMap) maps.drawBig(g, { w: VW, h: VH }, you); else maps.drawRadar(g, { w: VW, h: VH }, you);
   const name = town.placeAt(you.x, you.y);
   if (name !== shown) { shown = name; here.textContent = name; }
   requestAnimationFrame(frame);
