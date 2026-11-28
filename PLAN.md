@@ -536,10 +536,17 @@ bubble lab, so games can use them and they can grow.
     lamps and a high brake lamp), turn signals blinking before and through a turn,
     headlamps on in rain, storms and fog by day, snow on the roofs in winter.
 
+72. **Scooters and motorbikes in the traffic** (the owner chose A from mock-ups: flat, like
+    the people and the delivery scooter, over 3D blocks): three scooters and a motorbike, a
+    rider in a helmet each (colours and rider from the seed), side on or head on; brake lamp,
+    turn signals, a headlamp at night; at a red light they ride past the cars standing in
+    the queue, by the kerb, to the front. Catalogue cards (Street, Vehicles).
+
 ## In progress
 
 - Vehicles (the owner's order, Nov 2026): 1. small fixes, 2. motorbikes in the traffic,
   3. city bikes and bike racks, 4. the rubbish truck; each from mock-ups first.
+  - Step 2, done (72): scooters and motorbikes. Next: step 3, city bikes and bike racks.
   - Step 1, done (71): brake lights (the tail lamps a brighter red and a high brake lamp at the bottom of the
     rear window while slowing or standing), turn signals (the turn decided 40 px before
     the corner; that side's corner lamps blink amber until round it), headlamps on in

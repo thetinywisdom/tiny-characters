@@ -408,7 +408,8 @@ mornings; walkers put their umbrellas up while it rains. The address takes
 `drawBuilding(g, { ...b, lights: true })` draws only what shines on a
 building, `propLights(p)` and `vehicleLights(v)` where things give light;
 `drawVehicleBeams(g, v)` the pool of light headlamps throw on the road in
-front of a car. In the traffic, vehicles show brake lights when they slow or stand,
+front of a car. Scooters and motorbikes (`type: 'moped'`, `'motorbike'`, riders in helmets) ride in the
+traffic and slip past the queue to the front at red lights. In the traffic, vehicles show brake lights when they slow or stand,
 blink their turn signals before a turn, drive with headlamps on in rain and fog, and
 carry snow on their roofs in winter (`drawVehicle(g, { ..., brake, signal: 'l' | 'r',
 blinkOn, snow })`).

@@ -13,10 +13,11 @@
 //   drawPetals(g, tree, t)   petals drifting down round a cherry tree
 //   drawRubbish(g, r)        rubbish bags under a green net (rubbish day)
 //   drawScooter(g, v)        the delivery scooter, side on or head on
+//   drawMotorbike(g, v)      a scooter (v.type 'moped') or a motorbike ('motorbike') in the traffic, a rider in a helmet
 //
 // Plain ES module.
 
-import { drawCharacter, drawRing, shade } from './tinyCharacters.js';
+import { drawCharacter, drawRing, randomCharacter, seeded, shade } from './tinyCharacters.js';
 import { drawWeapon } from './tinyCombat.js';
 import { drawProp } from './tinyStreet.js';
 import { SWING_SEATS, chainColour } from './full/p3.js';
@@ -217,4 +218,73 @@ export function drawScooter(g, v, t = 0) {
   upper(g, { ...rider, facing: back ? 'up' : 'down' }, x, y - 5);
   px(g, '#e8402f', x - 3, y - 7, 6, 4); px(g, WHITE, x - 2, y - 8, 4, 1); px(g, INK, x - 4, y - 9, 8, 1);
   if (!back) px(g, '#fff2c0', x - 1, y - 6, 2, 1);
+}
+
+// --- scooters and motorbikes in the traffic (the owner chose A, flat like the people, Nov 2026) ----
+const TYRE = '#26282c', METAL = '#a8aeb4', DARK = '#3a3f44', LAMP = '#fff2c0', TAIL = '#e8403a', SEAT = '#2a2c30', BRAKE = '#ff2a1c', AMBER = '#ffb428', VISOR = '#2a3440';
+export const MOPED_COLORS = ['#e8402f', '#f2f2ee', '#2f5f9a', '#3f7a5a', '#e8c840', '#d46a8e', '#c8ccd0', '#3a3d42'];
+export const MOTORBIKE_COLORS = ['#2f5f9a', '#e8402f', '#3a3d42', '#3f7a5a', '#e8c840', '#f2f2ee'];
+const HELMETS = ['#f2f2ee', '#3a3d42', '#e8402f', '#2f5f9a', '#e8c840', '#c8ccd0'];
+/** A helmet over the head of someone whose feet line is at (x, y): its visor at the front. */
+function helmet(g, x, y, col, facing) {
+  const s = facing === 'left' ? -1 : 1, side = facing === 'left' || facing === 'right';
+  px(g, col, x - 1, y - 14, 3, 1); px(g, col, x - 2, y - 13, 5, 3); px(g, shade(col, 0.8), x + 2, y - 13, 1, 3);
+  if (side) px(g, VISOR, s > 0 ? x + 1 : x - 2, y - 12, 2, 1); else if (facing !== 'up') px(g, VISOR, x - 1, y - 12, 3, 1);
+}
+/** Who rides it and in what colours, from its seed (or v.color, v.helmet, v.rider). */
+function motoLook(v) {
+  const rng = seeded((v.seed ?? 1) * 61 + 7), big = v.type === 'motorbike';
+  const colours = big ? MOTORBIKE_COLORS : MOPED_COLORS, c = v.color ?? colours[Math.floor(rng() * colours.length)];
+  const hc = v.helmet ?? HELMETS[Math.floor(rng() * HELMETS.length)];
+  const r = v.rider ?? { ...randomCharacter(rng), kid: false, size: undefined, carry: undefined, hat: undefined, legwear: 'trousers' };
+  if (big && !v.rider) { r.top = 'jacket'; r.body = ['#3a3d42', '#262b3a', '#5a3a28'][Math.floor(rng() * 3)]; r.trim = '#5a5f66'; }
+  return { c, hc, r };
+}
+/**
+ * A scooter (v.type 'moped') or a motorbike ('motorbike') with its rider, drawn flat like the people:
+ * side on (heading 0 right, 180 left) or head on / from behind (90 towards you, 270 away), its middle on
+ * the ground at (x, y). v.brake: the tail lamp brighter; v.signal 'l' | 'r' with v.blinkOn: amber at
+ * that side's ends. Colours, helmet and rider come from the seed.
+ */
+export function drawMotorbike(g, v) {
+  const x = Math.round(v.x), y = Math.round(v.y) + 2, h = (((v.heading ?? 0) % 360) + 360) % 360, big = v.type === 'motorbike';
+  const side = h < 45 || h >= 315 || (h >= 135 && h < 225), s = h >= 135 && h < 225 ? -1 : 1, X = (dx, w = 1) => (s > 0 ? x + dx : x - dx - w + 1);
+  const { c, hc, r } = motoLook(v), tail = v.brake ? BRAKE : TAIL, blink = v.signal && v.blinkOn;
+  if (side) {
+    const facing = s > 0 ? 'right' : 'left';
+    // its near side faces you: going right that is its right side, going left its left
+    const near = blink && (v.signal === 'r') === (s > 0);
+    for (const wx of big ? [-8, 8] : [-6, 6]) { px(g, TYRE, X(wx - 2, 5), y - 5, 5, 5); px(g, METAL, X(wx - 1, 3), y - 4, 3, 3); px(g, TYRE, X(wx), y - 3); }
+    if (big) {
+      px(g, METAL, X(-3, 7), y - 6, 7, 3); px(g, DARK, X(-2, 5), y - 5, 5, 2);                         // the engine
+      px(g, METAL, X(-10, 8), y - 4, 8, 1);                                                          // the exhaust
+      px(g, c, X(0, 6), y - 10, 6, 3); px(g, shade(c, 1.15), X(1, 4), y - 10, 4, 1);                 // the tank
+      px(g, SEAT, X(-6, 6), y - 9, 6, 2); px(g, c, X(-9, 4), y - 9, 4, 2); px(g, tail, X(-10), y - 9);
+      px(g, DARK, X(6), y - 11, 1, 6); px(g, DARK, X(5, 3), y - 13, 3, 1); px(g, LAMP, X(7), y - 10, 1, 2);
+      if (near) { px(g, AMBER, X(7), y - 12); px(g, AMBER, X(-10), y - 10); }
+      upper(g, { ...r, facing }, X(-2), y - 7);
+      px(g, r.legs, X(-3, 5), y - 10, 5, 2); px(g, r.legs, X(1, 2), y - 9, 2, 3);
+      helmet(g, X(-2), y - 7, hc, facing);
+    } else {
+      px(g, c, X(-8, 6), y - 8, 6, 4); px(g, shade(c, 0.85), X(-8, 6), y - 5, 6, 1);                  // the back
+      px(g, DARK, X(-2, 5), y - 4, 5, 1);                                                            // the floorboard
+      px(g, c, X(3, 3), y - 12, 3, 9); px(g, shade(c, 1.12), X(3), y - 12, 1, 9);                    // the front shield
+      px(g, SEAT, X(-7, 5), y - 9, 5, 1); px(g, tail, X(-9), y - 7);
+      px(g, DARK, X(3, 4), y - 13, 4, 1); px(g, LAMP, X(6), y - 11, 1, 2);
+      if (near) { px(g, AMBER, X(6), y - 13); px(g, AMBER, X(-9), y - 8); }
+      upper(g, { ...r, facing }, X(-4), y - 6);
+      px(g, r.legs, X(-4, 5), y - 9, 5, 2); px(g, r.legs, X(0, 2), y - 8, 2, 4);
+      helmet(g, X(-4), y - 6, hc, facing);
+    }
+    return;
+  }
+  // head on (towards you) or from behind: narrow; the signal at the ends of the handlebar
+  const back = h >= 225, f = back ? 'up' : 'down';
+  px(g, TYRE, x - 1, y - 5, 2, 5);
+  if (back) { px(g, c, x - 2, y - 9, 4, 4); px(g, tail, x - 1, y - 7, 2, 1); }
+  upper(g, { ...r, facing: f }, x, y - 6);
+  helmet(g, x, y - 6, hc, f);
+  if (!back) { px(g, c, x - 2, y - 10, 4, 6); px(g, LAMP, x - 1, y - 8, 2, 1); }
+  px(g, DARK, x - 4, y - 11, 8, 1);
+  if (blink) px(g, AMBER, (v.signal === 'r') === back ? x + 4 : x - 5, y - 11);   // its right is your left when it faces you
 }

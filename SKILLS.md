@@ -572,6 +572,18 @@ when braking and an amber one when blinking. Turns are planned 40 px before the 
 vehicle has swung round). drawTownView draws `drawVehicleBeams` faintly ('lighter', 70 %)
 under everything on a dark day (rain, storm, fog) so the headlamps show.
 
+**Scooters and motorbikes** (`moped`, `motorbike`; the owner chose flat like the people, A):
+tinyLife's `drawMotorbike` draws them the way `drawScooter` draws the delivery scooter (side on
+for headings near 0 / 180, else head on or from behind), the rider by `upper` with a `helmet`
+over the head; `motoLook` picks the colour (`MOPED_COLORS`, `MOTORBIKE_COLORS`), helmet and
+rider from the seed. `TWO_WHEELS` (with the delivery scooter) have one headlamp; their brake
+lamp is a brighter pixel, the signal an amber pixel at both ends (side on, only for the side
+you see) or at the end of the handlebar (head on). `makeTraffic({ motorbikes: 4 })` (one in
+four a motorbike). Squeezing to the front: in `room`, a two-wheeler with a red or yellow light
+within 140 px (`redAhead`) looks past four-wheeled vehicles standing still in its lane; while
+it passes one (`v.squeezing`) and while it waits slowly at the front, it moves 6 px towards the
+kerb on its left (`v.kerb`), back to the lane's middle once it gets going.
+
 **The town's junctions** come from makeTown (`junctionsOf`): for each
 street x cross street, the `box` where the roads cross, its zebra
 `crossings` (`axis` 'h' over the street, west of the junction; 'v' over the
