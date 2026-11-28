@@ -8,6 +8,7 @@
 //                         (tinyBuildings.js draws these instead of the old ones; the
 //                         buildings themselves are in src/full/a.js .. d.js, spread in below)
 //   FULL_STOREY           { ground: 24, shop: 28, upper: 20, sill: 6 }
+//   setSnow, snowing, SNOWC  roofs under snow in winter (drawBuilding's b.snow)
 //
 // Everything is drawn with tinyBuildings' painter r(colour, dx, up, w, h) at
 // scale 1 (a rectangle dx from the left edge, its bottom `up` above the
@@ -116,6 +117,7 @@ export const CROSS = ['.ggggg.', 'gggwggg', 'gggwggg', 'gwwwwwg', 'gggwggg', 'gg
 export function dome(r, c, cx, up, rad) {
   for (let k = 0; k <= rad; k++) {
     const hw = Math.round(Math.sqrt(rad * rad - k * k));
+    if (SNOW && k > rad * 0.45) { r(SNOWC.lit, cx - hw, up + k, hw * 2 + 1, 1); if (hw > 1) r(SNOWC.shade, cx + hw - 1, up + k, 2, 1); continue; }   // snow on its top
     r(c, cx - hw, up + k, hw * 2 + 1, 1);
     if (hw > 1) { r(shade(c, 1.18), cx - hw + 1, up + k, Math.max(1, Math.round(hw * 0.6)), 1); r(shade(c, 0.8), cx + hw - 1, up + k, 2, 1); }
   }
@@ -128,9 +130,24 @@ export function pointedArch(r, c, dx, up, w, h) {
   for (let k = 1; k <= steps; k++) r(c, dx + k, up + h - steps + k - 1, w - k * 2, 1);
 }
 
+// --- snow (winter: drawBuilding sets it while it draws a building with b.snow) -----
+let SNOW = false;
+/** Draw the roofs that follow under snow (true) or not. */
+export const setSnow = (on) => { SNOW = !!on; };
+/** Whether roofs are drawn under snow now (for roofs a part draws itself). */
+export const snowing = () => SNOW;
+/** Snow's colours: lying snow, its shade, the shade of a slope away from the light, a bright ridge. */
+export const SNOWC = { lit: '#eef2f6', mid: '#dfe6ee', shade: '#cdd6e0', deep: '#b8c4d2', top: '#ffffff' };
+
 // --- roofs (seen from above: d rows over the front wall give the depth) -----------
 /** A flat roof: a rim (parapet) round a roof top with seams, the front edge in shade. */
 export function flatRoof(r, wall, dx, up, w, d = 18) {
+  if (SNOW) {                                                            // under snow: the rim's front edge shows, the top is white
+    r(shade(wall, 0.86), dx, up, w, d); r(SNOWC.lit, dx + 1, up + 2, w - 2, d - 2);
+    for (let y = up + 6; y < up + d - 2; y += 5) r(SNOWC.mid, dx + 2, y, w - 4, 1);
+    r(SNOWC.shade, dx + 2, up + 2, w - 4, 1); r(SNOWC.top, dx, up + d - 1, w, 1); r(shade(wall, 0.7), dx, up, w, 1);
+    return;
+  }
   r(shade(wall, 0.86), dx, up, w, d);
   r(TOP, dx + 2, up + 2, w - 4, d - 4);
   for (let y = up + 6; y < up + d - 2; y += 5) r(shade(TOP, 0.94), dx + 2, y, w - 4, 1);
@@ -145,6 +162,16 @@ export function flatRoof(r, wall, dx, up, w, d = 18) {
  * triangles at the sides, widening `hip`/3 px a row toward the ridge).
  */
 export function pitched(r, c, dx, up, w, d, hip = 0) {
+  if (SNOW) {                                                            // under snow: white slopes in soft rows, the ends in shade, the eaves dark
+    const f = Math.round(d * 0.7);
+    for (let k = 0; k < d; k++) {
+      const front = k < f, col = front ? (k % 3 === 2 ? SNOWC.mid : SNOWC.lit) : k === f ? SNOWC.top : SNOWC.shade;
+      const end = Math.min(Math.floor(w / 2), Math.floor((front ? k : f - (k - f)) * hip / 3));
+      if (end > 0) { r(SNOWC.deep, dx, up + k, w, 1); r(col, dx + end, up + k, w - end * 2, 1); } else r(col, dx, up + k, w, 1);
+    }
+    r(shade(c, 0.58), dx, up, w, 1); r(SNOWC.deep, dx, up + 1, w, 1);   // the eaves, the snow's shadow over them
+    return;
+  }
   const f = Math.round(d * 0.7), side = shade(c, 0.72);
   for (let k = 0; k < d; k++) {
     const front = k < f, ridge = k === f;
@@ -166,11 +193,12 @@ export function pitched(r, c, dx, up, w, d, hip = 0) {
  */
 export function gable(r, c, face, dx, up, w, gh, d) {
   const half = Math.floor(w / 2);
-  for (let k = 0; k < d; k++) {                                          // the roof running back
+  for (let k = 0; k < d; k++) {                                          // the roof running back (under snow: white, the left in shade)
+    if (SNOW) { r(SNOWC.shade, dx, up + k, half, 1); r(k % 3 === 2 ? SNOWC.mid : SNOWC.lit, dx + half, up + k, w - half, 1); continue; }
     r(shade(c, 0.78), dx, up + k, half, 1); r(c, dx + half, up + k, w - half, 1);
     if (k % 3 === 2) { r(shade(c, 0.7), dx, up + k, half, 1); r(shade(c, 0.88), dx + half, up + k, w - half, 1); }
   }
-  r(shade(c, 1.25), dx + half - 1, up, 2, d);                            // the ridge
+  r(SNOW ? SNOWC.top : shade(c, 1.25), dx + half - 1, up, 2, d);         // the ridge
   for (let k = 0; k < gh; k++) {                                         // the gable's face, edged with the roof
     const inset = 1 + Math.round(k * (half - 1) / gh), rw = w - inset * 2;
     r(shade(c, 0.6), dx + inset - 1, up + k, rw + 2, 1);

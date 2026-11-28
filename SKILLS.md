@@ -578,6 +578,35 @@ s at each. Vehicles leaving the town on a street come back in at the edge
 of another. `mayCross` stops someone on foot from stepping onto a crossing
 unless that crossing's cars have red (the walk signal is green then).
 
+## How seasons and weather work
+
+The owner chose all four seasons and heavy rain with umbrellas (C) from mock-ups
+(Nov 2026). `drawTownView(..., { season, weather })`; no season means the town as
+drawn (so pictures without one are unchanged).
+- **Plants** (`inSeason` in tinyNature.js, on each cached plant image, keyed by
+  season): leaf greens (and the cherry's blossom) are mapped, darkest to lightest,
+  onto a ramp of the season's colours (`RAMPS`: spring greens; the cherry in leaf
+  for summer; three autumn ramps, red, orange, gold, by the plant's look; a browner
+  ramp for autumn bushes), so a plant keeps its shading on a few clean colours.
+  `EVERGREEN` plants keep their greens. Winter: leafy trees are drawn as the `bare`
+  tree, and every edge of a tree or bush that faces up gets two rows of snow.
+- **Buildings:** `drawBuilding({ snow: true })` sets `setSnow` in the kit while it
+  draws, so `flatRoof`, `pitched`, `gable` and `dome` draw their tops under snow
+  (`SNOWC` colours); parts with their own roofs ask `snowing()` (the chapel's gable,
+  the villa's barrel tiles, the Tudor tiles, the torii's beams, the stone lanterns).
+- **The ground** (`groundInSeason`, cached per town in `town.grounds` by
+  `groundOf`): lawns mapped onto a spring or autumn ramp, with petals and flowers or
+  fallen leaves dotted by a hash of the place; winter puts lawns, sand, dirt and the
+  sidewalks under snow, dusts gravel and paving, and leaves the roads clear.
+- **Rain** (`drawRain`, over everything, after the night): a `multiply` grey, about
+  one 5-pixel streak per 260 pixels of view falling at a slant (by `t`, nothing
+  random), splashes; the wet ground has `puddles` on roads and sidewalks. In winter
+  it snows: slow white flakes, no puddles. The demo puts walkers' umbrellas up
+  (`dryCarry` keeps what they carried) and picks the season by the real month and
+  rain spells by the town's day and hour (`rainingNow`).
+- Putting a town in a season the first time recolours its ground once (a fraction
+  of a second); after that it is cached.
+
 ## How day and night work
 
 `drawTownView`'s `night` (0 to 1) runs `drawNight` after everything else:

@@ -8,6 +8,7 @@
 // read only inside functions, never at the top level.)
 import { shade, seeded } from '../tinyCharacters.js';
 import {
+  snowing,
   V, floorAt, DOORS, WINDOWS, pane, pitched, gable,
   INK, WHITE, NAVY, WIN, GLASS, DARKWOOD, CONCRETE, DOOR_COLOURS,
 } from '../tinyBuildingsFull.js';
@@ -92,7 +93,7 @@ export const PART = {
       const roofC = v.pick(['#4a3a32', '#5a5a4a', '#6a5a3a']);
       gable(r, roofC, wall, -3, top, w + 6, 21, 39);
       const half = Math.floor((w + 6) / 2);
-      for (let k = 0; k < 39; k++) {                                       // the roof running back, its tile joints staggered
+      if (!snowing()) for (let k = 0; k < 39; k++) {                       // the roof running back, its tile joints staggered (none under snow)
         if (k % 3 === 2) continue;
         const inset = k < 21 ? 1 + Math.round(k * (half - 1) / 21) : half + 1;   // clear of the gable's face
         for (let x = 1 + (Math.floor(k / 3) % 2) * 2; x < w + 5; x += 4) {
@@ -157,7 +158,7 @@ export const PART = {
       const roofC = v.pick(['#c0603a', '#d0783a', '#a85030']), d = Math.round(v.int(13, 16) * 1.5);
       pitched(r, roofC, -3, top, w + 6, d, 3);
       const f = Math.round(d * 0.7);
-      for (let k = 1; k < f; k++) {                                       // rows of barrel tiles: a lit crest, a shaded channel
+      if (!snowing()) for (let k = 1; k < f; k++) {                       // rows of barrel tiles: a lit crest, a shaded channel (under snow: the snow)
         const x0 = -3 + k, x1 = w + 3 - k, course = k % 4 === 0;
         r(course ? shade(roofC, 0.9) : roofC, x0, top + k, x1 - x0, 1);
         for (let x = 0; x < x1; x += 3) { if (x >= x0) r(shade(roofC, course ? 0.68 : 0.76), x, top + k, 1, 1); if (x + 1 >= x0 && x + 1 < x1) r(shade(roofC, course ? 1.0 : 1.14), x + 1, top + k, 1, 1); }

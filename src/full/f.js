@@ -7,6 +7,7 @@
 // read only inside functions, never at the top level.)
 import { shade, seeded } from '../tinyCharacters.js';
 import {
+  snowing, SNOWC,
   V, DOORS, WINDOWS, sign, awning, dome, pointedArch, pitched, flatRoof, icon,
   INK, WHITE, NAVY, GOLD, LIT, CURTAIN, WOOD, DARKWOOD, LIGHTWOOD, METAL,
 } from '../tinyBuildingsFull.js';
@@ -31,6 +32,7 @@ function torii(r, rng) {
   r(red, 3, 28, 33, 2); r(dim, 3, 28, 33, 1);                                       // the shimaki
   r(INK, 1, 30, 37, 3); r(shade(INK, 1.55), 2, 32, 35, 1);                          // the kasagi, its top lit
   r(INK, 0, 31, 1, 3); r(INK, 38, 31, 1, 3); r(INK, 1, 33, 1, 1); r(INK, 37, 33, 1, 1);   // its ends turned up
+  if (snowing()) { r(SNOWC.lit, 1, 32, 37, 1); r(SNOWC.lit, 4, 23, 31, 1); r(SNOWC.lit, 3, 29, 33, 1); }   // snow on the beams
 }
 
 /** A stone lantern (toro), 5 wide (its roof 7), 14 tall; the fire box lit (it glows at night). */
@@ -41,6 +43,7 @@ function toro(r, x) {
   r(D, x, 6, 5, 1);                                                                  // the platform
   r(S, x, 7, 5, 3); r(LIT, x + 1, 7, 3, 2); r(L, x, 7, 1, 3);                       // the fire box
   r(D, x - 1, 10, 7, 1); r(S, x, 11, 5, 1); r(L, x + 1, 12, 3, 1); r(D, x + 2, 13, 1, 1);   // the roof, the knob
+  if (snowing()) { r(SNOWC.lit, x, 11, 5, 1); r(SNOWC.top, x + 1, 12, 3, 1); }      // snow on its roof
 }
 
 // --- the shrine hall (54, 60 or 72 wide): a stone base with steps, the wooden hall,
@@ -85,6 +88,7 @@ function chapelGable(r, c, face, X0, up, W, gh, d, texture) {
   const cx = X0 + (W - 1) / 2, L = shade(c, 0.78);
   for (let k = 0; k < d; k++) {
     const y = up + k, dk = k % 3 === 2;
+    if (snowing()) { r(SNOWC.shade, X0, y, cx - X0, 1); r(dk ? SNOWC.mid : SNOWC.lit, cx + 1, y, X0 + W - cx - 1, 1); r(SNOWC.top, cx, y, 1, 1); continue; }   // under snow
     r(dk ? shade(L, 0.86) : L, X0, y, cx - X0, 1); r(dk ? shade(c, 0.86) : c, cx + 1, y, X0 + W - cx - 1, 1);
     if (!dk && k > 0) {                                                  // slate joints, staggered, mirrored
       const off = Math.floor(k / 3) % 2 ? 2 : 0;

@@ -21,7 +21,7 @@ import { BUILDINGS, buildingSize, buildingSolids, drawBuilding, cooks, usesFull 
 import { FULL_GROUND } from './tinyGroundFull.js';
 import { drawCat, drawDog } from './tinyAnimals.js';
 import { drawMonster } from './tinyMonsters.js';
-import { BUSHES, drawBush, drawTerrain, drawTree } from './tinyNature.js';
+import { BUSHES, SEASONS, drawBush, drawTerrain, drawTree, groundInSeason } from './tinyNature.js';
 import { PROPS, drawProp, drawWire, poleTops, propLights, propSolid } from './tinyStreet.js';
 import { drawPose, drawSwings, drawSteam, drawPetals } from './tinyLife.js';
 import { VEHICLES, drawVehicle, drawVehicleBeams, vehicleLights } from './tinyTraffic.js';
@@ -641,6 +641,60 @@ function drawGround(layout) {
   return c;
 }
 
+// --- weather (the owner chose C from animated mock-ups, Nov 2026: heavy rain, splashes,
+// puddles on the roads and sidewalks, umbrellas up; in winter it snows instead) ----------
+/** The ground in a season (none: as drawn), with puddles when it is wet; made once and kept. */
+function groundOf(town, season, wet) {
+  if (!season && !wet) return town.ground;
+  town.grounds ??= new Map();
+  const key = `${season ?? ''}|${wet ? 'wet' : ''}`;
+  if (town.grounds.has(key)) return town.grounds.get(key);
+  const c = season ? groundInSeason(town.ground, season) : groundInSeason(town.ground, 'summer');
+  if (wet) puddles(c, town);
+  town.grounds.set(key, c);
+  return c;
+}
+/** Puddles on the roads and sidewalks: flat pixel ovals of dark water with a lit edge, by place (nothing random). */
+function puddles(c, town) {
+  const g = c.getContext('2d'), { STREET } = town.dims;
+  const spots = [];
+  for (const y0 of town.streets) for (let x = 10 + (y0 % 37); x < town.W - 20; x += 23 + ((x * 7 + y0) % 29)) spots.push([x, y0 + 3 + ((x * 13 + y0) % (STREET - 8))]);
+  for (const x0 of town.crossStreets) for (let y = town.streets[0] + 10; y < town.streets[town.streets.length - 1]; y += 27 + ((y * 5 + x0) % 31)) spots.push([x0 + 3 + ((y * 11 + x0) % (town.dims.VSTREET - 12)), y]);
+  for (const [x, y] of spots) {
+    const w = 6 + ((x + y) % 7), h = 2 + ((x * 3 + y) % 2);
+    for (let j = 0; j < h; j++) { const inset = j === 0 || j === h - 1 ? 2 : 0; g.fillStyle = '#56626e'; g.fillRect(x + inset, y + j, w - inset * 2, 1); }
+    g.fillStyle = '#8c9caa'; g.fillRect(x + 2, y, Math.max(1, (w >> 1) - 2), 1);   // the sky in it
+  }
+}
+/** Rain over the view (or snow falling): a darker sky, streaks falling at a slant, splashes; pixels, by time. */
+function drawRain(g, view, t, night, snow) {
+  const { x: X, y: Y, w: W, h: H } = view, dark = Math.min(1, night);
+  g.globalCompositeOperation = 'multiply';                                 // the grey of a rainy day
+  g.fillStyle = snow ? '#e4e8f0' : `rgb(${Math.round(228 + 20 * dark)},${Math.round(232 + 16 * dark)},${Math.round(240 + 10 * dark)})`;
+  g.fillRect(X, Y, W, H);
+  g.globalCompositeOperation = 'source-over';
+  const streak = dark > 0.5 ? '#6a7890' : '#b8c8d8', tip = dark > 0.5 ? '#8a98b0' : '#dfe8f0';
+  const cols = Math.ceil(W * H / 260);                                     // about one drop per 260 pixels of view
+  for (let k = 0; k < cols; k++) {
+    const sx = ((k * 7919) % 997) / 997, sy = ((k * 104729) % 991) / 991, sp = 0.8 + (k % 5) * 0.08;
+    if (snow) {                                                            // flakes: drifting down slowly, swaying
+      const py = ((sy + t * 0.12 * sp) % 1) * (H + 10) - 5, px = Math.round(((sx * (W + 10) + Math.sin(t * 1.3 + k) * 3) % (W + 10) + W + 10) % (W + 10)) - 5;
+      g.fillStyle = '#ffffff'; g.fillRect(X + px, Math.round(Y + py), 1, 1);
+      continue;
+    }
+    const py = ((sy + t * 2.2 * sp) % 1) * (H + 20) - 10, px = Math.round(sx * (W + 20) - 10 - py * 0.25);
+    for (let j = 0; j < 5; j++) { g.fillStyle = j === 4 ? tip : streak; g.fillRect(X + px + Math.floor((py + j) * 0.25) - Math.floor(py * 0.25), Y + Math.round(py) + j, 1, 1); }
+  }
+  if (snow) return;
+  g.fillStyle = dark > 0.5 ? '#7a88a0' : '#e8f0f6';                        // splashes where drops land
+  const splashes = Math.ceil(W * H / 1300);
+  for (let k = 0; k < splashes; k++) {
+    const ph = (k * 0.37 + t * 3) % 1; if (ph > 0.3) continue;
+    const sx = X + Math.round(((k * 4447) % 983) / 983 * W), sy = Y + Math.round(((k * 2711 + Math.floor(t * 3 + k * 0.37) * 131) % 977) / 977 * H);
+    g.fillRect(sx - 1, sy, 1, 1); g.fillRect(sx + 1, sy, 1, 1); g.fillRect(sx, sy - 1, 1, 1);
+  }
+}
+
 /**
  * A fenced area's fence: its four sides as pieces { x, y, w, h, side }, with a gap (a gate)
  * in the middle of a side: `gates: { top, bottom, left, right }` (their widths), or `gate`
@@ -665,9 +719,11 @@ function fenceOf(a) {
  * dpx: device pixels per canvas pixel, when the canvas is drawn bigger
  * underneath (g scaled by dpx) so the signs' names can be written.
  */
-export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0, above = [], petals = true, steam = drawSteam, lights = 'bands' } = {}) {
+export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0, above = [], petals = true, steam = drawSteam, lights = 'bands', season = null, weather = null } = {}) {
+  if (!SEASONS.includes(season)) season = null;                             // no season: as drawn
+  const rain = weather === 'rain';
   g.imageSmoothingEnabled = false;
-  g.drawImage(town.ground, view.x, view.y, view.w, view.h, 0, 0, view.w, view.h);
+  g.drawImage(groundOf(town, season, rain && season !== 'winter'), view.x, view.y, view.w, view.h, 0, 0, view.w, view.h);
   g.save(); g.translate(-view.x, -view.y);
   const items = [];
   for (const b of town.buildings) {
@@ -688,12 +744,12 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0
   items.sort((a, b) => a.y - b.y || (a.b ? -1 : 1));
   /** Draw one thing of the view (a building, a prop, a plant, someone or something moving). */
   const drawItem = (ctx, it) => {
-    if (it.b) drawBuilding(ctx, dpx === 1 ? it.b : { ...it.b, dpx });
+    if (it.b) drawBuilding(ctx, dpx === 1 && season !== 'winter' ? it.b : { ...it.b, dpx, snow: season === 'winter' });
     else if (it.prop) {
       if (it.prop.riders) drawSwings(ctx, it.prop, t);                           // swings with people on them: { riders: [{ angle, kid }, null] }
       else { if (it.prop.type === 'redLantern') it.prop.sway = Math.round(Math.sin(t * 1.3 + it.prop.x * 0.7) * 0.7); drawProp(ctx, it.prop); }
     }
-    else if (it.p) { if (it.p.kind === 'tree') drawTree(ctx, { ...it.p, t }); else drawBush(ctx, it.p); }   // trees sway in the breeze
+    else if (it.p) { if (it.p.kind === 'tree') drawTree(ctx, { ...it.p, t, season }); else drawBush(ctx, season ? { ...it.p, season } : it.p); }   // trees sway in the breeze
     else if (it.s.vehicle) drawVehicle(ctx, it.s);                               // cars, buses, the train: { vehicle: true, type, ... }
     else if (it.s.ball) drawBall(ctx, it.s);                                     // a ball { ball: true, x, y, h (its height off the ground) }
     else if (it.s.draw) it.s.draw(ctx, it.s, t);                                // anything with its own drawing: { draw(g, s, t), x, y } (pigeons, rubbish...)
@@ -724,7 +780,7 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0
   // above everything: steam from the food stalls, cherry petals drifting, and what sits up high (crows on the wires: `above`)
   for (const it of items) {
     if (it.b && cooks(it.b)) { const { w, h } = buildingSize(it.b); steam(g, it.b.x + w * 0.22, it.b.y - h * 0.55, t, it.b.x); }
-    else if (it.p && it.p.kind === 'tree' && it.p.type === 'sakura' && petals) drawPetals(g, { ...it.p, seed: it.p.x }, t, Math.round(30 * town.scale));
+    else if (it.p && it.p.kind === 'tree' && it.p.type === 'sakura' && petals && (!season || season === 'spring')) drawPetals(g, { ...it.p, seed: it.p.x }, t, Math.round(30 * town.scale));
   }
   for (const s of above) if (s.x > view.x - 10 && s.x < view.x + view.w + 10 && s.y > view.y - 4 && s.y < view.y + view.h + 10) (s.draw ?? drawCharacter)(g, s, t);
   if (night > 0.01) {
@@ -745,5 +801,6 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0
       g.drawImage(ringCanvas, ox, oy, RING_W, RING_H);
     });
   }
+  if (rain) drawRain(g, view, t, night, season === 'winter');                   // over everything: rain (snow falling in winter)
   g.restore();
 }
