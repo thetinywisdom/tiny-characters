@@ -93,9 +93,11 @@ bubble lab, so games can use them and they can grow.
   animated mock-ups: up to 2 px at the top, trunks still); bushes stay still.
 - The front page (Nov 2026): no park (the owner never used it): the town,
   the looks, the buildings and the gallery.
-- An iOS game (Nov 2026): a story-driven RPG with a little fighting, written in
-  Swift (SpriteKit), using these drawings exported to PNG frames
-  (`tools/export-sprites.mjs`); the library itself stays plain JS.
+- An iOS game (Nov 2026): Swift (SpriteKit), using these drawings exported to PNG
+  frames (`tools/export-sprites.mjs`); the library itself stays plain JS. What the
+  game is gets planned with the owner from pictures first: the first playable
+  (story, fight) was built unasked and removed (the owner: "i only ask you if you
+  can use the assets").
 
 ## Done
 
@@ -671,6 +673,9 @@ bubble lab, so games can use them and they can grow.
     at a stop. Getting out of a car or scooter on the road hands it back to the traffic; anywhere
     else it stays parked there. Also: the taxi rank no longer picks a lot's car as its taxi.
 
+92. **Tiny RPG removed** (the owner chose: remove the game, keep the export): `ios/` is gone
+    (in git history, entry 90); the sprite export stays.
+
 ## In progress
 
 - Vehicles, round two (the owner's order, Nov 2026; all done: 77, 78, 82 as a parcel truck, 84 as a coin-parking lot): 1. a more detailed redraw of the cars,
@@ -692,10 +697,7 @@ bubble lab, so games can use them and they can grow.
 
 ## Next (only when the owner asks)
 
-- The Swift game (`ios/`): ground tiles and vehicles in the export; more of the story.
-  Open (the owner's call): a dark strip behind the goal line (hard to read over trees); the
-  font's capital I looks like l ("Grandpa lto"). Small: Ito stands inside the koban's solid box;
-  the zombie paces off the path.
+- The Swift game: plan it with the owner from pictures first (nothing built yet).
 
 The full-size redraw is done. Ideas offered before (on hold):
 - the catalogue in the seasons and the weather (the backlog)

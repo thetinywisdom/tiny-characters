@@ -1,6 +1,5 @@
 // Export every drawing to PNG frames for the Swift / SpriteKit game:
 //   node tools/export-sprites.mjs [outDir] [--no-preview]      (default: export/sprites)
-// The Swift game: node tools/export-sprites.mjs ios/TinyRPG/Sprites --no-preview
 // Writes <Group>.atlas/<frame>.png (Xcode makes texture atlases of these folders),
 // sprites.json (each frame's size, feet point and scale) and a preview sheet per group.
 // Needs Playwright (preinstalled here); serves this folder itself.
