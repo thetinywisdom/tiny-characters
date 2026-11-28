@@ -651,6 +651,14 @@ bubble lab, so games can use them and they can grow.
     frame; buildings (3 seeds, each shop type) at 4 px per pixel for crisp signs; approved street
     things, trees and bushes. Nothing in `src/` changed. Output (`export/`) is not committed.
 
+90. **Tiny RPG for iOS, first playable** (the owner: a story-driven RPG with a little fighting,
+    in Swift): `ios/TinyRPG.xcodeproj` (SpriteKit, iOS 17+), built from the exported sprites
+    (`ios/TinyRPG/Sprites`, re-export with `node tools/export-sprites.mjs ios/TinyRPG/Sprites
+    --no-preview`). A small town with the shrine at the top; tap to walk, tap someone to talk
+    (typing dialogue box in DotGothic16), a turn-based fight (Attack, Guard, Run). The first
+    chapter, "The Quiet Bell", is in `story.json`. The export now records each walk cycle's order
+    (`anims` in sprites.json). Built and launched in the iPhone simulator with no errors.
+
 ## In progress
 
 - Vehicles, round two (the owner's order, Nov 2026; all done: 77, 78, 82 as a parcel truck, 84 as a coin-parking lot): 1. a more detailed redraw of the cars,
@@ -672,8 +680,8 @@ bubble lab, so games can use them and they can grow.
 
 ## Next (only when the owner asks)
 
-- The Swift game: ground tiles and vehicles in the export; a SpriteKit project that loads the
-  atlases (nearest-neighbour filtering), walks a person round a small map, talks, one fight.
+- The Swift game (`ios/`): ground tiles and vehicles in the export; play-test walking, talking
+  and the fight on a phone; more of the story.
 
 The full-size redraw is done. Ideas offered before (on hold):
 - the catalogue in the seasons and the weather (the backlog)
