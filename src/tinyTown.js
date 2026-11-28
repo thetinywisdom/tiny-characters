@@ -537,6 +537,8 @@ function pixelLight(G, w, h, style) {
   G.setTransform(1, 0, 0, 1, 0, 0); G.putImageData(im, 0, 0);
 }
 let lightLayer = null;
+let plantLayer = null;                                    // forests drawn at half the canvas's pixels (drawTownView)
+const PLANT_RUN = 12;                                     // how many plants in a row make it worth it
 function drawNight(g, view, items, night, dpx, drawItem, t = 0, lights = 'bands') {
   const dusk = Math.max(0, 1 - Math.abs(night - 0.35) / 0.35);              // the warm light of dusk, early in the evening
   g.save();
@@ -700,7 +702,23 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0
     else if (it.s.monster) drawMonster(ctx, { ...it.s, type: it.s.monster }, t); // monsters: { monster: 'zombie', variant, ... }
     else (it.s.dog ? drawDog : it.s.cat ? drawCat : drawCharacter)(ctx, it.s, t);
   };
-  for (const it of items) drawItem(g, it);
+  // runs of plants one after another (a forest) are drawn into a layer at half the canvas's
+  // pixels, then copied up in one go: the same picture (every plant sits on half-pixels at
+  // most) for a quarter of the filling. Short runs are drawn straight.
+  const half = dpx % 2 === 0 && dpx > 2 ? dpx / 2 : 0;
+  for (let i = 0; i < items.length;) {
+    let j = i; while (j < items.length && items[j].p) j++;
+    if (half && j - i >= PLANT_RUN) {
+      if (!plantLayer || plantLayer.width !== view.w * half || plantLayer.height !== view.h * half) plantLayer = canvasOf(view.w * half, view.h * half);
+      const pg = plantLayer.getContext('2d');
+      pg.setTransform(1, 0, 0, 1, 0, 0); pg.clearRect(0, 0, plantLayer.width, plantLayer.height);
+      pg.setTransform(half, 0, 0, half, -view.x * half, -view.y * half); pg.imageSmoothingEnabled = false;
+      for (let q = i; q < j; q++) drawItem(pg, items[q]);
+      g.imageSmoothingEnabled = false; g.drawImage(plantLayer, view.x, view.y, view.w, view.h);
+      i = j;
+    } else if (j > i) { for (let q = i; q < j; q++) drawItem(g, items[q]); i = j; }
+    else drawItem(g, items[i++]);
+  }
   // the wires, over everything
   for (const [a, b, sag] of town.wires) if (Math.max(a.x, b.x) > view.x && Math.min(a.x, b.x) < view.x + view.w && a.y > view.y - 10 && a.y < view.y + view.h + 10) drawWire(g, a, b, sag);
   // above everything: steam from the food stalls, cherry petals drifting, and what sits up high (crows on the wires: `above`)

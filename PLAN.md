@@ -465,9 +465,17 @@ bubble lab, so games can use them and they can grow.
     but the Doors & windows cards, which now show the full-size kit. `?redraw=none` is
     gone; `STOREY` is no longer exported (`FULL_STOREY` in tinyBuildingsFull.js).
 
+60. **A faster forest** (the owner's pick, first of three): in a view, runs of 12 or more
+    plants one after another (a forest) are drawn into a layer at half the canvas's
+    pixels and copied up in one go, instead of each tree at 4x: the same picture (63
+    views by day, dusk and night with the breeze, all identical). A forest view 7 to 4
+    ms by day, 11 to 7 at night; on a 4x slower CPU 34 to 18 ms and 56 to 35 ms;
+    street views 2.0 to 1.2 ms.
+
 ## In progress
 
-- Nothing. Everything is drawn at full size; new drawings go through the review page.
+- The owner's order: a faster forest (done, 60), then weather and seasons (mock-ups
+  first), then people going into buildings (mock-ups first).
 
 ## Next (only when the owner asks)
 
@@ -495,9 +503,8 @@ The full-size redraw is done. Ideas offered before (on hold):
 
 - The catalogue has no night view yet.
 - A car's tail-light glow can tint a tree standing right in front of it.
-- A view full of forest is the slowest by day (about 7 ms; 35 ms on a 4x slower CPU):
-  hundreds of trees drawn each frame. A pre-drawn forest (or skipping the breeze far off)
-  would help if phones struggle.
+- A view full of forest at night is still the slowest (about 7 ms; 35 ms on a 4x
+  slower CPU): the night's layers over the whole view.
 - Sign text is drawn by the canvas, so its edges are a little soft (not
   snapped to the pixel grid like everything else).
 
