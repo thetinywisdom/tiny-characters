@@ -39,11 +39,15 @@ final class Battle: SKNode {
         addChild(strip)
 
         them.alwaysAnimate = true
+        // each fighter stands in a holder scaled up by zoom: Sprites.apply sets the
+        // walker's size on every new frame, which would undo a scale on the walker
         for (w, x) in [(you, -screen.width * 0.24), (them, screen.width * 0.24)] {
-            w.setScale(zoom)
-            w.position = CGPoint(x: x.rounded(), y: 0)
-            w.zPosition = 2
-            addChild(w)
+            let holder = SKNode()
+            holder.setScale(zoom)
+            holder.position = CGPoint(x: x.rounded(), y: 0)
+            holder.zPosition = 2
+            holder.addChild(w)
+            addChild(holder)
         }
         youBar.position = CGPoint(x: -screen.width * 0.24, y: zoom * 26)
         themBar.position = CGPoint(x: screen.width * 0.24, y: zoom * 26)
@@ -90,7 +94,7 @@ final class Battle: SKNode {
             themHP = max(0, themHP - dmg)
             themBar.set(themHP)
             say(crit ? "A clean hit! \(dmg) damage." : "You hit it for \(dmg).")
-            if themHP == 0 { after(1.0) { self.say(self.foe.defeat); self.them.run(.fadeOut(withDuration: 0.6)) }; after(2.6) { self.end(.won) }; return }
+            if themHP == 0 { after(1.0) { self.say(self.foe.defeat); self.them.parent?.run(.fadeOut(withDuration: 0.6)) }; after(2.6) { self.end(.won) }; return }
             after(1.0) { self.foeTurn() }
         }
     }
@@ -137,7 +141,8 @@ final class Battle: SKNode {
 
     /// Step forward and back (whole points, no easing: it stays pixel art).
     private func lunge(_ w: Walker, by dx: CGFloat, then: @escaping () -> Void) {
-        w.run(.sequence([.moveBy(x: dx, y: 0, duration: 0.1), .run(then), .moveBy(x: -dx, y: 0, duration: 0.15)]))
+        guard let holder = w.parent else { return then() }
+        holder.run(.sequence([.moveBy(x: dx, y: 0, duration: 0.1), .run(then), .moveBy(x: -dx, y: 0, duration: 0.15)]))
     }
 
     /// Blink white twice.

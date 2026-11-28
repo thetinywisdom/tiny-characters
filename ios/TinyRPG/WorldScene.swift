@@ -61,7 +61,8 @@ final class WorldScene: SKScene {
     private func layout() {
         zoom = max(2, min(6, (min(size.width, size.height) / 130).rounded(.down)))
         cam.setScale(1 / zoom)
-        ui.setScale(zoom)                    // cancels the camera's scale: ui is in points
+        // ui is a child of the camera, which SpriteKit draws in screen points
+        // whatever the camera's scale: no scaling of its own
         let top = view?.safeAreaInsets.top ?? 0
         goal.position = CGPoint(x: 0, y: size.height / 2 - max(top, 12) - 8)
         follow()
@@ -115,12 +116,19 @@ final class WorldScene: SKScene {
         let move = CGPoint(x: d.x / len * step, y: d.y / len * step)
         player.facing = Walker.facing(dx: d.x, dy: d.y, was: player.facing)
         // slide along walls: the whole step, else only across, else only up or down
-        for m in [move, CGPoint(x: move.x, y: 0), CGPoint(x: 0, y: move.y)] where m != .zero {
+        // (a slide of a sliver of a pixel is no progress: it would walk in place forever)
+        for m in [move, CGPoint(x: move.x, y: 0), CGPoint(x: 0, y: move.y)] where hypot(m.x, m.y) > 0.05 {
             let next = CGPoint(x: player.spot.x + m.x, y: player.spot.y + m.y)
             if world.free(feet(next)) && !bumps(next) { player.spot = next; player.walking = true; return }
         }
         player.walking = false
         target = nil
+        // blocked on the way to someone (they may stand against a building's
+        // solid box): if they are close, talk from here rather than give up
+        if let i = talkTo {
+            talkTo = nil
+            if player.spot.distance(to: npcs[i].walker.spot) < 40 { talk(i) }
+        }
     }
 
     private func feet(_ p: CGPoint) -> CGRect { CGRect(x: p.x - 2, y: p.y, width: 5, height: 2) }

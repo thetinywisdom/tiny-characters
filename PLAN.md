@@ -657,7 +657,10 @@ bubble lab, so games can use them and they can grow.
     --no-preview`). A small town with the shrine at the top; tap to walk, tap someone to talk
     (typing dialogue box in DotGothic16), a turn-based fight (Attack, Guard, Run). The first
     chapter, "The Quiet Bell", is in `story.json`. The export now records each walk cycle's order
-    (`anims` in sprites.json). Built and launched in the iPhone simulator with no errors.
+    (`anims` in sprites.json). Built and played through in the iPhone simulator; play-test fixes:
+    the camera's children are already in screen points (no counter-scale), fighters are scaled
+    through a holder (a new frame resets a sprite's size), a slide of a sliver of a pixel counts
+    as blocked, and blocked within 40 px of someone you tapped starts the talk.
 
 ## In progress
 
@@ -680,8 +683,10 @@ bubble lab, so games can use them and they can grow.
 
 ## Next (only when the owner asks)
 
-- The Swift game (`ios/`): ground tiles and vehicles in the export; play-test walking, talking
-  and the fight on a phone; more of the story.
+- The Swift game (`ios/`): ground tiles and vehicles in the export; more of the story.
+  Open (the owner's call): a dark strip behind the goal line (hard to read over trees); the
+  font's capital I looks like l ("Grandpa lto"). Small: Ito stands inside the koban's solid box;
+  the zombie paces off the path.
 
 The full-size redraw is done. Ideas offered before (on hold):
 - the catalogue in the seasons and the weather (the backlog)
