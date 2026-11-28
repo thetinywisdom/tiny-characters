@@ -709,7 +709,8 @@ handlebar and (four in five) a basket beyond, a rail in front.
 the owner: within 22.5 degrees of 0 / 180 side on, of 90 / 270 head on or from behind, else 3/4: `motoBlocks`, a shape of
 blocks (`MOTO_SHAPES`, tinyVoxel like the cars; the owner: the squeezed side drawing looked bad) with
 the flat rider in profile sitting on the seat's top (`seatTop`), thighs along it, both hands on the
-bars' ends (`bar`, `barZ`; the far arm darker, behind)):
+bars' ends (`bar`, `barZ`), each arm from its own shoulder (2.5 either side of the body, the far
+one darker, behind)):
 tinyLife's `drawMotorbike` draws them the way `drawScooter` draws the delivery scooter (side on
 for headings near 0 / 180, else head on or from behind), the rider by `upper` with a `helmet`
 over the head; `motoLook` picks the colour (`MOPED_COLORS`, `MOTORBIKE_COLORS`), helmet and

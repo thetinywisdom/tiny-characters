@@ -702,6 +702,10 @@ bubble lab, so games can use them and they can grow.
 98. **Both hands on the bars in 3/4 view** (the owner): on a diagonal the far arm shows too, a shade
     darker behind the body, its hand on the far end of the bars.
 
+99. **Arms from both shoulders in 3/4 view** (the owner: both seemed to come from the middle of the
+    body): each arm starts at its own shoulder, either side of the body in the bike's own terms, and
+    goes to its end of the bars (the far one darker, behind).
+
 ## In progress
 
 - Vehicles, round two (the owner's order, Nov 2026; all done: 77, 78, 82 as a parcel truck, 84 as a coin-parking lot): 1. a more detailed redraw of the cars,

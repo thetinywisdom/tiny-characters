@@ -363,10 +363,15 @@ function motoBlocks(g, v, h, c, hc, r, tail) {
   const ends = [at(S.bar, S.barZ, 2.5), at(S.bar, S.barZ, -2.5)].sort((a, b) => a[1] - b[1]), [far, nearEnd] = ends;
   g.drawImage(sp.canvas, x - sp.ox, y - sp.oy);
   if (!v.parked) {
-    reachArm((c, qx, qy) => px(g, c, qx, qy), { ...r, body: shade(r.body ?? WHITE, 0.8) }, rx - k, ry, k, far[0], far[1]);   // the far arm, behind
+    // the shoulders: either side of the body (in the shape's own terms, then on the screen), the lower one near
+    const shZ = S.seatTop + bodyRows(r) - 2, sh = [at(S.seat + 1, shZ, 2.5), at(S.seat + 1, shZ, -2.5)].sort((a, b) => a[1] - b[1]);
+    const arm = (from, to, sleeve) => { const n = Math.max(Math.abs(to[0] - from[0]), Math.abs(to[1] - from[1]));
+      for (let i = 0; i < n; i++) px(g, sleeve, Math.round(from[0] + (to[0] - from[0]) * i / n), Math.round(from[1] + (to[1] - from[1]) * i / n));
+      px(g, r.skin ?? '#e2b08e', to[0], to[1]); };
+    arm(sh[0], far, shade(r.body ?? WHITE, 0.72));                                  // the far arm, from the far shoulder, behind
     upper(g, { ...r, facing, reach: true }, rx, ry); helmet(g, rx, ry, hc, facing);
     px(g, r.legs ?? INK, k > 0 ? rx - 1 : rx - 2, seatTop - 1, 4, 2);              // the thighs along the seat
-    reachArm((c, qx, qy) => px(g, c, qx, qy), r, rx, ry, k, nearEnd[0], nearEnd[1]);   // the near hand on the bars
+    arm(sh[1], nearEnd, shade(r.body ?? WHITE, 0.86));                              // the near arm, from the near shoulder
   }
   if (v.parked) px(g, hc, Math.round(x + 4 * Math.cos(th)) - 1, Math.round(y + 4 * Math.sin(th) * KY) - 12, 3, 2);   // its helmet on the bars
 }
