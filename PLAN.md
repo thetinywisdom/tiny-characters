@@ -521,6 +521,10 @@ bubble lab, so games can use them and they can grow.
     `?weather=` take them; on auto, windy spells, fog some early mornings, a third of
     the rain stormy. Clear and rainy pictures unchanged (hashes).
 
+68. **Calmer wind** (the owner: too strong, confusing): a third as many leaves or petals,
+    drifting at a third of the speed, turning over slowly; the trees lean only a little
+    further than in the breeze; the washing flaps now and then, slowly.
+
 ## In progress
 
 - Nothing. (A faster forest, weather and seasons, the traffic jam: done, 60-63. Going into

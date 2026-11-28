@@ -142,7 +142,7 @@ let WIND = null;
 /** Washing flaps (t: the time in seconds) or hangs still (null). */
 export const setWind = (t) => { WIND = t ?? null; };
 /** How far a piece of washing at x is blown out now: 0 or 1 pixel, flapping by turns. */
-const flap = (x) => (WIND === null ? 0 : (Math.floor(WIND * 7 + x * 0.61) + Math.floor(WIND * 2.3 + x * 0.17)) % 3 === 0 ? 0 : 1);
+const flap = (x) => (WIND === null ? 0 : (Math.floor(WIND * 2.5 + x * 0.61) + Math.floor(WIND * 0.9 + x * 0.17)) % 3 === 0 ? 1 : 0);
 /** Snow's colours: lying snow, its shade, the shade of a slope away from the light, a bright ridge. */
 export const SNOWC = { lit: '#eef2f6', mid: '#dfe6ee', shade: '#cdd6e0', deep: '#b8c4d2', top: '#ffffff' };
 

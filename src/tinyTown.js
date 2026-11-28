@@ -716,13 +716,13 @@ const BLOWN = { autumn: ['#d8742a', '#c24a2a', '#e8a838', '#9a5a2a', '#e0c040'],
 /** Wind: autumn leaves or spring petals blowing across the view, tumbling (other seasons: none). */
 function drawWind(g, view, t, season) {
   const cols = BLOWN[season]; if (!cols) return;
-  const { x: X, y: Y, w: W, h: H } = view, n = Math.ceil(W * H / 450), span = W + 40;
+  const { x: X, y: Y, w: W, h: H } = view, n = Math.ceil(W * H / 1500), span = W + 40;   // (the owner: calmer) a few, drifting
   for (let k = 0; k < n; k++) {
-    const sp = 38 + whash(k * 3 + 1) * 30;
+    const sp = 12 + whash(k * 3 + 1) * 10;
     const x = Math.round(X - 20 + ((whash(k * 3 + 2) * span + t * sp) % span));
-    const y = Math.round(Y + whash(k * 3 + 3) * H + Math.sin(t * 2.5 + k) * 4 + Math.sin(t * 7 + k * 2) * 1.2);
+    const y = Math.round(Y + whash(k * 3 + 3) * H + Math.sin(t * 1.2 + k) * 3);
     g.fillStyle = cols[k % cols.length];
-    const f = Math.floor(t * 8 + k) % 3;                                     // tumbling: flat, on its edge, end on
+    const f = Math.floor(t * 3 + k) % 3;                                     // tumbling: flat, on its edge, end on
     g.fillRect(x, y, f === 0 ? 2 : 1, f === 1 ? 2 : 1);
   }
 }

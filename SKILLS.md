@@ -629,11 +629,12 @@ drawn (so pictures without one are unchanged).
   yes, fog B, thunder B): `weather: 'wind' | 'fog' | 'storm'`, all by `t` and hashes,
   nothing random.
   - Wind (`drawWind`, in the air before the night so the dark covers it): autumn leaves
-    or spring petals (`BLOWN`; other seasons none), one per 450 pixels of view, 38-68 px a
-    second across the view with a wobble, tumbling (2 × 1, 1 × 2, 1 × 1). Trees get
-    `wind: true`: `breeze` leans them over further (3 pixels) and tosses them faster.
+    or spring petals (`BLOWN`; other seasons none; the owner: calmer), one per 1500 pixels
+    of view, drifting 12-22 px a second across the view with a slow wobble, turning over
+    (2 × 1, 1 × 2, 1 × 1). Trees get `wind: true`: `breeze` leans them a little further
+    over (up to 2 pixels), steadily, gently tossing.
     Buildings get `wind: t`: drawBuilding sets `setWind` in the kit and `laundry` blows
-    the top of each shirt and towel a pixel over, by turns (`flap`; with no wind the
+    the top of each shirt and towel a pixel over now and then (`flap`, slowly; with no wind the
     washing is drawn exactly as before).
   - Fog (`drawFog`, before the night, so the lights shine through it): two layers of
     value noise (`vnoise`), worked out every 4 pixels and filled in between, drifting

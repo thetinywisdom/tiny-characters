@@ -187,10 +187,10 @@ export function groundInSeason(src, season) {
 // (its place and seed).
 function breeze(g, c, cw, ch, h, my, k, x0, y0, flip, p) {
   const t = p.t, ph = p.x * 0.02 + p.y * 0.013 + (p.seed ?? 0) * 0.7;
-  const gust = 0.5 + 0.5 * Math.sin(t * (p.wind ? 0.9 : 0.55) - p.x * 0.012);   // the gust's wave across the town
-  // a windy day (p.wind): leaning over harder and further (3 pixels), tossing faster
-  const s = p.wind ? 0.45 + 0.35 * gust + Math.sin(t * 2.6 - ph) * (0.2 + 0.25 * gust) : Math.sin(t * 1.6 - ph) * (0.35 + 0.65 * gust) + 0.45 * gust;
-  const foot = my + h, AMP = p.wind ? 3 : 2, FROM = 0.3;
+  const gust = 0.5 + 0.5 * Math.sin(t * 0.55 - p.x * 0.012);   // the gust's wave across the town
+  // a windy day (p.wind; the owner: calmer): leaning over a little more, steadily, gently tossing
+  const s = p.wind ? 0.45 + 0.3 * gust + Math.sin(t * 1.4 - ph) * 0.2 : Math.sin(t * 1.6 - ph) * (0.35 + 0.65 * gust) + 0.45 * gust;
+  const foot = my + h, AMP = 2, FROM = 0.3;
   const shift = (y) => { const rel = (foot - y) / h; return rel <= FROM ? 0 : Math.round(AMP * s * Math.pow(Math.min(1, (rel - FROM) / (1 - FROM)), 1.3)); };
   for (let y = 0; y < ch;) {
     const d = shift(y); let e = y + 1; while (e < ch && shift(e) === d) e++;   // rows that move together, drawn as one slice
