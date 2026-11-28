@@ -411,7 +411,7 @@ mornings; walkers put their umbrellas up while it rains. The address takes
 `drawBuilding(g, { ...b, lights: true })` draws only what shines on a
 building, `propLights(p)` and `vehicleLights(v)` where things give light;
 `drawVehicleBeams(g, v)` the pool of light headlamps throw on the road in
-front of a car. A coin-parking lot (`{ ground: 'parking' }` in a layout's areas, with `parkingSign` and
+front of a car. The train (two carriages) stops at platforms where people wait, get on and get off. A coin-parking lot (`{ ground: 'parking' }` in a layout's areas, with `parkingSign` and
 `payMachine` props) fills with parked cars that pull out and in now and then. A white parcel truck stops at shops (hazards blinking) and its driver wheels the parcels in on a
 trolley (`drawTrolley`). A police car patrols (now and then with its lights flashing) and the fire engine comes out of the
 fire station on calls (`traffic.callOut('fireEngine', spot)`). Each morning the rubbish truck comes round the blocks of flats and a worker loads the bags

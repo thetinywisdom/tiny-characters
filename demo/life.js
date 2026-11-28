@@ -357,12 +357,59 @@ export function makeLife({ town, traffic, people, follow, rng = Math.random }) {
     const look = rng() < 0.5 ? { ...LOOKS.salaryman, skin: ['#e2b08e', '#f1cdb0', '#c98d65'][Math.floor(rng() * 3)] } : { ...randomCharacter(rng), kid: false };
     return { ...look, x: at.x + (rng() - 0.5) * 6, y: at.y, path: null, wait: 0, talk: 0, temp: true };
   }
+  // the platforms (the owner, Nov 2026): people wait on them; when a train stops they walk up to its doors and
+  // step in behind it (they leave with it), and others step off it and walk away
+  const platforms = town.areas.filter((a) => a.ground === 'platform').map((a) => ({ a, waiting: [], next: 2 + rng() * 4 }));
+  const behind = (tr) => tr.y - 2;                                         // a person here stands behind the train
+  /** The train's doors, where they are now (x). */
+  function trainDoors(tr) {
+    const len = (tr.cars ?? 2) * 62 - 2, x0 = tr.x - len / 2, out = [];
+    for (let i = 0; i < (tr.cars ?? 2); i++) for (const d of tr.kind === 'local' ? [5, 55] : [7, 30, 53]) out.push(tr.dir < 0 ? x0 + len - (i * 62 + d) : x0 + i * 62 + d);
+    return out;
+  }
+  /** Walk q straight to (x, y) at 14 px/s, then call done (a job, so nobody else moves them). */
+  const walkTo = (q, x, y, done) => { q.path = null; q.busy = true; q.job = { to: { x: q.x, y: q.y }, started: T, dur: 1e9, each: (p, u, dt) => {
+    const dx = x - p.x, dy = y - p.y, d = Math.hypot(dx, dy), st = 14 * dt; p.walking = true; p.facing = facingFor(dx, dy, p.facing);
+    if (d > st) { p.x += dx / d * st; p.y += dy / d * st; } else { p.x = x; p.y = y; p.job = null; p.busy = false; done(p); }
+  } }; };
+  function platformLife(dt) {
+    const tr = traffic.train;
+    for (const pl of platforms) {
+      pl.waiting = pl.waiting.filter((p) => !p.gone && people.includes(p));
+      // now and then someone comes from the station to wait (up to four)
+      if ((pl.next -= dt) <= 0 && pl.waiting.length < 4 && people.filter((p) => p.temp).length < 24) {
+        pl.next = 6 + rng() * 8;
+        const st = stations.slice().sort((a, b) => Math.abs(a.x - (pl.a.x + pl.a.w / 2)) - Math.abs(b.x - (pl.a.x + pl.a.w / 2)))[0], p = commuter(town.doorOf(st));
+        const spot = { x: pl.a.x + 8 + rng() * (pl.a.w - 16), y: pl.a.y + pl.a.h - 4 - rng() * 3 };
+        if (free(p.x, p.y) && give(p, { to: spot, dur: 1e9, start: (q) => { q.facing = 'up'; } })) { people.push(p); pl.waiting.push(p); }
+      }
+    }
+  }
   function station(dt) {
     const tr = traffic.train;
     if (!tr) return;
+    platformLife(dt);
     const now = tr.dwell > 0 && tr.speed === 0;
     if (now && !dwelling) {                                                // a train has just stopped: out they come
       const st = stations.slice().sort((a, b) => Math.abs(a.x - tr.x) - Math.abs(b.x - tr.x))[0], door = town.doorOf(st);
+      const pl = platforms.find((q) => tr.x >= q.a.x - 20 && tr.x <= q.a.x + q.a.w + 20);
+      if (pl) {                                                            // at a platform: on and off by the train's doors
+        const doors = trainDoors(tr).filter((x) => x > pl.a.x + 2 && x < pl.a.x + pl.a.w - 2);
+        for (const p of pl.waiting) {                                      // the ones waiting get on
+          const x = doors.slice().sort((a, b) => Math.abs(a - p.x) - Math.abs(b - p.x))[0];
+          if (x === undefined) continue;
+          walkTo(p, x, pl.a.y + 2, (q) => walkTo(q, x, behind(tr), (r) => { r.gone = true; }));
+        }
+        pl.waiting = [];
+        const n = Math.min(2 + Math.floor(rng() * 3), 24 - people.filter((p) => p.temp).length);
+        for (let i = 0; i < n && doors.length; i++) {                      // and others get off, one after another, and go
+          const x = doors[Math.floor(rng() * doors.length)], p = commuter({ x, y: behind(tr) });
+          p.x = x; p.busy = true; p.away = true; p.holdT = i * 0.6; people.push(p);
+          const off = () => { p.away = false; walkTo(p, x, pl.a.y + pl.a.h - 3, (q) => { let to = town.randomSpot(rng); for (let k = 0; k < 6 && town.roadAt(to.x, to.y); k++) to = town.randomSpot(rng); q.path = town.findPath(q, to); }); };
+          p.job = { to: { x: p.x, y: p.y }, started: T, dur: 1e9, each: (q, u, d2) => { if ((q.holdT -= d2) <= 0) { q.job = null; off(); } } };
+        }
+        dwelling = now; return;
+      }
       const n = Math.min(4 + Math.floor(rng() * 3), 20 - people.filter((p) => p.temp).length);
       for (let i = 0; i < n; i++) {
         const p = commuter(door);

@@ -111,6 +111,12 @@ export const PART = {
     r('#8a9096', 0, 2, 54, 1); r('#6a7076', 0, 1, 54, 1);                               // the rail
   } },
 
+  // 18 x 15: a platform's name board: white on two grey posts, a blue stripe, the name a dark line
+  platformSign: { approved: true, draw(r) {
+    r('#5a5f66', 2, 0, 1, 9); r('#5a5f66', 15, 0, 1, 9);
+    r('#f2f2ee', 0, 8, 18, 7); r('#d8dadc', 17, 8, 1, 7); r('#2f6fb8', 0, 8, 18, 1);
+    r(INK, 3, 11, 12, 1); r('#8a9096', 5, 9, 8, 1);
+  } },
   // 9 x 28: a coin-parking sign: a yellow board with a black P on a grey pole
   parkingSign: { approved: true, draw(r) {
     r('#8a9096', 4, 0, 1, 20); r('#a8aeb4', 4, 0, 1, 1);

@@ -602,7 +602,7 @@ under everything on a dark day (rain, storm, fog) so the headlamps show.
 **Full screen** (the owner, Nov 2026): the `#townBox` (the canvas and an Exit button) goes full screen (Fullscreen API; else the class
 `full` covers the page), the canvas at `min(100vw, 100vh * 4/3)`; Esc leaves it.
 
-**The train** (`drawTrain`, the owner, Nov 2026): side on, carriages of 60 (62 with the gangway):
+**The train** (`drawTrain`, the owner, Nov 2026): side on, two carriages (`cars`, the owner: not four) of 60 (62 with the gangway):
 wheels on two bogies, the floor's gear, the body (commuter: silver with ribbed lower panels, the
 line's band, two pairs of windows between three slim double doors; local, `kind: 'local'`: red below
 cream, six small windows, a door at each end), the roof from above with an air-con unit and (commuter,
@@ -610,6 +610,15 @@ second car) a pantograph; cabs at both ends (lamps white at the front, red at th
 `lights: true` draws only what shines (`TRAIN_GLOW`: lit windows, lamps, the destination board):
 drawNight draws it over the dark. The traffic runs the local every third run (`train.kind`). drawTownView
 keeps the train while any of it is in view (half its length, not 24 px, round its middle).
+
+**Platforms** (the owner, Nov 2026): areas `{ ground: 'platform' }` drawn by FULL_GROUND.platform
+(g2.js; drawn after the other areas, over the plaza), the prop `platformSign`; the traffic waits 7 s
+(`platformAt`) at a station with one. The demo (life.js `platformLife`, `trainDoors`, `walkTo`):
+up to four people come from the nearest station's door to wait on each platform (a job that keeps
+them there, facing the track); when the train stops at it they walk to the nearest door (x from
+`trainDoors`) and up to 2 px above the train's foot (`behind`), where the train hides them, and are
+gone; 2-4 others start there hidden (`away`), one after another step down onto the platform and
+walk off somewhere. (jam.js counts people in a vehicle: those boarding count inside the train.)
 
 **The time on the town** (demo/town.js `drawClock`, after the view and the speech, so the night
 does not darken it): a plate (`rgba(32,36,44,0.78)`) at (4, 4), 34 x 11 town pixels, a sun
