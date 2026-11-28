@@ -546,8 +546,8 @@ bubble lab, so games can use them and they can grow.
     of the four cyclists ride city bikes (mamachari: low frame, wire basket, rack; one with a
     child on a seat behind, one with shopping in the basket) and two schoolkids ride city
     bikes in white helmets; a new layout item `bikeParking` (ten bikes side by side seen end
-    on, staggered, coloured mudguards, baskets) in front of the wooden station. The old
-    two-bike `bikeRack` stays as it was.
+    on, staggered, coloured mudguards, baskets) in front of the wooden station. (The old
+    two-bike racks were taken out of the town later, 76.)
 
 74. **The rubbish truck** (the owner chose B, the green cab, from mock-ups): a packer truck
     (green cab, white box with a green stripe, grey steel hopper with its dark mouth) comes
@@ -560,10 +560,17 @@ bubble lab, so games can use them and they can grow.
     plate, with a sun by day and a moon at night (one town hour is 8 seconds, a day about
     3 minutes; the small clock by the buttons stays).
 
+76. **The old bike racks out of the town** (the owner): the two two-bike `bikeRack`s (by the
+    station, and behind a bush near the park) are gone from DEFAULT_TOWN; the bike parking stays.
+    (`bikeRack` is still a prop in the library and the catalogue.)
+
 ## In progress
 
-- Vehicles (the owner's order, Nov 2026): 1. small fixes, 2. motorbikes in the traffic,
-  3. city bikes and bike racks, 4. the rubbish truck; each from mock-ups first.
+- Vehicles, round two (the owner's order, Nov 2026): 1. a more detailed redraw of the cars,
+  2. a police car and a fire engine, 3. the delivery van stopping at shops, 4. parked cars;
+  each from mock-ups first.
+- Vehicles, round one (done): 1. small fixes, 2. motorbikes in the traffic,
+  3. city bikes and bike racks, 4. the rubbish truck.
   - Step 4, done (74): the rubbish truck. The four steps are done.
   - Step 3, done (73): city bikes and bike parking.
   - Step 2, done (72): scooters and motorbikes.
