@@ -692,6 +692,10 @@ bubble lab, so games can use them and they can grow.
     else?"): getting off a scooter or a car, it is parked just off the road beside you (no one else
     drives it away); you can get on it again.
 
+96. **Hands on the handlebars** (the owner): side on, a rider's near arm reaches forward and the hand
+    holds the bar (bicycles, city bikes, the scooters, the motorbike, the delivery scooter); the hand
+    at their side is not drawn then (`reach`).
+
 ## In progress
 
 - Vehicles, round two (the owner's order, Nov 2026; all done: 77, 78, 82 as a parcel truck, 84 as a coin-parking lot): 1. a more detailed redraw of the cars,

@@ -239,7 +239,7 @@ function drawSide(g, p, t = 0, bw = 4) {
   if (wear === 'skirt') R(legs, -2, -legH - 1, bw === 4 ? 5 : 4, 2);
   // the near arm: a sleeve down the side, the hand swinging forward and back
   const swing = phase === 0 ? -2 : phase === 2 ? 2 : 0;
-  if (carry !== 'boxes') {
+  if (carry !== 'boxes' && !p.reach) {                                    // (p.reach: the arm is drawn reaching for something: a handlebar)
     R(shade(body, 0.86), 0, B + 1, 1, bodyH - 3);
     R(skin, swing === 0 ? 0 : swing, B + bodyH - 3 + (swing ? 0 : 1), 1, 2);
   }

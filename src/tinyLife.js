@@ -29,6 +29,18 @@ const px = (g, c, x, y, w = 1, h = 1) => { g.fillStyle = c; g.fillRect(Math.roun
 const legRows = (p) => (p.kid ? 2 : p.size === 'tall' ? 4 : 3);
 const legColour = (p) => ((p.legwear ?? 'trousers') === 'trousers' ? p.legs ?? INK : p.skin ?? '#e2b08e');
 const shoes = (p) => p.shoes ?? (p.kid ? '#e8402f' : '#3a2a22');
+const bodyRows = (p) => (p.kid ? 4 : p.size === 'tall' ? 7 : p.size === 'short' ? 5 : 6);
+/**
+ * The near arm reaching forward to a handlebar (the owner: hands on the bars, Nov 2026): a sleeve from
+ * the shoulder of someone whose feet line is at (rx, ry) (side on, facing s) to the hand at (hx, hy).
+ * pix(colour, x, y) puts one pixel.
+ */
+function reachArm(pix, p, rx, ry, s, hx, hy) {
+  const sx = rx + s, sy = ry - legRows(p) - bodyRows(p) + 2, sleeve = shade(p.body ?? WHITE, 0.86);
+  const n = Math.max(Math.abs(hx - sx), Math.abs(hy - sy));
+  for (let i = 0; i < n; i++) pix(sleeve, Math.round(sx + (hx - sx) * i / n), Math.round(sy + (hy - sy) * i / n));
+  pix(p.skin ?? '#e2b08e', hx, hy);
+}
 /** The person's body and head only (their legs are drawn by the pose), feet line at y. */
 function upper(g, p, x, y) {
   g.save(); g.beginPath(); g.rect(Math.round(x) - 14, -1e4, 28, Math.round(y) - legRows(p) + 1e4); g.clip();
@@ -67,7 +79,8 @@ export const POSES = {
       for (const wx of [-6, 6]) { px(g, INK, X(wx) - 2, y - 6, 5, 1); px(g, INK, X(wx) - 2, y - 1, 5, 1); px(g, INK, X(wx) - 3, y - 5, 1, 4); px(g, INK, X(wx) + 3, y - 5, 1, 4); px(g, '#9aa0a8', X(wx), y - 3); }   // wheels
       px(g, col, Math.min(X(-6), X(0)), y - 4, 7, 1); px(g, col, X(0), y - 7, 1, 4); px(g, col, Math.min(X(1), X(4)), y - 8, 4, 1); px(g, col, X(5), y - 8, 1, 5);   // frame
       px(g, INK, Math.min(X(-2), X(1)), y - 8, 4, 1); px(g, INK, Math.min(X(4), X(6)), y - 10, 3, 1); px(g, '#c8ccd0', X(6), y - 6);   // saddle, handlebar, light
-      upper(g, { ...p, facing: p.facing }, X(-1), y - 5);
+      upper(g, { ...p, facing: p.facing, reach: true }, X(-1), y - 5);
+      reachArm((c, ax, ay) => px(g, c, ax, ay), p, X(-1), y - 5, s, X(4), y - 11);   // the hand on the bar
       const lc = legColour(p);
       px(g, lc, Math.min(X(-1), X(0)), y - 8, 2, 2); px(g, lc, Math.min(X(step), X(step + 1)), y - 6, 2, 3 - step); px(g, shoes(p), Math.min(X(step), X(step + 1)), y - 3 - step, 2, 1);   // the legs on the pedals
       return;
@@ -211,7 +224,8 @@ export function drawScooter(g, v, t = 0) {
     for (const wx of [-7, 7]) { px(g, INK, X(wx - 2, 4), y - 4, 4, 4); px(g, '#9aa0a8', X(wx - 1, 2), y - 3, 2, 2); }
     px(g, WHITE, X(-8, 10), y - 7, 10, 3); px(g, '#e8402f', X(2, 4), y - 11, 4, 8); px(g, WHITE, X(3, 3), y - 12, 3, 2); px(g, INK, X(4, 3), y - 14, 3, 1); px(g, '#fff2c0', X(7), y - 9, 1, 2);
     px(g, '#c8402c', X(-12, 8), y - 15, 8, 7); px(g, WHITE, X(-11, 6), y - 13, 6, 1);
-    upper(g, { ...rider, facing: s > 0 ? 'right' : 'left' }, X(-2), y - 6);
+    upper(g, { ...rider, facing: s > 0 ? 'right' : 'left', reach: true }, X(-2), y - 6);
+    reachArm((c, ax, ay) => px(g, c, ax, ay), rider, X(-2), y - 6, s, X(4), y - 15);   // the hand on the bar
     px(g, rider.legs, X(-2, 4), y - 9, 4, 2); px(g, rider.legs, X(1, 2), y - 8, 2, 3);
     return;
   }
@@ -272,7 +286,10 @@ export function drawMotorbike(g, v) {
     const facing = s > 0 ? 'right' : 'left';
     // its near side faces you: going right that is its right side, going left its left
     const near = blink && (v.signal === 'r') === (s > 0);
-    const rider = (dx, ay) => { const [ax, ry] = A(dx, ay); upper(g, { ...r, facing }, ax, ry); helmet(g, ax, ry, hc, facing); };
+    const rider = (dx, ay, barDx, barY) => {
+      const [ax, ry] = A(dx, ay); upper(g, { ...r, facing, reach: true }, ax, ry); helmet(g, ax, ry, hc, facing);
+      const [bx, by] = A(barDx, barY); reachArm((c, qx, qy) => px(g, c, qx, qy), r, ax, ry, s, bx, by);   // the hand on the bar
+    };
     for (const wx of big ? [-8, 8] : [-6, 6]) { P(TYRE, wx - 2, y - 5, 5, 5); P(METAL, wx - 1, y - 4, 3, 3); P(TYRE, wx, y - 3); }
     if (big) {
       P(METAL, -3, y - 6, 7, 3); P(DARK, -2, y - 5, 5, 2);                                         // the engine
@@ -281,7 +298,7 @@ export function drawMotorbike(g, v) {
       P(SEAT, -6, y - 9, 6, 2); P(c, -9, y - 9, 4, 2); P(tail, -10, y - 9);
       P(DARK, 6, y - 11, 1, 6); P(DARK, 5, y - 13, 3, 1); P(LAMP, 7, y - 10, 1, 2);
       if (near) { P(AMBER, 7, y - 12); P(AMBER, -10, y - 10); }
-      if (!v.parked) { rider(-2, y - 7); P(r.legs, -3, y - 10, 5, 2); P(r.legs, 1, y - 9, 2, 3); }
+      if (!v.parked) { rider(-2, y - 7, 5, y - 14); P(r.legs, -3, y - 10, 5, 2); P(r.legs, 1, y - 9, 2, 3); }
     } else {
       P(c, -8, y - 8, 6, 4); P(shade(c, 0.85), -8, y - 5, 6, 1);                                    // the back
       P(DARK, -2, y - 4, 5, 1);                                                                    // the floorboard
@@ -289,7 +306,7 @@ export function drawMotorbike(g, v) {
       P(SEAT, -7, y - 9, 5, 1); P(tail, -9, y - 7);
       P(DARK, 3, y - 13, 4, 1); P(LAMP, 6, y - 11, 1, 2);
       if (near) { P(AMBER, 6, y - 13); P(AMBER, -9, y - 8); }
-      if (!v.parked) { rider(-4, y - 6); P(r.legs, -4, y - 9, 5, 2); P(r.legs, 0, y - 8, 2, 4); }
+      if (!v.parked) { rider(-4, y - 6, 3, y - 14); P(r.legs, -4, y - 9, 5, 2); P(r.legs, 0, y - 8, 2, 4); }
       else { P(hc, 3, y - 15, 3, 2); P(shade(hc, 0.8), 5, y - 15, 1, 2); }                          // parked: its helmet hung on the bars
     }
     return;
@@ -370,7 +387,8 @@ function cityBike(g, p, t) {
     if (p.load) px(g, p.load, X(5, 2), y - 10, 2, 1);
     px(g, BLAMP, X(7), y - 6);                                         // the lamp under it
     if (p.child) { px(g, '#3a3d42', X(-wr - 1, 4), y - 10, 4, 3); upper(g, { ...p.child, facing: p.facing, kid: true }, X(-wr + 1), y - 6); }
-    upper(g, { ...p, facing: p.facing }, X(-1), y - 5);
+    upper(g, { ...p, facing: p.facing, reach: true }, X(-1), y - 5);
+    reachArm((c, ax, ay) => px(g, c, ax, ay), p, X(-1), y - 5, s, X(3), y - 10);   // the hand on the bar
     const lc = legColour(p);
     px(g, lc, Math.min(X(-1), X(0)), y - 8, 2, 2); px(g, lc, Math.min(X(step), X(step + 1)), y - 6, 2, 3 - step); px(g, shoes(p), Math.min(X(step), X(step + 1)), y - 3 - step, 2, 1);
     if (p.helmet) whiteHelmet(g, X(-1), y - 5, kid);
