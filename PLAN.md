@@ -529,6 +529,9 @@ bubble lab, so games can use them and they can grow.
     animal): each bird takes off a moment sooner or later, at its own speed and height,
     curving out to the side with a flutter, and they land spread out.
 
+70. **No footprints on the court in the snow** (the owner): prints in winter only where the
+    ground lies under snow (the court, which stays clear, gets none).
+
 ## In progress
 
 - Nothing. (A faster forest, weather and seasons, the traffic jam: done, 60-63. Going into

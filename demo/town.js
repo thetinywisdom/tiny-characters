@@ -175,13 +175,30 @@ function addPrint(p, f, step) {
   (p.trail ??= []).push(f);
   while (p.trail.length > TRAIL / step) p.trail.shift().gone = true;
 }
+// whether the ground at (x, y) lies under snow (the owner: none on the basketball court): the winter
+// ground (made by drawTownView, kept in town.grounds) differs there from the ground as drawn
+let snowMap = null;
+function snowyAt(x, y) {
+  if (!snowMap) {
+    const w = town.grounds?.get('winter|'); if (!w) return false;
+    const read = (c) => c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+    const a = read(town.ground), b = read(w), W = w.width, H = w.height;
+    snowMap = { W, H, bits: new Uint8Array(W * H) };
+    for (let i = 0; i < W * H; i++) { const j = i * 4; if ((a[j] !== b[j] || a[j + 1] !== b[j + 1] || a[j + 2] !== b[j + 2]) && b[j] > 180 && b[j + 2] > 190) snowMap.bits[i] = 1; }
+  }
+  const X = Math.round(x), Y = Math.round(y) - 1;
+  if (X < 0 || Y < 0 || X >= snowMap.W || Y >= snowMap.H) return false;
+  // snow anywhere within a pixel or two (a dusted path has gaps between its flakes)
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -2; dx <= 2; dx++) if (snowMap.bits[(Y + dy) * snowMap.W + X + dx]) return true;
+  return false;
+}
 function footprints(season, raining, t) {
   for (let i = prints.length - 1; i >= 0; i--) { const f = prints[i]; f.age = (t - f.at) / f.life; if (f.age >= 1 || f.gone) prints.splice(i, 1); }
   const snow = season === 'winter';
   if (!snow && !raining) return;
   for (const p of people) {
     if (p.away || p.flying || FLOATERS.has(p.monster) || (p.monster && !showMonsters) || (p.pose && !p.rider)) continue;
-    const onSnow = !town.roadAt(p.x, p.y) && !town.blocked(p.x, p.y);
+    const onSnow = !town.roadAt(p.x, p.y) && !town.blocked(p.x, p.y) && (!snow || snowyAt(p.x, p.y));
     if (!onSnow) { p.lastPrint = null; continue; }
     if (p.lastPrint && Math.hypot(p.x - p.lastPrint.x, p.y - p.lastPrint.y) < (p.rider ? 2 : p.cat || p.dog ? 3 : 4)) continue;
     if (p.rider) {                                                         // a bicycle: a thin tyre track

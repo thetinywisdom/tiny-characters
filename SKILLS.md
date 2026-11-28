@@ -618,7 +618,9 @@ drawn (so pictures without one are unchanged).
 - **Footprints** (the owner: everything leaves them, in snow and rain, but the town must
   not fill up with them): the demo's `footprints` adds a print for everyone walking
   (people, you, cats, dogs, the monsters that walk; a bicycle leaves a 1 px tyre track)
-  off the roads, every 4 px (animals 3, bikes 2), left and right by turns: pale in the
+  off the roads (in the snow only where the ground lies under snow: `snowyAt` compares the
+  winter ground with the ground as drawn, once, so none on the court or the water; the
+  owner), every 4 px (animals 3, bikes 2), left and right by turns: pale in the
   snow (25 s), dark and 40 % see-through in the rain (10 s); each walker keeps only the
   last 60 px of its trail (`addPrint`, `TRAIL`). `drawTownView({ prints })` draws them
   ({ x, y, w, c, alpha, age }) after the ground, before everyone, half as strong once

@@ -387,7 +387,8 @@ evergreens stay green. Winter: snow on the ground, the sidewalks and every roof,
 leafy trees bare with snow on their branches, snow on the evergreens; roads stay
 clear. `weather: 'rain'`: a faintly grey sky, soft see-through rain falling slowly at a
 slant, very few splashes, puddles on the roads and sidewalks (in winter it snows instead,
-slowly). Everyone walking leaves footprints, short trails behind them: in the snow,
+slowly). Everyone walking leaves footprints, short trails behind them: in the snow (only where it
+lies: none on the basketball court),
 and wet ones in the rain (`prints`). `weather: 'storm'`: the rain with lightning now
 and then (the sky flashes twice and a jagged pixel bolt strikes; not in winter).
 `weather: 'wind'`: autumn leaves or spring petals blowing across, the trees tossing
