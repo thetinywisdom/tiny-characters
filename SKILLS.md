@@ -992,11 +992,15 @@ close racing: a car more than 3 % of a lap ahead of you eases off (down to 93 %)
 pushes (up to 104 %). ?auto lets you drive yourself (for checks).
 
 **The race**: the grid (you third), the lights (a lamp each 0.75 s, 3 2 1, then green: GO!), three
-laps. Laps count only through the four quarters in order (cutting across does not count); the places
-from laps and how far into this one. The view follows you, a little ahead of where you are going, and
+laps. Laps count only through 16 checkpoints in order (a cut across the infield skipped about 1,070 px
+of road and saved 2 s; now it does not count: your place stays at your last checkpoint, MISSED A TURN:
+GO BACK flashes, a computer car pushed off drives back to it); the places from laps and how far into
+this one. Your best lap is kept in the browser (`localStorage`, per track name; NEW TRACK RECORD when
+beaten; ?auto keeps none). Away from the tab, the race pauses. The view follows you, a little ahead of where you are going, and
 stops at the map's edges. The signs (a 3 × 5 pixel font on the view's own pixels): lap and time, your
 best lap, your place, the speed (km/h = px/s × 1.1), FINAL LAP, WRONG WAY, PAUSED, and the results
-(places, times, best laps; R or a tap races again). Keys: arrows / WASD, P pause, R restart; on touch
+(places, times, best laps, the track record; R or a tap races again). The camera eases by time (the
+same on any refresh rate). Keys: arrows / WASD, P pause, R restart; on touch
 screens buttons (steer left, right; brake, gas). A phone's view is about 190 of the map's pixels on its
 short side (the canvas is `dpx` device pixels per map pixel, a whole number).
 

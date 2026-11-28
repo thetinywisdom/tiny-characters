@@ -19,6 +19,10 @@ const RACERS = [
   { name: 'SORA', color: '#f2f2ee', power: 0.95, nerve: 0.84 },
 ];
 let cars = [], state = null;
+// your best lap on this track, kept in this browser (a nicety: without storage it is just this visit's)
+const RECORD_KEY = `tinyRace.best.${CIRCUIT.name}`;
+let record = null;
+try { record = Number(localStorage.getItem(RECORD_KEY)) || null; } catch { record = null; }
 const keys = { up: false, down: false, left: false, right: false };
 
 function newRace() {
@@ -30,15 +34,17 @@ function newRace() {
       sector: sectorOf(q.s), next: 0, lap: 0, lapStart: 0, laps: [], best: null, finished: null, lane: (j % 2 ? 8 : -8), laneT: 0,
       brake: false, wrong: 0, dust: [] };
   });
-  state = { phase: 'count', t: 0, raceT: 0, paused: false, results: [], go: 0 };
+  state = { phase: 'count', t: 0, raceT: 0, paused: false, results: [], go: 0, oldRecord: record };
   track.lights.lit = 0; track.lights.go = false;
   window.tinyRace = { track, cars, you: cars.find((c) => c.you), state, keys, ms: () => frameMs };
 }
 const rel = (s) => (((s - track.start) % track.len) + track.len) % track.len;     // how far past the line
-const sectorOf = (s) => Math.floor(rel(s) / (track.len / 4));
+const SECTORS = 16;                                  // checkpoints along a lap, passed in order (a cut across the grass skips one)
+const sectorOf = (s) => Math.floor(rel(s) / (track.len / SECTORS));
 const wrapA = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 /** How far along the race a car is (laps and how far into this one), for the places. */
-const score = (c) => (c.finished !== null ? 1e7 - c.finished : (c.lap - 1) * track.len + rel(c.s));
+/** How far along the race a car is (laps and how far into this one, no further than its last checkpoint), for the places. */
+const score = (c) => (c.finished !== null ? 1e7 - c.finished : (c.lap - 1) * track.len + Math.min(rel(c.s), (c.lap === 0 ? SECTORS : c.next || SECTORS) * (track.len / SECTORS)));
 
 /** The fastest a car may take the road ahead (from its bends) with room to brake. */
 function safeSpeed(c) {
@@ -66,7 +72,8 @@ function think(c, dt) {
     const free = !cars.some((o) => { if (o === c) return false; const { fwd, lat } = rel2(o); return fwd > -34 && fwd < 40 && Math.abs(lat - shift) < 9; });
     if (free) { c.lane = to; c.laneT = 1.5; }
   }
-  const look = 22 + c.v * 0.3, q = track.at(c.s + look), tx = q.x - q.ty * c.lane, ty = q.y + q.tx * c.lane;
+  // (after a cut, it drives back to the checkpoint it missed)
+  const look = 22 + c.v * 0.3, q = c.cut > 30 ? track.at(track.start + (c.next + 0.5) * (track.len / SECTORS)) : track.at(c.s + look), tx = q.x - q.ty * c.lane, ty = q.y + q.tx * c.lane;
   const diff = wrapA(Math.atan2(ty - c.y, tx - c.x) - c.a);
   // close racing: a car well ahead of you eases off a little, one well behind pushes a little
   const you = cars.find((o) => o.you), gap = c.you ? 0 : (score(c) - score(you)) / track.len;
@@ -151,13 +158,19 @@ function progress(c) {
   c.idx = q.i; c.s = q.s;
   const sec = sectorOf(q.s);
   if (sec === c.next) {
-    c.next = (c.next + 1) % 4;
+    c.next = (c.next + 1) % SECTORS;
     if (sec === 0) {                                     // over the line
-      if (c.lap > 0) { const t = state.raceT - c.lapStart; c.laps.push(t); if (c.best === null || t < c.best) c.best = t; }
+      if (c.lap > 0) {
+        const t = state.raceT - c.lapStart; c.laps.push(t); if (c.best === null || t < c.best) c.best = t;
+        if (c.you && !AUTO && (record === null || t < record)) { record = t; try { localStorage.setItem(RECORD_KEY, String(t)); } catch { /* no storage */ } }
+      }
       c.lap++; c.lapStart = state.raceT;
       if (c.lap > LAPS && c.finished === null) { c.finished = state.results.length; c.time = state.raceT; state.results.push(c); c.lap = LAPS; c.v *= 1; }
     }
   }
+  // a cut: ahead of the next checkpoint without passing it (it does not count; drive back to it)
+  const ahead = (sec - c.next + SECTORS) % SECTORS;
+  c.cut = c.lap > 0 && ahead >= 1 && ahead < SECTORS / 2 ? (c.cut ?? 0) + 1 : 0;
   // going the wrong way: facing back along the road
   const facing = Math.cos(c.a - Math.atan2(q.ty, q.tx));
   c.wrong = facing < -0.3 && Math.abs(c.v) > 15 ? c.wrong + 1 : 0;
@@ -230,7 +243,8 @@ function draw(t) {
   // the view follows you, a little ahead of where you are going
   const tx = you.x + Math.cos(you.a) * you.v * 0.45 - VW / 2, ty = you.y + Math.sin(you.a) * you.v * 0.45 - VH * 0.52;
   if (!cam.set) { cam.x = tx; cam.y = ty; cam.set = true; }
-  cam.x += (tx - cam.x) * 0.12; cam.y += (ty - cam.y) * 0.12;
+  const k = 1 - Math.exp(-Math.min(0.1, t - (cam.t ?? t)) * 7.5); cam.t = t;   // (by time, the same on any screen's refresh rate)
+  cam.x += (tx - cam.x) * k; cam.y += (ty - cam.y) * k;
   const vx = Math.round(Math.max(0, Math.min(track.W - VW, cam.x))), vy = Math.round(Math.max(0, Math.min(track.H - VH, cam.y)));
   g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = false;
   g.fillStyle = '#20242c'; g.fillRect(0, 0, canvas.width, canvas.height);
@@ -271,12 +285,13 @@ function hud(you) {
   // the last lap, the wrong way
   if (state.phase === 'race' && you.lap === LAPS && state.raceT - you.lapStart < 2 && Math.floor(state.t * 4) % 2) { panel(VW / 2 - 44, VH * 0.22, 88, 15); mid('FINAL LAP', VH * 0.22 + 4, 2, '#f2c230'); }
   if (you.wrong > 40 && Math.floor(state.t * 3) % 2) { panel(VW / 2 - 46, VH * 0.36, 92, 15); mid('WRONG WAY', VH * 0.36 + 4, 2, '#ff4030'); }
+  if (you.cut > 60 && Math.floor(state.t * 3) % 2) { const m = 'MISSED A TURN: GO BACK'; panel(VW / 2 - textW(m) / 2 - 5, VH * 0.46, textW(m) + 10, 11); mid(m, VH * 0.46 + 3, 1, '#ff4030'); }
   if (state.paused) { panel(VW / 2 - 34, VH / 2 - 12, 68, 22); mid('PAUSED', VH / 2 - 7, 2); }
   if (state.phase === 'done') results();
 }
 
 function results() {
-  const W = 140, rows = cars.length, H = 44 + rows * 10 + 14, x = Math.round(VW / 2 - W / 2), y = Math.round(Math.max(36, VH / 2 - H / 2));
+  const W = 140, rows = cars.length, H = 34 + rows * 10 + 24, x = Math.round(VW / 2 - W / 2), y = Math.round(Math.max(36, VH / 2 - H / 2));
   panel(x, y, W, H);
   const you = cars.find((c) => c.you), mine = you.finished + 1;
   const title = mine === 1 ? 'YOU WIN!' : `${mine}${ORD(mine)} PLACE`;
@@ -291,6 +306,8 @@ function results() {
     if (c.best !== null) text(clock(c.best), x + 96, Y, 1, '#8a9098');
   });
   text('TIME', x + 56, y + 23, 1, '#8a9098'); text('BEST LAP', x + 96, y + 23, 1, '#8a9098');
+  const beat = state.oldRecord !== null && you.best !== null && you.best < state.oldRecord;
+  if (record !== null) { const s = `${beat ? 'NEW ' : ''}TRACK RECORD ${clock(record)}`; text(s, x + Math.round(W / 2 - textW(s) / 2), y + H - 20, 1, beat ? '#3fbf5a' : '#8a9098'); }
   const again = document.body.classList.contains('touch') ? 'TAP TO RACE AGAIN' : 'R: RACE AGAIN';
   if (state.t - state.doneT > 1.5) text(again, x + Math.round(W / 2 - textW(again) / 2), y + H - 9, 1, '#f2c230');
 }
@@ -304,6 +321,7 @@ addEventListener('keydown', (e) => {
 });
 addEventListener('keyup', (e) => { if (KEYMAP[e.code]) keys[KEYMAP[e.code]] = false; });
 addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+document.addEventListener('visibilitychange', () => { if (document.hidden && state.phase !== 'done') state.paused = true; });   // away from the tab: paused
 if ('ontouchstart' in window || matchMedia('(pointer: coarse)').matches) document.body.classList.add('touch');
 for (const b of document.querySelectorAll('.pad button')) {
   const k = b.dataset.key, on = (v) => (e) => { e.preventDefault(); keys[k] = v; b.classList.toggle('on', v); if (v) b.setPointerCapture?.(e.pointerId); };

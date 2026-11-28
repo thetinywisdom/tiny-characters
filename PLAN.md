@@ -723,7 +723,9 @@ bubble lab, so games can use them and they can grow.
     keys or touch buttons, results and race again. New: `src/tinyRace.js` (a track is a layout:
     anyone can make their own), Racing in the catalogue (grandstand, start lights, tyre stack, a
     track). Played through and tuned: crashes slide along instead of sticking, the computer cars no
-    longer swerve into each other on the grid, close racing, the phone's buttons clear of the signs.
+    longer swerve into each other on the grid, close racing, the phone's buttons clear of the signs,
+    no shortcut across the infield (16 checkpoints), a track record kept in the browser, paused when
+    you leave the tab.
 
 ## In progress
 
