@@ -256,6 +256,18 @@ export function makeLife({ town, traffic, people, follow, rng = Math.random }) {
   // out it comes round, stops by each pile, a worker in a cap walks the bags to the back, and it drives on
   const WORKER = { body: '#8aa8c0', legs: '#6a88a0', hair: '#2f3236', skin: '#e2b08e', hat: 'cap', hatColor: '#8aa8c0', top: 'jacket', trim: '#c8d8e4' };
   let truck = null, worker = null, roundDone = false;
+  // the fire engine (the owner, Nov 2026): every few minutes a call: out of the fire station, lights flashing,
+  // round the town, back in
+  const fireStation = town.buildings.find((b) => b.type === 'fireStation');
+  let nextCall = 40, engine = null;
+  function fireCalls(dt) {
+    if (!fireStation || !traffic.callOut) return;
+    if (engine && !traffic.vehicles.includes(engine)) engine = null;
+    if (engine || (nextCall -= dt) > 0) return;
+    const d = town.doorOf(fireStation);
+    engine = traffic.callOut('fireEngine', { x: d.x, y: d.y }, 35);
+    nextCall = engine ? 150 + rng() * 90 : 5;
+  }
   function collect(dt, h) {
     if (h < 6) roundDone = false;
     if (!truck && !roundDone && h >= 7 && h < 10.5 && rubbish.length && traffic.sendRound) {
@@ -349,6 +361,7 @@ export function makeLife({ town, traffic, people, follow, rng = Math.random }) {
     if (h < 6) for (const r of rubbish) r.collected = false;
     for (const r of rubbish) { const i = sprites.indexOf(r), show = out && !r.collected; if (show && i < 0) sprites.push(r); else if (!show && i >= 0) sprites.splice(i, 1); }
     collect(dt, h);
+    fireCalls(dt);
     for (const p of people) {
       if (p.job) runJob(p, dt);
       if (p.hold && (p.holdT -= dt) <= 0 && !people.some((q) => q !== p && !q.away && near(q, p, 5, 3))) { p.path = p.hold; p.hold = null; p.busy = false; p.away = false; }

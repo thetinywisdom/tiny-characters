@@ -25,7 +25,7 @@ import { KY, voxelSprite } from './tinyVoxel.js';
 import { drawScooter, drawMotorbike } from './tinyLife.js';
 
 const INK = '#2f3236', WHITE = '#f2f2ee', METAL = '#a8aeb4', DARK = '#3a3f44';
-const GLINT = '#8ea6c0', RUBBER = '#2a2e34', BUMPER = '#4a4e54', HUB = '#5a5f66';
+const GLINT = '#8ea6c0', RUBBER = '#2a2e34', BUMPER = '#4a4e54', HUB = '#5a5f66', LIGHT_ON = '#ff3a2a', LIGHT_OFF = '#a8302a';
 const LAMP = '#fff2c0', TAIL = '#e8403a', GLASS = '#5d7590', TYRE = '#26282c', ORANGE = '#f2a040';
 
 /** Body colours: white and silver most, then black, red, blue, a few bright ones. */
@@ -45,7 +45,7 @@ const TAXI_COLORS = [['#f2c230', '#3a3d42'], ['#3a3d42', '#f2c230'], ['#3f8a5a',
  */
 function carShape(o) {
   const hl = o.L / 2, hw = o.W / 2, R = o.r ?? 2.6, base = R * 0.75;
-  return (u, v, z, c, c2) => {
+  return (u, v, z, c, c2, flash) => {
     const au = Math.abs(u), av = Math.abs(v);
     if (au > hl || av > hw || z < 0) return null;
     for (const uc of o.wheels) {                                       // tyres, rims round a dark hub, in dark arches
@@ -65,12 +65,13 @@ function carShape(o) {
       if (backFace && lampRow && av >= hw - 3.7) return RUBBER;
       if (low && av > hw - 0.7) return shade(c, 0.62);
       if (o.stripe && z >= o.body - 2 && z < o.body - 1) return c2;
+      if (o.twoTone) return c2;                                           // a patrol car: all the body below the windows black
       if (av > hw - 0.7 && Math.abs(u - o.door) < 0.6 && z > base + 1) return shade(c, 0.72);
       if (av > hw - 0.7 && z >= o.body - 2 && z < o.body - 1.3 && (Math.abs(u - o.door - 2) < 0.7 || (o.door2 !== undefined && Math.abs(u - o.door2 - 2) < 0.7))) return RUBBER;   // door handles
       if (av > hw - 0.7 && z >= o.body - 1 && z < o.body - 0.4) return shade(c, 1.12);            // a crease catching the light
       return c;
     }
-    if (z >= o.H) return o.extra ? o.extra(u, v, z, c, c2) : null;
+    if (z >= o.H) return o.extra ? o.extra(u, v, z, c, c2, flash) : null;
     const k = z - o.body, front = o.cabF - k * o.slopeF, back = o.cabB + k * o.slopeB, side = hw - 1 - k * 0.15;
     if (u > front || u < back || av > side) {
       if (z < o.body + 1.2 && av > hw - 0.9 && Math.abs(u - (o.cabF - 0.8)) < 0.8) return shade(c, 0.55);
@@ -123,6 +124,44 @@ const SHAPES = {
     if (z >= 9.5 && z < 14.5 && av > 7) return Math.abs(((u + 54) % 6) - 3) > 2.4 ? c : GLASS;   // windows and pillars
     return c;
   } },
+  // the police car (the owner, Nov 2026): a Japanese patrol car, black below and white above, a red
+  // light bar across the roof that flashes side by side on a call (flash 0 | 1; null: off)
+  police: { label: 'Police car', L: 30, W: 13, H: 13, shape: carShape({ ...CAR, twoTone: true,
+    extra: (u, v, z, c, c2, flash) => (z < CAR.H + 1.5 && Math.abs(u + 1.5) < 1.6 && Math.abs(v) < 4.6
+      ? (Math.abs(v) < 1 ? '#c8ccd0' : flash !== null && flash !== undefined && (v > 0) === (flash === 1) ? LIGHT_ON : LIGHT_OFF) : null) }) },
+  // the fire engine (the owner, Nov 2026): long and red, a cab with big windows and a white band, silver
+  // lockers down its sides, a ladder along the top, red lights on the cab's roof that flash on a call
+  fireEngine: { label: 'Fire engine', L: 42, W: 15, H: 17, shape: (u, v, z, c, c2, flash) => {
+    const au = Math.abs(u), av = Math.abs(v), hw = 7, RED = '#d8302a';
+    if (au > 21 || av > hw || z < 0) return null;
+    for (const uc of [13, -8, -13]) { const w = wheel(u, v, z, uc, 2.9, hw); if (w) return w; }
+    if (z < 2) return null;
+    if (z < 3.4) return au > 20.3 ? '#c8ccd0' : DARK;                                 // bumpers, the chassis
+    if (u >= 10) {                                                                    // the cab
+      if (au > 20.3 && av > hw - 1) return null;
+      if (z >= 13.5) return z < 14.6 && u > 12 && u < 17 && av > 1.5 && av < 5.5 ? (flash !== null && flash !== undefined && (v > 0) === (flash === 1) ? LIGHT_ON : LIGHT_OFF) : null;
+      if (z >= 12.5) return RED;
+      if (u > 20.3) return z >= 8 ? (av < 0.6 ? DARK : GLASS) : z >= 4.5 && z < 6 && av > 4.5 ? LAMP : z >= 6.5 && z < 7.5 ? WHITE : z < 5 && av < 3 ? '#c8ccd0' : RED;
+      if (z >= 8 && z < 12 && av > hw - 0.8 && u > 11 && u < 19.5) return Math.abs(u - 15) < 0.5 ? RED : GLASS;
+      if (z >= 6.5 && z < 7.5) return WHITE;                                         // the white band
+      return RED;
+    }
+    if (u >= 9) return z < 12.5 ? DARK : null;
+    if (z >= 13.5) {                                                                  // the ladder along the top, its rungs
+      if (z >= 15) return null;
+      if (av > 2.2 && av < 3.5 && u > -20 && u < 8) return z >= 14 ? '#d8dcdf' : METAL;
+      if (av <= 2.2 && Math.abs(((u + 40) % 3) - 1.5) < 0.5 && u > -20 && u < 8) return METAL;
+      return null;
+    }
+    if (z >= 12.5) return RED;
+    if (av > hw - 0.8 && z >= 4 && z < 12) {                                          // lockers: silver shutters
+      if (z >= 6.5 && z < 7.5) return WHITE;
+      if (Math.abs(((u + 40) % 7) - 3.5) > 3) return RED;
+      return Math.floor(z) % 2 ? '#c8ccd0' : '#b0b6bc';
+    }
+    if (u < -20.3 && z >= 4 && z < 5.5 && av > hw - 2) return TAIL;
+    return RED;
+  } },
   // the rubbish truck (the owner chose B, Nov 2026): a green cab, a tall white box with a green stripe
   // and rounded top edges, the grey steel hopper at the back sloping out, its dark mouth, ribs, tail lamps
   rubbishTruck: { label: 'Rubbish truck', L: 39, W: 15, H: 16, shape: (u, v, z) => {
@@ -161,7 +200,7 @@ const SHAPES = {
 const SPRITES = new Map();
 const DIRS = 16;
 // glass: the sloped windscreen and rear window one tone (no steps), the side windows darker; lamps unshaded
-const tone = (col, f, face) => (col === GLASS || col === GLINT ? (face === 'side' ? 0.8 : 1.04) : col === LAMP || col === TAIL || col === ORANGE || col === BRAKE || col === AMBER ? 1 : f);
+const tone = (col, f, face) => (col === GLASS || col === GLINT ? (face === 'side' ? 0.8 : 1.04) : col === LAMP || col === TAIL || col === ORANGE || col === BRAKE || col === AMBER || col === LIGHT_ON ? 1 : f);
 // the lamps as they change (the owner, Nov 2026): the tail lamps brighter while braking or standing,
 // the corner lamps of one side blinking amber before and through a turn; snow on the tops in winter
 const BRAKE = '#ff2a1c', AMBER = '#ffb428', SNOWTOP = '#eef2f6';
@@ -169,19 +208,19 @@ const BRAKE = '#ff2a1c', AMBER = '#ffb428', SNOWTOP = '#eef2f6';
  * The sprite of a vehicle at one of 16 headings: { canvas, ox, oy } (where its ground middle is).
  * lamps: { brake, blink: 'l' | 'r' (that side's corner lamps lit amber), snow }.
  */
-function sprite(type, c, c2, dir, { brake = false, blink = null, snow = false } = {}) {
-  const key = `${type}|${c}|${c2}|${dir}|${brake ? 'b' : ''}${blink ?? ''}${snow ? 's' : ''}`;
+function sprite(type, c, c2, dir, { brake = false, blink = null, snow = false, flash = null } = {}) {
+  const key = `${type}|${c}|${c2}|${dir}|${brake ? 'b' : ''}${blink ?? ''}${snow ? 's' : ''}${flash ?? ''}`;
   if (!SPRITES.has(key)) {
     const S = SHAPES[type], lampLow = shade(LAMP, 0.85), hw = S.W / 2;
     const get = (u, v, z) => {
-      const col = S.shape(u, v, z, c, c2);
+      const col = S.shape(u, v, z, c, c2, flash);
       if (!col) return null;
       if (col === TAIL || col === LAMP || col === lampLow) {
         if (blink && (blink === 'r' ? v > 0 : v < 0) && Math.abs(v) > hw - 2) return AMBER;   // (+v is its right)
         return col === TAIL && brake ? BRAKE : col;
       }
       if (brake && col === GLASS && type !== 'bus' && u < 0 && Math.abs(v) < 1.6 && z < 8.2) return BRAKE;   // the high brake lamp, at the bottom of the rear window
-      if (snow && z >= S.H - 3 && col !== GLASS && col !== TYRE && !S.shape(u, v, z + 1, c, c2)) return SNOWTOP;
+      if (snow && z >= S.H - 3 && col !== GLASS && col !== TYRE && !S.shape(u, v, z + 1, c, c2, flash)) return SNOWTOP;
       return col;
     };
     SPRITES.set(key, voxelSprite((bu, bv, bz) => get(bu + 0.5, bv + 0.5, bz + 0.5), S, (dir / DIRS) * 360, tone));
@@ -211,6 +250,7 @@ function coloursOf(v) {
   const rng = seeded((v.seed ?? 1) * 53 + 5);
   const [tc, tc2] = TAXI_COLORS[Math.floor(rng() * TAXI_COLORS.length)];
   const c = v.color ?? (v.type === 'taxi' ? tc : v.type === 'bus' ? ['#f2f2ee', '#e8c840', '#3f7a5a'][Math.floor(rng() * 3)] : CAR_COLORS[Math.floor(rng() * CAR_COLORS.length)]);
+  if (v.type === 'police') return [v.color ?? WHITE, v.color2 ?? '#262a30'];
   const c2 = v.color2 ?? (v.type === 'taxi' ? tc2 : v.type === 'bus' ? '#2f7ac8' : v.type === 'keiTruck' ? '#b88a58' : '#3f7fd6');
   return [c, c2];
 }
@@ -228,7 +268,7 @@ export function drawVehicle(g, v) {
   const type = SHAPES[v.type] ? v.type : 'car', [c, c2] = coloursOf(v);
   const heading = v.heading ?? HEADING[v.facing ?? 'right'];
   const dir = ((Math.round(heading / (360 / DIRS)) % DIRS) + DIRS) % DIRS;
-  const s = sprite(type, c, c2, dir, { brake: v.brake, blink: v.signal && v.blinkOn ? v.signal : null, snow: v.snow });
+  const s = sprite(type, c, c2, dir, { brake: v.brake, blink: v.signal && v.blinkOn ? v.signal : null, snow: v.snow, flash: v.siren ? v.flash ?? 0 : null });
   g.drawImage(s.canvas, Math.round(v.x) - s.ox, Math.round(v.y) - s.oy);
 }
 
@@ -274,6 +314,7 @@ export function vehicleLights(v) {
     if (sn < 0.35) out.push({ ...onScreen(v, S, -hl - 0.5, w, 4.8), r: v.brake ? 3.5 : 2.5, c: v.brake ? '#ff3a28' : '#ff5040' });
     if (v.signal && v.blinkOn && (two || (v.signal === 'r' ? w > 0 : w < 0))) out.push({ ...onScreen(v, S, sn > -0.35 ? hl + 0.5 : -hl - 0.5, w, 4.8), r: 2.5, c: '#ffb428' });
   }
+  if (v.siren && (v.type === 'police' || v.type === 'fireEngine')) out.push({ ...onScreen(v, S, v.type === 'police' ? -1.5 : 14.5, (v.flash ?? 0) ? 3 : -3, S.H), r: 6, c: '#ff3a2a' });   // the flashing light on its roof
   return out;
 }
 
@@ -317,7 +358,7 @@ function signal(jn, axis, t) {
  * front of them; buses keep to the streets with bus stops and wait at each.
  * Hand `vehicles` to drawTownView with the people (they sort with them).
  */
-export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, motorbikes = 4, seed = 5 } = {}) {
+export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, motorbikes = 4, police = 1, seed = 5 } = {}) {
   const rng = seeded(seed);
   const { streets, crossStreets, junctions, W } = town, { SIDE, ROAD, VSIDE } = town.dims;
   const last = streets.length - 1, CRUISE = 30;
@@ -360,6 +401,10 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, motorbik
   for (let n = 0, tries = 0; n < motorbikes && tries < 100; tries++) {        // scooters and motorbikes (one in four a motorbike)
     const lane = hLanes[Math.floor(rng() * hLanes.length)], s = 20 + rng() * (W - 40);
     if (clear(lane, s, 30)) { vehicles.push(make(n % 4 === 3 ? 'motorbike' : 'moped', lane, s)); n++; }
+  }
+  for (let n = 0, tries = 0; n < police && tries < 100; tries++) {            // the police car on patrol
+    const lane = hLanes[Math.floor(rng() * hLanes.length)], s = 20 + rng() * (W - 40);
+    if (clear(lane, s, 34)) { vehicles.push(make('police', lane, s)); n++; }
   }
 
   const lightAt = (jn, axis, t) => signal(jn, axis, t);
@@ -593,7 +638,13 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, motorbik
       // no way round (they stand across both lanes, in the middle of a junction): turn round and go another way
       if (v.stuck > 3.5 && uTurn(v)) { v.stuck = 0; free = room(v, t, walkers); }
       if (v.dodge) steer(v, dt);
-      const target = free <= 0 ? 0 : Math.min(v.type === 'bus' ? CRUISE * 0.8 : CRUISE, free * 3);
+      // the police car: now and then a call (lights flashing, a little faster) for a while
+      if (v.type === 'police') {
+        v.sirenT = (v.sirenT ?? 25 + rng() * 35) - dt;
+        if (v.sirenT <= 0) { v.siren = !v.siren; v.sirenT = v.siren ? 12 + rng() * 10 : 40 + rng() * 50; }
+      }
+      if (v.siren) v.flash = Math.floor(t * 4) % 2;
+      const target = free <= 0 ? 0 : Math.min(v.type === 'bus' ? CRUISE * 0.8 : v.siren ? CRUISE * 1.3 : CRUISE, free * 3);
       v.speed += Math.max(-90 * dt, Math.min(40 * dt, target - v.speed));
       v.brake = v.speed < 0.5 || target < v.speed - 1;                         // the brake lights: slowing down, or standing
       const step = Math.max(0, Math.min(v.speed * dt, Math.max(0, free)));
@@ -609,7 +660,11 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, motorbik
       // a bus waits at its stops
       if (v.type === 'bus') for (const s of stops) if (s.lane === v.lane && !v.served.has(s) && (before - s.x) * (now - s.x) <= 0) { v.served.add(s); v.wait = 2.5; }
       // a vehicle on a round (the rubbish truck): it stops at each of its stops and waits until it is let go (v.wait = 0)
-      if (v.route) for (const s of v.route) if (s.lane === v.lane && !s.done && (before - s.x) * (now - s.x) <= 0) { s.done = true; v.atStop = s; v.wait = 99; v.speed = 0; }
+      if (v.route) for (const s of v.route) if (s.lane === v.lane && !s.done && (before - s.x) * (now - s.x) <= 0) {
+        s.done = true;
+        if (s.home) { v.gone = true; break; }                                  // back at its station: in it goes
+        v.atStop = s; v.wait = 99; v.speed = 0;
+      }
       // turns, decided a little before the turn (40 px) so the signal blinks on the way to it
       if (v.type !== 'bus' && !v.route && !v.toRank && v.driftY === undefined) {
         if (v.lane.kind === 'h') {
@@ -639,6 +694,10 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, motorbik
       v.blinkOn = !!v.signal && Math.floor(t * 2.5) % 2 === 0;
       // out of town: come back in somewhere else
       if (v.lane.kind === 'h' && (v.x < -40 || v.x > W + 40) && v.extra && !v.toRank) { v.gone = true; continue; }   // a taxi from the rank: gone (another comes)
+      if (v.home) {                                                            // out on a call: after a while, back to its station
+        v.outFor -= dt;
+        if (v.outFor <= 0 && !v.route && v.lane.kind === 'h' && (v.x < -40 || v.x > W + 40)) { v.siren = false; v.route = [{ lane: v.homeLane, x: v.home.x, spot: v.home, home: true, done: false }]; }
+      }
       if (v.route && v.lane.kind === 'h' && (v.x < -40 || v.x > W + 40)) {   // on a round: in again on the next stop's street, or done
         const next = v.route.find((s) => !s.done);
         if (!next) { v.gone = true; continue; }
@@ -649,7 +708,7 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, motorbik
       if (v.lane.kind === 'h' && (v.x < -40 || v.x > W + 40) && !v.toRank) {
         const lanes = v.type === 'bus' ? busLanes : hLanes, lane = lanes[Math.floor(rng() * lanes.length)], s = lane.dir > 0 ? -30 : W + 30;
         if (clear(lane, s, 40)) {
-          Object.assign(v, make(v.type === 'bus' || TWO_WHEELS.includes(v.type) ? v.type : TYPES[Math.floor(rng() * TYPES.length)], lane, s));
+          Object.assign(v, make(TYPES.includes(v.type) ? TYPES[Math.floor(rng() * TYPES.length)] : v.type, lane, s));   // (the bus, two wheels, the police car, the fire engine stay what they are)
         }
       }
     }
@@ -689,5 +748,20 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, motorbik
     return v;
   }
 
-  return { vehicles, update, mayCross, lightAt, train, crossingClosed: closed, hits, pickUp, sendRound };
+  /**
+   * A call (the fire engine): a vehicle of `type` pulls out from `spot` (in front of its station, on the
+   * sidewalk) into the kerb-side lane of the street below, lights flashing, drives round the town for
+   * `minutes` of its own (seconds, really: `secs`), then comes back along that street and goes in.
+   */
+  function callOut(type, spot, secs = 40) {
+    const lane = hLanes.filter((l) => l.dir > 0 && l.y > spot.y).sort((a, b) => a.y - b.y)[0];
+    if (!lane || !clear(lane, spot.x, 60)) return null;
+    const v = make(type, lane, spot.x);
+    v.y = lane.y - 10; v.driftY = lane.y; v.target = 25;                       // pulling out, turned a little
+    v.siren = true; v.home = spot; v.homeLane = lane; v.outFor = secs;
+    vehicles.push(v);
+    return v;
+  }
+
+  return { vehicles, update, mayCross, lightAt, train, crossingClosed: closed, hits, pickUp, sendRound, callOut };
 }

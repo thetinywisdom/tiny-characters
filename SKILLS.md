@@ -581,6 +581,20 @@ does not darken it): a plate (`rgba(32,36,44,0.78)`) at (4, 4), 34 x 11 town pix
 at a time, like the small clock by the buttons. The demo's clock runs one town hour every 8 s
 (`hour += dt / 8` while Time is passing).
 
+**The police car and the fire engine** (`police`: `carShape` with `twoTone`, the body below the
+windows all `c2` black, white above, a light bar `extra`; `fireEngine`: its own shape). A shape
+takes a sixth argument, `flash` (0 | 1, or null for lights off): their roof lights are `LIGHT_ON`
+on the side `flash` picks, `LIGHT_OFF` otherwise; `sprite(..., { flash })` caches each state;
+`drawVehicle` passes `v.siren ? v.flash : null`, and the traffic sets `v.flash` (4 a second) while
+`v.siren`. `vehicleLights` adds a red glow on the roof at night. The police car (`makeTraffic({
+police: 1 })`) turns its siren on for 12-22 s every 40-90 s (`v.sirenT`) and drives at 1.3 x
+while it is on. `traffic.callOut(type, spot, secs)`: a vehicle pulls out from a spot on the
+sidewalk (`driftY`) into the kerb-side lane of the street below, siren on, drives freely for
+`secs`, then, once it leaves the town, comes back along that street (a `route` with a `home`
+stop) and is gone when it reaches the spot. The demo (`fireCalls` in demo/life.js) calls the
+fire engine out from the fire station's door 40 s in and every 150-240 s. The respawn at the
+town's edge keeps any type not in `TYPES` (the bus, two wheels, the police car, the fire engine).
+
 **The rubbish truck** (`rubbishTruck`, a shape like the bus's; the owner chose the green cab)
 and **rounds**: `traffic.sendRound(type, spots)` sends a vehicle round places on the sidewalk:
 each becomes a stop on the kerb-side (east-bound) lane of the street below it, at its x plus

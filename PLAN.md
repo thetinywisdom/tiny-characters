@@ -570,9 +570,16 @@ bubble lab, so games can use them and they can grow.
     dark window rubber, a darker rim round the roof, a glint on the windscreen. Same shapes
     and sizes.
 
+78. **A police car and a fire engine** (the owner, from mock-ups: the police car with fewer white
+    lines, the fire engine as drawn; calls now and then): a Japanese patrol car (black body, white
+    cabin and roof, a red light bar) patrols with the traffic and now and then flashes its lights and
+    hurries for a while; the fire engine (long and red, a ladder, silver lockers, red lights) waits
+    in the fire station and every few minutes pulls out, lights flashing, drives round the town and
+    comes back in. Their lights glow at night. Catalogue cards.
+
 ## In progress
 
-- Vehicles, round two (the owner's order, Nov 2026; 1 done, 77): 1. a more detailed redraw of the cars,
+- Vehicles, round two (the owner's order, Nov 2026; 1 done, 77; 2 done, 78): 1. a more detailed redraw of the cars,
   2. a police car and a fire engine, 3. the delivery van stopping at shops, 4. parked cars;
   each from mock-ups first.
 - Vehicles, round one (done): 1. small fixes, 2. motorbikes in the traffic,

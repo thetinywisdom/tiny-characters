@@ -409,7 +409,8 @@ mornings; walkers put their umbrellas up while it rains. The address takes
 `drawBuilding(g, { ...b, lights: true })` draws only what shines on a
 building, `propLights(p)` and `vehicleLights(v)` where things give light;
 `drawVehicleBeams(g, v)` the pool of light headlamps throw on the road in
-front of a car. Each morning the rubbish truck comes round the blocks of flats and a worker loads the bags
+front of a car. A police car patrols (now and then with its lights flashing) and the fire engine comes out of the
+fire station on calls (`traffic.callOut('fireEngine', spot)`). Each morning the rubbish truck comes round the blocks of flats and a worker loads the bags
 (`traffic.sendRound('rubbishTruck', spots)` sends any vehicle round stops). Cyclists ride plain bikes or city bikes (`pose: { kind: 'ride' }, city: true`, with `child`,
 `load`, `helmet`); bikes stand in `bikeParking` in front of the station. Scooters and motorbikes (`type: 'moped'`, `'motorbike'`, riders in helmets) ride in the
 traffic and slip past the queue to the front at red lights. In the traffic, vehicles show brake lights when they slow or stand,
