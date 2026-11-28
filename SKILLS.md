@@ -572,6 +572,17 @@ when braking and an amber one when blinking. Turns are planned 40 px before the 
 vehicle has swung round). drawTownView draws `drawVehicleBeams` faintly ('lighter', 70 %)
 under everything on a dark day (rain, storm, fog) so the headlamps show.
 
+**The rubbish truck** (`rubbishTruck`, a shape like the bus's; the owner chose the green cab)
+and **rounds**: `traffic.sendRound(type, spots)` sends a vehicle round places on the sidewalk:
+each becomes a stop on the kerb-side (east-bound) lane of the street below it, at its x plus
+0.42 of the vehicle's length (its back by the spot); the vehicle comes in from the west edge,
+does not turn, stops at each (`v.atStop`, `v.wait` 99) until let go (`v.wait = 0`), leaves at
+the east edge, comes in on the next stop's street, and is gone when all are done. The demo
+(`collect` in demo/life.js) sends it once a morning (from 7, while the bags are out, which
+stay out while it is still on its round), walks a worker (`WORKER`, light blue, a cap) from
+the truck's back to the pile and back with a bag, hides the pile (`collected`, until 6 the
+next morning) and lets the truck go. A round of the three piles takes about 85 s.
+
 **City bikes** (tinyLife's `cityBike`, through the `ride` pose with `p.city`; the owner chose a
 mix with the plain bike): a low step-through frame in `p.bike`, a wire basket at the front
 (`p.load`: a pixel of shopping in it), a lamp under it, a rack behind (`p.child`: a kid in a

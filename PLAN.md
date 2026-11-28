@@ -549,11 +549,18 @@ bubble lab, so games can use them and they can grow.
     on, staggered, coloured mudguards, baskets) in front of the wooden station. The old
     two-bike `bikeRack` stays as it was.
 
+74. **The rubbish truck** (the owner chose B, the green cab, from mock-ups): a packer truck
+    (green cab, white box with a green stripe, grey steel hopper with its dark mouth) comes
+    round once each morning while the bags are out (from 7): it stops by each block of flats'
+    pile, a worker in a light blue uniform and cap walks the bags to the back, and it drives
+    on; the bags stay gone until the next morning. A catalogue card.
+
 ## In progress
 
 - Vehicles (the owner's order, Nov 2026): 1. small fixes, 2. motorbikes in the traffic,
   3. city bikes and bike racks, 4. the rubbish truck; each from mock-ups first.
-  - Step 3, done (73): city bikes and bike parking. Next: step 4, the rubbish truck.
+  - Step 4, done (74): the rubbish truck. The four steps are done.
+  - Step 3, done (73): city bikes and bike parking.
   - Step 2, done (72): scooters and motorbikes.
   - Step 1, done (71): brake lights (the tail lamps a brighter red and a high brake lamp at the bottom of the
     rear window while slowing or standing), turn signals (the turn decided 40 px before

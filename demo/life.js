@@ -252,6 +252,30 @@ export function makeLife({ town, traffic, people, follow, rng = Math.random }) {
     return free(x, d.y) ? { x, y: d.y - 1, draw: drawRubbish } : null;
   }).filter(Boolean);
 
+  // --- the rubbish truck (the owner chose the green one, Nov 2026): once each morning while the bags are
+  // out it comes round, stops by each pile, a worker in a cap walks the bags to the back, and it drives on
+  const WORKER = { body: '#8aa8c0', legs: '#6a88a0', hair: '#2f3236', skin: '#e2b08e', hat: 'cap', hatColor: '#8aa8c0', top: 'jacket', trim: '#c8d8e4' };
+  let truck = null, worker = null, roundDone = false;
+  function collect(dt, h) {
+    if (h < 6) roundDone = false;
+    if (!truck && !roundDone && h >= 7 && h < 10.5 && rubbish.length && traffic.sendRound) {
+      truck = traffic.sendRound('rubbishTruck', rubbish.filter((r) => !r.collected));
+      if (truck) roundDone = true;
+    }
+    if (!truck) return;
+    if (!traffic.vehicles.includes(truck)) { truck = null; return; }
+    const stop = truck.atStop;
+    if (!stop || truck.wait <= 0) return;
+    const bag = stop.spot, back = { x: truck.x - 19, y: truck.y - 8 };
+    if (!worker) { worker = { ...WORKER, x: back.x, y: back.y, walking: true, facing: 'up', leg: 'there', talk: 0 }; sprites.push(worker); }
+    const to = worker.leg === 'there' ? { x: bag.x, y: bag.y + 3 } : back, dx = to.x - worker.x, dy = to.y - worker.y, d = Math.hypot(dx, dy), step = 22 * dt;
+    worker.facing = facingFor(dx, dy, worker.facing);
+    if (d > step) { worker.x += dx / d * step; worker.y += dy / d * step; return; }
+    worker.x = to.x; worker.y = to.y;
+    if (worker.leg === 'there') { worker.leg = 'back'; bag.collected = true; worker.carry = 'bag'; worker.carryColor = '#3f7fd6'; return; }
+    sprites.splice(sprites.indexOf(worker), 1); worker = null; truck.atStop = null; truck.wait = 0.5;   // in the back, and on
+  }
+
   // --- dogs greeting: two dogs meet, sniff, wag; their owners stop for a moment --------------------------
   const dogs = people.filter((p) => p.dog);
   let greetings = [];
@@ -319,9 +343,12 @@ export function makeLife({ town, traffic, people, follow, rng = Math.random }) {
     // the buildings: laundry out by day, shutters down at night, the windows' own rhythm
     const day = h >= 8 && h < 16, shut = h >= 21 || h < 7;
     for (const b of town.buildings) { b.laundry = day; b.shut = shut; }
-    // rubbish out from 6 to 11 in the morning
-    const out = h >= 6 && h < 11;
-    for (const r of rubbish) { const i = sprites.indexOf(r); if (out && i < 0) sprites.push(r); else if (!out && i >= 0) sprites.splice(i, 1); }
+    // rubbish out from 6 to 11 in the morning, until the truck has taken it (it stays out while the truck is
+    // still on its round: the round takes longer than the town's morning)
+    const out = (h >= 6 && h < 11) || (!!truck && h >= 6 && h < 19);
+    if (h < 6) for (const r of rubbish) r.collected = false;
+    for (const r of rubbish) { const i = sprites.indexOf(r), show = out && !r.collected; if (show && i < 0) sprites.push(r); else if (!show && i >= 0) sprites.splice(i, 1); }
+    collect(dt, h);
     for (const p of people) {
       if (p.job) runJob(p, dt);
       if (p.hold && (p.holdT -= dt) <= 0 && !people.some((q) => q !== p && !q.away && near(q, p, 5, 3))) { p.path = p.hold; p.hold = null; p.busy = false; p.away = false; }

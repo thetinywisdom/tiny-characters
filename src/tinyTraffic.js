@@ -114,6 +114,38 @@ const SHAPES = {
     if (z >= 9.5 && z < 14.5 && av > 7) return Math.abs(((u + 54) % 6) - 3) > 2.4 ? c : GLASS;   // windows and pillars
     return c;
   } },
+  // the rubbish truck (the owner chose B, Nov 2026): a green cab, a tall white box with a green stripe
+  // and rounded top edges, the grey steel hopper at the back sloping out, its dark mouth, ribs, tail lamps
+  rubbishTruck: { label: 'Rubbish truck', L: 39, W: 15, H: 16, shape: (u, v, z) => {
+    const au = Math.abs(u), av = Math.abs(v), hw = 7, CAB = '#3f8a5a', BODY = '#e8efe4', STRIPE = '#3f8a5a';
+    if (au > 19 || av > hw || z < 0) return null;
+    for (const uc of [12, -9]) { const w = wheel(u, v, z, uc, 2.8, hw); if (w) return w; }
+    if (z < 2) return null;
+    if (z < 3.4) return u > 18 || u < -18.5 ? DARK : '#4a4e54';                       // the chassis, bumpers
+    if (u >= 9) {                                                                      // the cab
+      if (au > 18.3 && av > hw - 1) return null;
+      if (z >= 13) return null;
+      if (z >= 12) return CAB;
+      if (u > 18.3) return z >= 8 ? (av < 0.6 ? DARK : GLASS) : z >= 4.5 && z < 6 && av > 4.5 ? LAMP : z < 5 && av < 2 ? WHITE : CAB;
+      if (z >= 8 && z < 11.5 && av > hw - 0.8 && u > 10.5 && u < 17.5) return Math.abs(u - 14) < 0.5 ? CAB : GLASS;   // its side windows
+      if (z >= 5 && z < 6 && u > 16) return ORANGE;                                    // a lamp on its corner
+      return CAB;
+    }
+    if (u >= 8) return z < 13 ? DARK : null;                                           // the gap behind the cab
+    if (u > -11) {                                                                     // the box
+      if (z >= 15) return z < 15.6 && av < hw - 0.8 ? BODY : null;
+      if (z >= 14 && av > hw - 0.8) return null;
+      if (z >= 7 && z < 9 && av > hw - 0.8) return STRIPE;
+      if (z >= 3.4 && z < 4.6 && av > hw - 0.8) return '#9aa0a6';                      // the side rail
+      return BODY;
+    }
+    const back = -18.6 + Math.max(0, z - 4) * 0.35;                                    // the hopper
+    if (u < back || z >= 14.5) return null;
+    if (u < back + 1 && z >= 6 && z < 11 && av < hw - 1.4) return '#1e2024';           // its mouth
+    if (u < back + 1 && z >= 3.4 && z < 5 && av > hw - 2) return TAIL;
+    if (Math.abs(u + 13.5) < 0.5 && av > hw - 0.8) return '#6a7076';                   // a rib down its side
+    return z >= 13.5 ? '#b8bec4' : '#8a9096';
+  } },
 };
 
 // --- drawing them (tinyVoxel) ----------------------------------------------------------
@@ -567,8 +599,10 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, motorbik
       const now = along(v);
       // a bus waits at its stops
       if (v.type === 'bus') for (const s of stops) if (s.lane === v.lane && !v.served.has(s) && (before - s.x) * (now - s.x) <= 0) { v.served.add(s); v.wait = 2.5; }
+      // a vehicle on a round (the rubbish truck): it stops at each of its stops and waits until it is let go (v.wait = 0)
+      if (v.route) for (const s of v.route) if (s.lane === v.lane && !s.done && (before - s.x) * (now - s.x) <= 0) { s.done = true; v.atStop = s; v.wait = 99; v.speed = 0; }
       // turns, decided a little before the turn (40 px) so the signal blinks on the way to it
-      if (v.type !== 'bus' && !v.toRank && v.driftY === undefined) {
+      if (v.type !== 'bus' && !v.route && !v.toRank && v.driftY === undefined) {
         if (v.lane.kind === 'h') {
           if (!v.plan) for (const l of vLanes) { const dist = (l.x - now) * d; if (dist > 0 && dist < 40 && v.planFor !== l) {
             v.planFor = l; v.plan = (l.dir > 0 ? v.lane.i < last : v.lane.i > 0) && rng() < 0.3; v.signal = v.plan ? turnSide(v, l) : v.signal; break; } }
@@ -596,6 +630,13 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, motorbik
       v.blinkOn = !!v.signal && Math.floor(t * 2.5) % 2 === 0;
       // out of town: come back in somewhere else
       if (v.lane.kind === 'h' && (v.x < -40 || v.x > W + 40) && v.extra && !v.toRank) { v.gone = true; continue; }   // a taxi from the rank: gone (another comes)
+      if (v.route && v.lane.kind === 'h' && (v.x < -40 || v.x > W + 40)) {   // on a round: in again on the next stop's street, or done
+        const next = v.route.find((s) => !s.done);
+        if (!next) { v.gone = true; continue; }
+        const s = next.lane.dir > 0 ? -30 : W + 30;
+        if (clear(next.lane, s, 40)) { v.lane = next.lane; v.x = s; v.y = next.lane.y; v.heading = v.target = headingOf(next.lane); }
+        continue;
+      }
       if (v.lane.kind === 'h' && (v.x < -40 || v.x > W + 40) && !v.toRank) {
         const lanes = v.type === 'bus' ? busLanes : hLanes, lane = lanes[Math.floor(rng() * lanes.length)], s = lane.dir > 0 ? -30 : W + 30;
         if (clear(lane, s, 40)) {
@@ -623,5 +664,21 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, motorbik
     return !c || signal(c.junction, c.axis, t) === 'red';
   }
 
-  return { vehicles, update, mayCross, lightAt, train, crossingClosed: closed, hits, pickUp };
+  /**
+   * Send a vehicle of `type` round some stops ({ x, y }: places on a sidewalk): it comes in on the
+   * kerb-side lane of each one's street in turn, stops beside it (its back by the spot), waits there
+   * (v.atStop is that stop, v.wait 99) until let go (set v.wait to 0), and leaves the town when done.
+   */
+  function sendRound(type, spots) {
+    const route = spots.map((p) => {
+      const lane = hLanes.filter((l) => l.dir > 0 && l.y > p.y).sort((a, b) => a.y - b.y)[0];   // the street below it, the lane by its kerb
+      return lane && { lane, x: p.x + VEHICLES[type].length * 0.42, spot: p, done: false };
+    }).filter(Boolean).sort((a, b) => a.lane.y - b.lane.y || a.x - b.x);
+    if (!route.length || !clear(route[0].lane, -30, 40)) return null;
+    const v = make(type, route[0].lane, -30);
+    v.route = route; vehicles.push(v);
+    return v;
+  }
+
+  return { vehicles, update, mayCross, lightAt, train, crossingClosed: closed, hits, pickUp, sendRound };
 }
