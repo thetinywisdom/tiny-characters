@@ -620,6 +620,19 @@ them there, facing the track); when the train stops at it they walk to the neare
 gone; 2-4 others start there hidden (`away`), one after another step down onto the platform and
 walk off somewhere. (jam.js counts people in a vehicle: those boarding count inside the train.)
 
+**Riding** (demo/town.js, the owner, Nov 2026): `ride` = { kind: 'bike' | 'scooter' | 'car' | 'bus',
+v, to }. `nearRide()` gives the hint each frame ({ label, x, y, act }; `drawHint` in pixel letters):
+the bike parking (`getOnBike`: you in the city-bike pose, 2 x speed), a parked moped, car, kei or van
+in `town.parked` (`getInto`: out of the list and any lot bay, into `traffic.vehicles` as a `player`
+vehicle with `you`, a dummy lane, your look as its rider), a bus standing at the stop you are at
+(`board`: you `away`, the bus `you`). E or a tap on the hint acts. `driveStep`: the keys or `ride.to`
+(a tap), on `roadAt` or a parking lot (or, until it first reaches a road, anywhere not blocked),
+clear of vehicles and people; the scooter turns four ways, the car smoothly. traffic: `v.player` is
+skipped by update (others still avoid it); `handBack(v)` puts it in the nearest lane (within 14 px)
+as ordinary traffic; `drawVehicle` draws a gold frame round a vehicle with `you` (two wheels: the
+people's ring); a parked moped has no rider (its helmet on the bars). `getOff`: a car or scooter on
+the road goes back to the traffic, else stays parked; you stand at the nearest free spot (`standNear`).
+
 **The time on the town** (demo/town.js `drawClock`, after the view and the speech, so the night
 does not darken it): a plate (`rgba(32,36,44,0.78)`) at (4, 4), 34 x 11 town pixels, a sun
 (from 5:30) or a moon (from 19:00), the time in 3 x 5 pixel numbers (`DIGITS`), ten minutes

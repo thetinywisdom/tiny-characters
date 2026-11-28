@@ -299,7 +299,14 @@ function coloursOf(v) {
  * towards you, 180 left, 270 up), or facing 'right' | 'down' | 'left' | 'up'.
  * Without a colour the seed picks one.
  */
+/** The gold ring of the one you drive, round its footprint on the screen (two wheels: the people's ring). */
+function youFrame(g, v) {
+  const S = shapeOf(v), th = ((v.heading ?? HEADING[v.facing ?? 'right']) * Math.PI) / 180, c = Math.abs(Math.cos(th)), s = Math.abs(Math.sin(th));
+  const hx = Math.round(c * S.L / 2 + s * S.W / 2) + 2, hy = Math.round((s * S.L / 2 + c * S.W / 2) * KY) + 1, x = Math.round(v.x), y = Math.round(v.y);
+  g.fillStyle = '#f2b64a'; g.fillRect(x - hx, y - hy, hx * 2 + 1, 1); g.fillRect(x - hx, y + hy, hx * 2 + 1, 1); g.fillRect(x - hx - 1, y - hy + 1, 1, hy * 2 - 1); g.fillRect(x + hx + 1, y - hy + 1, 1, hy * 2 - 1);
+}
 export function drawVehicle(g, v) {
+  if (v.you) { if (TWO_WHEELS.includes(v.type)) { g.fillStyle = '#f2b64a'; for (const [dx, dy, w] of [[-3, -1, 7], [-5, 0, 2], [4, 0, 2], [-6, 1, 1], [6, 1, 1], [-5, 2, 2], [4, 2, 2], [-3, 3, 7]]) g.fillRect(Math.round(v.x) + dx, Math.round(v.y) + dy, w, 1); } else youFrame(g, v); }
   if (v.type === 'train') { drawTrain(g, v); return; }
   if (v.type === 'scooter') { drawScooter(g, v); return; }
   if (v.type === 'moped' || v.type === 'motorbike') { drawMotorbike(g, v); return; }
@@ -501,7 +508,7 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, motorbik
         vehicles.push(v); b.car = null;
       } else if (free.length) {                                                  // one coming along the lane pulls in
         const b = free[Math.floor(lrng() * free.length)];
-        const v = vehicles.find((o) => o.lane === lot.lane && ['car', 'kei', 'van', 'taxi'].includes(o.type) && !o.route && !o.toRank && !o.toBay && o.driftY === undefined && !o.siren && !o.extra && o.x > b.x + 30);
+        const v = vehicles.find((o) => o.lane === lot.lane && ['car', 'kei', 'van'].includes(o.type) && !o.route && !o.toRank && !o.toBay && o.driftY === undefined && !o.siren && !o.extra && o.x > b.x + 30);
         if (v) { v.toBay = { lot, bay: b }; b.coming = true; } else lot.next = 2;   // none coming: look again soon
       }
     }
@@ -717,7 +724,7 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, motorbik
     for (const p of town.props) if (p.type === 'crossingGate') { p.down = closed(p.crossing); p.flash = Math.floor(t * 3) % 2; }
     lotsUpdate(dt);
     for (const v of vehicles) {
-      if (v.type === 'train') continue;
+      if (v.type === 'train' || v.player) continue;                           // (the one you drive: moved by you)
       // swing round towards its heading (a quarter turn in about a third of a second)
       if (v.heading !== v.target) { const diff = ((v.target - v.heading + 540) % 360) - 180, turnBy = 280 * dt; v.heading = Math.abs(diff) <= turnBy ? v.target : (v.heading + Math.sign(diff) * turnBy + 360) % 360; }
       if (v.wait > 0) { v.wait -= dt; v.walking = false; v.brake = true; if (v.signal) v.blinkOn = Math.floor(t * 2.5) % 2 === 0; continue; }   // (standing: hazards blink)
@@ -877,5 +884,21 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, motorbik
     return v;
   }
 
-  return { vehicles, update, mayCross, lightAt, train, crossingClosed: closed, hits, pickUp, sendRound, callOut, lots };
+  /**
+   * You got out of v (one you drove, v.player): it joins the traffic in the nearest lane it fits (within
+   * 14 px, its heading the nearest), or returns false (off the road: the caller parks it).
+   */
+  function handBack(v) {
+    const th = ((v.heading ?? 0) % 360 + 360) % 360;
+    const near = [...hLanes.map((l) => ({ l, d: Math.abs(l.y - v.y) })), ...vLanes.map((l) => ({ l, d: Math.abs(l.x - v.x) }))]
+      .filter((c) => c.d < 14).sort((a, b) => (a.d + Math.abs(((headingOf(a.l) - th + 540) % 360) - 180) / 30) - (b.d + Math.abs(((headingOf(b.l) - th + 540) % 360) - 180) / 30))[0];
+    if (!near) return false;
+    const l = near.l;
+    if (l.kind === 'h') v.y = l.y; else v.x = l.x;
+    Object.assign(v, { lane: l, heading: headingOf(l), target: headingOf(l), from: l.i ?? -1, speed: 0, served: new Set(), id: ++made });
+    delete v.player; delete v.you;
+    return true;
+  }
+
+  return { vehicles, update, mayCross, lightAt, train, crossingClosed: closed, hits, pickUp, sendRound, callOut, lots, handBack };
 }

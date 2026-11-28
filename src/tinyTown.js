@@ -115,7 +115,8 @@ export const DEFAULT_TOWN = {
     { type: 'toilets', x: 340, y: 552 },
   ],
   // vehicles parked for good (a taxi rank in the plaza)
-  parked: [{ type: 'taxi', x: 404, y: 636, heading: 180 }, { type: 'taxi', x: 426, y: 636, heading: 180 }],
+  parked: [{ type: 'taxi', x: 404, y: 636, heading: 180 }, { type: 'taxi', x: 426, y: 636, heading: 180 },
+    { type: 'moped', x: 214, y: 205, heading: 0, color: '#2f5f9a', helmet: '#f2f2ee' }],   // a scooter you can ride (the owner, Nov 2026)
   // cables strung across the alley
   wires: [[[316, 590], [340, 596], 3], [[316, 604], [340, 600], 2], [[316, 614], [340, 618], 3]],
   areas: [

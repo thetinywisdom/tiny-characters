@@ -21,6 +21,7 @@ const town = makeTown();
 const traffic = makeTraffic(town, { cars: 18, buses: 2 });
 const area = (name) => town.areas.find((a) => a.name === name);
 
+let ride = null, hint = null;   // riding (below): { kind: 'bike' | 'scooter' | 'car' | 'bus', v, to }; the hint shown
 let people, you, seed = 11, players = [], ball = null, smallLife = null;
 const keys = new Set();
 function walker(look, rng, within, cat = false) {
@@ -29,6 +30,9 @@ function walker(look, rng, within, cat = false) {
   return { ...look, ...at, within, cat, path: null, wait: rng() * 3, talk: 0 };
 }
 function newPeople() {
+  if (ride?.v?.player) traffic.vehicles.splice(traffic.vehicles.indexOf(ride.v), 1);   // (a car you were driving goes)
+  if (ride?.v) delete ride.v.you;
+  ride = null;
   const rng = seeded(seed++);
   people = [];
   for (let i = 0; i < 20; i++) people.push(walker(randomCharacter(rng), rng));
@@ -75,7 +79,7 @@ newPeople();
 window.tinyTown = { town, traffic, get you() { return you; }, get people() { return people; }, get life() { return smallLife; }, get hour() { return hour; }, set hour(h) { hour = h; } };
 
 const active = () => (document.body.dataset.active ?? 'town') === 'town';
-addEventListener('keydown', (e) => { if (e.key.startsWith('Arrow') && active()) e.preventDefault(); keys.add(e.key.toLowerCase()); });
+addEventListener('keydown', (e) => { if (e.key.startsWith('Arrow') && active()) e.preventDefault(); keys.add(e.key.toLowerCase()); if (e.key.toLowerCase() === 'e' && hint && !e.repeat) hint.act(); });
 addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
 addEventListener('blur', () => keys.clear());
 
@@ -95,6 +99,10 @@ canvas.addEventListener('pointerleave', () => { pointed = null; canvas.style.cur
 canvas.addEventListener('pointerdown', (e) => {
   document.body.dataset.active = 'town';
   const { x, y, who: hit } = pointAt(e);
+  // riding: tap the hint (or what it is over) to get on or off; driving, a tap is where to go
+  if (hint && Math.abs(x - hint.x) < hint.label.length * 2 + 8 && y > hint.y - 14 && y < hint.y + 26) { hint.act(); return; }
+  if (ride && (ride.kind === 'car' || ride.kind === 'scooter')) { ride.to = { x, y }; return; }
+  if (ride?.kind === 'bus') return;
   // tap someone: they stop and say a line that suits them (a white ring under them while they say it)
   if (hit) { const said = speak(hit, t); hit.talk = Math.min(4, sayDuration(said.text) - 0.8); hit.ringUntil = t + sayDuration(said.text); return; }
   // a building: walk to its door; anywhere else you can stand: walk there
@@ -353,21 +361,25 @@ function follow(p, speed, dt) {
 let last = performance.now(), t = 0, shown = '';
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
-  // you: the keys (sliding along walls), else your path
+  // you: the keys (sliding along walls), else your path; riding something: see `ride`
   let dx = 0, dy = 0;
   if (active()) {
     dx = (keys.has('arrowright') || keys.has('d')) - (keys.has('arrowleft') || keys.has('a'));
     dy = (keys.has('arrowdown') || keys.has('s')) - (keys.has('arrowup') || keys.has('w'));
   }
-  if (dx || dy) {
+  const fast = ride?.kind === 'bike' ? 2 : 1;                                   // on a bicycle: twice as fast
+  if (ride && ride.kind !== 'bike') {
+    if (ride.kind === 'car' || ride.kind === 'scooter') driveStep(dt, dx, dy);
+    you.x = ride.v.x; you.y = ride.v.y; you.path = null;
+  } else if (dx || dy) {
     you.path = null; you.walking = true;
     you.facing = facingFor(dx, dy, you.facing);
-    const nx = you.x + dx * 36 * dt, ny = you.y + dy * 24 * dt;
+    const nx = you.x + dx * 36 * fast * dt, ny = you.y + dy * 24 * fast * dt;
     // walls, things, and cars: you cannot walk through any of them (but you can step out of one you are already in)
     const free = (x, y) => !town.blocked(x, y) && (!traffic.hits(x, y) || traffic.hits(you.x, you.y)) && (!crowded(you, x, y) || crowded(you, you.x, you.y));
     if (free(nx, you.y)) you.x = nx;
     if (free(you.x, ny)) you.y = ny;
-  } else if (you.path) follow(you, 36, dt);
+  } else if (you.path) follow(you, 36 * fast, dt);
   else you.walking = false;
   // everyone else: a short trip, a rest, another trip
   for (const p of people) {
@@ -418,6 +430,8 @@ function frame(now) {
   // lines and icon bubbles over everything (and bright at night)
   g.save(); g.translate(-view.x, -view.y); drawSpeech(g, shownPeople, t, { bounds: view }); g.restore();
   drawClock(g, time, hour);
+  hint = nearRide();
+  if (hint) drawHint(g, hint.label, hint.x - view.x, hint.y - view.y);
   const name = town.placeAt(you.x, you.y);
   if (name !== shown) { shown = name; here.textContent = name; }
   requestAnimationFrame(frame);
@@ -441,6 +455,94 @@ function drawClock(g, time, h) {
     [...DIGITS[ch]].forEach((on, i) => { if (on === '1') g.fillRect(x + (i % 3), 7 + Math.floor(i / 3), 1, 1); });
     x += 4;
   }
+}
+
+// --- riding (the owner, Nov 2026): a bicycle from the bike parking, the scooter, a car from the coin
+// parking (steered like walking, on the roads; the traffic gives way), the bus (a passenger, on and off at
+// its stops). Near one a hint shows (E or a tap); riding, it says how to get off.
+const DRIVE_SPEED = { scooter: 58, car: 62 };
+const lookOf = (p) => { const { x, y, you: _, path, ring, away, pose, ...look } = p; return look; };
+const lotAt = (x, y) => town.areas.some((a) => a.ground === 'parking' && x >= a.x && x <= a.x + a.w && y >= a.y && y <= a.y + a.h);
+/** What you could get on (or off) now: { label, x, y, act } for the hint, or null. */
+function nearRide() {
+  if (ride) {
+    if (ride.kind === 'bus') return ride.v.wait > 0 ? { label: 'E: GET OFF', x: ride.v.x, y: ride.v.y - 30, act: getOff } : null;
+    const at = ride.v ?? you;
+    return { label: 'E: GET OFF', x: at.x, y: at.y - (ride.kind === 'car' ? 24 : 21), act: getOff };
+  }
+  const bp = town.props.find((q) => q.type === 'bikeParking' && Math.abs(q.x - you.x) < 30 && you.y - q.y < 14 && you.y - q.y > -4);
+  if (bp) return { label: 'E: RIDE', x: bp.x, y: bp.y - 20, act: getOnBike };
+  const pv = (town.parked ?? []).filter((q) => ['moped', 'car', 'kei', 'van'].includes(q.type)).map((q) => ({ q, d: Math.hypot(q.x - you.x, (q.y - you.y) * 1.6) }))
+    .filter((o) => o.d < (o.q.type === 'moped' ? 16 : 26)).sort((a, b) => a.d - b.d)[0];
+  if (pv) return { label: 'E: RIDE', x: pv.q.x, y: pv.q.y - (pv.q.type === 'moped' ? 20 : 26), act: () => getInto(pv.q) };
+  const stop = town.props.find((q) => q.type === 'busStop' && Math.hypot(q.x - you.x, q.y - you.y) < 30);
+  const bus = stop && traffic.vehicles.find((v) => v.type === 'bus' && v.wait > 0 && Math.abs(v.x - stop.x) < 50 && Math.abs(v.y - stop.y) < 30);
+  if (bus) return { label: 'E: GET ON', x: bus.x, y: bus.y - 30, act: () => board(bus) };
+  return null;
+}
+function getOnBike() { ride = { kind: 'bike' }; Object.assign(you, { pose: { kind: 'ride' }, city: true, bike: '#e8402f', rider: true, path: null }); }
+function getInto(q) {
+  town.parked.splice(town.parked.indexOf(q), 1);
+  for (const lot of traffic.lots ?? []) for (const b of lot.bays) if (b.car === q) b.car = null;
+  const v = { ...q, parked: false, player: true, you: true, lane: { kind: 'h', dir: 1, y: q.y, i: -1 }, speed: 0, served: new Set(), rider: lookOf(you) };
+  traffic.vehicles.push(v);
+  ride = { kind: q.type === 'moped' ? 'scooter' : 'car', v };
+  you.away = true; you.path = null;
+}
+function board(bus) { ride = { kind: 'bus', v: bus }; bus.you = true; you.away = true; you.path = null; }   // (the gold frame round the bus you ride)
+/** The nearest place near (x, y) to stand: off the road, not in anything. */
+function standNear(x, y) {
+  for (let r = 4; r < 60; r += 3) for (let a = 0; a < 16; a++) {
+    const px = x + Math.cos(a / 16 * Math.PI * 2) * r, py = y + Math.sin(a / 16 * Math.PI * 2) * r * 0.7;
+    if (!town.roadAt(px, py) && !town.blocked(px, py) && !traffic.hits(px, py)) return { x: px, y: py };
+  }
+  return { x, y };
+}
+function getOff() {
+  if (!ride) return;
+  if (ride.kind === 'bike') { you.pose = null; delete you.city; delete you.bike; delete you.rider; ride = null; return; }
+  const v = ride.v;
+  if (ride.kind === 'bus') { delete v.you; const stop = town.props.filter((q) => q.type === 'busStop').sort((a, b) => Math.hypot(a.x - v.x, a.y - v.y) - Math.hypot(b.x - v.x, b.y - v.y))[0]; Object.assign(you, standNear(stop ? stop.x : v.x, stop ? stop.y + 2 : v.y)); }
+  else {
+    const at = standNear(v.x, v.y);
+    if (!(town.roadAt(v.x, v.y) && traffic.handBack(v))) {                     // off the road (or no lane near): parked where it is
+      traffic.vehicles.splice(traffic.vehicles.indexOf(v), 1);
+      const { player, you: _, lane, speed, served, to, ...rest } = v;
+      town.parked.push({ ...rest, parked: true });
+    }
+    Object.assign(you, at);
+  }
+  you.away = false; ride = null;
+}
+/** Steer the car or the scooter you drive: the keys, or towards where you tapped; on the roads and lots only. */
+function driveStep(dt, dx, dy) {
+  const v = ride.v;
+  if (!dx && !dy && ride.to) { const ex = ride.to.x - v.x, ey = ride.to.y - v.y, d = Math.hypot(ex, ey); if (d < 3) ride.to = null; else { dx = ex / d; dy = ey / d; } }
+  else if (dx || dy) ride.to = null;
+  if (!dx && !dy) { v.brake = true; v.walking = false; return; }
+  if (town.roadAt(v.x, v.y)) v.onRoad = true;
+  const stuck = town.blocked(v.x, v.y);                                       // (parked somewhere marked blocked: it may drive out of it)
+  const drivable = (x, y) => town.roadAt(x, y) || lotAt(x, y) || (!v.onRoad && (stuck || !town.blocked(x, y)));   // (from where it was parked, out onto the road)
+  const clearOf = (x, y) => !traffic.vehicles.some((o) => o !== v && o.type !== 'train' && Math.abs(o.x - x) < 18 && Math.abs(o.y - y) < 8)
+    && !people.some((p) => p !== you && !p.away && Math.abs(p.x - x) < 6 && Math.abs(p.y - y) < 4);
+  const sp = DRIVE_SPEED[ride.kind], ox = v.x, oy = v.y, nx = v.x + dx * sp * dt, ny = v.y + dy * sp * 0.66 * dt;
+  if (drivable(nx, v.y) && clearOf(nx, v.y)) v.x = nx;
+  if (drivable(v.x, ny) && clearOf(v.x, ny)) v.y = ny;
+  if (v.x === ox && v.y === oy) { v.brake = true; ride.to = null; return; }
+  const want = ((Math.atan2((v.y - oy) / 0.6, v.x - ox) * 180) / Math.PI + 360) % 360;
+  if (ride.kind === 'scooter') v.heading = (Math.round(want / 90) * 90) % 360;
+  else { const diff = ((want - v.heading + 540) % 360) - 180, by = 320 * dt; v.heading = (Math.abs(diff) <= by ? want : v.heading + Math.sign(diff) * by + 360) % 360; }
+  v.brake = false; v.lane.y = v.y;
+}
+// the hint: a dark tag with pixel letters, a little tail under it
+const HINT_LETTERS = { E: '111100110100111', R: '110101110101101', I: '111010010010111', D: '110101101101110', ':': '000010000010000', ' ': '000000000000000', O: '111101101101111', N: '101111111111101', G: '111100101101111', T: '111010010010010', F: '111100110100100' };
+function drawHint(g, label, x, y) {
+  x = Math.round(x); y = Math.round(y);
+  const w = label.length * 4 + 3;
+  g.fillStyle = 'rgba(32,36,44,0.85)'; g.fillRect(x - Math.floor(w / 2), y - 8, w, 9); g.fillRect(x - 1, y + 1, 3, 1);
+  g.fillStyle = '#f2f2ee';
+  let xx = x - Math.floor(w / 2) + 2;
+  for (const ch of label) { [...(HINT_LETTERS[ch] ?? HINT_LETTERS[' '])].forEach((b, i) => { if (b === '1') g.fillRect(xx + (i % 3), y - 6 + Math.floor(i / 3), 1, 1); }); xx += 4; }
 }
 
 // Buildings: each one on its own, with its name, three seeds of each: a seed

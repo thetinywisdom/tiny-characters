@@ -640,6 +640,15 @@ bubble lab, so games can use them and they can grow.
     there (7 s, not 3) the ones waiting walk to its doors and step in behind it, and others step
     off and walk away.
 
+89. **Riding** (the owner: ride a car, a scooter, a bicycle, the bus; steered like walking on the
+    roads; the bus as a passenger): near the bike parking, the parked scooter (new, by the sushi
+    shop), a car in the coin-parking lot, or a bus stopped at your stop, a hint shows (E: RIDE / E:
+    GET ON); E or a tap gets you on. A bicycle goes twice as fast anywhere you can walk; the scooter
+    and the car drive on the roads and the lot (the keys or a tap to where to go), the traffic gives
+    way to them, a gold frame round the one you drive; on the bus you ride its route and get off (E)
+    at a stop. Getting out of a car or scooter on the road hands it back to the traffic; anywhere
+    else it stays parked there. Also: the taxi rank no longer picks a lot's car as its taxi.
+
 ## In progress
 
 - Vehicles, round two (the owner's order, Nov 2026; all done: 77, 78, 82 as a parcel truck, 84 as a coin-parking lot): 1. a more detailed redraw of the cars,
