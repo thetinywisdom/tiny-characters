@@ -590,14 +590,14 @@ bubble lab, so games can use them and they can grow.
     head on); standing a while, cats and dogs sit now and then (haunches low, front legs straight,
     head up, the tail round the paws, a dog's sweeping; their coats show). Catalogue cards stand.
 
+81. **Older people, zombies, werewolves** (the owner, from pictures): grey- and white-haired
+    adults stoop (the head a pixel lower, side on a pixel forward over a rounded back) and walk
+    slower; zombies hold their arms out (side on long and level, head on wide at the chest) and
+    lurch as they shamble; werewolves are less boxy (broad shoulders over a narrow waist, a hump,
+    ragged sides, long arms with claws by the knees, the head forward side on).
+
 ## In progress
 
-- Characters (built on the working branch, waiting for the owner's look before `main`): older
-  people stooping (`isOld`: grey or white hair, not a kid, or `stoop`; the head a pixel lower,
-  side on a pixel forward over a rounded back; slower steps, 9 px/s against 14), zombies'
-  arms held out (side on long and level, head on wide at the chest) with a lurch, werewolves
-  less boxy (broad shoulders over a narrow waist, a hump, ragged sides, long clawed arms, the
-  head forward side on).
 - Vehicles, round two (the owner's order, Nov 2026; 1 done, 77; 2 done, 78): 1. a more detailed redraw of the cars,
   2. a police car and a fire engine, 3. the delivery van stopping at shops, 4. parked cars;
   each from mock-ups first.
@@ -666,7 +666,5 @@ The full-size redraw is done. Ideas offered before (on hold):
 
 ## Open questions for the owner
 
-- Characters, next (offered): older people stooping and slower; zombies' arms out; werewolves
-  less boxy.
 
 - What next (see Next)?
