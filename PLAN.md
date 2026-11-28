@@ -696,6 +696,9 @@ bubble lab, so games can use them and they can grow.
     holds the bar (bicycles, city bikes, the scooters, the motorbike, the delivery scooter); the hand
     at their side is not drawn then (`reach`).
 
+97. **The rider on a 3/4 scooter or motorbike** (the owner: looked broken): sits on the seat (no
+    longer floating above it with no legs), thighs along it, the near hand on the bars.
+
 ## In progress
 
 - Vehicles, round two (the owner's order, Nov 2026; all done: 77, 78, 82 as a parcel truck, 84 as a coin-parking lot): 1. a more detailed redraw of the cars,

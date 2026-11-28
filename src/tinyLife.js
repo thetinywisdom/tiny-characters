@@ -326,7 +326,7 @@ export function drawMotorbike(g, v) {
 // everyone) on the seat in profile
 const DISC = (u, z, uc, R) => (u - uc) ** 2 + (z - R) ** 2 <= R * R;
 const MOTO_SHAPES = {
-  moped: { L: 17, W: 6, H: 10, seat: -4, shape: (u, v, z, c, tail) => {
+  moped: { L: 17, W: 6, H: 10, seat: -4, seatTop: 7.5, bar: 3.5, barZ: 10, shape: (u, v, z, c, tail) => {
     const av = Math.abs(v); if (av > 3 || z < 0) return null;
     for (const uc of [5.5, -5.5]) if (av < 1 && DISC(u, z, uc, 2.3)) return (u - uc) ** 2 + (z - 2.3) ** 2 < 1 ? METAL : TYRE;
     if (u > 2.5 && u < 5 && z >= 2 && z < 9 && av < 2.6) return u > 4.2 && z > 6.5 && z < 8 && av < 1 ? LAMP : z >= 8 ? shade(c, 1.1) : c;   // the front shield
@@ -336,7 +336,7 @@ const MOTO_SHAPES = {
     if (u > -7 && u < -1.5 && z >= 6.5 && z < 7.5 && av < 2) return SEAT;
     return null;
   } },
-  motorbike: { L: 21, W: 6, H: 10, seat: -2.5, shape: (u, v, z, c, tail) => {
+  motorbike: { L: 21, W: 6, H: 10, seat: -2.5, seatTop: 7.2, bar: 5.5, barZ: 10, shape: (u, v, z, c, tail) => {
     const av = Math.abs(v); if (av > 3 || z < 0) return null;
     for (const uc of [7, -7]) if (av < 1 && DISC(u, z, uc, 2.8)) return (u - uc) ** 2 + (z - 2.8) ** 2 < 1.2 ? METAL : TYRE;
     if (u > -3.5 && u < 3.5 && z >= 2 && z < 5.5 && av < 2.4) return z < 3 ? DARK : METAL;                // the engine
@@ -355,11 +355,16 @@ function motoBlocks(g, v, h, c, hc, r, tail) {
   const S = MOTO_SHAPES[v.type] ?? MOTO_SHAPES.moped, dir = ((Math.round(h / 22.5) % 16) + 16) % 16, key = `${v.type}|${c}|${tail}|${dir}`;
   if (!MOTO_SPRITES.has(key)) MOTO_SPRITES.set(key, voxelSprite((bu, bv, bz) => S.shape(bu + 0.5, bv + 0.5, bz + 0.5, c, tail), S, dir * 22.5, motoTone));
   const sp = MOTO_SPRITES.get(key), x = Math.round(v.x), y = Math.round(v.y), th = (dir * 22.5 * Math.PI) / 180;
-  const towards = Math.sin(th) > 0, facing = Math.cos(th) >= 0 ? 'right' : 'left';
-  const rx = Math.round(x + S.seat * Math.cos(th)), ry = Math.round(y + S.seat * Math.sin(th) * KY) - 6;   // the seat, on the screen
-  const rider = () => { if (v.parked) return; upper(g, { ...r, facing }, rx, ry); helmet(g, rx, ry, hc, facing); px(g, r.legs, rx - 2, ry - 3, 4, 2); };
-  if (towards) { rider(); g.drawImage(sp.canvas, x - sp.ox, y - sp.oy); }        // coming towards you: the bike in front of the rider's legs
-  else { g.drawImage(sp.canvas, x - sp.ox, y - sp.oy); rider(); }
+  const facing = Math.cos(th) >= 0 ? 'right' : 'left', k = Math.cos(th) >= 0 ? 1 : -1;
+  // the rider sits on the seat (its top on the screen), thighs along it, the near hand on the bars
+  const at = (u, z) => [Math.round(x + u * Math.cos(th)), Math.round(y + u * Math.sin(th) * KY - z)];
+  const [rx, seatTop] = at(S.seat, S.seatTop), ry = seatTop + legRows(r), [bx, by] = at(S.bar, S.barZ);
+  g.drawImage(sp.canvas, x - sp.ox, y - sp.oy);
+  if (!v.parked) {
+    upper(g, { ...r, facing, reach: true }, rx, ry); helmet(g, rx, ry, hc, facing);
+    px(g, r.legs ?? INK, k > 0 ? rx - 1 : rx - 2, seatTop - 1, 4, 2);              // the thighs along the seat
+    reachArm((c, qx, qy) => px(g, c, qx, qy), r, rx, ry, k, bx, by);               // the hand on the bars
+  }
   if (v.parked) px(g, hc, Math.round(x + 4 * Math.cos(th)) - 1, Math.round(y + 4 * Math.sin(th) * KY) - 12, 3, 2);   // its helmet on the bars
 }
 
