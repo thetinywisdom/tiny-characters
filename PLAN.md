@@ -577,6 +577,13 @@ bubble lab, so games can use them and they can grow.
     in the fire station and every few minutes pulls out, lights flashing, drives round the town and
     comes back in. Their lights glow at night. Catalogue cards.
 
+79. **People side on, and a real walk** (the owner chose A from mock-ups: a 4-pixel body):
+    seen from the side a person is a profile now (4 wide; the head with a nose pixel and the
+    hair over the top and down the back, no eyes; a ponytail, long hair or a bun at the back; a
+    cap's brim forward), each leg a pixel wide, the far one darker; walking takes four steps
+    (the legs' lower halves forward and back, passing, a bob) with the near hand swinging. Front
+    and back views as they were. Poses, cyclists and riders get the profile too.
+
 ## In progress
 
 - Vehicles, round two (the owner's order, Nov 2026; 1 done, 77; 2 done, 78): 1. a more detailed redraw of the cars,
@@ -646,5 +653,8 @@ The full-size redraw is done. Ideas offered before (on hold):
   depth sorting beyond drawing the ones further back first.
 
 ## Open questions for the owner
+
+- Characters, next (offered): cats from the front and back, tails flicking and sitting, dogs
+  wagging; older people stooping and slower; zombies' arms out; werewolves less boxy.
 
 - What next (see Next)?

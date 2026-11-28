@@ -92,7 +92,7 @@ size. `LOOKS` has starter looks like the catalogue's: `man`, `woman`, `boy`,
 
 | Export | What it does |
 | --- | --- |
-| `drawCharacter(g, person, t)` | Draws one person. `talking`: bobs a pixel six times a second; `walking`: the legs take turns lifting a pixel; `you`: a thin gold ring round the feet (`ring`: a ring of another colour; point at someone in the town and a white one shows under them); `facing`: a pixel of hair at the back of the head. |
+| `drawCharacter(g, person, t)` | Draws one person (side on: a profile with a nose pixel, a four-step walk). `talking`: bobs a pixel six times a second; `walking`: the legs take turns lifting a pixel; `you`: a thin gold ring round the feet (`ring`: a ring of another colour; point at someone in the town and a white one shows under them); `facing`: a pixel of hair at the back of the head. |
 | `LOOKS` | Starter looks to spread into a person. |
 | `drawStage(g, W, H)` | The lab's grass with a path across it. |
 | `randomCharacter(rng)` | A random look: colours from `BODY_COLORS`, `HAIR_COLORS`, `SKIN_COLORS`, `LEG_COLORS`; sometimes a kid, another hairstyle, a hat, a jacket, a skirt, something to carry. |

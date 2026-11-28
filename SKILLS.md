@@ -101,6 +101,17 @@ demo/demo.css          the demo page's look (light and dark)
   the wearer and whatever stands in front painted out, so they keep their
   colour). The owner chose the thin ring, still (no pulse)
 
+**Side on** (`drawSide`, the owner's A, Nov 2026: drawCharacter hands every left / right
+facing to it): the body 4 wide (columns -2..1, its front at +1, mirrored when facing left),
+the head 3 x 4 with a nose pixel at +2, the hair over the top, a column down the back (long:
+two; ponytail and bun behind), the shaded column at the back of the head; each leg one pixel
+(near at 0, far at -1, the far one at 0.72), a shoe with a toe pixel forward. Walking:
+`phase = floor(t * 8) % 4`: 0 the near leg's lower half forward and the far one back, 2 the
+other way, 1 and 3 passing with the body a pixel up; the near arm a darker column down the
+side, its hand behind (phase 0), in front (2) or at the side. Tops show on the front edge
+(jacket, suit, apron, gakuran, sailor ribbon; the police vest over the side; a yukata to the
+feet). Things in the hand go with the hand; the backpack behind, boxes in front.
+
 Every look is drawn with `R(colour, dx, dy, w, h)`: a rectangle at
 (x + dx, y + dy), mirrored when facing left, so "back" is negative dx and
 "front" positive. Rows come from `frameOf(p, bob)`: `legH` (3, a kid 2),

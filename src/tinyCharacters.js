@@ -74,6 +74,7 @@ function frameOf(p, bob = 0) {
  * plain top. No eyes: the people are faceless.
  */
 export function drawCharacter(g, p, t = 0) {
+  if (p.facing === 'left' || p.facing === 'right') { drawSide(g, p, t); return; }
   const x = Math.round(p.x), y = Math.round(p.y);
   if (p.you || p.ring) drawRing(g, x, y, p.ring ?? COLORS.gold);   // round the feet, under everything
   const talkBob = p.talking && Math.floor(t * 6) % 2 ? -1 : 0;
@@ -185,6 +186,86 @@ export function drawCharacter(g, p, t = 0) {
   }
 }
 
+/**
+ * A person seen side on (the owner chose A, Nov 2026): a profile, 4 pixels wide (the front view is 5),
+ * the head with a nose pixel at the front and the hair over the top and down the back (no eyes); each
+ * leg a pixel wide, the far one darker; walking takes four steps (the legs' lower halves a pixel
+ * forward and back, then passing, the body a pixel up), the near hand swinging forward and back.
+ */
+function drawSide(g, p, t = 0, bw = 4) {
+  const x = Math.round(p.x), y = Math.round(p.y);
+  if (p.you || p.ring) drawRing(g, x, y, p.ring ?? COLORS.gold);
+  const s = p.facing === 'left' ? -1 : 1;
+  const R = (c, dx, dy, w = 1, h = 1) => { g.fillStyle = c; g.fillRect(s > 0 ? x + dx : x - dx - w + 1, y + dy, w, h); };
+  const phase = p.walking ? Math.floor(t * 8) % 4 : -1;                 // 0: near leg forward, 2: far leg forward, 1 / 3: passing
+  const talkBob = p.talking && Math.floor(t * 6) % 2 ? -1 : 0, bob = talkBob || (phase === 1 || phase === 3 ? -1 : 0);
+  const { legH, bodyH, B, Hd } = frameOf(p, bob);
+  const body = p.body ?? BODY_COLORS[0], legs = p.legs ?? COLORS.ink, skin = p.skin ?? SKIN_COLORS[1], hair = p.hair ?? COLORS.ink;
+  const carry = p.carry, carryColor = p.carryColor ?? DEFAULT_CARRY[carry], wear = p.legwear ?? 'trousers', shoes = p.shoes ?? (p.kid ? RED : '#3a2a22');
+  const L = bw === 4 ? -2 : -1;                                          // the body's back column (its front is +1)
+  if (carry === 'backpack') R(carryColor, L - 2, p.kid ? B - 1 : B, 2, p.kid ? 3 : 4);
+  // legs: a stride (forward leg leaning to the front, back leg to the back), the far one darker
+  const legCol = wear === 'trousers' ? legs : skin;
+  // each leg one pixel wide seen from the side (near at 0, far at -1); a step: the leg's lower half
+  // a pixel forward or back, the shoe a pixel longer at the toe
+  const leg = (col, fwd, c, sh) => {
+    for (let i = 0; i < legH; i++) {
+      const lower = i >= Math.ceil(legH / 2), dx = col + (lower ? fwd : 0), last = i === legH - 1;
+      R(last ? sh : wear === 'shorts' && i === 0 ? legs : c, dx, -legH + i, 1, 1);
+      if (last) R(sh, dx + 1, -1, 1, 1);
+    }
+  };
+  if (p.top !== 'yukata') {
+    if (bob < 0) R(wear === 'trousers' || wear === 'skirt' ? legs : skin, -1, -legH - 1, 2, 1);
+    const far = shade(legCol, 0.72), farShoe = shade(shoes, 0.75);
+    if (phase === 0) { leg(-1, -1, far, farShoe); leg(0, 1, legCol, shoes); }
+    else if (phase === 2) { leg(-1, 1, far, farShoe); leg(0, -1, legCol, shoes); }
+    else { leg(-1, 0, far, farShoe); leg(0, 0, legCol, shoes); }
+  }
+  // body
+  R(body, L, B, bw, bodyH);
+  R(shade(body, 0.8), L, B + bodyH - 3, bw, 1);                          // the hem
+  switch (p.top) {
+    case 'jacket': R(p.trim ?? WHITE, 1, B, 1, bodyH); break;
+    case 'suit': R(WHITE, 1, B, 1, 2); break;
+    case 'apron': R(p.trim ?? WHITE, 1, B + 2, 1, bodyH - 2); break;
+    case 'yukata': R(body, L, -legH - 1, bw, legH); R(p.shoes ?? legs, 0, -1, 2, 1); R(p.trim ?? RED, L, B + bodyH - 3, bw, 1); break;
+    case 'sailor': R(COLORS.navy, L, B, bw - 1, 2); R(p.trim ?? RED, 1, B + 1); break;
+    case 'gakuran': R(COLORS.gold, 1, B + 1); R(COLORS.gold, 1, B + 3); break;
+    case 'police': R(p.trim ?? COLORS.navy, L, B, bw, bodyH); R(COLORS.gold, 1, B + 1); break;
+  }
+  if (wear === 'skirt') R(legs, -2, -legH - 1, bw === 4 ? 5 : 4, 2);
+  // the near arm: a sleeve down the side, the hand swinging forward and back
+  const swing = phase === 0 ? -2 : phase === 2 ? 2 : 0;
+  if (carry !== 'boxes') {
+    R(shade(body, 0.86), 0, B + 1, 1, bodyH - 3);
+    R(skin, swing === 0 ? 0 : swing, B + bodyH - 3 + (swing ? 0 : 1), 1, 2);
+  }
+  if (carry === 'boxes') { R(carryColor, 1, B, 3, 4); R('#8a6440', 1, B + 2, 3, 1); R(skin, 1, B + 2); }
+  // the head in profile: the face at the front, a nose, hair over the top and the back
+  R(skin, -1, Hd, 3, 4); R(skin, 2, Hd + 2);                              // head, nose
+  R(shade(skin, 0.88), -1, Hd + 1, 1, 3);
+  let style = p.hairStyle ?? 'short';
+  if (p.hat && (style === 'afro' || style === 'bun' || style === 'mohawk')) style = style === 'mohawk' ? 'bald' : 'short';
+  if (style === 'afro') { R(hair, -2, Hd - 2, 4, 3); R(hair, -2, Hd + 1, 2, 2); }
+  else if (style === 'mohawk') R(hair, -1, Hd - 1, 3, 1);
+  else if (style !== 'bald') {
+    R(hair, -1, Hd - 1, 3, 1); R(hair, -1, Hd, 2, 1); R(hair, -1, Hd + 1, 1, 1);
+    if (style === 'long') { R(hair, -2, Hd, 1, 5); R(hair, -1, Hd + 2, 1, 3); }
+    if (style === 'bun') R(hair, -2, Hd - 1, 1, 2);
+    if (style === 'ponytail') { const sw = phase === 1 || phase === 3 ? -1 : 0; R(hair, -2, Hd, 1, 1); R(hair, -3 + sw, Hd + 1, 1, 3); }
+  }
+  if (p.moustache) R(hair, 1, Hd + 3);
+  const hatColor = p.hatColor ?? DEFAULT_HAT[p.hat];
+  if (p.hat === 'cap') { R(hatColor, -1, Hd - 2, 3, 2); R(hatColor, 2, Hd - 1); }
+  else if (p.hat === 'wide') { R(hatColor, -2, Hd - 1, 5, 1); R(hatColor, -1, Hd - 2, 3, 1); }
+  // carried in the near hand
+  const hx = swing, hy = B + bodyH - 1;
+  if (carry === 'bag') R(carryColor, hx - 1 + (swing < 0 ? 0 : 0), -legH - 1, 2, 3);
+  else if (carry === 'briefcase') R(carryColor, hx - 1, -legH, 3, 2);
+  else if (carry === 'stick') R(carryColor, 2, -legH - 3, 1, legH + 3);
+  else if (carry === 'umbrella') { R(COLORS.ink, 1, Hd - 2, 1, 7); R(carryColor, -5, Hd - 3, 11, 1); R(carryColor, -4, Hd - 4, 9, 1); R(carryColor, -2, Hd - 5, 5, 1); R(COLORS.ink, 0, Hd - 6); }
+}
 /**
  * A thin ring on the ground round someone's feet at (x, y): 13 x 5 pixels, its
  * back row hidden behind the legs (draw it before them). The owner's choice
