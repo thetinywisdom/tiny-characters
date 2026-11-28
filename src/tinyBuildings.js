@@ -19,7 +19,7 @@
 // The seed picks the width, floors, windows, door, roof, colours and details.
 
 import { seeded } from './tinyCharacters.js';
-import { FULL, DOORS, WINDOWS, LIT, CURTAIN, GLASS, GLASS2, LANTERN, WIN, setSnow } from './tinyBuildingsFull.js';
+import { FULL, DOORS, WINDOWS, LIT, CURTAIN, GLASS, GLASS2, LANTERN, WIN, setSnow, setWind } from './tinyBuildingsFull.js';
 
 // the shop kind each building drew (its own, or the one its seed picked), for shutters and steam
 let lastShop = null;
@@ -134,8 +134,9 @@ export function drawBuilding(g, b) {
   const L = Math.round(b.x - Math.round(w * k) / 2), y = Math.round(b.y);
   const r = painter(g, L, y, k, b.dpx ?? 1);
   setSnow(b.snow);                                                       // winter: its roofs under snow
+  setWind(b.wind);                                                       // a windy day (the time): its washing flaps
   lastShop = f.draw(b.lights ? nightLights(r, b.seed ?? 1, b.time ?? 0) : r, rng, b, wall, roof, w) ?? null;
-  setSnow(false);
+  setSnow(false); setWind(null);
   SHOP_OF.set(`${b.type}|${b.seed ?? 1}|${b.shopType ?? ''}`, lastShop);
   if (b.shut && SHUTTERED(b.type, lastShop)) {                                            // closed: a roller shutter down over the shop front
     g.save(); if (b.lights) g.globalCompositeOperation = 'destination-out';   // (at night: nothing shines through it)

@@ -625,6 +625,27 @@ drawn (so pictures without one are unchanged).
   half their time is gone. The demo puts walkers' umbrellas up
   (`dryCarry` keeps what they carried) and picks the season by the real month and
   rain spells by the town's day and hour (`rainingNow`).
+- **Wind, fog and thunder** (the owner chose them from animated mock-ups, Nov 2026: wind
+  yes, fog B, thunder B): `weather: 'wind' | 'fog' | 'storm'`, all by `t` and hashes,
+  nothing random.
+  - Wind (`drawWind`, in the air before the night so the dark covers it): autumn leaves
+    or spring petals (`BLOWN`; other seasons none), one per 450 pixels of view, 38-68 px a
+    second across the view with a wobble, tumbling (2 × 1, 1 × 2, 1 × 1). Trees get
+    `wind: true`: `breeze` leans them over further (3 pixels) and tosses them faster.
+    Buildings get `wind: t`: drawBuilding sets `setWind` in the kit and `laundry` blows
+    the top of each shirt and towel a pixel over, by turns (`flap`; with no wind the
+    washing is drawn exactly as before).
+  - Fog (`drawFog`, before the night, so the lights shine through it): two layers of
+    value noise (`vnoise`), worked out every 4 pixels and filled in between, drifting
+    slowly in town pixels; three steps of `#e8ecef` (18, 32, 46 %), drawn as runs of a
+    row; about 1 ms a frame.
+  - Thunder (`drawThunder`, last of all, in a storm, not in winter): in each 9 s three
+    times in four a strike (`flashOf`): the view flashes twice (brighter at night) and
+    for 0.3 s a jagged bolt (white on a pale blue edge, now and then a fork) strikes
+    from the top of the view.
+  - The demo: `weatherNow()` (auto: of each 3-hour spell's hash, 7 % storm, 15 % rain,
+    10 % wind, 20 % fog in the spells from 3 to 9 in the morning; the rain spells are
+    the same as before); in winter a storm is snow.
 - Putting a town in a season the first time recolours its ground once (a fraction
   of a second); after that it is cached.
 

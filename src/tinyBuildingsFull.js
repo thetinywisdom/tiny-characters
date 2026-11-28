@@ -9,6 +9,7 @@
 //                         buildings themselves are in src/full/a.js .. d.js, spread in below)
 //   FULL_STOREY           { ground: 24, shop: 28, upper: 20, sill: 6 }
 //   setSnow, snowing, SNOWC  roofs under snow in winter (drawBuilding's b.snow)
+//   setWind                 washing flapping on a windy day (drawBuilding's b.wind: the time)
 //
 // Everything is drawn with tinyBuildings' painter r(colour, dx, up, w, h) at
 // scale 1 (a rectangle dx from the left edge, its bottom `up` above the
@@ -136,6 +137,12 @@ let SNOW = false;
 export const setSnow = (on) => { SNOW = !!on; };
 /** Whether roofs are drawn under snow now (for roofs a part draws itself). */
 export const snowing = () => SNOW;
+// --- wind (a windy day: drawBuilding sets it, the time in seconds, while it draws a building with b.wind) --
+let WIND = null;
+/** Washing flaps (t: the time in seconds) or hangs still (null). */
+export const setWind = (t) => { WIND = t ?? null; };
+/** How far a piece of washing at x is blown out now: 0 or 1 pixel, flapping by turns. */
+const flap = (x) => (WIND === null ? 0 : (Math.floor(WIND * 7 + x * 0.61) + Math.floor(WIND * 2.3 + x * 0.17)) % 3 === 0 ? 0 : 1);
 /** Snow's colours: lying snow, its shade, the shade of a slope away from the light, a bright ridge. */
 export const SNOWC = { lit: '#eef2f6', mid: '#dfe6ee', shade: '#cdd6e0', deep: '#b8c4d2', top: '#ffffff' };
 
@@ -415,8 +422,9 @@ export function laundry(r, b, floor, x0, x1, up, top) {
     if (rng() < 0.35) continue;
     const c = cols[Math.floor(rng() * cols.length)], shirt = rng() < 0.45, w = shirt ? 5 : 3;
     if (x + w >= x1) break;
-    if (shirt) { r(c, x, up - 4, 5, 3); r(c, x + 1, up - 6, 3, 2); r(shade(c, 0.8), x + 1, up - 6, 3, 1); }   // a shirt: sleeves out, body down
-    else { r(c, x, up - 5, 3, 5); r(shade(c, 0.82), x, up - 5, 3, 1); }   // a towel
+    const d = flap(x);                                                       // (a windy day: the top blown a pixel over)
+    if (shirt) { if (d) { r(c, x, up - 3, 5, 2); r(c, x + d, up - 4, 5, 1); } else r(c, x, up - 4, 5, 3); r(c, x + 1 + d, up - 6, 3, 2); r(shade(c, 0.8), x + 1 + d, up - 6, 3, 1); }   // a shirt: sleeves out, body down
+    else { if (d) { r(c, x, up - 3, 3, 3); r(c, x + d, up - 5, 3, 2); } else r(c, x, up - 5, 3, 5); r(shade(c, 0.82), x + d, up - 5, 3, 1); }   // a towel
     r('#c8ccd0', x + 1, up, 1, 1); x += w;
   }
 }

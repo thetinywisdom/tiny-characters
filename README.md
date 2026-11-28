@@ -388,14 +388,21 @@ leafy trees bare with snow on their branches, snow on the evergreens; roads stay
 clear. `weather: 'rain'`: a faintly grey sky, soft see-through rain falling slowly at a
 slant, very few splashes, puddles on the roads and sidewalks (in winter it snows instead,
 slowly). Everyone walking leaves footprints, short trails behind them: in the snow,
-and wet ones in the rain (`prints`). The same `season` works
+and wet ones in the rain (`prints`). `weather: 'storm'`: the rain with lightning now
+and then (the sky flashes twice and a jagged pixel bolt strikes; not in winter).
+`weather: 'wind'`: autumn leaves or spring petals blowing across, the trees tossing
+harder, washing on the balconies flapping. `weather: 'fog'`: banks of mist drifting
+slowly over the town, in three hard-edged steps (the night's lights shine through).
+`drawTree(g, { ..., t, wind: true })` and `drawBuilding(g, { ..., wind: t })` do the
+same on their own. The same `season` works
 on single plants (`drawTree` / `drawBush`), `snow: true` on a building
 (`drawBuilding`), and `groundInSeason(canvas, season)` on any ground picture.
 
 In the demo, **Season** and **Weather** under the town pick them; on *auto* the
-season follows the real month and it rains now and then (some three-hour spells
-of the town's day), and walkers put their umbrellas up while it rains. The
-address takes `?season=winter` and `?weather=rain` (or `clear`).
+season follows the real month and the weather changes by three-hour spells of the
+town's day: rain now and then (a third of it stormy), windy spells, fog some early
+mornings; walkers put their umbrellas up while it rains. The address takes
+`?season=winter` and `?weather=rain` (or `clear`, `storm`, `wind`, `fog`).
 
 `drawBuilding(g, { ...b, lights: true })` draws only what shines on a
 building, `propLights(p)` and `vehicleLights(v)` where things give light;

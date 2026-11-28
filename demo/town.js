@@ -126,19 +126,30 @@ timeButton.onclick = () => {
 if (params.get('time') === 'night') timeButton.onclick();
 if (params.get('time') === 'night') timeButton.onclick();   // passing -> day -> night
 // the season and the weather (the owner's choice, Nov 2026): left on auto, the season follows the
-// real month and it rains now and then (some 3-hour spells of the town's day; snow in winter);
-// the buttons (or ?season= spring | summer | autumn | winter, ?weather= clear | rain) pick them
+// real month and the weather changes by 3-hour spells of the town's day: rain now and then (snow
+// in winter), a third of it stormy (lightning), windy spells, fog some early mornings; the buttons
+// (or ?season= spring | summer | autumn | winter, ?weather= clear | rain | storm | wind | fog) pick them
 const SEASON_OF_MONTH = ['winter', 'winter', 'spring', 'spring', 'spring', 'summer', 'summer', 'summer', 'autumn', 'autumn', 'autumn', 'winter'];
-const SEASON_MODES = ['auto', 'spring', 'summer', 'autumn', 'winter'], WEATHER_MODES = ['auto', 'clear', 'rain'];
+const SEASON_MODES = ['auto', 'spring', 'summer', 'autumn', 'winter'], WEATHER_MODES = ['auto', 'clear', 'rain', 'storm', 'wind', 'fog'];
 let seasonMode = SEASON_MODES.includes(params.get('season')) ? params.get('season') : 'auto';
 let weatherMode = WEATHER_MODES.includes(params.get('weather')) ? params.get('weather') : 'auto';
 let day = 0;                                                               // days gone by on the town's clock
 const seasonButton = document.querySelector('#season'), weatherButton = document.querySelector('#weather');
 const seasonNow = () => (seasonMode === 'auto' ? SEASON_OF_MONTH[new Date().getMonth()] : seasonMode);
-const rainingNow = () => (weatherMode === 'auto' ? (Math.imul(day * 8 + Math.floor(hour / 3) + 11, 2654435761) >>> 0) % 100 < 22 : weatherMode === 'rain');
+/** The weather now: 'clear', 'rain', 'storm', 'wind' or 'fog' (in winter a storm is only snow). */
+const weatherNow = () => {
+  let w = weatherMode;
+  if (w === 'auto') {
+    const spell = Math.floor(hour / 3), r = (Math.imul(day * 8 + spell + 11, 2654435761) >>> 0) % 100;
+    w = r < 7 ? 'storm' : r < 22 ? 'rain' : r < 32 ? 'wind' : r < 52 && (spell === 1 || spell === 2) ? 'fog' : 'clear';
+  }
+  return w === 'storm' && seasonNow() === 'winter' ? 'rain' : w;
+};
+const rainingNow = () => ['rain', 'storm'].includes(weatherNow());
 const label = () => {
   seasonButton.textContent = `Season: ${seasonMode === 'auto' ? `auto (${seasonNow()})` : seasonMode}`;
-  weatherButton.textContent = `Weather: ${weatherMode === 'auto' ? `auto (${rainingNow() ? (seasonNow() === 'winter' ? 'snow' : 'rain') : 'clear'})` : weatherMode === 'rain' && seasonNow() === 'winter' ? 'snow' : weatherMode}`;
+  const w = weatherNow(), name = w === 'rain' && seasonNow() === 'winter' ? 'snow' : w;
+  weatherButton.textContent = `Weather: ${weatherMode === 'auto' ? `auto (${name})` : name}`;
 };
 seasonButton.onclick = () => { seasonMode = SEASON_MODES[(SEASON_MODES.indexOf(seasonMode) + 1) % SEASON_MODES.length]; label(); };
 weatherButton.onclick = () => { weatherMode = WEATHER_MODES[(WEATHER_MODES.indexOf(weatherMode) + 1) % WEATHER_MODES.length]; label(); };
@@ -372,7 +383,7 @@ function frame(now) {
   };
   for (const p of people) p.ring = p === pointed || (p.ringUntil ?? 0) > t ? '#ffffff' : undefined;
   g.setTransform(D, 0, 0, D, 0, 0);
-  drawTownView(g, town, view, [...shownPeople, ...smallLife.sprites, ...traffic.vehicles, ...(ball ? [ball] : [])], t, { dpx: D, night: nightAt(hour), above: smallLife.above, lights: LIGHTS, season, weather: raining ? 'rain' : 'clear', prints });
+  drawTownView(g, town, view, [...shownPeople, ...smallLife.sprites, ...traffic.vehicles, ...(ball ? [ball] : [])], t, { dpx: D, night: nightAt(hour), above: smallLife.above, lights: LIGHTS, season, weather: weatherNow(), prints });
   // lines and icon bubbles over everything (and bright at night)
   g.save(); g.translate(-view.x, -view.y); drawSpeech(g, shownPeople, t, { bounds: view }); g.restore();
   const name = town.placeAt(you.x, you.y);

@@ -1,7 +1,7 @@
 // Tiny Nature: trees, bushes and terrains in the same small pixel style as
 // the people and buildings.
 //
-//   drawTree(g, { type, x, y, seed, scale, t, season })  centred on x, its foot at y; t: it sways in the breeze
+//   drawTree(g, { type, x, y, seed, scale, t, season, wind })  centred on x, its foot at y; t: it sways in the breeze (wind: harder)
 //   drawBush(g, { type, x, y, seed, scale, season })     season: 'spring' | 'summer' | 'autumn' | 'winter' (none: as drawn)
 //   SEASONS, groundInSeason(canvas, season)   the seasons; a town's ground canvas put in a season
 //   drawTerrain(g, { type, x, y, w, h, seed, scale, t })   fills a rectangle
@@ -187,9 +187,10 @@ export function groundInSeason(src, season) {
 // (its place and seed).
 function breeze(g, c, cw, ch, h, my, k, x0, y0, flip, p) {
   const t = p.t, ph = p.x * 0.02 + p.y * 0.013 + (p.seed ?? 0) * 0.7;
-  const gust = 0.5 + 0.5 * Math.sin(t * 0.55 - p.x * 0.012);             // the gust's wave across the town
-  const s = Math.sin(t * 1.6 - ph) * (0.35 + 0.65 * gust) + 0.45 * gust;
-  const foot = my + h, AMP = 2, FROM = 0.3;
+  const gust = 0.5 + 0.5 * Math.sin(t * (p.wind ? 0.9 : 0.55) - p.x * 0.012);   // the gust's wave across the town
+  // a windy day (p.wind): leaning over harder and further (3 pixels), tossing faster
+  const s = p.wind ? 0.45 + 0.35 * gust + Math.sin(t * 2.6 - ph) * (0.2 + 0.25 * gust) : Math.sin(t * 1.6 - ph) * (0.35 + 0.65 * gust) + 0.45 * gust;
+  const foot = my + h, AMP = p.wind ? 3 : 2, FROM = 0.3;
   const shift = (y) => { const rel = (foot - y) / h; return rel <= FROM ? 0 : Math.round(AMP * s * Math.pow(Math.min(1, (rel - FROM) / (1 - FROM)), 1.3)); };
   for (let y = 0; y < ch;) {
     const d = shift(y); let e = y + 1; while (e < ch && shift(e) === d) e++;   // rows that move together, drawn as one slice
@@ -198,7 +199,7 @@ function breeze(g, c, cw, ch, h, my, k, x0, y0, flip, p) {
     y = e;
   }
 }
-/** Draw a tree { type, x, y, seed, scale, t }: centred on x, its foot at y; with t (seconds) it sways in the breeze. */
+/** Draw a tree { type, x, y, seed, scale, t, wind }: centred on x, its foot at y; with t (seconds) it sways in the breeze (wind: a windy day, harder). */
 export function drawTree(g, p) { drawPlant(TREE_DEFS, FULL_TREES, g, p, 17); }
 /** Draw a bush { type, x, y, seed, scale }: centred on x, its foot at y. */
 export function drawBush(g, p) { drawPlant(BUSH_DEFS, FULL_BUSHES, g, p, 23); }

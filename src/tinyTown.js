@@ -701,6 +701,80 @@ function drawRain(g, view, t, night, snow) {
   g.globalAlpha = 1;
 }
 
+// --- more weather (the owner's choices from animated mock-ups, Nov 2026): wind (leaves or
+// petals blowing across, the trees tossing, washing flapping), fog (B: drifting banks of mist
+// in three hard-edged steps) and thunder (B: the sky flashes twice and a pixel bolt strikes)
+const whash = (n) => { n = Math.imul(n ^ (n >>> 15), 2246822507); n = Math.imul(n ^ (n >>> 13), 3266489909); return ((n ^ (n >>> 16)) >>> 0) / 4294967296; };
+/** Smooth value noise, 0..1, at (x, y). */
+function vnoise(x, y) {
+  const xi = Math.floor(x), yi = Math.floor(y), fx = x - xi, fy = y - yi, s = (a) => a * a * (3 - 2 * a), sx = s(fx), sy = s(fy);
+  const v = (i, j) => whash(i * 374761 + j * 668265 + 99);
+  const a = v(xi, yi), b = v(xi + 1, yi), c = v(xi, yi + 1), d = v(xi + 1, yi + 1);
+  return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy;
+}
+const BLOWN = { autumn: ['#d8742a', '#c24a2a', '#e8a838', '#9a5a2a', '#e0c040'], spring: ['#f2c8d8', '#f8e0e8', '#f2b0c8', '#ffffff'] };
+/** Wind: autumn leaves or spring petals blowing across the view, tumbling (other seasons: none). */
+function drawWind(g, view, t, season) {
+  const cols = BLOWN[season]; if (!cols) return;
+  const { x: X, y: Y, w: W, h: H } = view, n = Math.ceil(W * H / 450), span = W + 40;
+  for (let k = 0; k < n; k++) {
+    const sp = 38 + whash(k * 3 + 1) * 30;
+    const x = Math.round(X - 20 + ((whash(k * 3 + 2) * span + t * sp) % span));
+    const y = Math.round(Y + whash(k * 3 + 3) * H + Math.sin(t * 2.5 + k) * 4 + Math.sin(t * 7 + k * 2) * 1.2);
+    g.fillStyle = cols[k % cols.length];
+    const f = Math.floor(t * 8 + k) % 3;                                     // tumbling: flat, on its edge, end on
+    g.fillRect(x, y, f === 0 ? 2 : 1, f === 1 ? 2 : 1);
+  }
+}
+const FOG = [0, 0.18, 0.32, 0.46], FOG_CELL = 4;
+/** Fog: banks of mist drifting slowly over the town (in town pixels, so they stay put as you walk), in three steps. */
+function drawFog(g, view, t) {
+  const { x: X, y: Y, w: W, h: H } = view, S = FOG_CELL;
+  const x0 = Math.floor(X / S) * S, y0 = Math.floor(Y / S) * S, gw = Math.ceil((X + W - x0) / S) + 2, gh = Math.ceil((Y + H - y0) / S) + 2;
+  const d = new Float32Array(gw * gh);                                     // the mist's thickness every 4 pixels, filled in between
+  for (let j = 0; j < gh; j++) for (let i = 0; i < gw; i++) {
+    const wx = x0 + i * S, wy = y0 + j * S;
+    d[j * gw + i] = 0.25 + 0.75 * vnoise(wx / 52 - t * 0.3, wy / 30) * (0.55 + 0.45 * vnoise(wx / 19 - t * 0.5, wy / 14 + 5));
+  }
+  g.fillStyle = '#e8ecef';
+  for (let y = Y; y < Y + H; y++) {
+    const fj = (y - y0) / S, j = Math.floor(fj), v = fj - j;
+    let run = 0, start = X;
+    for (let x = X; x <= X + W; x++) {
+      let lv = -1;
+      if (x < X + W) {
+        const fi = (x - x0) / S, i = Math.floor(fi), u = fi - i, a = d[j * gw + i], b = d[j * gw + i + 1], c = d[(j + 1) * gw + i], e = d[(j + 1) * gw + i + 1];
+        const m = a + (b - a) * u + (c - a) * v + (a - b - c + e) * u * v;
+        lv = m < 0.42 ? 0 : m < 0.55 ? 1 : m < 0.66 ? 2 : 3;
+      }
+      if (lv !== run) { if (run > 0) { g.globalAlpha = FOG[run]; g.fillRect(start, y, x - start, 1); } run = lv; start = x; }
+    }
+  }
+  g.globalAlpha = 1;
+}
+const STORM = 9;                                                             // a strike now and then: at most one every 9 s
+/** How bright the lightning's flash is at t (0..1): two quick flashes, then fading. */
+function flashOf(t) {
+  const n = Math.floor(t / STORM); if (whash(n * 7 + 1) > 0.75) return [0, n, 0];
+  const ph = t - n * STORM - whash(n * 7 + 2) * (STORM - 1);
+  return [ph < 0 ? 0 : ph < 0.08 ? 1 : ph < 0.16 ? 0 : ph < 0.26 ? 0.8 : ph < 0.5 ? (0.5 - ph) / 0.24 * 0.4 : 0, n, ph];
+}
+/** Thunder: the sky flashes (brighter at night) and a jagged pixel bolt strikes down from the top of the view. */
+function drawThunder(g, view, t, night) {
+  const [f, n, ph] = flashOf(t); if (!f) return;
+  const { x: X, y: Y, w: W, h: H } = view;
+  g.globalAlpha = (0.3 + 0.25 * Math.min(1, night)) * f; g.fillStyle = '#eef2ff'; g.fillRect(X, Y, W, H); g.globalAlpha = 1;
+  if (ph > 0.3) return;
+  let x = X + W * (0.25 + 0.5 * whash(n * 7 + 3)), y = Y, k = 0;
+  const end = Y + H * (0.35 + 0.2 * whash(n * 7 + 4));
+  while (y < end) {
+    const seg = 3 + Math.floor(whash(n * 100 + k) * 5), dx = whash(n * 100 + k + 50) < 0.5 ? -1 : 1;
+    for (let i = 0; i < seg && y < end; i++) { g.fillStyle = '#b8c8ff'; g.fillRect(Math.round(x) - 1, y, 3, 1); g.fillStyle = '#ffffff'; g.fillRect(Math.round(x), y, 1, 1); y++; x += dx * 0.6; }
+    if (whash(n * 100 + k + 80) < 0.3) { let bx = x, by = y; g.fillStyle = '#dfe6ff'; for (let i = 0; i < 6; i++) { g.fillRect(Math.round(bx), by, 1, 1); bx -= dx; by++; } }   // a fork
+    k++;
+  }
+}
+
 /**
  * A fenced area's fence: its four sides as pieces { x, y, w, h, side }, with a gap (a gate)
  * in the middle of a side: `gates: { top, bottom, left, right }` (their widths), or `gate`
@@ -724,10 +798,13 @@ function fenceOf(a) {
  * further back first, so whoever stands lower on the screen is in front.
  * dpx: device pixels per canvas pixel, when the canvas is drawn bigger
  * underneath (g scaled by dpx) so the signs' names can be written.
+ * weather: 'clear' (or nothing), 'rain' (snow in winter), 'storm' (rain and
+ * lightning), 'wind' (leaves in autumn, petals in spring, the trees tossing,
+ * washing flapping) or 'fog' (drifting banks of mist).
  */
 export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0, above = [], petals = true, steam = drawSteam, lights = 'bands', season = null, weather = null, prints = [] } = {}) {
   if (!SEASONS.includes(season)) season = null;                             // no season: as drawn
-  const rain = weather === 'rain';
+  const rain = weather === 'rain' || weather === 'storm', wind = weather === 'wind', fog = weather === 'fog';
   g.imageSmoothingEnabled = false;
   g.drawImage(groundOf(town, season, rain && season !== 'winter'), view.x, view.y, view.w, view.h, 0, 0, view.w, view.h);
   g.save(); g.translate(-view.x, -view.y);
@@ -757,12 +834,12 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0
   items.sort((a, b) => a.y - b.y || (a.b ? -1 : 1));
   /** Draw one thing of the view (a building, a prop, a plant, someone or something moving). */
   const drawItem = (ctx, it) => {
-    if (it.b) drawBuilding(ctx, dpx === 1 && season !== 'winter' ? it.b : { ...it.b, dpx, snow: season === 'winter' });
+    if (it.b) drawBuilding(ctx, dpx === 1 && season !== 'winter' && !wind ? it.b : { ...it.b, dpx, snow: season === 'winter', wind: wind ? t : null });
     else if (it.prop) {
       if (it.prop.riders) drawSwings(ctx, it.prop, t);                           // swings with people on them: { riders: [{ angle, kid }, null] }
       else { if (it.prop.type === 'redLantern') it.prop.sway = Math.round(Math.sin(t * 1.3 + it.prop.x * 0.7) * 0.7); drawProp(ctx, it.prop); }
     }
-    else if (it.p) { if (it.p.kind === 'tree') drawTree(ctx, { ...it.p, t, season }); else drawBush(ctx, season ? { ...it.p, season } : it.p); }   // trees sway in the breeze
+    else if (it.p) { if (it.p.kind === 'tree') drawTree(ctx, { ...it.p, t, season, wind }); else drawBush(ctx, season ? { ...it.p, season } : it.p); }   // trees sway in the breeze
     else if (it.s.vehicle) drawVehicle(ctx, it.s);                               // cars, buses, the train: { vehicle: true, type, ... }
     else if (it.s.ball) drawBall(ctx, it.s);                                     // a ball { ball: true, x, y, h (its height off the ground) }
     else if (it.s.draw) it.s.draw(ctx, it.s, t);                                // anything with its own drawing: { draw(g, s, t), x, y } (pigeons, rubbish...)
@@ -796,6 +873,8 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0
     else if (it.p && it.p.kind === 'tree' && it.p.type === 'sakura' && petals && (!season || season === 'spring')) drawPetals(g, { ...it.p, seed: it.p.x }, t, Math.round(30 * town.scale));
   }
   for (const s of above) if (s.x > view.x - 10 && s.x < view.x + view.w + 10 && s.y > view.y - 4 && s.y < view.y + view.h + 10) (s.draw ?? drawCharacter)(g, s, t);
+  if (wind) drawWind(g, view, t, season);                                      // in the air, under the night (it darkens them)
+  if (fog) drawFog(g, view, t);
   if (night > 0.01) {
     drawNight(g, view, items, night, dpx, drawItem, t, lights);
     // the rings (yours gold, whoever is pointed at white) keep their colour at night: drawn again over
@@ -815,5 +894,6 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0
     });
   }
   if (rain) drawRain(g, view, t, night, season === 'winter');                   // over everything: rain (snow falling in winter)
+  if (weather === 'storm' && season !== 'winter') drawThunder(g, view, t, night);  // and lightning
   g.restore();
 }

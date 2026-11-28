@@ -513,6 +513,14 @@ bubble lab, so games can use them and they can grow.
 65. **Softer rain** (the owner: still too harsh): half as many drops, fainter and shorter
     streaks (22-38 % see-through, 3 px), a barely grey sky, very few faint splashes.
 
+67. **Wind, fog and thunder** (the owner, from animated mock-ups: wind yes, fog B, thunder B):
+    `weather: 'wind'` blows autumn leaves or spring petals across, tosses the trees harder
+    and flaps the washing on the balconies; `'fog'` drifts banks of mist over the town in
+    three hard-edged steps (the night's lights through it); `'storm'` is rain with
+    lightning (a double flash and a pixel bolt, now and then). The Weather button and
+    `?weather=` take them; on auto, windy spells, fog some early mornings, a third of
+    the rain stormy. Clear and rainy pictures unchanged (hashes).
+
 ## In progress
 
 - Nothing. (A faster forest, weather and seasons, the traffic jam: done, 60-63. Going into
@@ -521,7 +529,7 @@ bubble lab, so games can use them and they can grow.
 ## Next (only when the owner asks)
 
 The full-size redraw is done. Ideas offered before (on hold):
-- weather and time (the backlog): wind, rain, seasons
+- the catalogue in the seasons and the weather (the backlog)
 - a map maker: place streets, buildings, props and areas, save and load
   (every place is already a layout piece)
 - people going into buildings (on hold, the owner: chose B from mock-ups, the door
@@ -532,8 +540,7 @@ The full-size redraw is done. Ideas offered before (on hold):
 
 ## Backlog (agreed ideas for later)
 
-- Weather, more: leaves and petals blowing in the wind, laundry flapping, thunder,
-  fog; the catalogue showing the seasons.
+- The catalogue showing the seasons and the weather.
 
 ## Known issues and small ideas
 
