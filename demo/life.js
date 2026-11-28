@@ -280,15 +280,17 @@ export function makeLife({ town, traffic, people, follow, rng = Math.random }) {
     parcel.signal = 'h';                                                        // hazards on while it stands
     const door = stop.spot.door, back = { x: parcel.x - 18, y: door.y + 4 };
     if (!porter) { porter = { ...DRIVER, x: back.x, y: back.y, walking: true, leg: 'there', load: true, inside: 0, draw: drawTrolley, talk: 0 }; sprites.push(porter); }
-    if (porter.inside > 0) {                                                    // in the shop a moment
-      if ((porter.inside -= dt) <= 0) { porter.hidden = false; porter.leg = 'back'; porter.load = false; }
+    if (porter.inside > 0) {                                                    // at the door a moment, unloading (the owner: no vanishing)
+      porter.walking = false; porter.facing = 'up';
+      if ((porter.inside -= dt) < 0.6) porter.load = false;                     // the parcels off, in at the door
+      if (porter.inside <= 0) porter.leg = 'back';
       return;
     }
     const to = porter.leg === 'there' ? { x: door.x, y: door.y + 2 } : back, dx = to.x - porter.x, dy = to.y - porter.y, d = Math.hypot(dx, dy), step = 16 * dt;
     porter.facing = facingFor(dx, dy, porter.facing); porter.walking = true;
     if (d > step) { porter.x += dx / d * step; porter.y += dy / d * step; return; }
     porter.x = to.x; porter.y = to.y;
-    if (porter.leg === 'there') { porter.inside = 1.2; porter.hidden = true; return; }
+    if (porter.leg === 'there') { porter.inside = 1.2; return; }
     sprites.splice(sprites.indexOf(porter), 1); porter = null; parcel.atStop = null; parcel.wait = 0.5; parcel.signal = null;   // in the back, and on
   }
 

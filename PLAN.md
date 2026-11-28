@@ -604,6 +604,10 @@ bubble lab, so games can use them and they can grow.
     blinking, and the driver (dark green shirt, yellow placket, green-grey trousers) wheels the
     parcels in on a hand trolley and comes back. A catalogue card.
 
+83. **The parcel driver no longer vanishes** (the owner: "why does the driver blink and go?";
+    chose A): at the door they stop a moment facing it, the parcels come off the trolley, and they
+    walk back.
+
 ## In progress
 
 - Vehicles, round two (the owner's order, Nov 2026; 1 done, 77; 2 done, 78; 3 done, 82, as a parcel truck): 1. a more detailed redraw of the cars,

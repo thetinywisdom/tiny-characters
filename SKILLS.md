@@ -613,8 +613,8 @@ small on the back doors). tinyLife's `drawTrolley(g, p, t)` draws someone wheeli
 (`p.load`: parcels on it). The demo (`deliveries` in demo/life.js) sends it by day every 70-120 s
 round up to three shops of one row (`PARCEL_SHOPS` or any with a shopType), each spot 20 px past
 the door so the truck stands clear of it; at a stop: `v.signal = 'h'` (hazards), the driver
-(`DRIVER`: dark green, yellow placket) wheels the load to the door, is inside for 1.2 s, comes
-back empty and lets the truck go.
+(`DRIVER`: dark green, yellow placket) wheels the load to the door, stands there 1.2 s facing it (the parcels
+come off the trolley half way; the owner: nobody vanishes), comes back empty and lets the truck go.
 
 **The police car and the fire engine** (`police`: `carShape` with `twoTone`, the body below the
 windows all `c2` black, white above, a light bar `extra`; `fireEngine`: its own shape). A shape
