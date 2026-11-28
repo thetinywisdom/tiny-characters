@@ -216,7 +216,7 @@ function sprite(type, c, c2, dir, { brake = false, blink = null, snow = false, f
       const col = S.shape(u, v, z, c, c2, flash);
       if (!col) return null;
       if (col === TAIL || col === LAMP || col === lampLow) {
-        if (blink && (blink === 'r' ? v > 0 : v < 0) && Math.abs(v) > hw - 2) return AMBER;   // (+v is its right)
+        if (blink && (blink === 'h' || (blink === 'r' ? v > 0 : v < 0)) && Math.abs(v) > hw - 2) return AMBER;   // ('h': hazards, both sides)   // (+v is its right)
         return col === TAIL && brake ? BRAKE : col;
       }
       if (brake && col === GLASS && type !== 'bus' && u < 0 && Math.abs(v) < 1.6 && z < 8.2) return BRAKE;   // the high brake lamp, at the bottom of the rear window
@@ -312,7 +312,7 @@ export function vehicleLights(v) {
   for (const w of two ? [0] : [-side, side]) {   // (two wheels: one lamp)
     if (sn > -0.35) out.push({ ...onScreen(v, S, hl + 0.5, w, 4.8), r: 2.5, c: '#fff8d8' });
     if (sn < 0.35) out.push({ ...onScreen(v, S, -hl - 0.5, w, 4.8), r: v.brake ? 3.5 : 2.5, c: v.brake ? '#ff3a28' : '#ff5040' });
-    if (v.signal && v.blinkOn && (two || (v.signal === 'r' ? w > 0 : w < 0))) out.push({ ...onScreen(v, S, sn > -0.35 ? hl + 0.5 : -hl - 0.5, w, 4.8), r: 2.5, c: '#ffb428' });
+    if (v.signal && v.blinkOn && (two || v.signal === 'h' || (v.signal === 'r' ? w > 0 : w < 0))) out.push({ ...onScreen(v, S, sn > -0.35 ? hl + 0.5 : -hl - 0.5, w, 4.8), r: 2.5, c: '#ffb428' });
   }
   if (v.siren && (v.type === 'police' || v.type === 'fireEngine')) out.push({ ...onScreen(v, S, v.type === 'police' ? -1.5 : 14.5, (v.flash ?? 0) ? 3 : -3, S.H), r: 6, c: '#ff3a2a' });   // the flashing light on its roof
   return out;
@@ -611,7 +611,7 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, motorbik
       if (v.type === 'train') continue;
       // swing round towards its heading (a quarter turn in about a third of a second)
       if (v.heading !== v.target) { const diff = ((v.target - v.heading + 540) % 360) - 180, turnBy = 280 * dt; v.heading = Math.abs(diff) <= turnBy ? v.target : (v.heading + Math.sign(diff) * turnBy + 360) % 360; }
-      if (v.wait > 0) { v.wait -= dt; v.walking = false; v.brake = true; continue; }
+      if (v.wait > 0) { v.wait -= dt; v.walking = false; v.brake = true; if (v.signal) v.blinkOn = Math.floor(t * 2.5) % 2 === 0; continue; }   // (standing: hazards blink)
       if (v.driftY !== undefined) {                                           // pulling out or in: not while someone stands against it
         const V = VEHICLES[v.type], patient = (v.driftHeld ?? 0) < 1.5;  // (after a moment only for someone right in its way: who stands beside it may be waiting for it)
         const near = walkers.some((p) => { if (p.vehicle || p.ball || p.monster) return false; const { ahead, side } = local(v, p.x, p.y); return patient ? Math.abs(ahead) < V.length / 2 + 5 && Math.abs(side) < V.width / 2 + 5 : ahead > 0 && ahead < V.length / 2 + 5 && Math.abs(side) < V.width / 2 + 2; });

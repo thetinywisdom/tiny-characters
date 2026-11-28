@@ -592,7 +592,7 @@ taxi and bus liveries). To add a vehicle: add a shape (start from
 state its own cached sprite): a wrapper over the shape turns the tail lamps `BRAKE` red
 and the bottom middle of the rear window into a high brake lamp (`v.brake`: slowing, or
 standing); the outer lamps (front and back) of the side `v.signal` ('l' | 'r'; +v is
-the vehicle's right) `AMBER` while `v.blinkOn` (2.5 blinks a second); with `snow` (the
+the vehicle's right) `AMBER` while `v.blinkOn` (2.5 blinks a second; `v.signal = 'h'`: hazards, both sides, blinking while it stands); with `snow` (the
 town in winter) the roof's top blocks white. `vehicleLights` adds a bigger red glow
 when braking and an amber one when blinking. Turns are planned 40 px before the lane
 (`v.plan`, `v.planFor`; `turnSide` gives the side; the signal stays on until the
