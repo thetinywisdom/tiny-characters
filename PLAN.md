@@ -85,7 +85,7 @@ bubble lab, so games can use them and they can grow.
 - Seasons and weather (Nov 2026): all four seasons as in the mock-ups (autumn colours by
   tree, bare trees and snow in winter); rain with splashes, puddles and umbrellas (C),
   made gentler and slow (the owner: the town must stay easy to see), snow falling
-  slower still, footprints in the snow; a picker under the town, otherwise the real
+  slower still, footprints for everyone in snow and rain, in short trails; a picker under the town, otherwise the real
   month and rain now and then.
 - The breeze (Nov 2026): trees sway in gusts that roll across the town (B, from
   animated mock-ups: up to 2 px at the top, trunks still); bushes stay still.
@@ -502,6 +502,11 @@ bubble lab, so games can use them and they can grow.
     down at half that; you leave footprints on snowy ground (left and right by turns,
     gone after 30 s). Going into buildings is on hold (the owner); when it comes back:
     doors that open (B, from the mock-ups), then a peek inside as its own step.
+
+64. **Footprints for everyone, in snow and rain, in short trails** (the owner): people,
+    you, cats, dogs, the monsters that walk, and bicycles (a tyre track) leave prints off
+    the roads: pale in the snow, wet and dark in the rain (washed away sooner); each keeps
+    only the last 60 px of its trail, so the town does not fill up with prints.
 
 ## In progress
 

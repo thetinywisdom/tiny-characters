@@ -615,10 +615,14 @@ drawn (so pictures without one are unchanged).
   `t`, nothing random), a few splashes; the wet ground has `puddles` on roads and
   sidewalks. In winter it snows: white flakes drifting down slowly (half the rain's
   speed), no puddles.
-- **Footprints** (the owner): the demo keeps `prints` ({ x, y, at }) where you walk on
-  snow (winter, off the roads), a print every 4 px, left and right by turns, and drops
-  them after 30 s; `drawTownView({ prints })` draws them after the ground, before
-  everyone (2 x 1 px, paler after 15 s). The demo puts walkers' umbrellas up
+- **Footprints** (the owner: everything leaves them, in snow and rain, but the town must
+  not fill up with them): the demo's `footprints` adds a print for everyone walking
+  (people, you, cats, dogs, the monsters that walk; a bicycle leaves a 1 px tyre track)
+  off the roads, every 4 px (animals 3, bikes 2), left and right by turns: pale in the
+  snow (25 s), dark and 40 % see-through in the rain (10 s); each walker keeps only the
+  last 60 px of its trail (`addPrint`, `TRAIL`). `drawTownView({ prints })` draws them
+  ({ x, y, w, c, alpha, age }) after the ground, before everyone, half as strong once
+  half their time is gone. The demo puts walkers' umbrellas up
   (`dryCarry` keeps what they carried) and picks the season by the real month and
   rain spells by the town's day and hour (`rainingNow`).
 - Putting a town in a season the first time recolours its ground once (a fraction

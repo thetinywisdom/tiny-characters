@@ -730,10 +730,13 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0
   g.imageSmoothingEnabled = false;
   g.drawImage(groundOf(town, season, rain && season !== 'winter'), view.x, view.y, view.w, view.h, 0, 0, view.w, view.h);
   g.save(); g.translate(-view.x, -view.y);
-  // footprints pressed into the ground (snow): { x, y, age } pixel pairs, paler as they age, under everyone
+  // footprints on the ground (in snow, or wet in the rain): { x, y, w, c, alpha, age }, under everyone;
+  // half as strong once half their time is gone
   for (const f of prints) if (f.x > view.x - 2 && f.x < view.x + view.w + 2 && f.y > view.y - 2 && f.y < view.y + view.h + 2) {
-    g.fillStyle = f.age < 0.5 ? '#b4c0d0' : '#cbd4e0'; g.fillRect(Math.round(f.x), Math.round(f.y), 2, 1);
+    g.globalAlpha = (f.alpha ?? 1) * ((f.age ?? 0) < 0.5 ? 1 : 0.5);
+    g.fillStyle = f.c ?? '#b4c0d0'; g.fillRect(Math.round(f.x), Math.round(f.y), f.w ?? 2, 1);
   }
+  g.globalAlpha = 1;
   const items = [];
   for (const b of town.buildings) {
     const { w, h } = buildingSize(b);

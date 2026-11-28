@@ -150,20 +150,40 @@ function umbrellas(raining) {
     else if (!raining && 'dryCarry' in p) { p.carry = p.dryCarry; delete p.dryCarry; }
   }
 }
-// footprints in the snow (the owner, Nov 2026): you leave a print every few pixels you walk on
-// snowy ground (anywhere but the roads in winter), left and right foot by turns; they fade
-// (paler after a while) and go after 30 s
+// footprints (the owner, Nov 2026: everything leaves them, in the snow and in the rain): everyone
+// walking (people, you, cats, dogs, the monsters that walk; bicycles a tyre track) leaves a print every few pixels, left and
+// right by turns: in the snow (winter, off the roads) pale prints that go after 25 s; in the rain wet
+// dark prints the rain washes away in 10 s (not on the roads, where cars splash them away); each
+// walker keeps only the last 60 px of its trail, so the town does not fill up with prints
 const prints = [];
-let lastPrint = null, foot = 1;
-function footprints(season, t) {
-  for (let i = prints.length - 1; i >= 0; i--) { prints[i].age = (t - prints[i].at) / 30; if (prints[i].age >= 1) prints.splice(i, 1); }
-  if (season !== 'winter' || town.roadAt(you.x, you.y)) { lastPrint = null; return; }
-  if (lastPrint && Math.hypot(you.x - lastPrint.x, you.y - lastPrint.y) < 4) return;
-  const across = you.facing === 'left' || you.facing === 'right';
-  foot = -foot;
-  prints.push({ x: you.x - 1 + (across ? 0 : foot * 1.5), y: you.y - 1 + (across ? foot : 0), at: t, age: 0 });
-  lastPrint = { x: you.x, y: you.y };
-  if (prints.length > 200) prints.shift();
+const FLOATERS = new Set(['ghostGirl', 'reaper', 'skull']);
+const TRAIL = 60;                                                          // px of trail behind each walker: older prints go as they walk on (the owner)
+/** Add a print for p, dropping p's oldest once its trail is longer than TRAIL. */
+function addPrint(p, f, step) {
+  prints.push(f);
+  (p.trail ??= []).push(f);
+  while (p.trail.length > TRAIL / step) p.trail.shift().gone = true;
+}
+function footprints(season, raining, t) {
+  for (let i = prints.length - 1; i >= 0; i--) { const f = prints[i]; f.age = (t - f.at) / f.life; if (f.age >= 1 || f.gone) prints.splice(i, 1); }
+  const snow = season === 'winter';
+  if (!snow && !raining) return;
+  for (const p of people) {
+    if (p.away || p.flying || FLOATERS.has(p.monster) || (p.monster && !showMonsters) || (p.pose && !p.rider)) continue;
+    const onSnow = !town.roadAt(p.x, p.y) && !town.blocked(p.x, p.y);
+    if (!onSnow) { p.lastPrint = null; continue; }
+    if (p.lastPrint && Math.hypot(p.x - p.lastPrint.x, p.y - p.lastPrint.y) < (p.rider ? 2 : p.cat || p.dog ? 3 : 4)) continue;
+    if (p.rider) {                                                         // a bicycle: a thin tyre track
+      addPrint(p, { x: p.x, y: p.y - 1, w: 1, c: snow ? '#b4c0d0' : '#3a4450', alpha: snow ? 1 : 0.4, at: t, life: snow ? 25 : 10, age: 0 }, 2);
+      p.lastPrint = { x: p.x, y: p.y }; continue;
+    }
+    const small = p.cat || p.dog, across = p.facing === 'left' || p.facing === 'right';
+    p.foot = -(p.foot ?? 1);
+    addPrint(p, { x: p.x - (small ? 0 : 1) + (across ? 0 : p.foot * (small ? 1 : 1.5)), y: p.y - 1 + (across ? p.foot * (small ? 0.5 : 1) : 0), w: small ? 1 : 2,
+      c: snow ? '#b4c0d0' : '#3a4450', alpha: snow ? 1 : 0.4, at: t, life: snow ? 25 : 10, age: 0 }, small ? 3 : 4);
+    p.lastPrint = { x: p.x, y: p.y };
+  }
+  if (prints.length > 3000) prints.splice(0, prints.length - 3000);
 }
 /** How dark it is at an hour: 0 by day (7 to 17), 1 at night (20 to 5), easing between. */
 function nightAt(h) {
@@ -340,7 +360,7 @@ function frame(now) {
   traffic.update(dt, t, shownPeople);
   if (timeMode === 'passing') { const h = hour + dt / 8; if (h >= 24) day++; hour = h % 24; }
   const season = seasonNow(), raining = rainingNow();
-  umbrellas(raining); label(); footprints(season, t);
+  umbrellas(raining); label(); footprints(season, raining, t);
   const hh = Math.floor(hour), mm = Math.floor((hour - hh) * 6) * 10;
   const time = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
   if (clock.textContent !== time) clock.textContent = time;

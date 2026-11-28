@@ -387,7 +387,8 @@ evergreens stay green. Winter: snow on the ground, the sidewalks and every roof,
 leafy trees bare with snow on their branches, snow on the evergreens; roads stay
 clear. `weather: 'rain'`: a light grey sky, gentle see-through rain falling at a slant,
 a few splashes, puddles on the roads and sidewalks (in winter it snows instead,
-slowly). In winter you leave footprints in the snow (`prints`). The same `season` works
+slowly). Everyone walking leaves footprints, short trails behind them: in the snow,
+and wet ones in the rain (`prints`). The same `season` works
 on single plants (`drawTree` / `drawBush`), `snow: true` on a building
 (`drawBuilding`), and `groundInSeason(canvas, season)` on any ground picture.
 
