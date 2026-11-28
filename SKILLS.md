@@ -572,6 +572,12 @@ when braking and an amber one when blinking. Turns are planned 40 px before the 
 vehicle has swung round). drawTownView draws `drawVehicleBeams` faintly ('lighter', 70 %)
 under everything on a dark day (rain, storm, fog) so the headlamps show.
 
+**The time on the town** (demo/town.js `drawClock`, after the view and the speech, so the night
+does not darken it): a plate (`rgba(32,36,44,0.78)`) at (4, 4), 34 x 11 town pixels, a sun
+(from 5:30) or a moon (from 19:00), the time in 3 x 5 pixel numbers (`DIGITS`), ten minutes
+at a time, like the small clock by the buttons. The demo's clock runs one town hour every 8 s
+(`hour += dt / 8` while Time is passing).
+
 **The rubbish truck** (`rubbishTruck`, a shape like the bus's; the owner chose the green cab)
 and **rounds**: `traffic.sendRound(type, spots)` sends a vehicle round places on the sidewalk:
 each becomes a stop on the kerb-side (east-bound) lane of the street below it, at its x plus

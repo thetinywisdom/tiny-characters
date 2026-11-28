@@ -403,11 +403,31 @@ function frame(now) {
   drawTownView(g, town, view, [...shownPeople, ...smallLife.sprites, ...traffic.vehicles, ...(ball ? [ball] : [])], t, { dpx: D, night: nightAt(hour), above: smallLife.above, lights: LIGHTS, season, weather: weatherNow(), prints });
   // lines and icon bubbles over everything (and bright at night)
   g.save(); g.translate(-view.x, -view.y); drawSpeech(g, shownPeople, t, { bounds: view }); g.restore();
+  drawClock(g, time, hour);
   const name = town.placeAt(you.x, you.y);
   if (name !== shown) { shown = name; here.textContent = name; }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
+
+// the time on the town (the owner chose A, Nov 2026: "when is 7 am?"): in the top-left corner, in
+// pixel numbers 3 x 5 on a dark see-through plate, a sun by day and a moon at night; one town hour
+// passes in 8 seconds
+const DIGITS = { 0: '111101101101111', 1: '010110010010111', 2: '111001111100111', 3: '111001111001111', 4: '101101111001001',
+  5: '111100111001111', 6: '111100111101111', 7: '111001010010010', 8: '111101111101111', 9: '111101111001111' };
+function drawClock(g, time, h) {
+  const night = h >= 19 || h < 5.5, PLATE = 'rgba(32,36,44,0.78)';
+  g.fillStyle = PLATE; g.fillRect(4, 4, 34, 11);
+  if (night) { g.fillStyle = '#f2e8b0'; g.fillRect(7, 6, 4, 7); g.fillRect(6, 7, 1, 5); g.fillStyle = '#20242c'; g.fillRect(9, 6, 2, 5); }   // the moon
+  else { g.fillStyle = '#f2c230'; g.fillRect(7, 7, 4, 5); g.fillRect(8, 6, 2, 7); g.fillRect(6, 8, 6, 3); }                                  // the sun
+  g.fillStyle = '#f2f2ee';
+  let x = 15;
+  for (const ch of time) {
+    if (ch === ':') { g.fillRect(x, 8, 1, 1); g.fillRect(x, 10, 1, 1); x += 2; continue; }
+    [...DIGITS[ch]].forEach((on, i) => { if (on === '1') g.fillRect(x + (i % 3), 7 + Math.floor(i / 3), 1, 1); });
+    x += 4;
+  }
+}
 
 // Buildings: each one on its own, with its name, three seeds of each: a seed
 // picks the width, floors, windows, door, roof and colours, so pick seeds

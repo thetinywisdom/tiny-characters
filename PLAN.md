@@ -555,6 +555,11 @@ bubble lab, so games can use them and they can grow.
     pile, a worker in a light blue uniform and cap walks the bags to the back, and it drives
     on; the bags stay gone until the next morning. A catalogue card.
 
+75. **The time on the town** (the owner: "when is 7 am?", chose A from mock-ups): the
+    town's time in pixel numbers in the top-left corner of the town, on a dark see-through
+    plate, with a sun by day and a moon at night (one town hour is 8 seconds, a day about
+    3 minutes; the small clock by the buttons stays).
+
 ## In progress
 
 - Vehicles (the owner's order, Nov 2026): 1. small fixes, 2. motorbikes in the traffic,

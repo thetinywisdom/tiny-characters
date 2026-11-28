@@ -7,7 +7,8 @@ canvas and scaled up with hard pixels. Plain JavaScript, no dependencies.
 
 **Try it:** https://thetinywisdom.github.io/tiny-characters/ (GitHub Pages,
 served from `main`). Or open `index.html` through any static server for the demo:
-a town to walk around (a 2D map of streets, blocks and grounds; the view
+a town to walk around (its time in the top-left corner, a sun or a moon by it; one town
+hour passes every 8 seconds; a 2D map of streets, blocks and grounds; the view
 follows you; tap a building to walk to its door; move the one with the gold
 ring with the arrow keys / WASD or by tapping; tap anyone to make them talk),
 every look they can have, every building, and a gallery of random looks.
