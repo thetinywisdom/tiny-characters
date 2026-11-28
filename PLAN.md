@@ -534,8 +534,17 @@ bubble lab, so games can use them and they can grow.
 
 ## In progress
 
-- Nothing. (A faster forest, weather and seasons, the traffic jam: done, 60-63. Going into
-  buildings is on hold: see Next.)
+- Vehicles (the owner's order, Nov 2026): 1. small fixes, 2. motorbikes in the traffic,
+  3. city bikes and bike racks, 4. the rubbish truck; each from mock-ups first.
+  - Step 1, built on the working branch, waiting for the owner's look before `main`:
+    brake lights (the tail lamps a brighter red and a high brake lamp at the bottom of the
+    rear window while slowing or standing), turn signals (the turn decided 40 px before
+    the corner; that side's corner lamps blink amber until round it), headlamps on in
+    rain, storms and fog by day (a faint pool ahead, red behind), snow on the roofs in
+    winter (roof only: on the bonnet too a blue car looked white).
+  - Ideas from the look at vehicles (not chosen yet): a redraw with more detail, cleaner
+    corner views, parked cars, a police car, a fire engine, the van stopping at shops,
+    bike lamps at night, smoother bike turns.
 
 ## Next (only when the owner asks)
 

@@ -120,13 +120,30 @@ const SHAPES = {
 const SPRITES = new Map();
 const DIRS = 16;
 // glass: the sloped windscreen and rear window one tone (no steps), the side windows darker; lamps unshaded
-const tone = (col, f, face) => (col === GLASS ? (face === 'side' ? 0.8 : 1.04) : col === LAMP || col === TAIL || col === ORANGE ? 1 : f);
-/** The sprite of a vehicle at one of 16 headings: { canvas, ox, oy } (where its ground middle is). */
-function sprite(type, c, c2, dir) {
-  const key = `${type}|${c}|${c2}|${dir}`;
+const tone = (col, f, face) => (col === GLASS ? (face === 'side' ? 0.8 : 1.04) : col === LAMP || col === TAIL || col === ORANGE || col === BRAKE || col === AMBER ? 1 : f);
+// the lamps as they change (the owner, Nov 2026): the tail lamps brighter while braking or standing,
+// the corner lamps of one side blinking amber before and through a turn; snow on the tops in winter
+const BRAKE = '#ff2a1c', AMBER = '#ffb428', SNOWTOP = '#eef2f6';
+/**
+ * The sprite of a vehicle at one of 16 headings: { canvas, ox, oy } (where its ground middle is).
+ * lamps: { brake, blink: 'l' | 'r' (that side's corner lamps lit amber), snow }.
+ */
+function sprite(type, c, c2, dir, { brake = false, blink = null, snow = false } = {}) {
+  const key = `${type}|${c}|${c2}|${dir}|${brake ? 'b' : ''}${blink ?? ''}${snow ? 's' : ''}`;
   if (!SPRITES.has(key)) {
-    const S = SHAPES[type];
-    SPRITES.set(key, voxelSprite((bu, bv, bz) => S.shape(bu + 0.5, bv + 0.5, bz + 0.5, c, c2), S, (dir / DIRS) * 360, tone));
+    const S = SHAPES[type], lampLow = shade(LAMP, 0.85), hw = S.W / 2;
+    const get = (u, v, z) => {
+      const col = S.shape(u, v, z, c, c2);
+      if (!col) return null;
+      if (col === TAIL || col === LAMP || col === lampLow) {
+        if (blink && (blink === 'r' ? v > 0 : v < 0) && Math.abs(v) > hw - 2) return AMBER;   // (+v is its right)
+        return col === TAIL && brake ? BRAKE : col;
+      }
+      if (brake && col === GLASS && type !== 'bus' && u < 0 && Math.abs(v) < 1.6 && z < 8.2) return BRAKE;   // the high brake lamp, at the bottom of the rear window
+      if (snow && z >= S.H - 3 && col !== GLASS && col !== TYRE && !S.shape(u, v, z + 1, c, c2)) return SNOWTOP;
+      return col;
+    };
+    SPRITES.set(key, voxelSprite((bu, bv, bz) => get(bu + 0.5, bv + 0.5, bz + 0.5), S, (dir / DIRS) * 360, tone));
   }
   return SPRITES.get(key);
 }
@@ -163,7 +180,7 @@ export function drawVehicle(g, v) {
   const type = SHAPES[v.type] ? v.type : 'car', [c, c2] = coloursOf(v);
   const heading = v.heading ?? HEADING[v.facing ?? 'right'];
   const dir = ((Math.round(heading / (360 / DIRS)) % DIRS) + DIRS) % DIRS;
-  const s = sprite(type, c, c2, dir);
+  const s = sprite(type, c, c2, dir, { brake: v.brake, blink: v.signal && v.blinkOn ? v.signal : null, snow: v.snow });
   g.drawImage(s.canvas, Math.round(v.x) - s.ox, Math.round(v.y) - s.oy);
 }
 
@@ -206,7 +223,8 @@ export function vehicleLights(v) {
   const S = shapeOf(v), sn = sinOf(v), hl = S.L / 2, side = v.type === 'scooter' ? 0 : S.W / 2 - 1.6, out = [];
   for (const w of v.type === 'scooter' ? [0] : [-side, side]) {   // (the scooter: one lamp)
     if (sn > -0.35) out.push({ ...onScreen(v, S, hl + 0.5, w, 4.8), r: 2.5, c: '#fff8d8' });
-    if (sn < 0.35) out.push({ ...onScreen(v, S, -hl - 0.5, w, 4.8), r: 2.5, c: '#ff5040' });
+    if (sn < 0.35) out.push({ ...onScreen(v, S, -hl - 0.5, w, 4.8), r: v.brake ? 3.5 : 2.5, c: v.brake ? '#ff3a28' : '#ff5040' });
+    if (v.signal && v.blinkOn && (v.signal === 'r' ? w > 0 : w < 0)) out.push({ ...onScreen(v, S, sn > -0.35 ? hl + 0.5 : -hl - 0.5, w, 4.8), r: 2.5, c: '#ffb428' });
   }
   return out;
 }
@@ -409,7 +427,10 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, seed = 5
     return !vehicles.some((o) => o !== v && o.lane === lane && Math.abs(along(o) - at) < half(o) + mine + 4);
   }
   /** Turn v onto another lane at its current spot. */
+  /** Which way a turn into `lane` goes: 'l' or 'r' (on the screen, turning clockwise is to the right). */
+  const turnSide = (v, lane) => (((headingOf(lane) - headingOf(v.lane) + 540) % 360) - 180 > 0 ? 'r' : 'l');
   function turn(v, lane) {
+    v.signal = turnSide(v, lane); v.plan = false;
     v.dodge = null;
     if (lane.kind === 'h') { v.y = lane.y; v.from = lane.i; } else { v.x = lane.x; v.from = v.lane.i; }
     v.lane = lane; v.target = headingOf(lane); v.speed = Math.min(v.speed, 14);   // it swings round to its new heading
@@ -471,7 +492,7 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, seed = 5
       if (v.type === 'train') continue;
       // swing round towards its heading (a quarter turn in about a third of a second)
       if (v.heading !== v.target) { const diff = ((v.target - v.heading + 540) % 360) - 180, turnBy = 280 * dt; v.heading = Math.abs(diff) <= turnBy ? v.target : (v.heading + Math.sign(diff) * turnBy + 360) % 360; }
-      if (v.wait > 0) { v.wait -= dt; v.walking = false; continue; }
+      if (v.wait > 0) { v.wait -= dt; v.walking = false; v.brake = true; continue; }
       if (v.driftY !== undefined) {                                           // pulling out or in: not while someone stands against it
         const V = VEHICLES[v.type], patient = (v.driftHeld ?? 0) < 1.5;  // (after a moment only for someone right in its way: who stands beside it may be waiting for it)
         const near = walkers.some((p) => { if (p.vehicle || p.ball || p.monster) return false; const { ahead, side } = local(v, p.x, p.y); return patient ? Math.abs(ahead) < V.length / 2 + 5 && Math.abs(side) < V.width / 2 + 5 : ahead > 0 && ahead < V.length / 2 + 5 && Math.abs(side) < V.width / 2 + 2; });
@@ -500,31 +521,40 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, seed = 5
       if (v.dodge) steer(v, dt);
       const target = free <= 0 ? 0 : Math.min(v.type === 'bus' ? CRUISE * 0.8 : CRUISE, free * 3);
       v.speed += Math.max(-90 * dt, Math.min(40 * dt, target - v.speed));
+      v.brake = v.speed < 0.5 || target < v.speed - 1;                         // the brake lights: slowing down, or standing
       const step = Math.max(0, Math.min(v.speed * dt, Math.max(0, free)));
       const d = v.lane.dir, before = along(v);
       if (v.lane.kind === 'h') v.x += d * step; else v.y += d * step;
       const now = along(v);
       // a bus waits at its stops
       if (v.type === 'bus') for (const s of stops) if (s.lane === v.lane && !v.served.has(s) && (before - s.x) * (now - s.x) <= 0) { v.served.add(s); v.wait = 2.5; }
-      // turns
+      // turns, decided a little before the turn (40 px) so the signal blinks on the way to it
       if (v.type !== 'bus' && !v.toRank && v.driftY === undefined) {
         if (v.lane.kind === 'h') {
+          if (!v.plan) for (const l of vLanes) { const dist = (l.x - now) * d; if (dist > 0 && dist < 40 && v.planFor !== l) {
+            v.planFor = l; v.plan = (l.dir > 0 ? v.lane.i < last : v.lane.i > 0) && rng() < 0.3; v.signal = v.plan ? turnSide(v, l) : v.signal; break; } }
           for (const l of vLanes) if ((before - l.x) * (now - l.x) < 0 || before === l.x) {
-            const can = l.dir > 0 ? v.lane.i < last : v.lane.i > 0;
-            if (can && rng() < 0.3 && roomOn(v, l)) { turn(v, l); break; }
+            if (v.planFor === l && v.plan && roomOn(v, l)) { turn(v, l); break; }
+            if (v.planFor === l && v.plan) { v.plan = false; v.signal = null; }   // no room: on, straight over
           }
         } else {
+          const forcedAt = (l) => (d > 0 && l.i === last && l.dir > 0) || (d < 0 && l.i === 0 && l.dir < 0);
+          if (!v.plan) for (const l of hLanes) { const dist = (l.y - now) * d; if (dist > 0 && dist < 40 && v.planFor !== l) {
+            v.planFor = l; v.plan = forcedAt(l) || (l.i !== v.from && rng() < 0.3); v.signal = v.plan ? turnSide(v, l) : v.signal; break; } }
           for (const l of hLanes) if ((before - l.y) * (now - l.y) < 0) {
-            const forced = (d > 0 && l.i === last && l.dir > 0) || (d < 0 && l.i === 0 && l.dir < 0);
+            const forced = forcedAt(l);
             if (forced && !roomOn(v, l)) {                                    // it must turn here: wait for a gap,
               const alt = hLanes.find((h) => h.i === l.i && h.dir !== l.dir);      // or after a while turn the other way
               if ((v.held ?? 0) > 2 && alt && roomOn(v, alt)) { turn(v, alt); break; }
-              v.y = before; v.speed = 0; break;
+              v.y = before; v.speed = 0; v.signal = turnSide(v, l); break;
             }
-            if (forced || (l.i !== v.from && rng() < 0.3 && roomOn(v, l))) { turn(v, l); break; }
+            if (forced || (v.planFor === l && v.plan && roomOn(v, l))) { turn(v, l); break; }
+            if (v.planFor === l && v.plan) { v.plan = false; v.signal = null; }
           }
         }
       }
+      if (v.signal && !v.plan && v.heading === v.target) v.signal = null;   // round the corner: the signal off
+      v.blinkOn = !!v.signal && Math.floor(t * 2.5) % 2 === 0;
       // out of town: come back in somewhere else
       if (v.lane.kind === 'h' && (v.x < -40 || v.x > W + 40) && v.extra && !v.toRank) { v.gone = true; continue; }   // a taxi from the rank: gone (another comes)
       if (v.lane.kind === 'h' && (v.x < -40 || v.x > W + 40) && !v.toRank) {

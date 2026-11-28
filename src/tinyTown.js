@@ -815,6 +815,12 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0
     g.fillStyle = f.c ?? '#b4c0d0'; g.fillRect(Math.round(f.x), Math.round(f.y), f.w ?? 2, 1);
   }
   g.globalAlpha = 1;
+  // a dark day (rain, a storm, fog): the vehicles drive with their headlamps on, a faint pool of light ahead
+  if ((rain || fog) && night < 0.3) {
+    g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.7;
+    for (const s of sprites) if (s.vehicle && s.type !== 'train' && s.x > view.x - 40 && s.x < view.x + view.w + 40 && s.y > view.y - 30 && s.y < view.y + view.h + 30) drawVehicleBeams(g, s);
+    g.restore();
+  }
   const items = [];
   for (const b of town.buildings) {
     const { w, h } = buildingSize(b);
@@ -840,7 +846,7 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0
       else { if (it.prop.type === 'redLantern') it.prop.sway = Math.round(Math.sin(t * 1.3 + it.prop.x * 0.7) * 0.7); drawProp(ctx, it.prop); }
     }
     else if (it.p) { if (it.p.kind === 'tree') drawTree(ctx, { ...it.p, t, season, wind }); else drawBush(ctx, season ? { ...it.p, season } : it.p); }   // trees sway in the breeze
-    else if (it.s.vehicle) drawVehicle(ctx, it.s);                               // cars, buses, the train: { vehicle: true, type, ... }
+    else if (it.s.vehicle) drawVehicle(ctx, season === 'winter' ? { ...it.s, snow: true } : it.s);   // (winter: snow on their tops)                               // cars, buses, the train: { vehicle: true, type, ... }
     else if (it.s.ball) drawBall(ctx, it.s);                                     // a ball { ball: true, x, y, h (its height off the ground) }
     else if (it.s.draw) it.s.draw(ctx, it.s, t);                                // anything with its own drawing: { draw(g, s, t), x, y } (pigeons, rubbish...)
     else if (it.s.pose) drawPose(ctx, it.s, t);                                  // someone sitting, riding, sweeping... (tinyLife POSES)
