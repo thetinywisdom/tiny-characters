@@ -1,6 +1,7 @@
 // Tiny Street: the things on a street that make a town feel lived in:
 // utility poles with their wires and lamps, street lamps, stone lanterns,
-// vending machines, a bus stop, benches, bins, bikes in a rack, a red post
+// vending machines, a bus stop, benches, bins, bikes in a rack (and a long row of them
+// parked end on), a red post
 // box, pot plants, a stop sign; drawn in the buildings' pixel style.
 //
 //   drawProp(g, p)      one thing { type, x, y, seed, scale }: centred on x, standing on y
@@ -37,6 +38,7 @@ const DEFS = {
   busStop: ['Bus stop', 20, 16, 3],
   bins: ['Bins', 9, 6, 2],
   bikeRack: ['Bikes in a rack', 16, 6, 3],
+  bikeParking: ['Bike parking', 36, 12, 3],
   postBox: ['Post box', 4, 8, 2],
   plantPot: ['Pot plant', 5, 6, 2],
   trafficLight: ['Traffic light', 8, 19, 2],

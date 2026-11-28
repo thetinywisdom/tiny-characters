@@ -1,5 +1,5 @@
 // Full-size street things, part 2: the vending machine, the bench, the bus stop, the bins,
-// the bike rack, the post box, the pot plant, the drinking fountain.
+// the bike rack, bike parking, the post box, the pot plant, the drinking fountain.
 // Each makes the same rng calls in the same order as the old drawing in tinyStreet.js and
 // keeps the spots other code relies on at the old place times 1.5 (the vending machine's
 // lit window under its glow at old [3.5, 7]; the bench's seat at old up 3, so people
@@ -90,6 +90,25 @@ export const PART = {
       r(c, bx + 3, 6, 1, 1); r(INK, bx + 2, 7, 3, 1);                                   // the seat post, the saddle
       if (rng() < 0.5) { r(METAL, bx + 9, 5, 3, 2); r(shade(METAL, 1.3), bx + 9, 6, 3, 1); r(shade(METAL, 0.8), bx + 10, 5, 1, 1); }   // a basket
     }
+  } },
+
+  // 54 x 18: bike parking (the owner chose B, Nov 2026): ten city bikes side by side, seen end on
+  // from behind, every other one pushed in further; a coloured mudguard with a red reflector, the
+  // rack over the back wheel, the saddle, and beyond them the handlebar and (most) a wire basket; a rail
+  bikeParking: { approved: true, draw(r, rng) {
+    const COLS = ['#3f7fd6', '#e8402f', WHITE, '#2f8a5a', '#c8ccd0', '#3a3d42', '#d46a8e', '#e8c840', '#8a5a2a'];
+    for (let i = 0; i < 10; i++) {
+      const c = pick(rng, COLS), bx = 3 + i * 5, st = (i % 2) * 2, basket = rng() < 0.8;
+      r(INK, bx - 1, 13 + st, 5, 1);                                                    // the handlebar beyond
+      if (basket) { r('#9aa0a6', bx - 1, 14 + st, 3, 2); r('#7a8088', bx, 14 + st, 1, 1); }   // its basket
+      r(c, bx, 9 + st, 1, 3);                                                           // the frame
+      r('#2a2c30', bx - 1, 10 + st, 3, 1);                                              // the saddle
+      r('#a8aeb4', bx - 1, 8 + st, 3, 1);                                               // the rack over the back wheel
+      r(c, bx - 1, 5 + st, 3, 3); r(shade(c, 0.78), bx + 1, 5 + st, 1, 3);              // the mudguard
+      r('#e8403a', bx, 6 + st, 1, 1);                                                   // the reflector
+      r(INK, bx, st, 1, 5);                                                             // the tyre
+    }
+    r('#8a9096', 0, 2, 54, 1); r('#6a7076', 0, 1, 54, 1);                               // the rail
   } },
 
   // 6 x 12: the red Japanese post box, a rounded top, the slot, a white 〒

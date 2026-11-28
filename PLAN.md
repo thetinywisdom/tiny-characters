@@ -542,11 +542,19 @@ bubble lab, so games can use them and they can grow.
     turn signals, a headlamp at night; at a red light they ride past the cars standing in
     the queue, by the kerb, to the front. Catalogue cards (Street, Vehicles).
 
+73. **City bikes and bike parking** (the owner, from mock-ups: a mix of bikes, rack B): two
+    of the four cyclists ride city bikes (mamachari: low frame, wire basket, rack; one with a
+    child on a seat behind, one with shopping in the basket) and two schoolkids ride city
+    bikes in white helmets; a new layout item `bikeParking` (ten bikes side by side seen end
+    on, staggered, coloured mudguards, baskets) in front of the wooden station. The old
+    two-bike `bikeRack` stays as it was.
+
 ## In progress
 
 - Vehicles (the owner's order, Nov 2026): 1. small fixes, 2. motorbikes in the traffic,
   3. city bikes and bike racks, 4. the rubbish truck; each from mock-ups first.
-  - Step 2, done (72): scooters and motorbikes. Next: step 3, city bikes and bike racks.
+  - Step 3, done (73): city bikes and bike parking. Next: step 4, the rubbish truck.
+  - Step 2, done (72): scooters and motorbikes.
   - Step 1, done (71): brake lights (the tail lamps a brighter red and a high brake lamp at the bottom of the
     rear window while slowing or standing), turn signals (the turn decided 40 px before
     the corner; that side's corner lamps blink amber until round it), headlamps on in

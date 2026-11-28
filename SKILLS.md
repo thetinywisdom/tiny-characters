@@ -572,6 +572,16 @@ when braking and an amber one when blinking. Turns are planned 40 px before the 
 vehicle has swung round). drawTownView draws `drawVehicleBeams` faintly ('lighter', 70 %)
 under everything on a dark day (rain, storm, fog) so the headlamps show.
 
+**City bikes** (tinyLife's `cityBike`, through the `ride` pose with `p.city`; the owner chose a
+mix with the plain bike): a low step-through frame in `p.bike`, a wire basket at the front
+(`p.load`: a pixel of shopping in it), a lamp under it, a rack behind (`p.child`: a kid in a
+dark seat on it, drawn by `upper`), a white helmet (`p.helmet`, the schoolkids); smaller wheels
+for a kid. The demo's two schoolkid cyclists and the child come from their own stream
+(`seeded(77)`), so nothing else in the town changes. **Bike parking** (`bikeParking`, a prop,
+36 x 12 at scale 1, 54 x 18 drawn; rack B): ten bikes end on from behind, every other one 2 px
+further in, a mudguard in the bike's colour with a red reflector, the rack, the saddle, the
+handlebar and (four in five) a basket beyond, a rail in front.
+
 **Scooters and motorbikes** (`moped`, `motorbike`; the owner chose flat like the people, A):
 tinyLife's `drawMotorbike` draws them the way `drawScooter` draws the delivery scooter (side on
 for headings near 0 / 180, else head on or from behind), the rider by `upper` with a `helmet`

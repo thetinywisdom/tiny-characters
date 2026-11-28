@@ -38,7 +38,8 @@ function upper(g, p, x, y) {
  * under the seat for 'sitBench'); p.facing as usual. Other fields per pose:
  *  sitBench: on a bench (front: up on the seat, knees forward, feet down; side: thighs along the seat)
  *  sitGround: cross-legged on the ground or a blanket
- *  ride: on a bike (p.bike its colour; walking pedals); swing: on a swing seat (drawn by drawSwings)
+ *  ride: on a bike (p.bike its colour; walking pedals; p.city: a city bike, with p.child on a seat
+ *        behind, p.load in the basket, p.helmet a white helmet); swing: on a swing seat (drawn by drawSwings)
  *  sweep / kick / throw / drink / bow: with p.pose.u, 0-1 through the move
  *  slide: sitting, legs forward, going down a slide
  */
@@ -57,6 +58,7 @@ export const POSES = {
     px(g, p.legwear === 'skirt' ? p.legs ?? INK : legColour(p), x - 3, seat, 7, 2); px(g, shoes(p), x - 3, seat + 1, 2, 1); px(g, shoes(p), x + 2, seat + 1, 2, 1);
   },
   ride(g, p, t) {
+    if (p.city) { cityBike(g, p, t); return; }
     const x = Math.round(p.x), y = Math.round(p.y), col = p.bike ?? '#3f7fd6', step = p.walking ? Math.floor(t * 6) % 2 : 0;
     if (p.facing === 'left' || p.facing === 'right') {
       const s = p.facing === 'left' ? -1 : 1, X = (dx) => x + dx * s;
@@ -287,4 +289,45 @@ export function drawMotorbike(g, v) {
   if (!back) { px(g, c, x - 2, y - 10, 4, 6); px(g, LAMP, x - 1, y - 8, 2, 1); }
   px(g, DARK, x - 4, y - 11, 8, 1);
   if (blink) px(g, AMBER, (v.signal === 'r') === back ? x + 4 : x - 5, y - 11);   // its right is your left when it faces you
+}
+
+// --- the city bike (mamachari; the owner chose a mix of these and the plain bike, Nov 2026) ----------
+const BASKET = '#9aa0a6', BASKET2 = '#7a8088', BSEAT = '#2a2c30', BLAMP = '#e8e4d0', BMETAL = '#a8aeb4';
+/** A white helmet over the head of someone whose feet line is at (x, y) (schoolkids on bikes). */
+function whiteHelmet(g, x, y, kid) { const top = kid ? y - 11 : y - 14; px(g, WHITE, x - 1, top, 3, 1); px(g, WHITE, x - 2, top + 1, 5, 2); px(g, '#d8dadc', x + 2, top + 1, 1, 2); }
+/**
+ * Someone on a city bike: a low step-through frame, a wire basket at the front (p.load: something
+ * in it), a rack behind (p.child: a kid in a seat on it), a lamp; p.helmet: a white helmet.
+ */
+function cityBike(g, p, t) {
+  const x = Math.round(p.x), y = Math.round(p.y), col = p.bike ?? '#3f7fd6', step = p.walking ? Math.floor(t * 6) % 2 : 0, kid = p.kid, wr = kid ? 5 : 6;
+  if (p.facing === 'left' || p.facing === 'right') {
+    const s = p.facing === 'left' ? -1 : 1, X = (dx, w = 1) => (s > 0 ? x + dx : x - dx - w + 1);
+    for (const wx of [-wr, wr]) { px(g, INK, X(wx - 2, 5), y - 6, 5, 1); px(g, INK, X(wx - 2, 5), y - 1, 5, 1); px(g, INK, X(wx - 3), y - 5, 1, 4); px(g, INK, X(wx + 3), y - 5, 1, 4); px(g, '#9aa0a8', X(wx), y - 3); }
+    px(g, col, X(-wr, wr + 2), y - 3, wr + 2, 1);                      // the low frame, from the back wheel
+    px(g, col, X(1), y - 4); px(g, col, X(2), y - 5); px(g, col, X(3), y - 7, 1, 3);   // curving up to the head tube
+    px(g, col, X(-2), y - 7, 1, 4);                                    // the seat post
+    px(g, shade(col, 0.8), X(-wr - 2, wr + 1), y - 6, wr + 1, 1);      // the mudguard behind
+    px(g, BMETAL, X(-wr - 1, 5), y - 7, 5, 1);                         // the rack
+    px(g, BSEAT, X(-3, 3), y - 8, 3, 1);                               // the saddle
+    px(g, INK, X(3, 3), y - 9, 3, 1);                                  // the handlebar
+    px(g, BASKET, X(4, 4), y - 9, 4, 3); px(g, BASKET2, X(5), y - 8, 1, 2); px(g, BASKET2, X(7), y - 8, 1, 2);   // the basket
+    if (p.load) px(g, p.load, X(5, 2), y - 10, 2, 1);
+    px(g, BLAMP, X(7), y - 6);                                         // the lamp under it
+    if (p.child) { px(g, '#3a3d42', X(-wr - 1, 4), y - 10, 4, 3); upper(g, { ...p.child, facing: p.facing, kid: true }, X(-wr + 1), y - 6); }
+    upper(g, { ...p, facing: p.facing }, X(-1), y - 5);
+    const lc = legColour(p);
+    px(g, lc, Math.min(X(-1), X(0)), y - 8, 2, 2); px(g, lc, Math.min(X(step), X(step + 1)), y - 6, 2, 3 - step); px(g, shoes(p), Math.min(X(step), X(step + 1)), y - 3 - step, 2, 1);
+    if (p.helmet) whiteHelmet(g, X(-1), y - 5, kid);
+    return;
+  }
+  const back = p.facing === 'up';
+  px(g, INK, x - 1, y - 5, 2, 5);
+  if (back) { px(g, BMETAL, x - 2, y - 8, 4, 1); if (p.child) px(g, '#3a3d42', x - 2, y - 10, 4, 3); }
+  upper(g, p, x, y - 4);
+  if (p.helmet) whiteHelmet(g, x, y - 4, kid);
+  if (back && p.child) upper(g, { ...p.child, facing: 'up', kid: true }, x, y - 5);
+  px(g, legColour(p), x - 3, y - 7, 2, 3 - step); px(g, legColour(p), x + 1, y - 7, 2, 2 + step);
+  px(g, INK, x - 4, y - 10, 8, 1);
+  if (!back) { px(g, BASKET, x - 2, y - 9, 4, 3); px(g, BASKET2, x - 1, y - 8, 2, 1); px(g, BLAMP, x, y - 6); }
 }

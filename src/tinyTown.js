@@ -141,7 +141,7 @@ export const DEFAULT_TOWN = {
     { type: 'hoop', x: 412, y: 508 }, { type: 'hoop', x: 548, y: 508 },
     { type: 'floodlight', x: 406, y: 462 }, { type: 'floodlight', x: 554, y: 462 }, { type: 'floodlight', x: 406, y: 550 }, { type: 'floodlight', x: 554, y: 550 },
     // the station plaza and the alley
-    { type: 'plazaClock', x: 228, y: 636 }, { type: 'bikeRack', x: 110, y: 638 }, { type: 'bench', x: 512, y: 636 }, { type: 'busStop', x: 300, y: 671 },
+    { type: 'plazaClock', x: 228, y: 636 }, { type: 'bikeRack', x: 110, y: 638 }, { type: 'bikeParking', x: 25, y: 636 }, { type: 'bench', x: 512, y: 636 }, { type: 'busStop', x: 300, y: 671 },
     { type: 'redLantern', x: 318, y: 590 }, { type: 'redLantern', x: 338, y: 598 }, { type: 'redLantern', x: 318, y: 610 }, { type: 'redLantern', x: 338, y: 618 },
     { type: 'crates', x: 324, y: 602 }, { type: 'acUnit', x: 334, y: 588 }, { type: 'bins', x: 332, y: 630 }, { type: 'vendingMachine', x: 322, y: 624 },
   ],

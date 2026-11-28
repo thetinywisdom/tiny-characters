@@ -14,7 +14,7 @@
 //     sprites  extra things to draw with the people (pigeons, the ball, rubbish, the picnic...)
 //     above    things drawn over everything (crows on the wires)
 
-import { LOOKS, facingFor, randomCharacter } from '../src/tinyCharacters.js';
+import { LOOKS, SKIN_COLORS, facingFor, randomCharacter, seeded } from '../src/tinyCharacters.js';
 import { drawNappingCat, drawPigeon, drawCrow, drawPose, drawRubbish } from '../src/tinyLife.js';
 import { closes } from '../src/tinyBuildings.js';
 import { emote } from '../src/tinySpeech.js';
@@ -105,6 +105,17 @@ export function makeLife({ town, traffic, people, follow, rng = Math.random }) {
   for (let i = 0; i < 4; i++) {
     const at = town.randomSpot(rng);
     const p = { ...randomCharacter(rng), kid: false, carry: undefined, x: at.x, y: at.y, pose: { kind: 'ride' }, bike: ['#3f7fd6', '#e8402f', '#f2f2ee', '#2f8a5a'][i], path: null, wait: rng() * 3, talk: 0, rider: true };
+    bikes.push(p); people.push(p);
+  }
+  // a mix (the owner): two of them on city bikes (one with a child on the seat behind, one with
+  // shopping in the basket), and two schoolkids on city bikes in white helmets; their own random
+  // stream, so nothing else in the town changes
+  const brng = seeded(77);
+  bikes[1].city = true; bikes[1].child = { ...randomCharacter(brng), kid: true, carry: undefined, hat: undefined };
+  bikes[3].city = true; bikes[3].load = '#e8c840';
+  for (const look of [LOOKS.schoolboy, LOOKS.schoolgirl]) {
+    const at = town.randomSpot(brng);
+    const p = { ...look, skin: SKIN_COLORS[Math.floor(brng() * SKIN_COLORS.length)], kid: true, carry: undefined, x: at.x, y: at.y, pose: { kind: 'ride' }, city: true, helmet: true, bike: ['#c8ccd0', '#3a3d42'][bikes.length % 2], path: null, wait: brng() * 3, talk: 0, rider: true };
     bikes.push(p); people.push(p);
   }
 
