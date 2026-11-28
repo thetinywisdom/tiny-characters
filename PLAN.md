@@ -608,9 +608,17 @@ bubble lab, so games can use them and they can grow.
     chose A): at the door they stop a moment facing it, the parcels come off the trolley, and they
     walk back.
 
+84. **A coin-parking lot** (the owner chose A, nose-in bays, cars coming and going, the bus
+    stop moved out of its way): a new area type, `ground: 'parking'` (asphalt, a grey kerb, white
+    bay lines, yellow wheel stops), with a yellow P sign and a pay machine, on the grass strip of
+    the first block; five bays, four cars to start. Now and then a parked car pulls out across the
+    sidewalk and turns left into the lane, and a car coming along it pulls in, nose first (they
+    wait for anyone on the sidewalk). Parked cars' lamps are off at night. Whatever lies in a lot
+    is cleared away (after seeding, so nothing else changes); the lot is solid to walkers.
+
 ## In progress
 
-- Vehicles, round two (the owner's order, Nov 2026; 1 done, 77; 2 done, 78; 3 done, 82, as a parcel truck): 1. a more detailed redraw of the cars,
+- Vehicles, round two (the owner's order, Nov 2026; all done: 77, 78, 82 as a parcel truck, 84 as a coin-parking lot): 1. a more detailed redraw of the cars,
   2. a police car and a fire engine, 3. the delivery van stopping at shops, 4. parked cars;
   each from mock-ups first.
 - Vehicles, round one (done): 1. small fixes, 2. motorbikes in the traffic,

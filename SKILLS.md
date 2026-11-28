@@ -605,6 +605,18 @@ does not darken it): a plate (`rgba(32,36,44,0.78)`) at (4, 4), 34 x 11 town pix
 at a time, like the small clock by the buttons. The demo's clock runs one town hour every 8 s
 (`hour += dt / 8` while Time is passing).
 
+**Coin parking** (the owner, Nov 2026): an area `{ ground: 'parking', solid: true }` is drawn by
+FULL_GROUND.parking (g2.js: asphalt with grain, a kerb on three sides, open to the street above,
+bays 16 px wide, white lines, a yellow wheel stop near the top of each); props `parkingSign`
+and `payMachine` (p2.js). `inLot` clears layout plants and props inside a lot after they are
+seeded (other things' seeds stay as they were). makeTraffic's `lots` (returned too): the bays
+(x every 16 px, y 5 px above the lot's bottom), four of five filled to start with parked cars in
+`town.parked` (heading 270, its own stream `seeded(seed * 31 + 7)`); `lotsUpdate` every 12-30 s:
+a car pulls out (`fromLot`: it drifts up across the sidewalk to the lot's lane, the west-bound
+one of the street above, turning left) or one coming along that lane is sent to a free bay
+(`toBay`: `room` stops it beside the bay, it drifts in nose first, heading 90, and is parked
+again); a lot's cars always wait for anyone near them. `vehicleLights` gives parked vehicles none.
+
 **The parcel truck** (`parcelTruck`; the owner: white, a logo in the spirit of a parcel firm's but
 not a copy): a white cab, a white box with rounded top edges, a yellow strip along the bottom, the
 back doors' seam, and our mark (`mark(cu, cz, ru, rz, u, z)`: an oval in yellow with a black

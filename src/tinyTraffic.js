@@ -345,6 +345,7 @@ export function drawTrain(g, v) {
 }
 
 export function vehicleLights(v) {
+  if (v.parked) return [];                                                     // parked: its lamps off
   if (v.type === 'train') { const L = (v.cars ?? 4) * CARRIAGE - 2; return [{ x: v.x + v.dir * (L / 2 + 4), y: v.y - 4, r: 12, c: '#fff2c0' }]; }
   const two = TWO_WHEELS.includes(v.type), S = shapeOf(v), sn = sinOf(v), hl = S.L / 2, side = two ? 0 : S.W / 2 - 1.6, out = [];
   for (const w of two ? [0] : [-side, side]) {   // (two wheels: one lamp)
@@ -445,6 +446,35 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, motorbik
     if (clear(lane, s, 34)) { vehicles.push(make('police', lane, s)); n++; }
   }
 
+  // the coin-parking lots (the owner, Nov 2026): their bays, some with a car parked nose-in; now and then one
+  // pulls out into the lane by the lot (turning left, the kerb side) and a car passing pulls into a free bay.
+  // Their own random stream, so the rest of the traffic is as it was.
+  const lrng = seeded(seed * 31 + 7);
+  const lots = town.areas.filter((a) => a.ground === 'parking').map((a) => {
+    const lane = hLanes.filter((l) => l.dir < 0 && l.y < a.y).sort((p, q) => q.y - p.y)[0];
+    const bays = Array.from({ length: Math.floor((a.w - 4) / 16) }, (_, i) => ({ x: a.x + 10 + i * 16, y: a.y + a.h - 5, car: null }));
+    bays.forEach((b, i) => { if (i % 3 !== 2) { b.car = { vehicle: true, parked: true, type: ['car', 'kei', 'car', 'van'][Math.floor(lrng() * 4)], seed: 1 + Math.floor(lrng() * 9999), x: b.x, y: b.y, heading: 270 }; (town.parked ??= []).push(b.car); } });
+    return { a, lane, bays, next: 8 + lrng() * 12 };
+  }).filter((l) => l.lane);
+  function lotsUpdate(dt) {
+    for (const lot of lots) {
+      if ((lot.next -= dt) > 0) continue;
+      lot.next = 12 + lrng() * 18;
+      const taken = lot.bays.filter((b) => b.car), free = lot.bays.filter((b) => !b.car && !b.coming);
+      if (taken.length && (lrng() < (taken.length >= 4 ? 0.6 : 0.35) || !free.length)) {                     // one pulls out
+        const b = taken[Math.floor(lrng() * taken.length)];
+        if (!clear(lot.lane, b.x, 40) || vehicles.some((o) => o.toBay?.bay === b)) continue;
+        town.parked.splice(town.parked.indexOf(b.car), 1);
+        const v = make(b.car.type, lot.lane, b.x); v.seed = b.car.seed; v.y = b.y; v.heading = 270; v.target = 230; v.driftY = lot.lane.y; v.speed = 0; v.fromLot = true;
+        vehicles.push(v); b.car = null;
+      } else if (free.length) {                                                  // one coming along the lane pulls in
+        const b = free[Math.floor(lrng() * free.length)];
+        const v = vehicles.find((o) => o.lane === lot.lane && ['car', 'kei', 'van', 'taxi'].includes(o.type) && !o.route && !o.toRank && !o.toBay && o.driftY === undefined && !o.siren && !o.extra && o.x > b.x + 30);
+        if (v) { v.toBay = { lot, bay: b }; b.coming = true; } else lot.next = 2;   // none coming: look again soon
+      }
+    }
+  }
+
   const lightAt = (jn, axis, t) => signal(jn, axis, t);
   /** Where a point on the ground is from a vehicle's middle: `ahead` along its heading, `side` across it (ground units). */
   function local(v, x, y) {
@@ -528,6 +558,7 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, motorbik
       const stop = d > 0 ? rail.y - 6 : rail.y + rail.h + 6, dd = (stop - f) * d;
       if (dd >= -1 && dd < 60) free = Math.min(free, dd);
     }
+    if (v.toBay) free = Math.min(free, Math.max(0, (v.toBay.bay.x - along(v)) * v.lane.dir));   // pulling into a bay: stop beside it
     // anyone in its way (people, animals, monsters, you): within its width, from inside it to a little ahead
     const byCars = free;
     v.blocker = null;
@@ -634,8 +665,12 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, motorbik
   /** Ease v sideways to v.driftY (pulling out of the rank or into it), turned a little while it does. */
   function drift(v, dt) {
     const dy = v.driftY - v.y;
-    if (Math.abs(dy) <= 10 * dt) { v.y = v.driftY; delete v.driftY; v.target = headingOf(v.lane); return; }
-    v.y += Math.sign(dy) * 10 * dt;
+    if (Math.abs(dy) <= 10 * dt && v.toBay) {                                   // in its bay: parked
+      const { bay } = v.toBay; bay.car = { vehicle: true, parked: true, type: v.type, seed: v.seed, x: bay.x, y: bay.y, heading: 90 };
+      (town.parked ??= []).push(bay.car); bay.coming = false; v.gone = true; return;
+    }
+    if (Math.abs(dy) <= 10 * dt) { v.y = v.driftY; delete v.driftY; delete v.fromLot; v.target = headingOf(v.lane); return; }
+    v.y += Math.sign(dy) * (v.toBay || v.fromLot ? 16 : 10) * dt;
   }
 
   function update(dt, t, walkers = []) {
@@ -645,17 +680,23 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, motorbik
       const v = make('taxi', r.lane, W + 30); v.toRank = r.spot; v.extra = true; vehicles.push(v); r.coming = true;
     }
     for (const p of town.props) if (p.type === 'crossingGate') { p.down = closed(p.crossing); p.flash = Math.floor(t * 3) % 2; }
+    lotsUpdate(dt);
     for (const v of vehicles) {
       if (v.type === 'train') continue;
       // swing round towards its heading (a quarter turn in about a third of a second)
       if (v.heading !== v.target) { const diff = ((v.target - v.heading + 540) % 360) - 180, turnBy = 280 * dt; v.heading = Math.abs(diff) <= turnBy ? v.target : (v.heading + Math.sign(diff) * turnBy + 360) % 360; }
       if (v.wait > 0) { v.wait -= dt; v.walking = false; v.brake = true; if (v.signal) v.blinkOn = Math.floor(t * 2.5) % 2 === 0; continue; }   // (standing: hazards blink)
       if (v.driftY !== undefined) {                                           // pulling out or in: not while someone stands against it
-        const V = VEHICLES[v.type], patient = (v.driftHeld ?? 0) < 1.5;  // (after a moment only for someone right in its way: who stands beside it may be waiting for it)
+        const V = VEHICLES[v.type], patient = (v.driftHeld ?? 0) < 1.5 || v.toBay || v.fromLot;   // (a lot's cars always wait: they cross the sidewalk)  // (after a moment only for someone right in its way: who stands beside it may be waiting for it)
         const near = walkers.some((p) => { if (p.vehicle || p.ball || p.monster) return false; const { ahead, side } = local(v, p.x, p.y); return patient ? Math.abs(ahead) < V.length / 2 + 5 && Math.abs(side) < V.width / 2 + 5 : ahead > 0 && ahead < V.length / 2 + 5 && Math.abs(side) < V.width / 2 + 2; });
         if (near) { v.speed = 0; v.walking = false; v.driftHeld = (v.driftHeld ?? 0) + dt; continue; }
         v.driftHeld = 0;
         drift(v, dt);
+      }
+      if (v.toBay && v.lane !== v.toBay.lot.lane) { v.toBay.bay.coming = false; delete v.toBay; }   // off another way (turned round): the bay is free again
+      if (v.toBay) {                                                          // pulling into a bay of a lot
+        if (v.driftY !== undefined) { v.speed = 0; v.walking = false; continue; }
+        if (Math.abs(v.x - v.toBay.bay.x) < 1.5 && v.speed < 3) { v.x = v.toBay.bay.x; v.driftY = v.toBay.bay.y; v.target = 90; v.signal = 'l'; continue; }
       }
       if (v.toRank && v.driftY === undefined && v.x - v.toRank.x < 28 && v.y !== v.toRank.y) { v.driftY = v.toRank.y; v.target = 205; }   // pulling in
       if (v.toRank && v.x <= v.toRank.x) {                                     // in its place: parked again
@@ -704,7 +745,7 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, motorbik
         v.atStop = s; v.wait = 99; v.speed = 0;
       }
       // turns, decided a little before the turn (40 px) so the signal blinks on the way to it
-      if (v.type !== 'bus' && !v.route && !v.toRank && v.driftY === undefined) {
+      if (v.type !== 'bus' && !v.route && !v.toRank && !v.toBay && v.driftY === undefined) {
         if (v.lane.kind === 'h') {
           if (!v.plan) for (const l of vLanes) { const dist = (l.x - now) * d; if (dist > 0 && dist < 40 && v.planFor !== l) {
             v.planFor = l; v.plan = (l.dir > 0 ? v.lane.i < last : v.lane.i > 0) && rng() < 0.3; v.signal = v.plan ? turnSide(v, l) : v.signal; break; } }
@@ -801,5 +842,5 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, motorbik
     return v;
   }
 
-  return { vehicles, update, mayCross, lightAt, train, crossingClosed: closed, hits, pickUp, sendRound, callOut };
+  return { vehicles, update, mayCross, lightAt, train, crossingClosed: closed, hits, pickUp, sendRound, callOut, lots };
 }

@@ -39,6 +39,8 @@ const DEFS = {
   bins: ['Bins', 9, 6, 2],
   bikeRack: ['Bikes in a rack', 16, 6, 3],
   bikeParking: ['Bike parking', 36, 12, 3],
+  parkingSign: ['Parking sign (P)', 6, 19, 1],
+  payMachine: ['Parking pay machine', 4, 8, 2],
   postBox: ['Post box', 4, 8, 2],
   plantPot: ['Pot plant', 5, 6, 2],
   trafficLight: ['Traffic light', 8, 19, 2],

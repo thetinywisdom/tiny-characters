@@ -91,6 +91,20 @@ function fenceOf(a) {
 }
 
 export const PART = {
+  // a coin-parking lot (the owner chose nose-in bays, Nov 2026): asphalt with a grey kerb round it, white
+  // lines between bays 16 pixels wide (as many as fit), a yellow wheel stop in each, near its top
+  parking: {
+    approved: true,
+    draw(g, a) {
+      const Q = (col, x, y, w, h) => R(g, col, Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+      Q('#6e7277', a.x, a.y, a.w, a.h);
+      for (let i = 0; i < a.w * a.h / 9; i++) { const kk = (i * 7919) % Math.round(a.w * a.h); Q(i % 3 ? '#73777c' : '#686c71', a.x + kk % Math.round(a.w), a.y + Math.floor(kk / Math.round(a.w)), 1, 1); }   // its grain
+      Q('#9aa0a6', a.x, a.y + a.h - 1, a.w, 1); Q('#9aa0a6', a.x, a.y, 1, a.h); Q('#9aa0a6', a.x + a.w - 1, a.y, 1, a.h);   // the kerb (open to the street above)
+      const n = Math.floor((a.w - 4) / 16);
+      for (let i = 0; i <= n; i++) Q('#e8e8e4', a.x + 2 + i * 16, a.y + 3, 1, a.h - 4);
+      for (let i = 0; i < n; i++) Q('#e8c840', a.x + 6 + i * 16, a.y + 5, 8, 1);
+    },
+  },
   court: {
     approved: true,
     draw(g, a, k) {

@@ -111,6 +111,18 @@ export const PART = {
     r('#8a9096', 0, 2, 54, 1); r('#6a7076', 0, 1, 54, 1);                               // the rail
   } },
 
+  // 9 x 28: a coin-parking sign: a yellow board with a black P on a grey pole
+  parkingSign: { approved: true, draw(r) {
+    r('#8a9096', 4, 0, 1, 20); r('#a8aeb4', 4, 0, 1, 1);
+    r('#f2c230', 0, 19, 9, 9); r(shade('#f2c230', 0.85), 8, 19, 1, 9);
+    r(INK, 2, 20, 1, 6); r(INK, 3, 25, 2, 1); r(INK, 5, 23, 1, 2); r(INK, 3, 22, 2, 1);   // the P
+  } },
+  // 6 x 12: the lot's pay machine: white, a yellow top, its screen and slot
+  payMachine: { approved: true, draw(r) {
+    r('#e8e8e4', 0, 0, 6, 12); r('#c8ccd0', 5, 0, 1, 12); r('#f2c230', 0, 10, 6, 2);
+    r('#3a3f44', 1, 6, 4, 2); r('#7fc8a8', 2, 7, 2, 1); r(INK, 2, 3, 2, 1);
+  } },
+
   // 6 x 12: the red Japanese post box, a rounded top, the slot, a white 〒
   postBox: { approved: true, draw(r) {
     const S = shade(RED, 0.8);

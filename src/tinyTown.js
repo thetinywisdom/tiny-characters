@@ -34,6 +34,11 @@ function streetDims(k) {
   const SIDE = Math.round(7 * k), ROAD = Math.round(18 * k), VSIDE = Math.round(6 * k);
   return { SIDE, ROAD, STREET: SIDE * 2 + ROAD, VSIDE, VSTREET: VSIDE * 2 + ROAD, k };
 }
+/** Is (x, y) (scaled) inside one of the layout's parking lots? */
+function inLot(layout, x, y) {
+  const k = layout.scale ?? 1, pad = Math.round((layout.forest ?? 0) * k), X = (v) => Math.round(v * k) + pad, m = (v) => Math.round(v * k);
+  return (layout.areas ?? []).some((a) => a.ground === 'parking' && x > X(a.x) - 2 && x < X(a.x) + m(a.w) + 2 && y > X(a.y) && y < X(a.y) + m(a.h) + 6);
+}
 /** The layout with every position and size multiplied by its scale (people stay the same size). */
 function scaled(layout) {
   // the town sits inside a border of forest (layout.forest px on every side)
@@ -44,8 +49,9 @@ function scaled(layout) {
     streets: layout.streets.map(X), crossStreets: layout.crossStreets.map(X),
     rows: (layout.rows ?? []).map((r) => ({ ...r, x: X(r.x), y: X(r.y) })),
     buildings: (layout.buildings ?? []).map((b) => ({ ...b, x: X(b.x), y: X(b.y), scale: k })),
-    plants: (layout.plants ?? []).map((p, i) => ({ seed: i + 1, ...p, x: X(p.x), y: X(p.y), scale: k })),
-    props: (layout.props ?? []).map((p, i) => ({ seed: i + 1, ...p, x: X(p.x), y: X(p.y), scale: k })),
+    // (seeded by their place in the list first; then whatever lies in a parking lot is cleared away)
+    plants: (layout.plants ?? []).map((p, i) => ({ seed: i + 1, ...p, x: X(p.x), y: X(p.y), scale: k })).filter((p) => !inLot(layout, p.x, p.y)),
+    props: (layout.props ?? []).map((p, i) => ({ seed: i + 1, ...p, x: X(p.x), y: X(p.y), scale: k })).filter((p) => !inLot(layout, p.x, p.y) || ['parkingSign', 'payMachine'].includes(p.type)),
     areas: (layout.areas ?? []).map((a) => ({ ...a, x: X(a.x), y: X(a.y), w: m(a.w), h: m(a.h), path: a.path && { x: X(a.path.x), w: m(a.path.w), y0: X(a.path.y0) }, gate: a.gate && m(a.gate) })),
     railway: layout.railway && { y: X(layout.railway.y), h: m(layout.railway.h) },
     parked: (layout.parked ?? []).map((v, i) => ({ seed: i + 3, ...v, x: X(v.x), y: X(v.y), vehicle: true, parked: true })),
@@ -117,6 +123,8 @@ export const DEFAULT_TOWN = {
     { name: 'Schoolyard', ground: 'sand', x: 210, y: 316, w: 160, h: 100 },
     { name: 'Old-town square', ground: 'paving', x: 400, y: 316, w: 160, h: 100 },
     { name: 'Pond', ground: 'water', x: 88, y: 234, w: 44, h: 11, solid: true },
+    // a coin-parking lot (the owner, Nov 2026): six nose-in bays off the street above; cars come and go (tinyTraffic)
+    { name: 'Coin parking', ground: 'parking', x: 45, y: 140, w: 66, h: 18, solid: true },
     // the south (Nov 2026): a park with a pond, a playground, a basketball court; the station plaza and alley
     { name: 'Pond park', ground: 'grass', x: 0, y: 452, w: 180, h: 104, ring: true },
     { name: 'Pond', ground: 'water', shape: 'ellipse', x: 52, y: 486, w: 76, h: 36, solid: true, koi: true },
@@ -128,7 +136,7 @@ export const DEFAULT_TOWN = {
   // trees and bushes: in the back gardens, round the shrine, the school and the square
   // things on the streets and in the grounds (utility poles, lamps and vending machines are added by makeTown)
   props: [
-    { type: 'busStop', x: 60, y: 139 }, { type: 'busStop', x: 300, y: 315 }, { type: 'busStop', x: 470, y: 231 },
+    { type: 'busStop', x: 160, y: 139 }, { type: 'busStop', x: 300, y: 315 }, { type: 'busStop', x: 470, y: 231 },
     { type: 'postBox', x: 252, y: 139 }, { type: 'bench', x: 356, y: 404 },
     { type: 'stoneLantern', x: 72, y: 378 }, { type: 'stoneLantern', x: 108, y: 378 }, { type: 'stoneLantern', x: 72, y: 398 }, { type: 'stoneLantern', x: 108, y: 398 },
     { type: 'bench', x: 30, y: 380 }, { type: 'oldLamp', x: 408, y: 410 }, { type: 'oldLamp', x: 552, y: 410 },
@@ -144,6 +152,8 @@ export const DEFAULT_TOWN = {
     { type: 'plazaClock', x: 228, y: 636 }, { type: 'bikeParking', x: 25, y: 636 }, { type: 'bench', x: 512, y: 636 }, { type: 'busStop', x: 300, y: 671 },
     { type: 'redLantern', x: 318, y: 590 }, { type: 'redLantern', x: 338, y: 598 }, { type: 'redLantern', x: 318, y: 610 }, { type: 'redLantern', x: 338, y: 618 },
     { type: 'crates', x: 324, y: 602 }, { type: 'acUnit', x: 334, y: 588 }, { type: 'bins', x: 332, y: 630 }, { type: 'vendingMachine', x: 322, y: 624 },
+    // the coin-parking lot's sign and pay machine (added last, so no other thing's seed changes)
+    { type: 'parkingSign', x: 108, y: 158 }, { type: 'payMachine', x: 101, y: 158 },
   ],
   plants: [
     { tree: 'apple', x: 30, y: 152 }, { bush: 'round', x: 62, y: 148 }, { tree: 'oak', x: 150, y: 154 },
@@ -630,6 +640,7 @@ function drawGround(layout) {
   const terrain = (a) => (ctx, x = a.x, y = a.y, w = a.w, h = a.h, type = TERRAIN_OF[a.ground] ?? a.ground, seed = a.x + a.y) => drawTerrain(ctx, { type, x, y, w, h, scale: k, seed });
   for (const a of areas) {
     if (a.ground === 'court') { use('court')?.draw(g, a, k); continue; }            // the court, its lines and a pixel centre circle
+    if (a.ground === 'parking') { use('parking')?.draw(g, a, k); continue; }        // a coin-parking lot: asphalt, bays, wheel stops
     if (a.shape === 'ellipse') { use('pond')?.draw(g, a, k, terrain(a)); continue; } // a pond with a pixel bank of stones
     terrain(a)(g);
     if (a.ring) use('ringPath')?.draw(g, a, k, terrain(a));                          // a dirt path looping round inside it
