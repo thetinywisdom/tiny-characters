@@ -150,6 +150,21 @@ function umbrellas(raining) {
     else if (!raining && 'dryCarry' in p) { p.carry = p.dryCarry; delete p.dryCarry; }
   }
 }
+// footprints in the snow (the owner, Nov 2026): you leave a print every few pixels you walk on
+// snowy ground (anywhere but the roads in winter), left and right foot by turns; they fade
+// (paler after a while) and go after 30 s
+const prints = [];
+let lastPrint = null, foot = 1;
+function footprints(season, t) {
+  for (let i = prints.length - 1; i >= 0; i--) { prints[i].age = (t - prints[i].at) / 30; if (prints[i].age >= 1) prints.splice(i, 1); }
+  if (season !== 'winter' || town.roadAt(you.x, you.y)) { lastPrint = null; return; }
+  if (lastPrint && Math.hypot(you.x - lastPrint.x, you.y - lastPrint.y) < 4) return;
+  const across = you.facing === 'left' || you.facing === 'right';
+  foot = -foot;
+  prints.push({ x: you.x - 1 + (across ? 0 : foot * 1.5), y: you.y - 1 + (across ? foot : 0), at: t, age: 0 });
+  lastPrint = { x: you.x, y: you.y };
+  if (prints.length > 200) prints.shift();
+}
 /** How dark it is at an hour: 0 by day (7 to 17), 1 at night (20 to 5), easing between. */
 function nightAt(h) {
   const ease = (u) => u * u * (3 - 2 * u);
@@ -325,7 +340,7 @@ function frame(now) {
   traffic.update(dt, t, shownPeople);
   if (timeMode === 'passing') { const h = hour + dt / 8; if (h >= 24) day++; hour = h % 24; }
   const season = seasonNow(), raining = rainingNow();
-  umbrellas(raining); label();
+  umbrellas(raining); label(); footprints(season, t);
   const hh = Math.floor(hour), mm = Math.floor((hour - hh) * 6) * 10;
   const time = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
   if (clock.textContent !== time) clock.textContent = time;
@@ -337,7 +352,7 @@ function frame(now) {
   };
   for (const p of people) p.ring = p === pointed || (p.ringUntil ?? 0) > t ? '#ffffff' : undefined;
   g.setTransform(D, 0, 0, D, 0, 0);
-  drawTownView(g, town, view, [...shownPeople, ...smallLife.sprites, ...traffic.vehicles, ...(ball ? [ball] : [])], t, { dpx: D, night: nightAt(hour), above: smallLife.above, lights: LIGHTS, season, weather: raining ? 'rain' : 'clear' });
+  drawTownView(g, town, view, [...shownPeople, ...smallLife.sprites, ...traffic.vehicles, ...(ball ? [ball] : [])], t, { dpx: D, night: nightAt(hour), above: smallLife.above, lights: LIGHTS, season, weather: raining ? 'rain' : 'clear', prints });
   // lines and icon bubbles over everything (and bright at night)
   g.save(); g.translate(-view.x, -view.y); drawSpeech(g, shownPeople, t, { bounds: view }); g.restore();
   const name = town.placeAt(you.x, you.y);

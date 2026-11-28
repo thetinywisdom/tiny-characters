@@ -669,12 +669,14 @@ function puddles(c, town) {
 /** Rain over the view (or snow falling): a darker sky, streaks falling at a slant, splashes; pixels, by time. */
 function drawRain(g, view, t, night, snow) {
   const { x: X, y: Y, w: W, h: H } = view, dark = Math.min(1, night);
-  g.globalCompositeOperation = 'multiply';                                 // the grey of a rainy day
-  g.fillStyle = snow ? '#e4e8f0' : `rgb(${Math.round(228 + 20 * dark)},${Math.round(232 + 16 * dark)},${Math.round(240 + 10 * dark)})`;
+  // (the owner: the first rain was too harsh, the town hard to see: now a light grey, fewer and
+  // see-through streaks, few splashes)
+  g.globalCompositeOperation = 'multiply';                                 // the grey of a rainy day, light
+  g.fillStyle = snow ? '#eef0f4' : `rgb(${Math.round(240 + 12 * dark)},${Math.round(242 + 10 * dark)},${Math.round(246 + 6 * dark)})`;
   g.fillRect(X, Y, W, H);
   g.globalCompositeOperation = 'source-over';
-  const streak = dark > 0.5 ? '#6a7890' : '#b8c8d8', tip = dark > 0.5 ? '#8a98b0' : '#dfe8f0';
-  const cols = Math.ceil(W * H / 260);                                     // about one drop per 260 pixels of view
+  const streak = dark > 0.5 ? '#8a98b0' : '#d8e2ec';
+  const cols = Math.ceil(W * H / (snow ? 300 : 600));                      // about one drop per 600 pixels of view
   for (let k = 0; k < cols; k++) {
     const sx = ((k * 7919) % 997) / 997, sy = ((k * 104729) % 991) / 991, sp = 0.8 + (k % 5) * 0.08;
     if (snow) {                                                            // flakes: drifting down slowly, swaying
@@ -683,15 +685,18 @@ function drawRain(g, view, t, night, snow) {
       continue;
     }
     const py = ((sy + t * 2.2 * sp) % 1) * (H + 20) - 10, px = Math.round(sx * (W + 20) - 10 - py * 0.25);
-    for (let j = 0; j < 5; j++) { g.fillStyle = j === 4 ? tip : streak; g.fillRect(X + px + Math.floor((py + j) * 0.25) - Math.floor(py * 0.25), Y + Math.round(py) + j, 1, 1); }
+    g.globalAlpha = 0.45 + (k % 3) * 0.1;                                   // see-through streaks (some fainter, further off)
+    g.fillStyle = streak;
+    for (let j = 0; j < 4; j++) g.fillRect(X + px + Math.floor((py + j) * 0.25) - Math.floor(py * 0.25), Y + Math.round(py) + j, 1, 1);
   }
+  g.globalAlpha = 1;
   if (snow) return;
-  g.fillStyle = dark > 0.5 ? '#7a88a0' : '#e8f0f6';                        // splashes where drops land
-  const splashes = Math.ceil(W * H / 1300);
+  g.fillStyle = dark > 0.5 ? '#7a88a0' : '#e8f0f6';                        // a few splashes where drops land
+  const splashes = Math.ceil(W * H / 3000);
   for (let k = 0; k < splashes; k++) {
-    const ph = (k * 0.37 + t * 3) % 1; if (ph > 0.3) continue;
+    const ph = (k * 0.37 + t * 3) % 1; if (ph > 0.25) continue;
     const sx = X + Math.round(((k * 4447) % 983) / 983 * W), sy = Y + Math.round(((k * 2711 + Math.floor(t * 3 + k * 0.37) * 131) % 977) / 977 * H);
-    g.fillRect(sx - 1, sy, 1, 1); g.fillRect(sx + 1, sy, 1, 1); g.fillRect(sx, sy - 1, 1, 1);
+    g.fillRect(sx - 1, sy, 1, 1); g.fillRect(sx + 1, sy, 1, 1);
   }
 }
 
@@ -719,12 +724,16 @@ function fenceOf(a) {
  * dpx: device pixels per canvas pixel, when the canvas is drawn bigger
  * underneath (g scaled by dpx) so the signs' names can be written.
  */
-export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0, above = [], petals = true, steam = drawSteam, lights = 'bands', season = null, weather = null } = {}) {
+export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0, above = [], petals = true, steam = drawSteam, lights = 'bands', season = null, weather = null, prints = [] } = {}) {
   if (!SEASONS.includes(season)) season = null;                             // no season: as drawn
   const rain = weather === 'rain';
   g.imageSmoothingEnabled = false;
   g.drawImage(groundOf(town, season, rain && season !== 'winter'), view.x, view.y, view.w, view.h, 0, 0, view.w, view.h);
   g.save(); g.translate(-view.x, -view.y);
+  // footprints pressed into the ground (snow): { x, y, age } pixel pairs, paler as they age, under everyone
+  for (const f of prints) if (f.x > view.x - 2 && f.x < view.x + view.w + 2 && f.y > view.y - 2 && f.y < view.y + view.h + 2) {
+    g.fillStyle = f.age < 0.5 ? '#b4c0d0' : '#cbd4e0'; g.fillRect(Math.round(f.x), Math.round(f.y), 2, 1);
+  }
   const items = [];
   for (const b of town.buildings) {
     const { w, h } = buildingSize(b);

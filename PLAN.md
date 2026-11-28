@@ -83,9 +83,10 @@ bubble lab, so games can use them and they can grow.
   notes); only approved ones go live. The hand-drawn PNG plan (ART_PLAN) is
   dropped.
 - Seasons and weather (Nov 2026): all four seasons as in the mock-ups (autumn colours by
-  tree, bare trees and snow in winter); heavy rain with splashes, puddles and umbrellas
-  (C), snow falling in winter; a picker under the town, otherwise the real month and
-  rain now and then.
+  tree, bare trees and snow in winter); rain with splashes, puddles and umbrellas (C),
+  made gentler and slow (the owner: the town must stay easy to see), snow falling
+  slower still, footprints in the snow; a picker under the town, otherwise the real
+  month and rain now and then.
 - The breeze (Nov 2026): trees sway in gusts that roll across the town (B, from
   animated mock-ups: up to 2 px at the top, trunks still); bushes stay still.
 - The front page (Nov 2026): no park (the owner never used it): the town,
@@ -495,10 +496,17 @@ bubble lab, so games can use them and they can grow.
     eight runs of 150-200 s (longest hold 10 s); you standing on the road holds cars at
     most about 7 s.
 
+63. **Gentler rain, slower snow, footprints** (the owner: the rain was too harsh, the
+    town hard to see; rain as slow as the snow was, snow slower; footprints in the snow):
+    a lighter grey, fewer see-through streaks, few splashes, falling gently; snow drifting
+    down at half that; you leave footprints on snowy ground (left and right by turns,
+    gone after 30 s). Going into buildings is on hold (the owner); when it comes back:
+    doors that open (B, from the mock-ups), then a peek inside as its own step.
+
 ## In progress
 
-- The owner's order: a faster forest (done, 60), weather and seasons (done, 61), the
-  traffic jam (done, 62), then people going into buildings (mock-ups first).
+- Nothing. (A faster forest, weather and seasons, the traffic jam: done, 60-63. Going into
+  buildings is on hold: see Next.)
 
 ## Next (only when the owner asks)
 
@@ -506,7 +514,8 @@ The full-size redraw is done. Ideas offered before (on hold):
 - weather and time (the backlog): wind, rain, seasons
 - a map maker: place streets, buildings, props and areas, save and load
   (every place is already a layout piece)
-- people going into buildings (and maybe a simple look inside)
+- people going into buildings (on hold, the owner: chose B from mock-ups, the door
+  opens, they step in and it closes; then a peek inside as its own step)
 - Japanese and Indonesian lines (the code is ready; Japanese with the
   reading, the English and grammar notes)
 - real kana on a few signs (ラーメン, コンビニ, えき)

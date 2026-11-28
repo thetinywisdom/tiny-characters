@@ -609,10 +609,16 @@ drawn (so pictures without one are unchanged).
   `groundOf`): lawns mapped onto a spring or autumn ramp, with petals and flowers or
   fallen leaves dotted by a hash of the place; winter puts lawns, sand, dirt and the
   sidewalks under snow, dusts gravel and paving, and leaves the roads clear.
-- **Rain** (`drawRain`, over everything, after the night): a `multiply` grey, about
-  one 5-pixel streak per 260 pixels of view falling at a slant (by `t`, nothing
-  random), splashes; the wet ground has `puddles` on roads and sidewalks. In winter
-  it snows: slow white flakes, no puddles. The demo puts walkers' umbrellas up
+- **Rain** (`drawRain`, over everything, after the night; the owner found the first
+  too harsh): a light `multiply` grey, about one 4-pixel see-through streak (45-65 %)
+  per 600 pixels of view falling gently at a slant (a view's height in about 8 s, by
+  `t`, nothing random), a few splashes; the wet ground has `puddles` on roads and
+  sidewalks. In winter it snows: white flakes drifting down slowly (half the rain's
+  speed), no puddles.
+- **Footprints** (the owner): the demo keeps `prints` ({ x, y, at }) where you walk on
+  snow (winter, off the roads), a print every 4 px, left and right by turns, and drops
+  them after 30 s; `drawTownView({ prints })` draws them after the ground, before
+  everyone (2 x 1 px, paler after 15 s). The demo puts walkers' umbrellas up
   (`dryCarry` keeps what they carried) and picks the season by the real month and
   rain spells by the town's day and hour (`rainingNow`).
 - Putting a town in a season the first time recolours its ground once (a fraction
