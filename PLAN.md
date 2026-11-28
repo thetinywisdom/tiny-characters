@@ -11,8 +11,8 @@ bubble lab, so games can use them and they can grow.
   to `main` right away, without asking.
 - The characters are the bubble lab's tiny 2D pixel people (about 5 × 15
   pixels), kept as small and simple as they are there.
-- You, the player (Nov 2026): the orange guy (thetinywisdom/orange-guy), redrawn at
-  the people's size (A), not his own 16 × 24 sheet (B: a giant next to everyone).
+- You stay a townsperson (Nov 2026): the orange guy (thetinywisdom/orange-guy) was
+  tried as you, redrawn at the people's size, and removed (the owner: "looks bad").
 - Roofs (Nov 2026): like a top-down town map, every building shows its roof
   from above (8–18 rows), so it has depth; tile rows and a ridge on pitched
   roofs, a rim and rooftop things on flat roofs, front gables with the roof
@@ -513,15 +513,6 @@ bubble lab, so games can use them and they can grow.
 65. **Softer rain** (the owner: still too harsh): half as many drops, fainter and shorter
     streaks (22-38 % see-through, 3 px), a barely grey sky, very few faint splashes.
 
-66. **You are the orange guy** (the owner: "use the orange guy as the main character",
-    chose A from mock-ups): the orange guy from thetinywisdom/orange-guy (16 × 24, 8
-    directions), redrawn at the people's size (9 × 15: orange outline, pale skin, no clothes,
-    no eyes) with the same parts, four views and two steps, as text grids in
-    `ORANGE_GUY`; `drawCharacter` draws him for `{ orange: true }` (ring, talking bob,
-    night, footprints and speech as for anyone). The demo's you is him (the random look is
-    still drawn from the seed, so everyone else stays the same); a catalogue card
-    (People, You). Not used: B, his sheet as it is (1.6 × as tall as everyone).
-
 ## In progress
 
 - Nothing. (A faster forest, weather and seasons, the traffic jam: done, 60-63. Going into
@@ -559,8 +550,6 @@ The full-size redraw is done. Ideas offered before (on hold):
   snapped to the pixel grid like everything else).
 
 - Nobody goes inside buildings yet (tapping one walks you to its door).
-- The orange guy carries nothing (in the rain he has no umbrella) and faces four ways
-  (his own sheet has eight).
 - A dog can brush past someone who is not its owner.
 - People still brush past each other now and then (about 20 overlaps in 90 s,
   mostly cats and walkers).

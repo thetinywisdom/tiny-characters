@@ -62,7 +62,7 @@ people see and the public API).
 ## Where things are
 
 - `src/` the library (each file starts with a comment listing its exports):
-  `tinyCharacters.js` people (you are the orange guy, `{ orange: true }`; and the shared `shade`, `canvasOf`,
+  `tinyCharacters.js` people (and the shared `shade`, `canvasOf`,
   `drawRing`), `tinyBuildings.js`, `tinyStreet.js` (props), `tinyNature.js`
   (trees, bushes, ground), `tinyAnimals.js`, `tinyMonsters.js`,
   `tinyCombat.js`, `tinyVoxel.js` (3D blocks for vehicles only),

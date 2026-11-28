@@ -13,7 +13,7 @@ The owner chose these as the start of this repo.
 ```
 src/tinyCharacters.js  the library (plain ES module, no dependencies):
                        drawCharacter, drawStage, randomCharacter,
-                       drawOrangeGuy, ORANGE_GUY (you), LOOKS, seeded, headOf, snapToPalette, COLORS, the
+                       LOOKS, seeded, headOf, snapToPalette, COLORS, the
                        colour lists and the look lists (HAIRSTYLES, HATS,
                        TOPS, LEGWEAR, CARRY); and the helpers every other
                        module shares: shade (a colour darker or lighter)
@@ -100,17 +100,6 @@ demo/demo.css          the demo page's look (light and dark)
   from drawPose; at night drawTownView draws the rings again over the dark,
   the wearer and whatever stands in front painted out, so they keep their
   colour). The owner chose the thin ring, still (no pulse)
-
-**The orange guy** (`{ orange: true }`, you in the town; `drawOrangeGuy`): the orange
-guy of thetinywisdom/orange-guy (16 × 24, 8 directions, an outline round every part)
-redrawn at the people's size, 9 × 15. `ORANGE_GUY.down` and `.right` are three text
-grids each, 11 × 16 (standing, step one, step two; o outline `#ed612b`, s skin
-`#ffdfd3`, d near arm `#f6c0ac`, f far limbs and nose `#eb9a84`), the feet's outline on
-the bottom row, drawn at (x − 5, y − 15); `.up` is the front with the nape for the nose,
-left is right mirrored. The frames are painted once into small canvases. Walking: the
-frames 1, 0, 2, 0, eight a second; talking (standing): the top half up a pixel, the hip
-row drawn twice. `headOf` gives y − 16. Looks (clothes, carry) are not drawn. To change
-him, edit the grids (same size; keep the outline round every part).
 
 Every look is drawn with `R(colour, dx, dy, w, h)`: a rectangle at
 (x + dx, y + dy), mirrored when facing left, so "back" is negative dx and

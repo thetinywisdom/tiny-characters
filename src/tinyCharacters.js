@@ -6,8 +6,6 @@
 //   drawCharacter(g, person, t)   one person, feet at (person.x, person.y)
 //   drawStage(g, W, H)            the lab's grass strip and path
 //   drawRing(g, x, y, colour)     a thin ring round the feet (you: gold; pointed at: white)
-//   drawOrangeGuy(g, p, t)        the orange guy (drawCharacter draws him for { orange: true })
-//   ORANGE_GUY                    his palette and frames (text grids, editable)
 //   randomCharacter(rng)          a random look
 //   LOOKS                         starter looks (salaryman, grandma ...)
 //   snapToPalette(g, W, H)        hard edges, only the palette's colours
@@ -76,7 +74,6 @@ function frameOf(p, bob = 0) {
  * plain top. No eyes: the people are faceless.
  */
 export function drawCharacter(g, p, t = 0) {
-  if (p.orange) return drawOrangeGuy(g, p, t);
   const x = Math.round(p.x), y = Math.round(p.y);
   if (p.you || p.ring) drawRing(g, x, y, p.ring ?? COLORS.gold);   // round the feet, under everything
   const talkBob = p.talking && Math.floor(t * 6) % 2 ? -1 : 0;
@@ -189,61 +186,6 @@ export function drawCharacter(g, p, t = 0) {
 }
 
 /**
- * The orange guy (thetinywisdom/orange-guy), redrawn at the people's size to be
- * you, the player (the owner's choice A, Nov 2026): an orange outline, pale skin,
- * the shade of his near arm, no clothes and no eyes, 9 x 15 pixels. Each frame
- * is a text grid, 11 x 16, the feet's outline on the bottom row at (5, 15):
- * o outline, s skin, d skin shade, f far limbs and nose. Three frames a view
- * (standing, then the two steps); the back is the front with the nape for the
- * nose, the left the right mirrored.
- */
-export const ORANGE_GUY = {
-  colors: { o: '#ed612b', s: '#ffdfd3', d: '#f6c0ac', f: '#eb9a84' },
-  down: [
-    ['...........', '....ooo....', '...ossso...', '...ossso...', '...osfso...', '...oosoo...', '..odsssdo..', '..odsssdo..', '.odosssodo.', '.odosssodo.', '..oososoo..', '...ososo...', '...ososo...', '...ososo...', '..ossosso..', '...oo.oo...'],
-    ['...........', '....ooo....', '...ossso...', '...ossso...', '...osfso...', '...oosoo...', '..odsssdo..', '..odsssdo..', '.odosssodo.', '.odosssoo..', '..oososo...', '...ososo...', '...ososo...', '..ossoso...', '...ooosso..', '......oo...'],
-    ['...........', '....ooo....', '...ossso...', '...ossso...', '...osfso...', '...oosoo...', '..odsssdo..', '..odsssdo..', '.odosssodo.', '..oosssodo.', '...ososoo..', '...ososo...', '...ososo...', '...ososso..', '..ossooo...', '...oo......'],
-  ],
-  right: [
-    ['...........', '....ooo....', '...ossso...', '...osssso..', '...ossso...', '....oso....', '...osdso...', '...osdso...', '...osdso...', '...ossso...', '....oso....', '....oso....', '....oso....', '....oso....', '....osso...', '.....oo....'],
-    ['...........', '....ooo....', '...ossso...', '...osssso..', '...ossso...', '....oso....', '...osdso...', '..oossdo...', '..oossdo...', '...ossso...', '....oso....', '...ofoso...', '...ofoso...', '..ofo.oso..', '.offo.osso.', '..oo...oo..'],
-    ['...........', '....ooo....', '...ossso...', '...osssso..', '...ossso...', '....oso....', '...osdso...', '...osdso...', '...osdso...', '...ossso...', '....oso....', '....oso....', '...ooso....', '...ooso....', '...oosso...', '....ooo....'],
-  ],
-};
-ORANGE_GUY.up = ORANGE_GUY.down.map((rows) => rows.map((r, y) => (y === 4 ? r.replace('f', 's') : y === 5 ? r.replace('oosoo', 'oodoo') : r)));
-let orangeFrames = null;
-function orangeFrame(facing, i) {
-  if (!orangeFrames) {
-    const paint = (rows, flip) => {
-      const c = canvasOf(11, 16), g = c.getContext('2d');
-      rows.forEach((r, y) => [...r].forEach((ch, x) => { if (ch !== '.') { g.fillStyle = ORANGE_GUY.colors[ch]; g.fillRect(flip ? 10 - x : x, y, 1, 1); } }));
-      return c;
-    };
-    orangeFrames = { down: ORANGE_GUY.down.map((r) => paint(r)), up: ORANGE_GUY.up.map((r) => paint(r)), right: ORANGE_GUY.right.map((r) => paint(r)), left: ORANGE_GUY.right.map((r) => paint(r, true)) };
-  }
-  return orangeFrames[facing][i];
-}
-
-/**
- * Draw the orange guy with his feet at (p.x, p.y): facing 'down', 'up', 'left'
- * or 'right'; walking takes a step every eighth of a second; talking bobs his
- * top half up a pixel; you / ring: the ring round his feet. What is carried
- * and worn is not drawn (he has nothing).
- */
-export function drawOrangeGuy(g, p, t = 0) {
-  const x = Math.round(p.x), y = Math.round(p.y);
-  if (p.you || p.ring) drawRing(g, x, y, p.ring ?? COLORS.gold);
-  const facing = p.facing === 'back' ? 'up' : ['up', 'left', 'right'].includes(p.facing) ? p.facing : 'down';
-  const img = orangeFrame(facing, p.walking ? [1, 0, 2, 0][Math.floor(t * 8) % 4] : 0);
-  const smooth = g.imageSmoothingEnabled; g.imageSmoothingEnabled = false;
-  if (p.talking && !p.walking && Math.floor(t * 6) % 2) {           // the top half up a pixel, the hips drawn twice so no gap opens
-    g.drawImage(img, 0, 0, 11, 11, x - 5, y - 16, 11, 11);
-    g.drawImage(img, 0, 10, 11, 6, x - 5, y - 5, 11, 6);
-  } else g.drawImage(img, x - 5, y - 15);
-  g.imageSmoothingEnabled = smooth;
-}
-
-/**
  * A thin ring on the ground round someone's feet at (x, y): 13 x 5 pixels, its
  * back row hidden behind the legs (draw it before them). The owner's choice
  * (Nov 2026): gold under you, white under whoever you point at.
@@ -264,7 +206,6 @@ export function facingFor(dx, dy, was = 'down') {
 
 /** The point just over a person's head (where speech goes), above any hat or umbrella. */
 export function headOf(p) {
-  if (p.orange) return { x: p.x, y: p.y - 16 };
   const { Hd } = frameOf(p);
   const style = p.hairStyle ?? 'short';
   let top = Hd - 1;

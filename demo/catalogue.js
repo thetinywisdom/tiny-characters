@@ -39,10 +39,6 @@ for (const [name, [label, tags]] of Object.entries(PEOPLE)) {
     draw: (g, seed, t, anim) => drawCharacter(g, { ...lookFor(name, seed), x: 12, y: 22, walking: anim, facing: anim ? ['down', 'right', 'up', 'left'][Math.floor(t / 1.5) % 4] : 'down' }, t),
     code: (seed) => `drawCharacter(g, { ...lookFor('${name}', ${seed}), x, y }, t)` });
 }
-// the orange guy (you, in the town)
-items.push({ id: 'person.orangeGuy', label: 'Orange guy (you)', group: 'People', tags: ['You'], seed: 0, noSeed: true, w: 24, h: 26, px: 5,
-  draw: (g, seed, t, anim) => drawCharacter(g, { orange: true, x: 12, y: 22, walking: anim, facing: anim ? ['down', 'right', 'up', 'left'][Math.floor(t / 1.5) % 4] : 'down' }, t),
-  code: () => `drawCharacter(g, { orange: true, x, y }, t)` });
 // animals walk and turn round like the people
 const turning = (t, anim) => (anim ? ['down', 'right', 'up', 'left'][Math.floor(t / 1.5) % 4] : 'right');
 for (const [coat, [label]] of Object.entries(CAT_COATS)) {
@@ -257,7 +253,7 @@ const chip = (text, pressed, onClick, n) => {
 };
 function renderFilters() {
   $('#groups').replaceChildren(...GROUPS.map((g) => chip(g, state.g === g, () => { state.g = g; state.t.clear(); update(); }, items.filter((it) => g === 'All' || it.group === g).length)));
-  const ORDER = ['Adults', 'Kids', 'Elderly', 'Uniforms', 'Random', 'You', 'Cats', 'Dogs', 'Weapons', 'Attacks', 'Household', 'Monster skills', 'Reactions', 'Undead', 'Ghosts', 'Beasts', 'Zombie', 'Werewolf', 'Ghost girl', 'Reaper', 'Giant spider', 'Skeleton', 'Flaming skull', 'Trees', 'Bushes', 'Terrain', 'Doors', 'Windows', 'Wood', 'Glass', 'Japanese', 'European', 'Mosque', 'Homes', 'Shops & food', 'Civic', 'Worship', 'Low', 'Tall', 'Lights', 'Seats', 'Things', 'Vehicles', 'Park', 'Railway', 'Stations', 'Icons', 'Lines', 'Poses', 'Birds', 'Town life'];
+  const ORDER = ['Adults', 'Kids', 'Elderly', 'Uniforms', 'Random', 'Cats', 'Dogs', 'Weapons', 'Attacks', 'Household', 'Monster skills', 'Reactions', 'Undead', 'Ghosts', 'Beasts', 'Zombie', 'Werewolf', 'Ghost girl', 'Reaper', 'Giant spider', 'Skeleton', 'Flaming skull', 'Trees', 'Bushes', 'Terrain', 'Doors', 'Windows', 'Wood', 'Glass', 'Japanese', 'European', 'Mosque', 'Homes', 'Shops & food', 'Civic', 'Worship', 'Low', 'Tall', 'Lights', 'Seats', 'Things', 'Vehicles', 'Park', 'Railway', 'Stations', 'Icons', 'Lines', 'Poses', 'Birds', 'Town life'];
   const tags = [...new Set(items.filter(inGroup).flatMap((it) => it.tags))].sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
   // each kind's count: how many you would see with it on
   $('#tags').replaceChildren(...tags.map((t) => chip(t, state.t.has(t), () => { state.t.has(t) ? state.t.delete(t) : state.t.add(t); update(); },
