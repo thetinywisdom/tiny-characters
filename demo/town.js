@@ -504,14 +504,12 @@ function getOff() {
   const v = ride.v;
   if (ride.kind === 'bus') { delete v.you; const stop = town.props.filter((q) => q.type === 'busStop').sort((a, b) => Math.hypot(a.x - v.x, a.y - v.y) - Math.hypot(b.x - v.x, b.y - v.y))[0]; Object.assign(you, standNear(stop ? stop.x : v.x, stop ? stop.y + 2 : v.y)); }
   else {
-    const at = standNear(v.x, v.y);
-    delete v.rider;                                                             // (its own rider again, not you: you got off)
-    if (!(town.roadAt(v.x, v.y) && traffic.handBack(v))) {                     // off the road (or no lane near): parked where it is
-      traffic.vehicles.splice(traffic.vehicles.indexOf(v), 1);
-      const { player, you: _, lane, speed, served, to, ...rest } = v;
-      town.parked.push({ ...rest, parked: true });
-    }
-    Object.assign(you, at);
+    // (the owner: nobody else is on it) it stays where you leave it: parked just off the road, you beside it
+    const spot = town.roadAt(v.x, v.y) ? standNear(v.x, v.y) : { x: v.x, y: v.y };
+    traffic.vehicles.splice(traffic.vehicles.indexOf(v), 1);
+    const { player, you: _, lane, speed, served, to, rider, onRoad, heldT, ghost, ...rest } = v;
+    town.parked.push({ ...rest, x: spot.x, y: spot.y, parked: true });
+    Object.assign(you, standNear(spot.x, spot.y + 6));
   }
   you.away = false; ride = null;
 }

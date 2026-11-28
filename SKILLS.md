@@ -634,8 +634,9 @@ other vehicles by their footprints (`depth`: a move is fine if it ends clear or 
 ahead it slides sideways, held over 1.2 s it may edge through cars (`ghost`) till clear; clear of people; the scooter turns four ways, the car smoothly. traffic: `v.player` is
 skipped by update (others still avoid it); `handBack(v)` puts it in the nearest lane (within 14 px)
 as ordinary traffic; `drawVehicle` draws a gold frame round a vehicle with `you` (two wheels: the
-people's ring); a parked moped has no rider (its helmet on the bars). `getOff`: a car or scooter on
-the road goes back to the traffic, else stays parked; you stand at the nearest free spot (`standNear`).
+people's ring); a parked moped has no rider (its helmet on the bars). `getOff`: a car or scooter stays
+where you leave it (the owner: nobody else is on it), parked just off the road if you were on one
+(`standNear`), you beside it.
 
 **The time on the town** (demo/town.js `drawClock`, after the view and the speech, so the night
 does not darken it): a plate (`rgba(32,36,44,0.78)`) at (4, 4), 34 x 11 town pixels, a sun
