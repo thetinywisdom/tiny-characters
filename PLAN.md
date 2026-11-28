@@ -508,6 +508,9 @@ bubble lab, so games can use them and they can grow.
     the roads: pale in the snow, wet and dark in the rain (washed away sooner); each keeps
     only the last 60 px of its trail, so the town does not fill up with prints.
 
+65. **Softer rain** (the owner: still too harsh): half as many drops, fainter and shorter
+    streaks (22-38 % see-through, 3 px), a barely grey sky, very few faint splashes.
+
 ## In progress
 
 - Nothing. (A faster forest, weather and seasons, the traffic jam: done, 60-63. Going into

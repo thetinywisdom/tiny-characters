@@ -669,14 +669,14 @@ function puddles(c, town) {
 /** Rain over the view (or snow falling): a darker sky, streaks falling at a slant, splashes; pixels, by time. */
 function drawRain(g, view, t, night, snow) {
   const { x: X, y: Y, w: W, h: H } = view, dark = Math.min(1, night);
-  // (the owner: the first rain was too harsh, the town hard to see: now a light grey, fewer and
-  // see-through streaks, few splashes)
+  // (the owner, twice: the rain was too harsh, the town hard to see: now a faint grey, few faint
+  // short streaks, very few splashes)
   g.globalCompositeOperation = 'multiply';                                 // the grey of a rainy day, light
-  g.fillStyle = snow ? '#eef0f4' : `rgb(${Math.round(240 + 12 * dark)},${Math.round(242 + 10 * dark)},${Math.round(246 + 6 * dark)})`;
+  g.fillStyle = snow ? '#eef0f4' : `rgb(${Math.round(246 + 8 * dark)},${Math.round(247 + 7 * dark)},${Math.round(250 + 4 * dark)})`;
   g.fillRect(X, Y, W, H);
   g.globalCompositeOperation = 'source-over';
   const streak = dark > 0.5 ? '#8a98b0' : '#d8e2ec';
-  const cols = Math.ceil(W * H / (snow ? 300 : 600));                      // about one drop per 600 pixels of view
+  const cols = Math.ceil(W * H / (snow ? 300 : 1200));                     // about one drop per 1200 pixels of view
   for (let k = 0; k < cols; k++) {
     const sx = ((k * 7919) % 997) / 997, sy = ((k * 104729) % 991) / 991, sp = 0.8 + (k % 5) * 0.08;
     if (snow) {                                                            // flakes: drifting down slowly, swaying
@@ -685,19 +685,20 @@ function drawRain(g, view, t, night, snow) {
       continue;
     }
     const py = ((sy + t * 2.2 * sp) % 1) * (H + 20) - 10, px = Math.round(sx * (W + 20) - 10 - py * 0.25);
-    g.globalAlpha = 0.45 + (k % 3) * 0.1;                                   // see-through streaks (some fainter, further off)
+    g.globalAlpha = 0.22 + (k % 3) * 0.08;                                  // faint see-through streaks (some fainter still, further off)
     g.fillStyle = streak;
-    for (let j = 0; j < 4; j++) g.fillRect(X + px + Math.floor((py + j) * 0.25) - Math.floor(py * 0.25), Y + Math.round(py) + j, 1, 1);
+    for (let j = 0; j < 3; j++) g.fillRect(X + px + Math.floor((py + j) * 0.25) - Math.floor(py * 0.25), Y + Math.round(py) + j, 1, 1);
   }
   g.globalAlpha = 1;
   if (snow) return;
   g.fillStyle = dark > 0.5 ? '#7a88a0' : '#e8f0f6';                        // a few splashes where drops land
-  const splashes = Math.ceil(W * H / 3000);
+  const splashes = Math.ceil(W * H / 6000);
   for (let k = 0; k < splashes; k++) {
     const ph = (k * 0.37 + t * 3) % 1; if (ph > 0.25) continue;
     const sx = X + Math.round(((k * 4447) % 983) / 983 * W), sy = Y + Math.round(((k * 2711 + Math.floor(t * 3 + k * 0.37) * 131) % 977) / 977 * H);
-    g.fillRect(sx - 1, sy, 1, 1); g.fillRect(sx + 1, sy, 1, 1);
+    g.globalAlpha = 0.5; g.fillRect(sx - 1, sy, 1, 1); g.fillRect(sx + 1, sy, 1, 1);
   }
+  g.globalAlpha = 1;
 }
 
 /**

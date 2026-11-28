@@ -609,10 +609,10 @@ drawn (so pictures without one are unchanged).
   `groundOf`): lawns mapped onto a spring or autumn ramp, with petals and flowers or
   fallen leaves dotted by a hash of the place; winter puts lawns, sand, dirt and the
   sidewalks under snow, dusts gravel and paving, and leaves the roads clear.
-- **Rain** (`drawRain`, over everything, after the night; the owner found the first
-  too harsh): a light `multiply` grey, about one 4-pixel see-through streak (45-65 %)
-  per 600 pixels of view falling gently at a slant (a view's height in about 8 s, by
-  `t`, nothing random), a few splashes; the wet ground has `puddles` on roads and
+- **Rain** (`drawRain`, over everything, after the night; the owner found it too harsh
+  twice): a faint `multiply` grey, about one 3-pixel see-through streak (22-38 %) per
+  1200 pixels of view falling gently at a slant (a view's height in about 8 s, by `t`,
+  nothing random), very few half see-through splashes; the wet ground has `puddles` on roads and
   sidewalks. In winter it snows: white flakes drifting down slowly (half the rain's
   speed), no puddles.
 - **Footprints** (the owner: everything leaves them, in snow and rain, but the town must
