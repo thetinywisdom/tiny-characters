@@ -24,7 +24,7 @@ import { drawMonster } from './tinyMonsters.js';
 import { BUSHES, SEASONS, drawBush, drawTerrain, drawTree, groundInSeason } from './tinyNature.js';
 import { PROPS, drawProp, drawWire, poleTops, propLights, propSolid } from './tinyStreet.js';
 import { drawPose, drawSwings, drawSteam, drawPetals } from './tinyLife.js';
-import { VEHICLES, drawVehicle, drawVehicleBeams, vehicleLights } from './tinyTraffic.js';
+import { VEHICLES, drawTrain, drawVehicle, drawVehicleBeams, vehicleLights } from './tinyTraffic.js';
 import { KY } from './tinyVoxel.js';
 import { canvasOf, drawCharacter, drawRing, seeded as seededRng } from './tinyCharacters.js';
 
@@ -573,6 +573,7 @@ function drawNight(g, view, items, night, dpx, drawItem, t = 0, lights = 'bands'
       for (const it of items) {
         if (it.p && !lit.some((r) => it.p.x + 40 > r.x0 && it.p.x - 40 < r.x1 && it.p.y + 4 > r.y0 && it.p.y - 90 < r.y1)) continue;
         lg.globalCompositeOperation = 'destination-out'; drawItem(lg, it);
+        if (it.s?.type === 'train') { lg.globalCompositeOperation = 'source-over'; drawTrain(lg, { ...it.s, lights: true }); }   // its lit windows
         if (it.b) {
           lg.globalCompositeOperation = 'source-over'; drawBuilding(lg, { ...it.b, lights: true, dpx, time: t });
           const { w, h } = buildingSize(it.b); lit.push({ x0: it.b.x - w / 2 - 4, x1: it.b.x + w / 2 + 4, y0: it.b.y - h - 4, y1: it.b.y + 4 });
@@ -847,7 +848,9 @@ export function drawTownView(g, town, view, sprites, t = 0, { dpx = 1, night = 0
   for (const v of town.parked ?? []) if (v.x > view.x - 30 && v.x < view.x + view.w + 30 && v.y > view.y && v.y < view.y + view.h + 30) items.push({ y: v.y, s: v });
   for (const p of town.props) if (p.x > view.x - 20 && p.x < view.x + view.w + 20 && p.y > view.y && p.y < view.y + view.h + 50) items.push({ y: p.y, prop: p });
   for (const p of town.plants) if (p.x > view.x - 30 && p.x < view.x + view.w + 30 && p.y > view.y && p.y < view.y + view.h + 60) items.push({ y: p.y, p });
-  for (const s of sprites) if (s.x > view.x - 24 && s.x < view.x + view.w + 24 && s.y > view.y - 2 && s.y < view.y + view.h + 24) items.push({ y: s.y, s });
+  // (a train is long: kept while any of it is in view, not only its middle; it blinked out before)
+  for (const s of sprites) { const half = s.type === 'train' ? (s.cars ?? 4) * 31 + 8 : 24;
+    if (s.x > view.x - half && s.x < view.x + view.w + half && s.y > view.y - 2 && s.y < view.y + view.h + 40) items.push({ y: s.y, s }); }
   items.sort((a, b) => a.y - b.y || (a.b ? -1 : 1));
   /** Draw one thing of the view (a building, a prop, a plant, someone or something moving). */
   const drawItem = (ctx, it) => {

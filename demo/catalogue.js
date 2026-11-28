@@ -152,6 +152,8 @@ for (const [type, { label, w: w1, h: h1 }] of Object.entries(PROPS)) {
 // the train, side on
 items.push({ id: 'street.vehicle.train', label: 'Train', group: 'Street', tags: ['Vehicles', 'Railway'], seed: 0, noSeed: true, w: 260, h: 34, px: 0, wide: true,
   draw: (g) => drawTrain(g, { x: 130, y: 31, dir: 1, cars: 4 }), code: () => `drawTrain(g, { x, y, dir: 1, cars: 4 })` });
+items.push({ id: 'street.vehicle.trainLocal', label: 'Train (older local)', group: 'Street', tags: ['Vehicles', 'Railway'], seed: 0, noSeed: true, w: 260, h: 34, px: 0, wide: true,
+  draw: (g) => drawTrain(g, { x: 130, y: 31, dir: 1, cars: 4, kind: 'local' }), code: () => `drawTrain(g, { x, y, dir: 1, cars: 4, kind: 'local' })` });
 // vehicles, turning slowly all the way round (16 headings)
 for (const [type, { label, box }] of Object.entries(VEHICLES)) {
   const w = box.w + 4, h = box.h + 4;

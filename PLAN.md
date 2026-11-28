@@ -626,6 +626,13 @@ bubble lab, so games can use them and they can grow.
 86. **The maps removed** (the owner: "kinda useless"): the radar and the big map are gone (in
     git history); full screen stays.
 
+87. **The train redrawn, and no more blinking** (the owner chose both looks, taking turns): a
+    stainless commuter (silver, the green and orange band, big windows in dark frames, slim double
+    doors, a pantograph) and, every third run, an older local (cream over red, small windows, doors
+    at the ends); cabs at both ends with a windscreen, white lamps at the front and red at the
+    back; wheels on two bogies a carriage; lit windows at night. The town no longer drops the train
+    while its middle is out of view (it blinked out as it crossed the view's edge).
+
 ## In progress
 
 - Vehicles, round two (the owner's order, Nov 2026; all done: 77, 78, 82 as a parcel truck, 84 as a coin-parking lot): 1. a more detailed redraw of the cars,

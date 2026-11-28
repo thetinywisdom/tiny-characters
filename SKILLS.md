@@ -602,6 +602,15 @@ under everything on a dark day (rain, storm, fog) so the headlamps show.
 **Full screen** (the owner, Nov 2026): the `#townBox` (the canvas and an Exit button) goes full screen (Fullscreen API; else the class
 `full` covers the page), the canvas at `min(100vw, 100vh * 4/3)`; Esc leaves it.
 
+**The train** (`drawTrain`, the owner, Nov 2026): side on, carriages of 60 (62 with the gangway):
+wheels on two bogies, the floor's gear, the body (commuter: silver with ribbed lower panels, the
+line's band, two pairs of windows between three slim double doors; local, `kind: 'local'`: red below
+cream, six small windows, a door at each end), the roof from above with an air-con unit and (commuter,
+second car) a pantograph; cabs at both ends (lamps white at the front, red at the back, by `dir`).
+`lights: true` draws only what shines (`TRAIN_GLOW`: lit windows, lamps, the destination board):
+drawNight draws it over the dark. The traffic runs the local every third run (`train.kind`). drawTownView
+keeps the train while any of it is in view (half its length, not 24 px, round its middle).
+
 **The time on the town** (demo/town.js `drawClock`, after the view and the speech, so the night
 does not darken it): a plate (`rgba(32,36,44,0.78)`) at (4, 4), 34 x 11 town pixels, a sun
 (from 5:30) or a moon (from 19:00), the time in 3 x 5 pixel numbers (`DIGITS`), ten minutes

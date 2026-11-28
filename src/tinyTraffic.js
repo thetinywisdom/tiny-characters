@@ -328,19 +328,51 @@ const CARRIAGE = 62;                                    // a carriage's length (
  * A train { x, y, dir, cars, line }: x its middle, y the ground under it, dir 1 (going right) or -1.
  * Seen side on, its roof from above like the buildings'; drawn at the people's size.
  */
+// The train (the owner chose both of two looks, taking turns, Nov 2026): a stainless commuter (v.kind
+// 'commuter', the default: silver, the line's band, big windows in dark frames, slim double doors, a
+// pantograph) or an older local ('local': cream over red, small windows, a door at each end). Cabs at
+// both ends: white lamps at the front, red at the back. v.lights: only what shines (lit windows, the
+// lamps, the destination board), drawn over the dark at night.
+const TRAIN_GLOW = ['#f2dcae', '#fff0c8', '#c8d4e0', '#fff2c0', '#e8403a', '#ffb040'];
 export function drawTrain(g, v) {
-  const cars = v.cars ?? 4, line = v.line ?? ['#2f8a5a', '#f08a2c'], len = cars * CARRIAGE - 2, x0 = Math.round(v.x - len / 2), y = Math.round(v.y);
-  const R = (c, dx, up, w, h) => { g.fillStyle = c; g.fillRect(v.dir < 0 ? x0 + len - dx - w : x0 + dx, y - up - h, w, h); };   // mirrored going left
+  const cars = v.cars ?? 4, line = v.line ?? ['#2f8a5a', '#f08a2c'], len = cars * CARRIAGE - 2, x0 = Math.round(v.x - len / 2), y = Math.round(v.y), lit = !!v.lights;
+  const R = (c, dx, up, w, h) => { if (lit && !TRAIN_GLOW.includes(c)) return; g.fillStyle = c; g.fillRect(v.dir < 0 ? x0 + len - dx - w : x0 + dx, y - up - h, w, h); };   // mirrored going left
+  const local = v.kind === 'local';
   for (let i = 0; i < cars; i++) {
-    const cx = i * CARRIAGE, front = i === cars - 1;
-    R('#3a3d42', cx + 6, 0, 10, 2); R('#3a3d42', cx + 44, 0, 10, 2);                         // the bogies
-    R('#e8ecef', cx, 2, 60, 15); R(shade('#e8ecef', 0.86), cx, 2, 60, 1);                     // the body
-    R(line[0], cx, 4, 60, 2); R(line[1], cx, 6, 60, 1);                                      // the line's colours
-    for (let k = 0; k < 5; k++) R('#5f7487', cx + 4 + k * 11, 10, 7, 4);                     // windows
-    for (const d of [14, 44]) { R('#8a9096', cx + d, 2, 4, 12); R('#5f7487', cx + d + 1, 9, 2, 4); }   // doors
-    R('#c8ccd0', cx, 17, 60, 9); R('#b0b4b8', cx + 2, 19, 56, 1); R('#9aa0a6', cx + 20, 21, 18, 3);   // the roof from above, an air-con unit
-    if (i < cars - 1) R('#3a3d42', cx + 60, 6, 2, 8);                                        // the coupling
-    if (front) { R('#3a3f44', cx + 54, 9, 6, 6); R('#5f7487', cx + 55, 10, 4, 4); R('#fff2c0', cx + 58, 4, 2, 1); }   // the cab
+    const cx = i * CARRIAGE, front = i === cars - 1, back = i === 0;
+    // under the floor: its gear, two bogies of two wheels
+    R(local ? '#3a3d42' : '#4a4e54', cx + 4, 2, 52, 2);
+    for (const bg of local ? [5, 43] : [6, 42]) { R('#3a3d42', cx + bg, 1, 12, 2); for (const w of [1, 8]) { R('#26282c', cx + bg + w, 0, 3, 3); R('#8a9096', cx + bg + w + 1, 1, 1, 1); } }
+    if (!local) {
+      R('#d8dde2', cx, 4, 60, 13); R('#c4cad0', cx, 4, 60, 1); R('#eef1f4', cx, 16, 60, 1);
+      for (let k = 3; k < 60; k += 6) R('#c4cad0', cx + k, 5, 1, 4);                    // the ribbed lower panels
+      R(line[0], cx, 8, 60, 2); R(line[1], cx, 7, 60, 1);                               // the line's band
+      for (const wx of [11, 34]) for (const k of [0, 8]) { R('#3a4048', cx + wx + k, 10, 7, 5); R(lit ? '#f2dcae' : '#6a8299', cx + wx + k + 1, 11, 5, 3); R(lit ? '#fff0c8' : '#8ea6c0', cx + wx + k + 1, 13, 5, 1); }
+      for (const d of [4, 27, 50]) { R('#a8aeb4', cx + d, 4, 6, 12); R('#7a8088', cx + d + 3, 4, 1, 12); R('#3a4048', cx + d + 1, 9, 1, 5); R('#3a4048', cx + d + 4, 9, 1, 5); if (lit) { R('#f2dcae', cx + d + 1, 10, 1, 3); R('#f2dcae', cx + d + 4, 10, 1, 3); } }
+      R('#b8bec4', cx, 17, 60, 9); R('#a8aeb4', cx, 17, 60, 1); R('#cfd4d8', cx + 1, 24, 58, 1);   // the roof from above
+      R('#9aa0a6', cx + 22, 19, 16, 4); R('#c8ccd0', cx + 23, 22, 14, 1);                 // an air-con unit
+      if (i === 1) { R(INK, cx + 8, 26, 1, 2); R(INK, cx + 10, 28, 6, 1); R(INK, cx + 15, 26, 1, 2); R(INK, cx + 9, 27, 1, 1); R(INK, cx + 14, 27, 1, 1); }   // the pantograph
+    } else {
+      const CREAM = '#efe6cc', RED = '#c8402c';
+      R(RED, cx, 4, 60, 6); R(CREAM, cx, 10, 60, 7); R(shade(RED, 0.8), cx, 4, 60, 1); R(shade(CREAM, 1.04), cx, 16, 60, 1);
+      for (let k = 0; k < 6; k++) { const wx = cx + 10 + k * 7; R('#5a4a3a', wx, 10, 5, 5); R(lit ? '#f2dcae' : '#6a8299', wx + 1, 11, 3, 3); }
+      for (const d of [2, 52]) { R(shade(CREAM, 0.88), cx + d, 4, 6, 12); R(shade(RED, 0.85), cx + d, 4, 6, 6); R('#5a4a3a', cx + d + 1, 10, 4, 4); if (lit) R('#f2dcae', cx + d + 2, 11, 2, 2); }
+      R('#a8a090', cx + 1, 17, 58, 9); R('#989080', cx + 1, 17, 58, 1); R('#bab2a0', cx + 2, 24, 56, 1); R('#8a8478', cx + 26, 19, 8, 3);
+    }
+    if (i < cars - 1) R('#3a3d42', cx + 60, 6, 2, 9);                                     // the gangway
+    // the cabs at both ends: the windscreen, a destination board, the lamps
+    for (const [end, isFront] of [[front, true], [back, false]]) if (end) {
+      if (!local) {
+        const ex = isFront ? cx + 54 : cx;
+        R('#3a4048', ex, 9, 6, 7); R(lit ? '#c8d4e0' : '#5d7590', ex + 1, 10, 4, 5);
+        R('#ffb040', ex + 1, 15, 4, 1);
+        R(isFront ? '#fff2c0' : '#e8403a', isFront ? ex + 5 : ex, 5, 1, 2);
+      } else {
+        const ex = isFront ? cx + 55 : cx;
+        R('#5a4a3a', ex, 10, 5, 6); R(lit ? '#c8d4e0' : '#6a8299', ex + 1, 11, 3, 4);
+        for (const up of [6, 16]) R(isFront ? '#fff2c0' : '#e8403a', isFront ? ex + 4 : ex, up, 1, 1);
+      }
+    }
   }
 }
 
@@ -635,7 +667,9 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, motorbik
     if (train.wait > 0) { train.wait -= dt; return; }
     const far = W + trainLen;
     if ((train.dir > 0 && train.x > far) || (train.dir < 0 && train.x < -trainLen)) {   // gone: back the other way in a while
-      train.dir *= -1; train.wait = 5 + rng() * 5; train.served.clear(); train.speed = 0; return;
+      train.dir *= -1; train.wait = 5 + rng() * 5; train.served.clear(); train.speed = 0;
+      train.kind = (train.runs = (train.runs ?? 0) + 1) % 3 === 2 ? 'local' : 'commuter';   // the older local every third run
+      return;
     }
     // slow for the next station, stop there, then go on
     const next = stations.filter((s) => !train.served.has(s) && (s - train.x) * train.dir > -2).sort((a, b) => (a - b) * train.dir)[0];
