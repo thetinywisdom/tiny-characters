@@ -657,12 +657,13 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, motorbik
   }
 
   // the railway: one train running along it, stopping at each station; the level crossings close as it comes
-  const rail = town.railway, train = rail && { vehicle: true, type: 'train', cars: 4, dir: 1, x: -400, y: rail.y + rail.h - 3, speed: 0, wait: 0, served: new Set() };
+  const rail = town.railway, train = rail && { vehicle: true, type: 'train', cars: 2, dir: 1, x: -400, y: rail.y + rail.h - 3, speed: 0, wait: 0, served: new Set() };
   if (train) vehicles.push(train);
   const trainLen = train ? train.cars * CARRIAGE - 2 : 0;
   const stations = town.buildings.filter((b) => b.type.startsWith('station')).map((b) => b.x);
   /** Is the level crossing of cross street j closed (the train within reach of it)? */
   const closed = (j) => !!train && train.wait <= 0 && Math.abs(train.x - (crossStreets[j] + town.dims.VSTREET / 2)) < trainLen / 2 + 70;
+  const platformAt = (x) => town.areas.some((a) => a.ground === 'platform' && x >= a.x && x <= a.x + a.w);
   function moveTrain(dt) {
     if (train.wait > 0) { train.wait -= dt; return; }
     const far = W + trainLen;
@@ -676,7 +677,7 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, motorbik
     const toStop = next === undefined ? Infinity : (next - train.x) * train.dir;
     const target = toStop < 2 ? 0 : Math.min(55, Math.sqrt(2 * 40 * Math.max(0, toStop)) + 3);
     train.speed += Math.max(-60 * dt, Math.min(25 * dt, target - train.speed));
-    if (toStop < 2 && train.speed < 1) { train.served.add(next); train.speed = 0; train.dwell = 3; }
+    if (toStop < 2 && train.speed < 1) { train.served.add(next); train.speed = 0; train.dwell = platformAt(next) ? 7 : 3; }   // (longer at a platform: people get on and off)
     if (train.dwell > 0) { train.dwell -= dt; return; }
     train.x += train.dir * train.speed * dt;
   }

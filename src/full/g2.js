@@ -105,6 +105,17 @@ export const PART = {
       for (let i = 0; i < n; i++) Q('#e8c840', a.x + 6 + i * 16, a.y + 5, 8, 1);
     },
   },
+  // a station's platform (the owner, Nov 2026): concrete, its lit edge by the track, the yellow tactile line of
+  // studs a little in, a darker foot
+  platform: {
+    approved: true,
+    draw(g, a) {
+      const Q = (col, x, y, w, h) => R(g, col, Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+      Q('#c8c4bc', a.x, a.y, a.w, a.h); Q('#e8e6e0', a.x, a.y, a.w, 1); Q('#a8a49c', a.x, a.y + a.h - 1, a.w, 1);
+      for (let x = a.x + 1; x < a.x + a.w - 1; x += 2) Q('#e8c840', x, a.y + 2, 1, 1);
+      for (let i = 0; i < a.w * a.h / 14; i++) { const kk = (i * 7919) % Math.round(a.w * a.h); const y = a.y + 3 + Math.floor(kk / Math.round(a.w)) % Math.max(1, Math.round(a.h) - 4); Q('#bcb8b0', a.x + kk % Math.round(a.w), y, 1, 1); }
+    },
+  },
   court: {
     approved: true,
     draw(g, a, k) {

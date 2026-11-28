@@ -636,7 +636,14 @@ bubble lab, so games can use them and they can grow.
     back; wheels on two bogies a carriage; lit windows at night. The town no longer drops the train
     while its middle is out of view (it blinked out as it crossed the view's edge).
 
-88. **Sprite export for the Swift game** (the owner: an iOS RPG in Swift from these assets):
+88. **Platforms, and a shorter train** (the owner: build it; "keep to only 2", the train two
+    carriages, not four): platforms (`ground: 'platform'`: concrete, a lit edge, the yellow tactile
+    line) in front of the wooden and the small station (the modern and brick ones reach the track),
+    a name board and benches; people come from the station to wait on them; when a train stops
+    there (7 s, not 3) the ones waiting walk to its doors and step in behind it, and others step
+    off and walk away.
+
+89. **Sprite export for the Swift game** (the owner: an iOS RPG in Swift from these assets):
     `node tools/export-sprites.mjs [outDir]` draws everything with the library in Chromium and
     writes PNG frames into `<Group>.atlas` folders (Xcode makes texture atlases of them), a
     `sprites.json` (size and feet point of each frame) and a preview sheet per group. People (the

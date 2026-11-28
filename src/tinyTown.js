@@ -125,6 +125,9 @@ export const DEFAULT_TOWN = {
     { name: 'Pond', ground: 'water', x: 88, y: 234, w: 44, h: 11, solid: true },
     // a coin-parking lot (the owner, Nov 2026): six nose-in bays off the street above; cars come and go (tinyTraffic)
     { name: 'Coin parking', ground: 'parking', x: 45, y: 140, w: 66, h: 18, solid: true },
+    // platforms (the owner, Nov 2026) in front of the two stations with room between them and the track
+    { name: 'Platform', ground: 'platform', x: 7, y: 576, w: 100, h: 9 },
+    { name: 'Platform', ground: 'platform', x: 121, y: 576, w: 49, h: 9 },
     // the south (Nov 2026): a park with a pond, a playground, a basketball court; the station plaza and alley
     { name: 'Pond park', ground: 'grass', x: 0, y: 452, w: 180, h: 104, ring: true },
     { name: 'Pond', ground: 'water', shape: 'ellipse', x: 52, y: 486, w: 76, h: 36, solid: true, koi: true },
@@ -154,6 +157,8 @@ export const DEFAULT_TOWN = {
     { type: 'crates', x: 324, y: 602 }, { type: 'acUnit', x: 334, y: 588 }, { type: 'bins', x: 332, y: 630 }, { type: 'vendingMachine', x: 322, y: 624 },
     // the coin-parking lot's sign and pay machine (added last, so no other thing's seed changes)
     { type: 'parkingSign', x: 108, y: 158 }, { type: 'payMachine', x: 101, y: 158 },
+    // the platforms' name boards and benches (added last, so no other thing's seed changes)
+    { type: 'platformSign', x: 62, y: 584 }, { type: 'bench', x: 26, y: 584 }, { type: 'bench', x: 152, y: 584 },
   ],
   plants: [
     { tree: 'apple', x: 30, y: 152 }, { bush: 'round', x: 62, y: 148 }, { tree: 'oak', x: 150, y: 154 },
@@ -639,9 +644,10 @@ function drawGround(layout) {
   }
   const use = (name) => (usesFull(FULL_GROUND[name]) ? FULL_GROUND[name] : null);   // the ground's pieces (tinyGroundFull.js)
   const terrain = (a) => (ctx, x = a.x, y = a.y, w = a.w, h = a.h, type = TERRAIN_OF[a.ground] ?? a.ground, seed = a.x + a.y) => drawTerrain(ctx, { type, x, y, w, h, scale: k, seed });
-  for (const a of areas) {
+  for (const a of [...areas.filter((q) => q.ground !== 'platform'), ...areas.filter((q) => q.ground === 'platform')]) {   // (platforms last: over the plaza)
     if (a.ground === 'court') { use('court')?.draw(g, a, k); continue; }            // the court, its lines and a pixel centre circle
     if (a.ground === 'parking') { use('parking')?.draw(g, a, k); continue; }        // a coin-parking lot: asphalt, bays, wheel stops
+    if (a.ground === 'platform') { use('platform')?.draw(g, a, k); continue; }      // a station's platform: concrete, the edge, the yellow tactile line
     if (a.shape === 'ellipse') { use('pond')?.draw(g, a, k, terrain(a)); continue; } // a pond with a pixel bank of stones
     terrain(a)(g);
     if (a.ring) use('ringPath')?.draw(g, a, k, terrain(a));                          // a dirt path looping round inside it
