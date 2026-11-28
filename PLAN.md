@@ -93,6 +93,9 @@ bubble lab, so games can use them and they can grow.
   animated mock-ups: up to 2 px at the top, trunks still); bushes stay still.
 - The front page (Nov 2026): no park (the owner never used it): the town,
   the looks, the buildings and the gallery.
+- An iOS game (Nov 2026): a story-driven RPG with a little fighting, written in
+  Swift (SpriteKit), using these drawings exported to PNG frames
+  (`tools/export-sprites.mjs`); the library itself stays plain JS.
 
 ## Done
 
@@ -633,6 +636,14 @@ bubble lab, so games can use them and they can grow.
     back; wheels on two bogies a carriage; lit windows at night. The town no longer drops the train
     while its middle is out of view (it blinked out as it crossed the view's edge).
 
+88. **Sprite export for the Swift game** (the owner: an iOS RPG in Swift from these assets):
+    `node tools/export-sprites.mjs [outDir]` draws everything with the library in Chromium and
+    writes PNG frames into `<Group>.atlas` folders (Xcode makes texture atlases of them), a
+    `sprites.json` (size and feet point of each frame) and a preview sheet per group. People (the
+    13 looks, 12 random, 4 kids), cats, dogs and monsters in four views, standing and every walk
+    frame; buildings (3 seeds, each shop type) at 4 px per pixel for crisp signs; approved street
+    things, trees and bushes. Nothing in `src/` changed. Output (`export/`) is not committed.
+
 ## In progress
 
 - Vehicles, round two (the owner's order, Nov 2026; all done: 77, 78, 82 as a parcel truck, 84 as a coin-parking lot): 1. a more detailed redraw of the cars,
@@ -653,6 +664,9 @@ bubble lab, so games can use them and they can grow.
     bike lamps at night, smoother bike turns.
 
 ## Next (only when the owner asks)
+
+- The Swift game: ground tiles and vehicles in the export; a SpriteKit project that loads the
+  atlases (nearest-neighbour filtering), walks a person round a small map, talks, one fight.
 
 The full-size redraw is done. Ideas offered before (on hold):
 - the catalogue in the seasons and the weather (the backlog)
