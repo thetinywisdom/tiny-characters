@@ -599,17 +599,8 @@ when braking and an amber one when blinking. Turns are planned 40 px before the 
 vehicle has swung round). drawTownView draws `drawVehicleBeams` faintly ('lighter', 70 %)
 under everything on a dark day (rain, storm, fog) so the headlamps show.
 
-**The maps** (demo/minimap.js, `makeMaps(town, buildingSize)`; the owner chose a radar that opens
-the big map, from five mock-ups): `picture()` draws the town in little once (forest, gardens,
-the areas by ground, buildings 70 % of their height, roads, the railway), live colours at 6 town
-pixels a pixel for the radar and paper colours at 9 for the big map. `drawRadar`: a disc of
-radius 26 copied pixel by pixel round you each frame (ImageData), a dark rim, N, you a gold
-cross; `onRadar` hit test. `drawBig`: the view dimmed, the paper map fitted in it, the places'
-names (`SHORT`, or an area's own `mapName`, cut to fit) in 3 x 5 letters, you, N, X CLOSE;
-`bigAt` turns a tap into a town point (demo/town.js walks you there). **Full screen**: the
-`#townBox` (the canvas and an Exit button) goes full screen (Fullscreen API; else the class
-`full` covers the page), the canvas at `min(100vw, 100vh * 4/3)`; Esc closes the big map first,
-then leaves full screen.
+**Full screen** (the owner, Nov 2026): the `#townBox` (the canvas and an Exit button) goes full screen (Fullscreen API; else the class
+`full` covers the page), the canvas at `min(100vw, 100vh * 4/3)`; Esc leaves it.
 
 **The time on the town** (demo/town.js `drawClock`, after the view and the speech, so the night
 does not darken it): a plate (`rgba(32,36,44,0.78)`) at (4, 4), 34 x 11 town pixels, a sun

@@ -71,7 +71,7 @@ people see and the public API).
   (the map: layout, ground, walking, path finding, drawing a view, night).
 - `index.html` + `demo/town.js` (the town demo: walkers, you, taps, the
   clock), `demo/life.js` (small life: who sits, rides, sweeps, plays ...),
-  `demo/demo.js` (the Looks and Gallery canvases), `demo/minimap.js` (the radar and the big map).
+  `demo/demo.js` (the Looks and Gallery canvases).
 - `catalogue.html` + `demo/catalogue.js`: every item on a card with seeds and
   a copy-code line (each card's code must draw exactly what it shows).
 

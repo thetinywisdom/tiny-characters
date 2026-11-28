@@ -623,6 +623,9 @@ bubble lab, so games can use them and they can grow.
     town as a paper map with the places' names; tap a place on it to walk there, anywhere else,
     Esc or Close to close it.
 
+86. **The maps removed** (the owner: "kinda useless"): the radar and the big map are gone (in
+    git history); full screen stays.
+
 ## In progress
 
 - Vehicles, round two (the owner's order, Nov 2026; all done: 77, 78, 82 as a parcel truck, 84 as a coin-parking lot): 1. a more detailed redraw of the cars,
