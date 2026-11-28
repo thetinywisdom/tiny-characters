@@ -357,13 +357,16 @@ function motoBlocks(g, v, h, c, hc, r, tail) {
   const sp = MOTO_SPRITES.get(key), x = Math.round(v.x), y = Math.round(v.y), th = (dir * 22.5 * Math.PI) / 180;
   const facing = Math.cos(th) >= 0 ? 'right' : 'left', k = Math.cos(th) >= 0 ? 1 : -1;
   // the rider sits on the seat (its top on the screen), thighs along it, the near hand on the bars
-  const at = (u, z) => [Math.round(x + u * Math.cos(th)), Math.round(y + u * Math.sin(th) * KY - z)];
-  const [rx, seatTop] = at(S.seat, S.seatTop), ry = seatTop + legRows(r), [bx, by] = at(S.bar, S.barZ);
+  const at = (u, z, w = 0) => [Math.round(x + u * Math.cos(th) - w * Math.sin(th)), Math.round(y + (u * Math.sin(th) + w * Math.cos(th)) * KY - z)];
+  const [rx, seatTop] = at(S.seat, S.seatTop), ry = seatTop + legRows(r);
+  // both ends of the bars: the one lower on the screen is the near one; a hand on each (the owner: both hands)
+  const ends = [at(S.bar, S.barZ, 2.5), at(S.bar, S.barZ, -2.5)].sort((a, b) => a[1] - b[1]), [far, nearEnd] = ends;
   g.drawImage(sp.canvas, x - sp.ox, y - sp.oy);
   if (!v.parked) {
+    reachArm((c, qx, qy) => px(g, c, qx, qy), { ...r, body: shade(r.body ?? WHITE, 0.8) }, rx - k, ry, k, far[0], far[1]);   // the far arm, behind
     upper(g, { ...r, facing, reach: true }, rx, ry); helmet(g, rx, ry, hc, facing);
     px(g, r.legs ?? INK, k > 0 ? rx - 1 : rx - 2, seatTop - 1, 4, 2);              // the thighs along the seat
-    reachArm((c, qx, qy) => px(g, c, qx, qy), r, rx, ry, k, bx, by);               // the hand on the bars
+    reachArm((c, qx, qy) => px(g, c, qx, qy), r, rx, ry, k, nearEnd[0], nearEnd[1]);   // the near hand on the bars
   }
   if (v.parked) px(g, hc, Math.round(x + 4 * Math.cos(th)) - 1, Math.round(y + 4 * Math.sin(th) * KY) - 12, 3, 2);   // its helmet on the bars
 }
