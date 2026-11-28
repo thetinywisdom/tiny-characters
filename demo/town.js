@@ -215,6 +215,17 @@ function crowded(p, x, y) {
   }
   return null;
 }
+/** The nearest spot off the road (clear of cars by a few pixels, and of buildings) from p, the way there not through a car, or null. */
+function offRoad(p) {
+  for (let r = 3; r <= 36; r += 3) for (const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0], [-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+    const x = p.x + dx * r, y = p.y + dy * r;
+    if (town.roadAt(x, y) || town.blocked(x, y) || traffic.hits(x, y, 5)) continue;
+    let ok = true;                                                           // the way there must not run through a car
+    for (let u = 2; u <= r && ok; u += 2) if (traffic.hits(p.x + dx * u, p.y + dy * u)) ok = false;
+    if (ok) return { x, y };
+  }
+  return null;
+}
 /** Walk p along its path at `speed` px/s (waiting at a crossing while its cars have green); true when it has arrived. */
 function follow(p, speed, dt) {
   const q = p.path?.[0];
@@ -242,11 +253,19 @@ function follow(p, speed, dt) {
   if (inWay && onRoad && !resting(there) && ((p.blocked ?? 0) > 0.6 || p.squeeze)) { inWay = false; p.squeeze = true; } else if (!inWay) p.squeeze = false;
   if (d > 0 && (inWay || (ahead && !FLIERS.has(p.monster) && !traffic.hits(p.x, p.y)))) {
     p.walking = false; p.facing = facingFor(ex, ey, p.facing);
+    // a car in the way (that may be waiting for them: out on the road, or a taxi pulling in or out of the
+    // rank): give way, step aside to the nearest spot off the road and clear of cars, then go on elsewhere
+    if (ahead && p !== you && (p.carHeld = (p.carHeld ?? 0) + dt) > (onRoad ? 0.6 : 1.2)) {
+      p.carHeld = 0;
+      const spot = offRoad(p);
+      if (spot) { p.path = [spot]; p.blocked = 0; return false; }
+    }
     // kept waiting too long (a car, or someone, that waits for them in turn): give up and go somewhere else
     if ((p.blocked = (p.blocked ?? 0) + dt) > 2 && p !== you && !onRoad) { p.blocked = 0; p.path = null; p.wait = 0.5; }
+    else if (onRoad && p !== you && p.blocked > 1.5) { const spot = offRoad(p); p.blocked = 0; if (spot) p.path = [spot]; }   // held up out on the road, whatever by: off it
     return false;
   }
-  p.blocked = 0;
+  p.blocked = 0; p.carHeld = 0;
   if (d <= step) { p.x = q.x; p.y = q.y; p.path.shift(); }
   else { p.x += ex / d * step; p.y += ey / d * step; }
   if (Math.hypot(ex, ey) > 0.3) p.facing = facingFor(ex, ey, p.facing);

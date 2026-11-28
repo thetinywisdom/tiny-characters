@@ -354,7 +354,10 @@ How it behaves: cars drive on the left, as in Japan (east-bound on the
 north half of a street); they swing round as they turn; every junction has
 traffic lights (green, yellow, red side by side, and a walk signal) that
 cars wait at; cars turn at junctions, keep their distance, and stop for
-anyone in front of them (you too); buses keep to the streets with bus stops
+anyone in front of them (you too). Nobody holds the traffic up for long: a car
+kept waiting by someone on the road pulls out round them when the other lane is
+clear, or turns round; people caught by a car on the road (or beside a taxi
+pulling in or out) step aside and go another way; buses keep to the streets with bus stops
 and wait at each one; cars leaving town come back in somewhere else. People
 on foot cross the roads only at the zebra crossings and wait for the green
 man there (you can still walk anywhere with the keys). The catalogue has

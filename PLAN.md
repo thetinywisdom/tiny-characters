@@ -485,10 +485,20 @@ bubble lab, so games can use them and they can grow.
     buttons (auto: the real month, rain spells now and then), `?season=`, `?weather=`;
     walkers put umbrellas up in the rain. Without a season every picture is unchanged.
 
+62. **No more traffic jams** (the owner saw one: a walker on a crossing held a car, the
+    car held the junction): cars held by someone on foot pull out round them into the
+    other lane when it is clear, or turn round when there is no way round; a car held 6
+    s finds another way (a taxi gives up the rank); a car that cannot fit into a forced
+    turn turns the other way. People held up by a car step aside off the road (the way
+    there never through a car) and go elsewhere; nobody stays out on the road. Before:
+    one run in three jammed (a car held 50 s, a walker on the road 66 s); after: none in
+    eight runs of 150-200 s (longest hold 10 s); you standing on the road holds cars at
+    most about 7 s.
+
 ## In progress
 
-- The owner's order: a faster forest (done, 60), weather and seasons (done, 61), then the
-  traffic jam (Known issues), then people going into buildings (mock-ups first).
+- The owner's order: a faster forest (done, 60), weather and seasons (done, 61), the
+  traffic jam (done, 62), then people going into buildings (mock-ups first).
 
 ## Next (only when the owner asks)
 
@@ -515,10 +525,6 @@ The full-size redraw is done. Ideas offered before (on hold):
 
 - The catalogue has no night view yet.
 - A car's tail-light glow can tint a tree standing right in front of it.
-- **Traffic jam (the owner, Nov 2026; to fix after the weather):** a walker standing on a
-  crossing can hold a car, the cars behind it and the cross traffic until the junction locks
-  (screenshot: a bus and a taxi queue blocking each other). Cars and people should always
-  give way to each other and find another way round.
 - A view full of forest at night is still the slowest (about 7 ms; 35 ms on a 4x
   slower CPU): the night's layers over the whole view.
 - Sign text is drawn by the canvas, so its edges are a little soft (not

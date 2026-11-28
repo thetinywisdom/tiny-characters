@@ -290,7 +290,18 @@ the grass texture's dots).
 vehicle has a footprint on the ground (its length and width turned with its
 heading; the train its whole length on the rails). `local(v, x, y)` gives a
 point `ahead` / `side` of a vehicle in ground units; `hits(x, y, margin)` the
-vehicle standing there. Cars stop for anyone on the road (not the sidewalk)
+vehicle standing there. **Giving way (the owner saw a jam: a walker on a crossing
+held a car, the car held the junction):** a car held by someone on foot (`room`
+sets `v.blocker`) for 1.2 s pulls out into the other lane when that is clear ahead
+and they do not stand in it too (`dodge`, `steer`: across at 12 px/s, turned a
+little, back once past them); held 3.5 s with no way round, it turns round into the
+other lane (`uTurn`); held 6 s by anything, a taxi gives up the rank and drives on,
+other cars turn round; a car that must turn and cannot fit may turn the other way
+after 2 s. In the demo, anyone held up by a car steps aside (`offRoad`: the nearest
+spot off the road, 5 px clear of cars, the way there not through one) after 0.6 s
+on the road or 1.2 s beside it, and anyone held 1.5 s out on the road, whatever by,
+steps off it. A pulling-out taxi waits 1.5 s for whoever stands beside it, then only
+for someone right in its way. Cars stop for anyone on the road (not the sidewalk)
 within their width from inside them to 12 px ahead; in the demo, people wait
 instead of stepping into a vehicle (flying and floating monsters pass over),
 give up and go elsewhere after 2 s of waiting (but never out on a crossing:
@@ -789,7 +800,11 @@ and check with Playwright screenshots on a desktop size and a phone
   copy `DEFAULT_TOWN`, change it, `makeTown(copy)`.
 - **Traffic flows:** every second for 100 s, count how long each vehicle has
   had `speed < 0.5` without `wait`; none should reach 15 s (if one does, log
-  who is near it: people standing on the road, a dog, a crossing).
+  who is near it: people standing on the road, a dog, a crossing). Run several
+  at once (it is random): five 200 s runs that screenshot and log the scene when a
+  car has waited 20 s caught the taxi rank and forced-turn deadlocks. Also stand
+  `you` still on the road (mid-street and in a junction) for 25 s: cars should
+  wait at most about 7 s before going round or turning.
 - **People do not overlap:** every 0.5 s for 90 s, count pairs closer than
   3.5 px across and 2 px front to back (leave out dogs with their owners and
   the flying monsters); about 20 is normal now. Count anyone inside a

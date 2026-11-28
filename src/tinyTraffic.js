@@ -354,16 +354,55 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, seed = 5
       if (dd >= -1 && dd < 60) free = Math.min(free, dd);
     }
     // anyone in its way (people, animals, monsters, you): within its width, from inside it to a little ahead
+    const byCars = free;
+    v.blocker = null;
     for (const p of walkers) {
       if (p.vehicle || p.ball || !town.roadAt(p.x, p.y)) continue;           // (on the sidewalk, waiting to cross, is not in the way)
       const { ahead, side } = local(v, p.x, p.y);
       if (Math.abs(side) < VEHICLES[v.type].width / 2 + 3 && ahead > -VEHICLES[v.type].length / 2 - 2 && ahead < VEHICLES[v.type].length / 2 + 12) {
-        free = Math.min(free, (ahead - VEHICLES[v.type].length / 2 - 3) * (v.lane.kind === 'h' ? 1 : KY));
+        const f = (ahead - VEHICLES[v.type].length / 2 - 3) * (v.lane.kind === 'h' ? 1 : KY);
+        if (f < free) { free = f; if (f < byCars) v.blocker = p; }          // held up by someone on foot (not by a car)
       }
     }
     return free;
   }
 
+  /** The lane beside v's own, the other way along the same street (where it pulls out to go round someone). */
+  const otherLane = (v) => (v.lane.kind === 'h' ? hLanes.find((l) => l.i === v.lane.i && l.dir !== v.lane.dir) : vLanes.find((l) => l.j === v.lane.j && l.dir !== v.lane.dir));
+  const sideOf = (v) => (v.lane.kind === 'h' ? 'y' : 'x');
+  const laneAt = (lane) => (lane.kind === 'h' ? lane.y : lane.x);
+  /** Pull v out into the other lane to go round whoever holds it up, if that lane is clear ahead and they are not in it. */
+  function dodge(v) {
+    const o = otherLane(v), who = v.blocker;
+    if (!o || !who || v.type === 'bus' && !o) return;
+    const k = sideOf(v), to = laneAt(o), V = VEHICLES[v.type];
+    const across = Math.abs((k === 'y' ? who.y : who.x) - to) / (k === 'y' ? KY : 1);
+    if (across < V.width / 2 + 3) return;                                   // they stand in the other lane too
+    const s = along(v), d = v.lane.dir, reach = half(v) * 2 + 70;
+    if (vehicles.some((c) => c !== v && c.type !== 'train' && (c.lane === o || c.dodge?.to === laneAt(v.lane) && c.lane.kind === v.lane.kind) && (along(c) - s) * d > -half(v) - half(c) - 6 && (along(c) - s) * d < reach)) return;   // oncoming traffic
+    v.dodge = { k, home: laneAt(v.lane), to, who, since: 0 };
+  }
+  /** Turn v round into the other lane (a U-turn) when it is clear there; true if it did. */
+  function uTurn(v) {
+    const o = otherLane(v);
+    if (!o || v.type === 'bus' || v.driftY !== undefined || v.toRank) return false;
+    const s = along(v), room0 = half(v) * 2 + 40;
+    if (vehicles.some((c) => c !== v && c.type !== 'train' && c.lane === o && Math.abs(along(c) - s) < room0)) return false;
+    if (o.kind === 'h') v.y = o.y; else v.x = o.x;
+    v.lane = o; v.dodge = null; v.target = headingOf(o); v.speed = 0;      // it swings round (about half a second)
+    return true;
+  }
+  /** Ease v across to its dodge lane, and back home once past whoever held it up (or after a while). */
+  function steer(v, dt) {
+    const D = v.dodge, V = VEHICLES[v.type];
+    D.since += dt;
+    const past = local(v, D.who.x, D.who.y).ahead < -V.length / 2 - 4 || !town.roadAt(D.who.x, D.who.y);
+    if (past || D.since > 8) D.back = true;
+    const goal = D.back ? D.home : D.to, at = v[D.k], step = 12 * dt;
+    v[D.k] = Math.abs(goal - at) <= step ? goal : at + Math.sign(goal - at) * step;
+    v.target = (headingOf(v.lane) + (v[D.k] === goal ? 0 : (D.k === 'y' ? (goal > at ? 1 : -1) * v.lane.dir * 18 : (goal > at ? -1 : 1) * v.lane.dir * 18)) + 360) % 360;   // turned a little while it moves across
+    if (D.back && v[D.k] === D.home) { v.dodge = null; v.target = headingOf(v.lane); }
+  }
   /** Is there room on `lane` for v to turn into it where it is? */
   function roomOn(v, lane) {
     const at = lane.kind === 'h' ? v.x : v.y, mine = (VEHICLES[v.type].length / 2) * (lane.kind === 'h' ? 1 : 0.6);
@@ -371,6 +410,7 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, seed = 5
   }
   /** Turn v onto another lane at its current spot. */
   function turn(v, lane) {
+    v.dodge = null;
     if (lane.kind === 'h') { v.y = lane.y; v.from = lane.i; } else { v.x = lane.x; v.from = v.lane.i; }
     v.lane = lane; v.target = headingOf(lane); v.speed = Math.min(v.speed, 14);   // it swings round to its new heading
   }
@@ -433,15 +473,31 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, seed = 5
       if (v.heading !== v.target) { const diff = ((v.target - v.heading + 540) % 360) - 180, turnBy = 280 * dt; v.heading = Math.abs(diff) <= turnBy ? v.target : (v.heading + Math.sign(diff) * turnBy + 360) % 360; }
       if (v.wait > 0) { v.wait -= dt; v.walking = false; continue; }
       if (v.driftY !== undefined) {                                           // pulling out or in: not while someone stands against it
-        const V = VEHICLES[v.type], near = walkers.some((p) => { if (p.vehicle || p.ball || p.monster) return false; const { ahead, side } = local(v, p.x, p.y); return Math.abs(ahead) < V.length / 2 + 5 && Math.abs(side) < V.width / 2 + 5; });
-        if (near) { v.speed = 0; v.walking = false; continue; }
+        const V = VEHICLES[v.type], patient = (v.driftHeld ?? 0) < 1.5;  // (after a moment only for someone right in its way: who stands beside it may be waiting for it)
+        const near = walkers.some((p) => { if (p.vehicle || p.ball || p.monster) return false; const { ahead, side } = local(v, p.x, p.y); return patient ? Math.abs(ahead) < V.length / 2 + 5 && Math.abs(side) < V.width / 2 + 5 : ahead > 0 && ahead < V.length / 2 + 5 && Math.abs(side) < V.width / 2 + 2; });
+        if (near) { v.speed = 0; v.walking = false; v.driftHeld = (v.driftHeld ?? 0) + dt; continue; }
+        v.driftHeld = 0;
         drift(v, dt);
       }
       if (v.toRank && v.driftY === undefined && v.x - v.toRank.x < 28 && v.y !== v.toRank.y) { v.driftY = v.toRank.y; v.target = 205; }   // pulling in
       if (v.toRank && v.x <= v.toRank.x) {                                     // in its place: parked again
         town.parked.push({ ...v.toRank, seed: v.seed }); ranks.splice(ranks.findIndex((r) => r.spot === v.toRank), 1); v.gone = true; continue;
       }
-      const free = room(v, t, walkers);
+      // held up for a long while, whatever by: find another way (a taxi gives up the rank and drives
+      // on, pulling back into its lane; others turn round when the other lane is clear)
+      v.held = v.speed < 0.5 && !(v.wait > 0) ? (v.held ?? 0) + dt : 0;
+      if (v.held > 6) {
+        if (v.toRank) { delete v.toRank; if (v.driftY !== undefined) v.driftY = v.lane.y; v.held = 0; }
+        else if (v.driftY === undefined && uTurn(v)) v.held = 0;
+      }
+      let free = room(v, t, walkers);
+      // held up by someone who stays on the road (you standing on a crossing, someone stuck): after a
+      // moment pull out round them into the other lane when it is clear, then back in once past them
+      v.stuck = v.blocker && free < 2 ? (v.stuck ?? 0) + dt : 0;
+      if (v.stuck > 1.2 && !v.dodge) { dodge(v); if (v.dodge) { v.stuck = 0; free = room(v, t, walkers); } }
+      // no way round (they stand across both lanes, in the middle of a junction): turn round and go another way
+      if (v.stuck > 3.5 && uTurn(v)) { v.stuck = 0; free = room(v, t, walkers); }
+      if (v.dodge) steer(v, dt);
       const target = free <= 0 ? 0 : Math.min(v.type === 'bus' ? CRUISE * 0.8 : CRUISE, free * 3);
       v.speed += Math.max(-90 * dt, Math.min(40 * dt, target - v.speed));
       const step = Math.max(0, Math.min(v.speed * dt, Math.max(0, free)));
@@ -460,7 +516,11 @@ export function makeTraffic(town, { cars = 16, buses = 2, scooters = 1, seed = 5
         } else {
           for (const l of hLanes) if ((before - l.y) * (now - l.y) < 0) {
             const forced = (d > 0 && l.i === last && l.dir > 0) || (d < 0 && l.i === 0 && l.dir < 0);
-            if (forced && !roomOn(v, l)) { v.y = before; v.speed = 0; break; }   // it must turn here: wait for a gap
+            if (forced && !roomOn(v, l)) {                                    // it must turn here: wait for a gap,
+              const alt = hLanes.find((h) => h.i === l.i && h.dir !== l.dir);      // or after a while turn the other way
+              if ((v.held ?? 0) > 2 && alt && roomOn(v, alt)) { turn(v, alt); break; }
+              v.y = before; v.speed = 0; break;
+            }
             if (forced || (l.i !== v.from && rng() < 0.3 && roomOn(v, l))) { turn(v, l); break; }
           }
         }
