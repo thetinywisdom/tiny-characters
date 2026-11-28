@@ -632,14 +632,17 @@ the bike parking (`getOnBike`: you in the city-bike pose, 2 x speed), a parked m
 in `town.parked` (`getInto`: out of the list and any lot bay, into `traffic.vehicles` as a `player`
 vehicle with `you`, a dummy lane, your look as its rider), a bus standing at the stop you are at
 (`board`: you `away`, the bus `you`). E or a tap on the hint acts. `driveStep`: the keys or `ride.to`
-(a tap), on `roadAt` or a parking lot (or, until it first reaches a road, anywhere not blocked);
+(a tap), anywhere not blocked (the owner: drive and ride wherever you want), roads and lots always;
 other vehicles by their footprints (`depth`: a move is fine if it ends clear or less deep in), blocked
 ahead it slides sideways, held over 1.2 s it may edge through cars (`ghost`) till clear; clear of people; the scooter turns four ways, the car smoothly. traffic: `v.player` is
 skipped by update (others still avoid it); `handBack(v)` puts it in the nearest lane (within 14 px)
 as ordinary traffic; `drawVehicle` draws a gold frame round a vehicle with `you` (two wheels: the
 people's ring); a parked moped has no rider (its helmet on the bars). `getOff`: a car or scooter stays
 where you leave it (the owner: nobody else is on it), parked just off the road if you were on one
-(`standNear`), you beside it.
+(`standNear`), you beside it. Riders (you and the cyclists) get `heading` (8 ways) from how they moved;
+on a diagonal the `ride` pose draws `bikeBlocks`: a bike of blocks (`BIKES`, plain or city with basket
+and rack, tinyVoxel), the legs on turning pedals (far one darker, behind), both arms from their own
+shoulders to the bars' ends, as on the 3/4 scooter.
 
 **The time on the town** (demo/town.js `drawClock`, after the view and the speech, so the night
 does not darken it): a plate (`rgba(32,36,44,0.78)`) at (4, 4), 34 x 11 town pixels, a sun

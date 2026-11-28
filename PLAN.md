@@ -706,6 +706,12 @@ bubble lab, so games can use them and they can grow.
     body): each arm starts at its own shoulder, either side of the body in the bike's own terms, and
     goes to its end of the bars (the far one darker, behind).
 
+100. **3/4 bicycles; ride and drive anywhere** (the owner: "do the same with the bicycle", "allowed
+    to drive and ride wherever i want"): on a diagonal a bike is a shape of blocks (plain, or a city
+    bike with basket and rack), the rider on the saddle, legs on the turning pedals, both hands on the
+    bars from their own shoulders; riders get an 8-way heading from how they move. The car and the
+    scooter go anywhere not blocked (pavements, grass, plazas), not only roads and lots.
+
 ## In progress
 
 - Vehicles, round two (the owner's order, Nov 2026; all done: 77, 78, 82 as a parcel truck, 84 as a coin-parking lot): 1. a more detailed redraw of the cars,

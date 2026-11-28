@@ -72,6 +72,7 @@ export const POSES = {
     px(g, p.legwear === 'skirt' ? p.legs ?? INK : legColour(p), x - 3, seat, 7, 2); px(g, shoes(p), x - 3, seat + 1, 2, 1); px(g, shoes(p), x + 2, seat + 1, 2, 1);
   },
   ride(g, p, t) {
+    if (p.heading !== undefined && diagonal(p.heading)) { bikeBlocks(g, p, t); return; }   // 3/4: a bike of blocks (the owner)
     if (p.city) { cityBike(g, p, t); return; }
     const x = Math.round(p.x), y = Math.round(p.y), col = p.bike ?? '#3f7fd6', step = p.walking ? Math.floor(t * 6) % 2 : 0;
     if (p.facing === 'left' || p.facing === 'right') {
@@ -374,6 +375,51 @@ function motoBlocks(g, v, h, c, hc, r, tail) {
     arm(sh[1], nearEnd, shade(r.body ?? WHITE, 0.86));                              // the near arm, from the near shoulder
   }
   if (v.parked) px(g, hc, Math.round(x + 4 * Math.cos(th)) - 1, Math.round(y + 4 * Math.sin(th) * KY) - 12, 3, 2);   // its helmet on the bars
+}
+
+// bicycles in 3/4 view (the owner: "do the same with the bicycle"): a bike of blocks (city bikes with their
+// basket and rack), the rider on the saddle, legs on the turning pedals, both hands on the bars
+const diagonal = (h) => { const a = ((h % 90) + 90) % 90; return a > 22.5 && a < 67.5; };
+const BIKE_SHAPE = (city) => ({ L: 16, W: 6, H: 9, shape: (u, v, z, c) => {
+  const av = Math.abs(v); if (av > 3 || z < 0) return null;
+  for (const uc of [5.5, -5.5]) { const d = (u - uc) ** 2 + (z - 2.6) ** 2; if (av < 0.6 && d <= 6.8 && d >= 3.2) return TYRE; if (av < 0.6 && d < 0.6) return '#9aa0a8'; }   // the wheels: tyres round a hub
+  if (av < 0.6) {
+    if (z >= 4.5 && z < 5.5 && u > -4 && u < 3) return c;                         // the frame
+    if (Math.abs(u - (z - 2.6) * 0.4 + 1.5) < 0.6 && z >= 2.6 && z < 7) return c; // the seat post
+    if (u >= 2.5 && u < 3.5 && z >= 3 && z < 8.5) return c;                       // the head tube
+    if (u > -3.5 && u < -1.5 && z >= 7 && z < 8) return BSEAT;                    // the saddle
+  }
+  if (u >= 3 && u < 4 && z >= 8.5 && z < 9.5 && av < 2.6) return INK;             // the bars
+  if (city && u >= 4 && u < 7 && z >= 6 && z < 8.5 && av < 1.6) return z >= 8 ? BASKET2 : BASKET;   // the basket
+  if (city && u > -7 && u < -3.5 && z >= 5 && z < 6 && av < 1.4) return BMETAL;   // the rack
+  return null;
+} });
+const BIKES = { plain: BIKE_SHAPE(false), city: BIKE_SHAPE(true) };
+const BIKE_SPRITES = new Map();
+function bikeBlocks(g, p, t) {
+  const S = BIKES[p.city ? 'city' : 'plain'], col = p.bike ?? '#3f7fd6', h = ((p.heading % 360) + 360) % 360, dir = ((Math.round(h / 22.5) % 16) + 16) % 16, key = `${p.city}|${col}|${dir}`;
+  if (!BIKE_SPRITES.has(key)) BIKE_SPRITES.set(key, voxelSprite((bu, bv, bz) => S.shape(bu + 0.5, bv + 0.5, bz + 0.5, col), S, dir * 22.5, (cc, f) => f));
+  const sp = BIKE_SPRITES.get(key), x = Math.round(p.x), y = Math.round(p.y), th = (dir * 22.5 * Math.PI) / 180;
+  const at = (u, z, w = 0) => [Math.round(x + u * Math.cos(th) - w * Math.sin(th)), Math.round(y + (u * Math.sin(th) + w * Math.cos(th)) * KY - z)];
+  const facing = Math.cos(th) >= 0 ? 'right' : 'left', k = Math.cos(th) >= 0 ? 1 : -1;
+  if (p.you || p.ring) drawRing(g, x, y, p.ring ?? '#f2c230');
+  const [rx, seatTop] = at(-2.5, 8), ry = seatTop + legRows(p);
+  const line = (a, b, c) => { const n = Math.max(Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1])) || 1; for (let i = 0; i <= n; i++) px(g, c, Math.round(a[0] + (b[0] - a[0]) * i / n), Math.round(a[1] + (b[1] - a[1]) * i / n)); };
+  // the pedals turning (when riding on), the legs down to them: the far one first and darker
+  const a = p.walking ? t * 7 : 0.6, lc = legColour(p);
+  const ped = (sgn, ph) => at(Math.cos(a + ph) * 1.6, 2.8 + Math.sin(a + ph) * 1.6, sgn * 1.2);
+  const hips = (sgn) => at(-2, 8, sgn * 1);
+  const sides = [1, -1].map((sgn) => ({ sgn, hip: hips(sgn), ped: ped(sgn, sgn > 0 ? 0 : Math.PI) })).sort((m, n) => m.hip[1] - n.hip[1]);
+  line(sides[0].hip, sides[0].ped, shade(lc, 0.75)); px(g, shade(shoes(p), 0.8), sides[0].ped[0], sides[0].ped[1]);
+  g.drawImage(sp.canvas, x - sp.ox, y - sp.oy);
+  // the arms from either shoulder to either end of the bars, the far one behind the body
+  const shZ = 8 + bodyRows(p) - 2, sh = [at(-1.5, shZ, 2), at(-1.5, shZ, -2)].sort((m, n) => m[1] - n[1]), ends = [at(3.5, 9.5, 2.5), at(3.5, 9.5, -2.5)].sort((m, n) => m[1] - n[1]);
+  const arm = (from, to, sleeve) => { line(from, to, sleeve); px(g, p.skin ?? '#e2b08e', to[0], to[1]); };
+  arm(sh[0], ends[0], shade(p.body ?? WHITE, 0.72));
+  upper(g, { ...p, facing, reach: true }, rx, ry);
+  if (p.helmet) whiteHelmet(g, rx, ry, p.kid);
+  line(sides[1].hip, sides[1].ped, lc); px(g, shoes(p), sides[1].ped[0], sides[1].ped[1]);   // the near leg
+  arm(sh[1], ends[1], shade(p.body ?? WHITE, 0.86));
 }
 
 // --- the city bike (mamachari; the owner chose a mix of these and the plain bike, Nov 2026) ----------

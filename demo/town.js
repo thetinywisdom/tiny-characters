@@ -410,6 +410,12 @@ function frame(now) {
     ball.h = 7 * Math.abs(Math.cos(Math.PI * k));                          // from hand height, one bounce half way, up to the other's hands
     if (k >= 1) { ball.from = b; ball.to = players.filter((p) => p !== b)[Math.floor(Math.random() * 3)]; ball.start = t; b.facing = ball.to.x < b.x ? 'left' : 'right'; }
   }
+  // cyclists (you too, on a bike): which way they go, in eight steps (their 3/4 views)
+  for (const p of people) if (p.pose?.kind === 'ride') {
+    const ddx = p.x - (p.lastX ?? p.x), ddy = p.y - (p.lastY ?? p.y);
+    if (Math.hypot(ddx, ddy) > 0.02) p.heading = ((Math.round((Math.atan2(ddy / 0.66, ddx) * 180) / Math.PI / 45) * 45) % 360 + 360) % 360;
+    p.lastX = p.x; p.lastY = p.y;
+  }
   const shownPeople = people.filter((p) => !p.away && (showMonsters || !p.monster));
   traffic.update(dt, t, shownPeople);
   if (timeMode === 'passing') { const h = hour + dt / 8; if (h >= 24) day++; hour = h % 24; }
@@ -521,7 +527,7 @@ function driveStep(dt, dx, dy) {
   if (!dx && !dy) { v.brake = true; v.walking = false; return; }
   if (town.roadAt(v.x, v.y)) v.onRoad = true;
   const stuck = town.blocked(v.x, v.y);                                       // (parked somewhere marked blocked: it may drive out of it)
-  const drivable = (x, y) => town.roadAt(x, y) || lotAt(x, y) || (!v.onRoad && (stuck || !town.blocked(x, y)));   // (from where it was parked, out onto the road)
+  const drivable = (x, y) => stuck || !town.blocked(x, y) || town.roadAt(x, y) || lotAt(x, y);   // (the owner: anywhere you like, except into buildings and solid things)
   // how far into other vehicles (their footprints on the screen, by their headings) it would be at (x, y);
   // a move is fine when it ends clear, or less far in than now (so it can always back out of a squeeze)
   const half = (o) => { const V = VEHICLES[o.type] ?? VEHICLES.car, th = ((o.heading ?? 0) * Math.PI) / 180, c = Math.abs(Math.cos(th)), s = Math.abs(Math.sin(th));
