@@ -55,7 +55,7 @@ function newPeople() {
     const breed = Object.keys(DOG_BREEDS)[Math.floor(rng() * Object.keys(DOG_BREEDS).length)];
     people.push(owner, { dog: true, ...dogFor(breed, 1 + Math.floor(rng() * 99)), collar: ['#d8443c', '#3f7fd6', '#2fa36b', '#f2c230'][i % 4], owner, x: owner.x - 6, y: owner.y, talk: 0 });
   }
-  you = { ...randomCharacter(rng), body: '#f2f2ee', x: town.pad + Math.round(196 * town.scale), y: town.pad + Math.round(204 * town.scale), you: true, talk: 0, path: null };
+  you = { ...randomCharacter(rng), orange: true, x: town.pad + Math.round(196 * town.scale), y: town.pad + Math.round(204 * town.scale), you: true, talk: 0, path: null };
   while (town.roadAt(you.x, you.y) || town.blocked(you.x, you.y)) you.x -= 2;   // start on the sidewalk, not in the road (cars would wait for you)
   // monsters, each somewhere that suits it
   const M = (monster, variant, within) => walker({ monster, variant }, rng, within);

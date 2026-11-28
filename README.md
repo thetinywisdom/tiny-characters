@@ -8,8 +8,8 @@ canvas and scaled up with hard pixels. Plain JavaScript, no dependencies.
 **Try it:** https://thetinywisdom.github.io/tiny-characters/ (GitHub Pages,
 served from `main`). Or open `index.html` through any static server for the demo:
 a town to walk around (a 2D map of streets, blocks and grounds; the view
-follows you; tap a building to walk to its door; move the one with the gold
-ring with the arrow keys / WASD or by tapping; tap anyone to make them talk),
+follows you; tap a building to walk to its door; move the orange guy, you,
+with the gold ring, with the arrow keys / WASD or by tapping; tap anyone to make them talk),
 every look they can have, every building, and a gallery of random looks.
 
 ```bash
@@ -93,6 +93,7 @@ size. `LOOKS` has starter looks like the catalogue's: `man`, `woman`, `boy`,
 | --- | --- |
 | `drawCharacter(g, person, t)` | Draws one person. `talking`: bobs a pixel six times a second; `walking`: the legs take turns lifting a pixel; `you`: a thin gold ring round the feet (`ring`: a ring of another colour; point at someone in the town and a white one shows under them); `facing`: a pixel of hair at the back of the head. |
 | `LOOKS` | Starter looks to spread into a person. |
+| `{ orange: true }` | The orange guy (from [orange-guy](https://github.com/thetinywisdom/orange-guy), redrawn at the people's size; you, in the town): `drawCharacter(g, { orange: true, x, y, facing, walking }, t)`. `drawOrangeGuy` draws him straight; `ORANGE_GUY` has his colours and frames (text grids). |
 | `drawStage(g, W, H)` | The lab's grass with a path across it. |
 | `randomCharacter(rng)` | A random look: colours from `BODY_COLORS`, `HAIR_COLORS`, `SKIN_COLORS`, `LEG_COLORS`; sometimes a kid, another hairstyle, a hat, a jacket, a skirt, something to carry. |
 | `seeded(seed)` | A seeded random number generator, for crowds that come out the same every time. |
