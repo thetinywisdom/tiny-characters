@@ -605,6 +605,17 @@ does not darken it): a plate (`rgba(32,36,44,0.78)`) at (4, 4), 34 x 11 town pix
 at a time, like the small clock by the buttons. The demo's clock runs one town hour every 8 s
 (`hour += dt / 8` while Time is passing).
 
+**The parcel truck** (`parcelTruck`; the owner: white, a logo in the spirit of a parcel firm's but
+not a copy): a white cab, a white box with rounded top edges, a yellow strip along the bottom, the
+back doors' seam, and our mark (`mark(cu, cz, ru, rz, u, z)`: an oval in yellow with a black
+leaping hare in it, pixels listed in `hare`; mirrored on the left side so the hare faces forward;
+small on the back doors). tinyLife's `drawTrolley(g, p, t)` draws someone wheeling a hand trolley
+(`p.load`: parcels on it). The demo (`deliveries` in demo/life.js) sends it by day every 70-120 s
+round up to three shops of one row (`PARCEL_SHOPS` or any with a shopType), each spot 20 px past
+the door so the truck stands clear of it; at a stop: `v.signal = 'h'` (hazards), the driver
+(`DRIVER`: dark green, yellow placket) wheels the load to the door, is inside for 1.2 s, comes
+back empty and lets the truck go.
+
 **The police car and the fire engine** (`police`: `carShape` with `twoTone`, the body below the
 windows all `c2` black, white above, a light bar `extra`; `fireEngine`: its own shape). A shape
 takes a sixth argument, `flash` (0 | 1, or null for lights off): their roof lights are `LIGHT_ON`

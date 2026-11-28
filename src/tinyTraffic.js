@@ -162,6 +162,44 @@ const SHAPES = {
     if (u < -20.3 && z >= 4 && z < 5.5 && av > hw - 2) return TAIL;
     return RED;
   } },
+  // the parcel truck (the owner, Nov 2026: white, a logo in the spirit of a Japanese parcel firm's but
+  // not a copy): a white cab, a tall white box, our own mark (a yellow oval, a black hare leaping) on
+  // its sides and back doors, a yellow strip along the bottom, the back doors' seam
+  parcelTruck: { label: 'Parcel truck', L: 32, W: 13, H: 16, shape: (u, v, z) => {
+    const au = Math.abs(u), av = Math.abs(v), hw = 6.5, BOX = '#eeeeea', CAB = WHITE, YEL = '#f2c230', MARK = '#2a2c30';
+    if (au > 16 || av > hw || z < 0) return null;
+    for (const uc of [10, -9]) { const w = wheel(u, v, z, uc, 2.6, hw); if (w) return w; }
+    if (z < 2) return null;
+    if (z < 3.2) return au > 15.3 ? (av < 1.3 ? WHITE : BUMPER) : DARK;            // bumpers, plate, chassis
+    if (z < 4.2 && u < 9) return YEL;                                                 // the yellow strip along the bottom
+    if (u >= 9) {                                                                     // the cab
+      if (au > 15.3 && av > hw - 1) return null;
+      if (z >= 12) return null;
+      if (z >= 11) return CAB;
+      if (u > 15.3) return z >= 7.5 ? (av < 0.6 ? DARK : GLASS) : z >= 4.5 && z < 6 && av > 3.8 ? LAMP : z < 5 && av < 2 ? '#9aa0a6' : CAB;
+      if (z >= 7.5 && z < 10.5 && av > hw - 0.8 && u > 10.5 && u < 14.8) return GLASS;
+      if (z >= 5 && z < 6 && u > 14) return ORANGE;
+      return CAB;
+    }
+    if (u >= 8) return z < 12 ? DARK : null;                                          // the gap behind the cab
+    if (z >= 16) return null;
+    if (z >= 15 && av > hw - 0.8) return null;                                        // the box's top edges rounded
+    // our mark: a yellow oval, a black hare leaping in it (on each side, and smaller on the back doors)
+    const mark = (cu, cz, ru, rz, du, dz) => {
+      if (((du - cu) / ru) ** 2 + ((dz - cz) / rz) ** 2 > 1) return null;
+      const i = Math.round(du - cu), j = Math.round(dz - cz);
+      const hare = ru < 3 ? [[-1, 1], [0, 1], [0, 0], [-1, 0], [1, 0], [-1, -1], [1, -1]]
+        : [[0, 2], [1, 3], [1, 1], [2, 1], [-2, 0], [-1, 0], [0, 0], [1, 0], [-3, 1], [-3, -1], [-2, -1], [2, -1], [3, -2]];   // ears, head, body, tail, legs stretched
+      return hare.some(([a, b]) => a === i && b === j) ? MARK : YEL;
+    };
+    if (av > hw - 0.8) { const m = mark(-4, 10, 4.6, 3.6, v > 0 ? u : -u - 8, z); if (m) return m; }
+    if (u < -15.3) {
+      if (z >= 4.2 && z < 15 && av < 0.5) return '#b8bcc0';                          // the back doors' seam
+      if (z >= 6 && z < 7 && av > 4.6) return TAIL;
+      if (v > 0.5) { const m = mark(3.2, 11, 1.9, 1.9, v, z); if (m) return m; }
+    }
+    return BOX;
+  } },
   // the rubbish truck (the owner chose B, Nov 2026): a green cab, a tall white box with a green stripe
   // and rounded top edges, the grey steel hopper at the back sloping out, its dark mouth, ribs, tail lamps
   rubbishTruck: { label: 'Rubbish truck', L: 39, W: 15, H: 16, shape: (u, v, z) => {

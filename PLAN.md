@@ -596,9 +596,17 @@ bubble lab, so games can use them and they can grow.
     lurch as they shamble; werewolves are less boxy (broad shoulders over a narrow waist, a hump,
     ragged sides, long arms with claws by the knees, the head forward side on).
 
+82. **Parcel deliveries** (the owner chose B, the hand trolley, a white truck with a logo in
+    the spirit of a Japanese parcel firm's but not a copy, the driver in green): a white parcel
+    truck (white cab and box, our own mark: a yellow oval with a black leaping hare, on its
+    sides and back doors; a yellow strip along the bottom) comes round two or three shops on one
+    street every minute or two by day; at each it stops just past the door with its hazards
+    blinking, and the driver (dark green shirt, yellow placket, green-grey trousers) wheels the
+    parcels in on a hand trolley and comes back. A catalogue card.
+
 ## In progress
 
-- Vehicles, round two (the owner's order, Nov 2026; 1 done, 77; 2 done, 78): 1. a more detailed redraw of the cars,
+- Vehicles, round two (the owner's order, Nov 2026; 1 done, 77; 2 done, 78; 3 done, 82, as a parcel truck): 1. a more detailed redraw of the cars,
   2. a police car and a fire engine, 3. the delivery van stopping at shops, 4. parked cars;
   each from mock-ups first.
 - Vehicles, round one (done): 1. small fixes, 2. motorbikes in the traffic,

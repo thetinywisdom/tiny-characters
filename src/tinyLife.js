@@ -13,6 +13,7 @@
 //   drawPetals(g, tree, t)   petals drifting down round a cherry tree
 //   drawRubbish(g, r)        rubbish bags under a green net (rubbish day)
 //   drawScooter(g, v)        the delivery scooter, side on or head on
+//   drawTrolley(g, p, t)     someone pushing a hand trolley (p.load: boxes on it), the parcel driver
 //   drawMotorbike(g, v)      a scooter (v.type 'moped') or a motorbike ('motorbike') in the traffic, a rider in a helmet
 //
 // Plain ES module.
@@ -331,3 +332,21 @@ function cityBike(g, p, t) {
   px(g, INK, x - 4, y - 10, 8, 1);
   if (!back) { px(g, BASKET, x - 2, y - 9, 4, 3); px(g, BASKET2, x - 1, y - 8, 2, 1); px(g, BLAMP, x, y - 6); }
 }
+
+// --- the parcel driver's hand trolley (the owner chose B, Nov 2026) ------------------------------
+const TROLLEY = '#3a3f44';
+/** Someone wheeling a hand trolley in front of them (p.load: a stack of parcels on it; p.draw-able). */
+export function drawTrolley(g, p, t = 0) {
+  const x = Math.round(p.x), y = Math.round(p.y), side = p.facing === 'left' || p.facing === 'right', k = p.facing === 'left' ? -1 : 1;
+  drawCharacter(g, { ...p, carry: undefined, draw: undefined }, t);
+  const box = (bx, w) => { px(g, '#c09060', bx, y - 8, w, 7); px(g, '#8a6440', bx, y - 6, w, 1); px(g, '#8a6440', bx, y - 3, w, 1); px(g, '#d8b080', bx, y - 8, w, 1); };
+  if (side) {
+    const fx = k > 0 ? x + 3 : x - 4;
+    if (p.load) box(k > 0 ? x + 4 : x - 7, 4);
+    px(g, TROLLEY, fx, y - 9, 1, 9); px(g, TROLLEY, k > 0 ? fx : fx - 3, y - 1, 4, 1); px(g, '#26282c', k > 0 ? fx + 1 : fx - 2, y - 1, 2, 1);
+  } else {
+    if (p.load && p.facing !== 'up') box(x - 2, 5);
+    px(g, TROLLEY, x - 3, y - 9, 1, 9); px(g, TROLLEY, x + 3, y - 9, 1, 9); px(g, TROLLEY, x - 3, y - 1, 7, 1);
+  }
+}
+

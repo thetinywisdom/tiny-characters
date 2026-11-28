@@ -15,7 +15,7 @@
 //     above    things drawn over everything (crows on the wires)
 
 import { LOOKS, SKIN_COLORS, facingFor, randomCharacter, seeded } from '../src/tinyCharacters.js';
-import { drawNappingCat, drawPigeon, drawCrow, drawPose, drawRubbish } from '../src/tinyLife.js';
+import { drawNappingCat, drawPigeon, drawCrow, drawPose, drawRubbish, drawTrolley } from '../src/tinyLife.js';
 import { closes } from '../src/tinyBuildings.js';
 import { emote } from '../src/tinySpeech.js';
 import { poleTops } from '../src/tinyStreet.js';
@@ -256,6 +256,42 @@ export function makeLife({ town, traffic, people, follow, rng = Math.random }) {
   // out it comes round, stops by each pile, a worker in a cap walks the bags to the back, and it drives on
   const WORKER = { body: '#8aa8c0', legs: '#6a88a0', hair: '#2f3236', skin: '#e2b08e', hat: 'cap', hatColor: '#8aa8c0', top: 'jacket', trim: '#c8d8e4' };
   let truck = null, worker = null, roundDone = false;
+  // the parcel truck (the owner chose B, the hand trolley, Nov 2026): every minute or two it comes round two
+  // or three shops on one street; at each it stops just past the door, hazards blinking, and the driver
+  // wheels the parcels in on a trolley and comes back for the next
+  const PARCEL_SHOPS = ['shop', 'mixedUse', 'kissaten', 'pharmacy', 'florist', 'fishmonger', 'udonSoba', 'familyRestaurant', 'takoyaki', 'laundromat', 'karaoke', 'sushi'];
+  const shopRows = new Map();
+  for (const b of town.buildings) if (PARCEL_SHOPS.includes(b.type) || b.shopType) { const r = shopRows.get(b.y) ?? []; r.push(b); shopRows.set(b.y, r); }
+  // the driver's uniform (the owner, from a photo): a dark green shirt with a yellow placket, dark green-grey trousers
+  const DRIVER = { body: '#2f5a3a', top: 'jacket', trim: '#f2c230', legs: '#3a4a42', hair: '#2f3236', skin: '#e2b08e' };
+  let parcel = null, porter = null, nextParcel = 20;
+  function deliveries(dt, h) {
+    if (!traffic.sendRound) return;
+    if (parcel && !traffic.vehicles.includes(parcel)) { parcel = null; if (porter) { sprites.splice(sprites.indexOf(porter), 1); porter = null; } }
+    if (!parcel) {
+      if ((nextParcel -= dt) > 0 || h < 7 || h >= 20) return;                 // by day only
+      const rows = [...shopRows.values()], row = rows[Math.floor(rng() * rows.length)].slice().sort(() => rng() - 0.5).slice(0, 3);
+      parcel = traffic.sendRound('parcelTruck', row.map((b) => { const d = town.doorOf(b); return { x: d.x + 20, y: d.y, door: d }; }));
+      nextParcel = parcel ? 70 + rng() * 50 : 5;
+      return;
+    }
+    const stop = parcel.atStop;
+    if (!stop || parcel.wait <= 0) return;
+    parcel.signal = 'h';                                                        // hazards on while it stands
+    const door = stop.spot.door, back = { x: parcel.x - 18, y: door.y + 4 };
+    if (!porter) { porter = { ...DRIVER, x: back.x, y: back.y, walking: true, leg: 'there', load: true, inside: 0, draw: drawTrolley, talk: 0 }; sprites.push(porter); }
+    if (porter.inside > 0) {                                                    // in the shop a moment
+      if ((porter.inside -= dt) <= 0) { porter.hidden = false; porter.leg = 'back'; porter.load = false; }
+      return;
+    }
+    const to = porter.leg === 'there' ? { x: door.x, y: door.y + 2 } : back, dx = to.x - porter.x, dy = to.y - porter.y, d = Math.hypot(dx, dy), step = 16 * dt;
+    porter.facing = facingFor(dx, dy, porter.facing); porter.walking = true;
+    if (d > step) { porter.x += dx / d * step; porter.y += dy / d * step; return; }
+    porter.x = to.x; porter.y = to.y;
+    if (porter.leg === 'there') { porter.inside = 1.2; porter.hidden = true; return; }
+    sprites.splice(sprites.indexOf(porter), 1); porter = null; parcel.atStop = null; parcel.wait = 0.5; parcel.signal = null;   // in the back, and on
+  }
+
   // the fire engine (the owner, Nov 2026): every few minutes a call: out of the fire station, lights flashing,
   // round the town, back in
   const fireStation = town.buildings.find((b) => b.type === 'fireStation');
@@ -362,6 +398,7 @@ export function makeLife({ town, traffic, people, follow, rng = Math.random }) {
     for (const r of rubbish) { const i = sprites.indexOf(r), show = out && !r.collected; if (show && i < 0) sprites.push(r); else if (!show && i >= 0) sprites.splice(i, 1); }
     collect(dt, h);
     fireCalls(dt);
+    deliveries(dt, h);
     for (const p of people) {
       if (p.job) runJob(p, dt);
       if (p.hold && (p.holdT -= dt) <= 0 && !people.some((q) => q !== p && !q.away && near(q, p, 5, 3))) { p.path = p.hold; p.hold = null; p.busy = false; p.away = false; }
