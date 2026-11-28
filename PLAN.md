@@ -525,6 +525,10 @@ bubble lab, so games can use them and they can grow.
     drifting at a third of the speed, turning over slowly; the trees lean only a little
     further than in the breeze; the washing flaps now and then, slowly.
 
+69. **Pigeons scatter when they fly** (the owner: the flock looked like one big random
+    animal): each bird takes off a moment sooner or later, at its own speed and height,
+    curving out to the side with a flutter, and they land spread out.
+
 ## In progress
 
 - Nothing. (A faster forest, weather and seasons, the traffic jam: done, 60-63. Going into

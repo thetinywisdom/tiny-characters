@@ -729,7 +729,10 @@ the demo decides who does what.
   `sweep` (the broom from tinyCombat), `kick`, `throw` (crumbs fly),
   `drink` (`p.can`), `slide`. `u` (0-1) is how far through a move.
 - **Sprites with their own drawing**: any sprite with `draw(g, s, t)` is
-  drawn by it, sorted with the people (pigeons, the ball, rubbish, the
+  drawn by it, sorted with the people (pigeons: scared, each bird flies on its own, a
+  moment sooner or later, its own height, 10-26, and a curve out to the side up to 20 px,
+  a flutter, landing up to 13 px from the flock's new spot; `FLIGHT` 2.9 s; the owner:
+  together they looked like one big animal), the ball, rubbish, the
   picnic blanket); `drawTownView(..., { above })` draws a list over
   everything, after the wires (the crows). `steam: (g, x, y, t, seed) => ...` swaps the
   steam's drawing (used to try styles out; the default is `drawSteam`). `lights: 'soft' | 'bands' | 'dither' |

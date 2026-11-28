@@ -455,7 +455,7 @@ balconies by day, **rubbish** goes out in the morning, pixel **steam** puffs up 
 the ramen shop and the food stalls, the alley's **lanterns sway** and
 **petals** fall. Kids play on the **swings**, the **slide** and **kick a
 ball** in the schoolyard. **Pigeons** peck about and fly off when you come
-close, **crows** sit on the wires, a **cat naps** on a block wall, two
+close, scattering (each its own way) and landing spread out somewhere else, **crows** sit on the wires, a **cat naps** on a block wall, two
 **dogs** stop to greet each other. When a train stops, **commuters** come out
 of the station; now and then someone takes a **taxi** from the rank, and a
 **delivery scooter** weaves through the traffic.

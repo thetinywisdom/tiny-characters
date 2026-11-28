@@ -179,7 +179,7 @@ export function makeLife({ town, traffic, people, follow, rng = Math.random }) {
   }
 
   // --- pigeons: flocks pecking about; anyone close and up they all go, to land somewhere else -------------
-  const flocks = [];
+  const flocks = [], FLIGHT = 2.9;                                     // a flight, the slowest bird's included (s)
   for (const [name, n] of [['Station plaza', 6], ['Station plaza', 5], ['Old-town square', 5], ['Pond park', 4], ['Shrine grounds', 4]]) {
     const a = area(name);
     if (!a) continue;
@@ -191,19 +191,28 @@ export function makeLife({ town, traffic, people, follow, rng = Math.random }) {
     for (const f of flocks) {
       if (f.fly > 0) {
         f.fly -= dt;
+        const el = FLIGHT - f.fly;
+        // (the owner: more scattered in the air) each bird on its own: a moment later or sooner,
+        // its own speed, height and curve out to the side, a flutter; they land spread out
         for (const b of f.birds) {
-          const ex = b.tx - b.x, ey = b.ty - b.y, d = Math.hypot(ex, ey), u = Math.min(1, f.fly / 2.4);
-          if (d > 1) { b.x += ex / d * Math.min(d, 46 * dt); b.y += ey / d * Math.min(d, 46 * dt); }
-          b.h = Math.max(0, Math.sin(Math.min(1, 1 - u) * Math.PI) * 16 + (d > 2 ? 4 : 0));
-          b.flying = b.h > 0.5; b.facing = ex < 0 ? 'left' : 'right';
+          const e = Math.max(0, Math.min(1, (el - b.fl.delay) / b.fl.dur)), up = Math.sin(e * Math.PI);
+          const dx = b.tx - b.fl.x, dy = b.ty - b.fl.y, d = Math.hypot(dx, dy) || 1;
+          const nx = b.fl.x + dx * e - dy / d * b.fl.bend * up + Math.sin(el * 9 + b.fl.delay * 20) * up * 1.5;
+          const ny = b.fl.y + dy * e + dx / d * b.fl.bend * up;
+          if (e > 0 && e < 1) b.facing = nx < b.x ? 'left' : nx > b.x ? 'right' : b.facing;
+          b.x = nx; b.y = ny; b.h = up * b.fl.peak; b.flying = b.h > 0.5;
         }
-        if (f.fly <= 0) for (const b of f.birds) { b.h = 0; b.flying = false; }
+        if (f.fly <= 0) for (const b of f.birds) { b.x = b.tx; b.y = b.ty; b.h = 0; b.flying = false; }
         continue;
       }
       const scare = people.find((q) => !q.away && !q.busy && (q.walking || q.you) && !(q.monster && ['ghostGirl', 'reaper', 'skull'].includes(q.monster)) && f.birds.some((b) => near(q, b, 12, 7)));
       if (scare) {                                                         // up they go, to land somewhere else in their area
-        f.fly = 2.4; f.centre = town.randomSpot(rng, f.area);
-        for (const b of f.birds) { b.tx = f.centre.x + (rng() - 0.5) * 16; b.ty = f.centre.y + (rng() - 0.5) * 6; }
+        f.fly = FLIGHT; f.centre = town.randomSpot(rng, f.area);
+        for (const b of f.birds) {
+          b.tx = f.centre.x + (rng() - 0.5) * 26; b.ty = f.centre.y + (rng() - 0.5) * 10;
+          if (!free(b.tx, b.ty)) { b.tx = f.centre.x; b.ty = f.centre.y; }
+          b.fl = { x: b.x, y: b.y, delay: rng() * 0.5, dur: 1.6 + rng() * 0.8, peak: 10 + rng() * 16, bend: (rng() - 0.5) * 40 };
+        }
         continue;
       }
       for (const b of f.birds) if (rng() < dt * 0.6) {                      // pottering: a step, a turn, peck peck
